@@ -43,7 +43,7 @@ jobs:
             echo "No pyproject.toml yet — skipping. This job starts working at build step 2."
           fi
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         if: steps.detect.outputs.found == 'true'
         with:
           python-version: '3.12'
