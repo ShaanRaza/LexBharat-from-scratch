@@ -12,11 +12,11 @@ import pytest
 from adapters.qdrant import (
     DENSE_VECTOR,
     SPARSE_VECTOR,
-    SUPREME_COURT,
     QdrantStore,
     VectorStoreUnavailable,
     english_supreme_court,
 )
+from core.coverage import court_payload
 from core.settings import Settings
 
 
@@ -66,7 +66,7 @@ async def test_hybrid_is_one_call_dense_plus_sparse_merged_by_rrf():
     assert kw["limit"] == 50 and all(p.limit == 50 for p in kw["prefetch"])
     # the court filter is inside BOTH halves, and is court, not language_code
     for p in kw["prefetch"]:
-        assert _fields(p.filter) == {"court": SUPREME_COURT}
+        assert _fields(p.filter) == court_payload("supreme_court")
     assert calls == ["bail"]
     assert [h.record_id for h in hits] == ["c1", "c2"]
 

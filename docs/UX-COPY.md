@@ -17,7 +17,7 @@ them.
 | **Voyage API is down** | A notice that meaning-based search is unavailable. Act lookup, outcome statistics and keyword search still work and are labelled **"keyword results only"**. A retry button | No Voyage call |
 | **A judgment is longer than the model can read** | "This judgment is too long to read in full. Answering from the most relevant parts." The parts used are listed, and the user can ask about a page range | Needs verification: measure the longest judgments against the model's limit |
 | **An upload is an unreadable scan** | "We could not read this file. Try a clearer scan or paste the text." Nothing is guessed. **The usage meter is not charged** | OCR attempt only |
-| **The dataset has no coverage of the question** | "Version 1 covers Supreme Court judgments and central and state Acts and regulations. It does not include High Courts, district courts, tribunals, or judgments after the snapshot date." Points to the official court site | No LLM call if detected early |
+| **The dataset has no coverage of the question** | <!-- coverage-sentence:begin -->"LexBharat covers Supreme Court judgments and Central Acts, as listed on our coverage page. It does not include High Courts, district courts and tribunals, or anything after the data-as-of date." **NEEDS-OWNER** (generated from `core/coverage.json`)<!-- coverage-sentence:end --> Points to the official court site. A question about a source the dataset does not hold (for example an Act that is not listed) gets the O7 message instead: "not in our dataset" (`message_key` `out_of_scope:not_in_dataset`), never "does not exist" | No LLM call if detected early |
 | **The LLM provider fails or times out** | The retrieved sources are shown **with links but no written answer**, and the user can retry | Retrieval cost only |
 | **The verifier rejects a cited authority** | The answer is shown with that citation removed and a note saying one authority could not be verified. The failure is written to `invented_citation_log` | Free |
 
@@ -43,7 +43,7 @@ Full "means / does not mean" table: [CITATION-VERIFIER.md](CITATION-VERIFIER.md)
 | Every result, stats page, Act page and share card | `Data: Open India Law by Vaquill AI, CC BY 4.0` |
 | Every Act result whose `act_status` is empty | **"in-force status not checked"** |
 | Before upload | A warning about privileged material |
-| High Court answers (phase 2) | No citation string is shown — `citation` is 0.0% filled for High Courts |
+| Answers from courts whose records carry no citation string (none in v1; later phases) | No citation string is shown — `citation` is 0.0% filled for those courts |
 
 ## Copy rules
 

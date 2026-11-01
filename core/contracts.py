@@ -46,6 +46,7 @@ ScopeClass = Literal[
     "needs_high_court",
     "needs_tribunal",
     "after_snapshot",
+    "not_in_dataset",  # a source the dataset does not hold (O7); not a court matter
     "not_legal",
 ]
 Rating = Literal["answers", "partly", "not_relevant"]
@@ -272,7 +273,7 @@ class PipelineResult:
     outcome: Outcome
     answer: VerifiedAnswer | None  # set only when outcome == "answered"
     footer: Footer
-    message_key: str = ""  # for non-answers: "out_of_scope:needs_high_court" etc.
+    message_key: str = ""  # for non-answers: "out_of_scope:not_in_dataset" etc.
     confidence: float | None = None
     cache_hit: bool = False  # hits are free and not counted against the limit
     counted: bool = False  # True when the usage meter counted one answer

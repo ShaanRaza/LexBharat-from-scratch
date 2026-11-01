@@ -65,7 +65,7 @@ describe("sign in", () => {
 describe("navigation", () => {
   it("keeps every link on a phone (none is hidden by a breakpoint)", () => {
     const { container } = render(<TopBar />);
-    for (const t of ["Acts", "Statistics", "Sign in", "Get early access"]) {
+    for (const t of ["Acts", "Statistics", "Coverage", "Sign in", "Get early access"]) {
       expect(screen.getByRole("link", { name: t })).toBeInTheDocument();
     }
     expect(container.innerHTML).not.toMatch(/\bhidden\b/);
@@ -73,15 +73,12 @@ describe("navigation", () => {
 });
 
 describe("failure screens use the exact copy", () => {
-  it.each(["notFound", "outsideCoverage", "usageLimit", "serviceError"] as const)("%s", (k) => {
+  it.each(["notFound", "outsideCoverage", "notInDataset", "usageLimit", "serviceError"] as const)("%s", (k) => {
     render(<FailureCard kind={k} />);
     expect(screen.getByRole("alert")).toHaveTextContent(FAILURES[k].body);
   });
   it("UX-COPY sentences are verbatim", () => {
     expect(FAILURES.notFound.body).toBe("No matching judgments found in our dataset (data as of the snapshot date).");
-    expect(FAILURES.outsideCoverage.body).toBe(
-      "Version 1 covers Supreme Court judgments and central and state Acts and regulations. It does not include High Courts, district courts, tribunals, or judgments after the snapshot date.",
-    );
   });
 });
 

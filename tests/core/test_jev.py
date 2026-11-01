@@ -48,7 +48,8 @@ async def test_decide_maps_scope_and_safety_in_one_request():
     assert (d.scope, d.safety, d.jev_used) == ("needs_high_court", "trick", True)
     assert len(c.calls) == 1 and set(c.calls[0][1]) == {"scope", "safety"}
     assert set(c.calls[0][1]["scope"].criteria) == {
-        "in_scope", "needs_high_court", "needs_tribunal", "after_snapshot", "not_legal"
+        "in_scope", "needs_high_court", "needs_tribunal", "after_snapshot",
+        "not_in_dataset", "not_legal",
     }  # fmt: skip
 
 

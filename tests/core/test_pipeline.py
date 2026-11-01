@@ -250,3 +250,14 @@ async def test_prose_without_any_source_marker_is_refused(settings, store):
     res = await run_pipeline(PipelineRequest("u1", "Tell me about " + QUERY), deps)
     assert res.outcome == "not_found" and res.answer is None and not res.counted
     assert not deps.cache.data and deps.usage.counts == {}
+
+
+async def test_not_in_dataset_is_its_own_refusal_not_a_high_court_one(settings, store):
+    """A source the dataset does not hold (O7) must not tell the user 'needs a High
+    Court'. Step 3 stops here: no search, no model call, nothing is written."""
+    deps = deps_for(settings, store, decisions=FakeDecisions(scope="not_in_dataset"))
+    res = await run_pipeline(PipelineRequest("u1", "Tell me about " + QUERY), deps)
+    assert res.outcome == "out_of_scope"
+    assert res.message_key == "out_of_scope:not_in_dataset"
+    assert res.answer is None and not res.counted
+    assert deps.store.saved[-1][1].message_key == "out_of_scope:not_in_dataset"

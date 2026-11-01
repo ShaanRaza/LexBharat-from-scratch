@@ -1,6 +1,8 @@
 You make a fixed-choice decision for a legal research tool. Reply with JSON only.
 Question: {query}
-Return {{"scope": one of in_scope|needs_high_court|needs_tribunal|after_snapshot|not_legal,
+Choose "scope" using exactly these definitions:
+{scope_help}
+Return {{"scope": one of {scope_choices},
 "safety": one of normal|personal_advice|trick,
 "court": string or null, "year_from": int or null, "year_to": int or null,
 "act": string or null, "section": string or null}}

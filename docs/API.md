@@ -48,6 +48,7 @@ the login check. Judgment titles are never sent (they are party names).
 | `POST /conversations/{id}/messages/{mid}/followups` | Up to 3 next-question suggestions for a saved answer. Questions only, no citation marker. Not a pipeline step; not metered |
 | `POST /prompts/improve` | "Improve my question": editable text for the input box (`{text, changed}`). Never contains a citation. Not a pipeline step; not metered |
 | `POST /billing/webhook` | Razorpay events (**signature checked**, no Firebase token) |
+| `GET /coverage` | What the dataset covers: the coverage sentence, the courts and instruments, what is excluded, a `placeholder`/`measured` status, the data-as-of date, credit and notice. **Public, no login.** Every word comes from `core/coverage.json` (decision A51). Never invents a category |
 | `GET /stats` | Public outcome counts by court, year and outcome label. **No login.** Supreme Court only until Phase 2 |
 | `GET /sitemap.xml` | Every public Act and stats page, for Google (served by the website) |
 | `POST /organisations` | Create a Chambers organisation (minimum 3 seats, one bill) |

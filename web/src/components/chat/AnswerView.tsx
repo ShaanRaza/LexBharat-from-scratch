@@ -3,6 +3,7 @@ import { markFor, meaningFor } from "@/lib/citation";
 import { CITATION_AS_RECORDED, UNVERIFIED_NOTE } from "@/lib/copy";
 import type { Citation } from "@/lib/api/types";
 import { citationHref, citationName, isShown, toSegments, type AnswerState } from "@/lib/chat/state";
+import { CoverageFailureCard } from "./CoverageFailureCard";
 import { FailureCard } from "./FailureCard";
 
 export function AnswerView({
@@ -14,6 +15,9 @@ export function AnswerView({
   onRetry?: () => void;
   onOpenSource?: (c: Citation) => void;
 }) {
+  if (answer.failure === "outsideCoverage" || answer.failure === "notInDataset") {
+    return <CoverageFailureCard kind={answer.failure} />;
+  }
   if (answer.failure) return <FailureCard kind={answer.failure} onRetry={onRetry} />;
   const ce = answer.citations;
   return (

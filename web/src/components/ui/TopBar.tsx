@@ -4,6 +4,7 @@ import { PRODUCT_NAME } from "@/lib/config";
 const LINKS = [
   { href: "/acts", label: "Acts" },
   { href: "/stats", label: "Statistics" },
+  { href: "/coverage", label: "Coverage" },
   { href: "/signin", label: "Sign in" },
 ];
 

@@ -33,6 +33,21 @@ describe("design tokens", () => {
   });
 });
 
+// A coverage claim (a court, "Central Acts", "state Acts", "Acts and regulations" ...) is
+// written once, in core/coverage.json, and reaches the web app through GET /coverage.
+// (The same rule is enforced repo-wide by tests/test_coverage_source.py.)
+const CLAIM =
+  /\bcentral\s+(and\s+(state\s+)?)?acts?\b|\bstate\s+acts?\b|\bcentral\s+(and|or)\s+state\b|\bacts\s+and\s+regulations\b|\ball\s+(the\s+)?(indian\s+)?acts\b|\bhigh\s+courts?\b|\bdistrict\s+courts?\b|\btribunals?\b|\bsupreme\s+court\b/i;
+
+describe("coverage", () => {
+  it("no coverage claim is written in the web app (it comes from the API)", () => {
+    const bad = code
+      .filter((f) => !f.includes("/lib/fake/") && CLAIM.test(readFileSync(f, "utf8")))
+      .map((f) => f.replace(SRC, ""));
+    expect(bad).toEqual([]);
+  });
+});
+
 describe("hard rules", () => {
   it("no product or collection name is hard-coded (read from config)", () => {
     const bad = code.filter((f) => /kanoon|lexbharat/i.test(readFileSync(f, "utf8")) && !f.endsWith("design/tokens.css"));

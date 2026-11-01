@@ -41,6 +41,7 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 
 from adapters.decisions import DecisionUnavailable
+from core import coverage
 from core.contracts import (
     Decision,
     Filters,
@@ -62,13 +63,9 @@ def _warn_once(msg: str) -> None:
 
 MAX_QUESTIONS_PER_REQUEST = 255  # Choice option limit is 255; we also cap batch size
 
-SCOPE_CRITERIA: dict[str, str] = {
-    "in_scope": "A legal question on Supreme Court of India judgments or Central Acts.",
-    "needs_high_court": "Needs a High Court judgment or a state-level source.",
-    "needs_tribunal": "Needs a tribunal decision (NCLT, ITAT, NGT and similar).",
-    "after_snapshot": "Asks about law or events after the data snapshot date.",
-    "not_legal": "Not a legal question.",
-}
+# What each scope bucket means comes from the ONE coverage source (core/coverage.py), so
+# the scope checker can never refuse what the website says it covers (decision A51).
+SCOPE_CRITERIA: dict[str, str] = coverage.scope_criteria()
 SAFETY_CRITERIA: dict[str, str] = {
     "normal": "A general research question about law.",
     "personal_advice": "Asks what the user should do in their own legal situation.",
@@ -230,8 +227,7 @@ class JevClient:
             raise DecisionUnavailable("upload chats are never sent to Jev")
         qs = {
             "scope": self._make_choice(
-                "Can a research tool covering Supreme Court of India judgments and "
-                "Central Acts answer the user's question in state.question?",
+                coverage.scope_question(),
                 SCOPE_CRITERIA,
             ),
             "safety": self._make_choice(

@@ -139,7 +139,7 @@ class Citation(BaseModel):
         default=None, description="Case title or Act name. Never judges or parties."
     )
     # Stored citation string, exactly as recorded. Never retyped by the AI.
-    # None for High Court records (no citation strings in the dataset).
+    # None for records from courts whose citation strings are not in the dataset.
     citation_string: str | None = Field(
         default=None, description="Shown as 'as recorded in the dataset'"
     )
@@ -407,6 +407,27 @@ class StatsRow(BaseModel):
     year: int
     outcome_label: str
     count: int
+
+
+class CoverageItem(BaseModel):
+    id: str
+    label: str
+
+
+class CoverageResponse(BaseModel):
+    """What the dataset covers, read from the ONE coverage source (core/coverage.json).
+    `status` is "placeholder" until data/coverage_report.py has measured the dataset.
+    `sentence_approved` false means the wording is NEEDS-OWNER. Public, no login."""
+
+    status: Literal["placeholder", "measured"]
+    sentence: str
+    sentence_approved: bool
+    not_in_dataset_message: str
+    courts: list[CoverageItem]
+    instruments: list[CoverageItem]
+    excluded: list[str]
+    measured_at: str | None = None
+    provenance: Provenance
 
 
 class StatsResponse(BaseModel):

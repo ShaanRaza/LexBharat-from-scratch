@@ -97,3 +97,17 @@ export type StatsOut = { rows: StatsRow[]; live: boolean; provenance: Provenance
 // Next-question suggestions and the "Improve my question" helper (question text only).
 export type FollowupsOut = { suggestions: string[] };
 export type ImproveOut = { text: string; changed: boolean };
+
+// What the dataset covers: read from GET /coverage, never typed in the web app.
+export type CoverageItem = { id: string; label: string };
+export type CoverageOut = {
+  status: "placeholder" | "measured";
+  sentence: string;
+  sentence_approved: boolean;
+  not_in_dataset_message: string;
+  courts: CoverageItem[];
+  instruments: CoverageItem[];
+  excluded: string[];
+  measured_at: string | null;
+  provenance: Provenance;
+};

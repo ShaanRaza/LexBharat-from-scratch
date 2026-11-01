@@ -1,9 +1,9 @@
 // The ONLY file in web/ that talks to the backend (CLAUDE.md section 2 rule 3).
 // Fake mode (NEXT_PUBLIC_USE_FAKE_API=true, the default) returns canned data.
 import { API_BASE_URL, FAKE_STEP_DELAY_MS, USE_FAKE_API } from "@/lib/config";
-import { FAKE_ANSWER_TEXT, FAKE_CASE, FAKE_CITATIONS, FAKE_ME, FAKE_PROVENANCE, FAKE_SECTIONS, FAKE_STATS } from "@/lib/fake/data";
+import { FAKE_ANSWER_TEXT, FAKE_CASE, FAKE_CITATIONS, FAKE_COVERAGE, FAKE_ME, FAKE_PROVENANCE, FAKE_SECTIONS, FAKE_STATS } from "@/lib/fake/data";
 import { createSseParser } from "./sse";
-import type { ApiErrorBody, CaseOut, ConsentIn, FollowupsOut, ImproveOut, MeOut, SectionOut, StatsOut, StepEventData, StreamEvent } from "./types";
+import type { ApiErrorBody, CaseOut, ConsentIn, CoverageOut, FollowupsOut, ImproveOut, MeOut, SectionOut, StatsOut, StepEventData, StreamEvent } from "./types";
 
 const BASE = `${API_BASE_URL}/api/v1`;
 
@@ -58,6 +58,12 @@ export async function getSection(act: string, n: string): Promise<SectionOut> {
 export async function getStats(): Promise<StatsOut> {
   if (USE_FAKE_API) return FAKE_STATS;
   return getJson("/stats");
+}
+
+// What the dataset covers (public). The sentence and the lists come from the API.
+export async function getCoverage(): Promise<CoverageOut> {
+  if (USE_FAKE_API) return FAKE_COVERAGE;
+  return getJson("/coverage");
 }
 
 export async function getMe(): Promise<MeOut> {
@@ -155,6 +161,13 @@ async function* fakeStream(q: string): AsyncGenerator<StreamEvent> {
   if (lower.includes("limit")) return yield err("quota_exceeded");
   if (lower.includes("highcourt")) return yield err("out_of_scope");
   if (lower.includes("nothing")) return yield err("not_found_in_dataset");
+  if (lower.includes("notheld")) {
+    // A source the dataset does not hold: a refusal with its own message key (O7).
+    return yield {
+      event: "done",
+      data: { message_id: null, from_cache: false, refused: true, reason: "out_of_scope", message_key: "out_of_scope:not_in_dataset" },
+    };
+  }
   if (lower.includes("fail")) return yield err("service_unavailable");
   for (const ev of FAKE_STEPS) {
     yield { event: "step", data: ev };

@@ -1,7 +1,7 @@
 // Chat logic with no styling in it. A reducer folds stream events into one answer.
 import type { ApiErrorBody, Citation, CitationsEvent, StepEventData, StreamEvent } from "@/lib/api/types";
 
-export type FailureKind = "notFound" | "outsideCoverage" | "usageLimit" | "serviceError";
+export type FailureKind = "notFound" | "outsideCoverage" | "notInDataset" | "usageLimit" | "serviceError";
 
 export type AnswerState = {
   question: string;
@@ -30,6 +30,13 @@ export function failureFor(e: ApiErrorBody): FailureKind {
   }
 }
 
+// A refusal's screen: "not in our dataset" has its own message key and is NOT the
+// out-of-coverage screen (O7). Anything else refused out of scope is the coverage screen.
+function refusalFailure(reason?: string | null, messageKey?: string | null): FailureKind {
+  if (messageKey === "out_of_scope:not_in_dataset") return "notInDataset";
+  return reason === "out_of_scope" ? "outsideCoverage" : "notFound";
+}
+
 export function applyEvent(s: AnswerState, ev: StreamEvent): AnswerState {
   switch (ev.event) {
     case "step":
@@ -46,7 +53,7 @@ export function applyEvent(s: AnswerState, ev: StreamEvent): AnswerState {
         refused: ev.data.refused,
         messageId: ev.data.message_id,
         // A refusal with no explicit reason is treated as "nothing found": nothing is written.
-        failure: ev.data.refused && !s.failure ? (ev.data.reason === "out_of_scope" ? "outsideCoverage" : "notFound") : s.failure,
+        failure: ev.data.refused && !s.failure ? refusalFailure(ev.data.reason, ev.data.message_key) : s.failure,
       };
     case "error":
       return { ...s, status: "failed", failure: failureFor(ev.data), text: "", steps: [] };
@@ -96,5 +103,5 @@ export function citationHref(c: Citation): string {
 // only this function (owner decision pending).
 export function citationName(c: Citation): string {
   if (c.kind === "act") return `Act section ${c.section ?? ""} (${c.act_slug ?? c.record_id})`.replace("  ", " ");
-  return c.citation_string ?? "Supreme Court judgment";
+  return c.citation_string ?? "Judgment";
 }

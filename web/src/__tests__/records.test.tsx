@@ -39,7 +39,7 @@ describe("no party names", () => {
 import { judgmentHeading } from "@/components/records/Judgment";
 describe("judgment heading and titles", () => {
   it("falls back to court and year", () => {
-    expect(judgmentHeading({ ...FAKE_CASE, citation_string: null, case_number: null })).toBe("Supreme Court judgment, 2020");
+    expect(judgmentHeading({ ...FAKE_CASE, citation_string: null, case_number: null })).toBe("Supreme Court of India, 2020");
   });
   it("never renders the title in chat citations", async () => {
     const { ChatScreen } = await import("@/components/chat/ChatScreen");

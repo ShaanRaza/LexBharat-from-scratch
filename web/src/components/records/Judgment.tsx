@@ -10,7 +10,7 @@ export function judgmentHeading(c: CaseOut): string {
   if (c.citation_string) return `${c.citation_string} (${CITATION_AS_RECORDED})`;
   if (c.case_number) return c.case_number;
   const year = c.decision_date?.slice(0, 4);
-  return `Supreme Court judgment${year ? `, ${year}` : ""}`;
+  return `${c.court ?? "Judgment"}${year ? `, ${year}` : ""}`;
 }
 
 export function Judgment({ c, highlight }: { c: CaseOut; highlight?: string }) {

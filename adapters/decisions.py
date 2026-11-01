@@ -19,6 +19,7 @@ from typing import Protocol, cast, get_args
 
 from adapters.guard import refuse_in_production
 from adapters.llm import LLM, LLMUnavailable
+from core import coverage
 from core.contracts import (
     Decision,
     Filters,
@@ -100,7 +101,16 @@ class GeminiDecider:
             raise DecisionUnavailable("unparseable decision") from e
 
     async def decide(self, query: str, *, uploads: bool = False) -> Decision:
-        d = self._json(await self._ask(_prompt("decide", query=query)))
+        d = self._json(
+            await self._ask(
+                _prompt(
+                    "decide",
+                    query=query,
+                    scope_help=coverage.scope_help(),
+                    scope_choices=coverage.scope_choices(),
+                )
+            )
+        )
         scope, safety = d.get("scope"), d.get("safety")
         if scope not in get_args(ScopeClass) or safety not in get_args(SafetyClass):
             raise DecisionUnavailable("choice outside allowed list")

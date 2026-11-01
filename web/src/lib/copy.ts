@@ -27,10 +27,20 @@ export const FAILURES = {
     body: "No matching judgments found in our dataset (data as of the snapshot date).",
     hint: "Try rephrasing your question, or use Act lookup.",
   },
+  // What the product covers is NOT typed here: the sentence comes from GET /coverage
+  // (one source, core/coverage.json). The body below is only the fallback shown if that
+  // call fails, and it names no category. NEEDS-OWNER: wording not approved.
   outsideCoverage: {
     title: "Outside what this version covers",
-    body: "Version 1 covers Supreme Court judgments and central and state Acts and regulations. It does not include High Courts, district courts, tribunals, or judgments after the snapshot date.",
+    body: "This is outside what this version covers. See the coverage page for what it does cover.",
     hint: "For those, please see the official court website.",
+  },
+  // A source the dataset does not hold (O7). NEEDS-OWNER: the message itself is
+  // not_in_dataset_message from GET /coverage; this is the fallback.
+  notInDataset: {
+    title: "Not in our dataset",
+    body: "This is not in our dataset.",
+    hint: "See the coverage page for what the dataset holds.",
   },
   serviceError: {
     title: "We could not write an answer",
@@ -58,7 +68,7 @@ export const CONSENT_TEXT =
 
 // Stats page. NEEDS-OWNER: UX-COPY gives the rule ("descriptive, never a prediction")
 // but not the sentences below.
-export const STATS_TITLE = "Supreme Court outcome counts";
+export const STATS_TITLE = "Outcome counts";
 export const STATS_DESCRIPTIVE_NOTE =
   "These are counts of recorded outcomes. They describe past decisions and do not predict any case."; // NEEDS-OWNER
 
@@ -93,3 +103,9 @@ export const IMPROVE_DISMISS = "Dismiss";
 export const IMPROVE_NO_CHANGE = "No improvement suggested. Your question is unchanged.";
 export const IMPROVE_FAILED = "Could not improve the question. Your question is unchanged.";
 export const IMPROVE_EDIT_LABEL = "Suggested question (you can edit it)";
+
+// Coverage page. NEEDS-OWNER: interface words only; the sentence is the API's.
+export const COVERAGE_TITLE = "What the dataset covers";
+export const COVERAGE_PLACEHOLDER = "Placeholder: the dataset has not been measured yet";
+export const COVERAGE_COVERED = "Covered";
+export const COVERAGE_EXCLUDED = "Not covered";

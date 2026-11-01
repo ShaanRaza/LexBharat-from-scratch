@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 from typing import Any, Protocol
 
 from adapters.guard import refuse_in_production
+from core import coverage
 from core.settings import Settings
 
 
@@ -26,9 +27,9 @@ class VectorStoreUnavailable(Exception):
 DENSE_VECTOR = "dense"
 SPARSE_VECTOR = "sparse"
 
-# English Supreme Court chunks are selected by court. `language_code` is mostly missing
-# and uses uppercase "EN" (Measured), so filtering on it silently drops real chunks.
-SUPREME_COURT = "Supreme Court of India"
+# English judgments are selected by the court payload field (value from the coverage
+# source). `language_code` is mostly missing and uses uppercase "EN" (Measured), so
+# filtering on it silently drops real chunks.
 # Payload keys that mean "the user named this exactly": they skip the merge.
 EXACT_KEYS = ("section_number", "case_number")
 
@@ -37,8 +38,9 @@ SparseEncoder = Callable[[str], tuple[list[int], list[float]]]
 
 
 def english_supreme_court() -> dict[str, str]:
-    """The payload filter that selects English Supreme Court chunks."""
-    return {"court": SUPREME_COURT}
+    """The payload filter that selects the English judgments the coverage source
+    lists (today one court). The name is read from core/coverage.json, not typed."""
+    return coverage.court_payload("supreme_court")
 
 
 class FastEmbedBm25:

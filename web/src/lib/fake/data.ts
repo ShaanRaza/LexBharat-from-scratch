@@ -1,5 +1,5 @@
 // Canned data for fake mode. All of it is sample content, labelled "Sample" in the UI.
-import type { CaseOut, Citation, MeOut, SectionOut, StatsOut, Provenance } from "@/lib/api/types";
+import type { CaseOut, Citation, CoverageOut, MeOut, SectionOut, StatsOut, Provenance } from "@/lib/api/types";
 import { CC_BY_CREDIT, NOT_LEGAL_ADVICE_API } from "@/lib/copy";
 
 export const FAKE_PROVENANCE: Provenance = {
@@ -77,4 +77,17 @@ export const FAKE_STATS: StatsOut = {
     { court: "Supreme Court of India", year: 2021, outcome_label: "Allowed", count: 95 },
     { court: "Supreme Court of India", year: 2021, outcome_label: "Dismissed", count: 410 },
   ],
+};
+
+// Sample coverage in the shape GET /coverage returns (fake mode only; labelled Sample).
+export const FAKE_COVERAGE: CoverageOut = {
+  status: "placeholder",
+  sentence: "Sample coverage sentence: this demo covers its sample records only.",
+  sentence_approved: false,
+  not_in_dataset_message: "Sample: this is not in our dataset.",
+  courts: [{ id: "sample-court", label: "Sample court judgments" }],
+  instruments: [{ id: "sample-acts", label: "Sample Acts" }],
+  excluded: ["Sample exclusions"],
+  measured_at: null,
+  provenance: FAKE_PROVENANCE,
 };

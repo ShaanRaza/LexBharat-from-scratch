@@ -51,6 +51,29 @@ async def get_section(act: str, n: str, request: Request):
     )  # fmt: skip
 
 
+@router.get("/coverage", response_model=s.CoverageResponse)
+async def coverage_page(request: Request):
+    """Public. Every word comes from core/coverage.json via core.coverage."""
+    from core import coverage
+
+    cov = coverage.load_coverage()
+    return s.CoverageResponse(
+        status=cov.status,  # type: ignore[arg-type]
+        sentence=coverage.coverage_sentence(
+            request.app.state.core_settings.PRODUCT_NAME
+        ),
+        sentence_approved=cov.sentence_approved,
+        not_in_dataset_message=cov.not_in_dataset_message,
+        courts=[s.CoverageItem(id=c.id, label=c.covered_label) for c in cov.courts],
+        instruments=[
+            s.CoverageItem(id=i.id, label=i.covered_label) for i in cov.instruments
+        ],
+        excluded=list(cov.excluded),
+        measured_at=cov.measured_at,
+        provenance=await _prov(request),
+    )
+
+
 @router.get("/stats", response_model=s.StatsResponse)
 async def stats(request: Request):
     rows, live = await request.app.state.repo.stats()

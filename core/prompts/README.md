@@ -12,7 +12,7 @@ Expected files as the pipeline is built:
 | `rewrite.md` | 2. Rewrite | Turns the message + context into one standalone query; extracts Act, section, case number, year |
 | `summarise.md` | 1. Remember | Refreshes the rolling summary of older turns |
 | `answer.md` | 8. Answer | **Must instruct: use only the given passages S1–S8 and the reviewed background notes, and put a source ID after every point taken from one** |
-| `answer_upload.md` | 8. Answer, upload chats | Must label "your document says" separately from "Supreme Court judgments say" |
+| `answer_upload.md` | 8. Answer, upload chats | Must label "your document says" separately from what the dataset's sources say (that label is built from `core/coverage.json`, never typed) |
 
 Jev's decisions are **fixed choice lists**, not prose prompts — they belong in
 `adapters/decisions.py` with their choice sets, per the Tech Stack's safeguards.
