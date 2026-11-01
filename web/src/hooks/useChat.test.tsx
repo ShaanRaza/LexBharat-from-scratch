@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { ApiClient } from "@/lib/api";
 import { createFakeApi } from "@/lib/fake/fakeApi";
 import { sampleCitations } from "@/lib/fake/sampleData";
-import type { StreamEvent } from "@/lib/types";
+import type { Outcome, StreamEvent } from "@/lib/types";
 import { useChat } from "./useChat";
 
 // A client whose stream we script by hand, to test the hook's rules.
@@ -18,12 +18,10 @@ function scripted(events: StreamEvent[]): ApiClient {
 }
 
 const text = (t: string): StreamEvent => ({ type: "text", text: t });
-const citations = (list = sampleCitations): StreamEvent => ({
-  type: "citations", citations: list, dataAsOf: "2026-08-31", removedCount: 0,
+const citations = (list = sampleCitations, outcome: Outcome = "answered"): StreamEvent => ({
+  type: "citations", citations: list, outcome, dataAsOf: "2026-08-31", removedCount: 0, note: null,
 });
-const done = (outcome: "answered" | "not_found" = "answered"): StreamEvent => ({
-  type: "done", messageId: "m", outcome, answersLeft: 7,
-});
+const done = (): StreamEvent => ({ type: "done", messageId: "m", requestId: "r", answersLeft: 7 });
 
 const lastMessage = (r: { current: ReturnType<typeof useChat> }) =>
   r.current.messages[r.current.messages.length - 1];
@@ -61,17 +59,17 @@ describe("useChat", () => {
     expect(result.current.answersLeft).toBe(7);
   });
 
-  it("keeps the verified flag exactly as the API sent it (no tick promoted)", async () => {
+  it("keeps each citation's status exactly as the API sent it (no tick promoted)", async () => {
     const { result } = renderHook(() => useChat({ api: scripted([text("x"), citations(), done()]) }));
     await act(async () => {
       await result.current.send("q");
     });
-    const flags = lastMessage(result).citations!.map((c) => [c.source_id, c.verified]);
-    expect(flags).toEqual([["S1", true], ["S2", true], ["S3", false]]);
+    const flags = lastMessage(result).citations!.map((c) => [c.source_id, c.status]);
+    expect(flags).toEqual([["S1", "verified"], ["S2", "partly"], ["S3", "unverified"]]);
   });
 
   it("not-found outcome shows the not-found failure and no text", async () => {
-    const { result } = renderHook(() => useChat({ api: scripted([citations([]), done("not_found")]) }));
+    const { result } = renderHook(() => useChat({ api: scripted([citations([], "not_found"), done()]) }));
     await act(async () => {
       await result.current.send("q");
     });
@@ -98,6 +96,15 @@ describe("useChat", () => {
     expect(m.failure?.kind).toBe("service_error");
     expect(m.text).toBe("");
     expect(m.citations).toBeNull();
+  });
+
+  it("done with no citations event is a service error (never verified)", async () => {
+    const { result } = renderHook(() => useChat({ api: scripted([text("unchecked answer"), done()]) }));
+    await act(async () => {
+      await result.current.send("q");
+    });
+    expect(lastMessage(result).failure?.kind).toBe("service_error");
+    expect(lastMessage(result).text).toBe("");
   });
 
   it("a stream that stops without 'done' is a service error, not a silent success", async () => {
