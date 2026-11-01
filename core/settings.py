@@ -35,10 +35,10 @@ class Settings(BaseSettings):
     SEAL_KEY: SecretStr = SecretStr("")
 
     # --- AI gateway (LiteLLM) ---
-    MODEL_FREE: str = "gemini/gemini-2.5-flash-lite"
+    MODEL_FREE: str = "gemini/gemini-3.5-flash-lite"
     MODEL_STUDENT: str = "gemini/gemini-3.1-flash-lite"
     MODEL_PRO: str = "gemini/gemini-3.1-flash-lite"
-    MODEL_REWRITE: str = "gemini/gemini-2.5-flash-lite"
+    MODEL_REWRITE: str = "gemini/gemini-3.5-flash-lite"
     MODEL_FALLBACK: str = ""
     GEMINI_API_KEY: SecretStr = SecretStr("")
 

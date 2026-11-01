@@ -49,7 +49,7 @@ reads them from there.
 | Query embeddings | Voyage `voyage-4` | Only by re-embedding everything |
 | Re-ranker | Voyage `rerank-2.5-lite`; backup open-source bge-reranker | Any reranker behind the adapter |
 | AI model gateway | LiteLLM (Python library) | OpenRouter or a hosted gateway |
-| AI models | Free: Gemini 2.5 Flash-Lite (paid tier). Student/Pro: Gemini 3.1 Flash-Lite | Any model the gateway supports |
+| AI models | Free and query rewrite: Gemini 3.5 Flash-Lite (paid tier key). Student/Pro: Gemini 3.1 Flash-Lite | Any model the gateway supports |
 | Decision layer | **Jev** by TypeSafe AI (early access) | Gemini Flash-Lite with fixed choices |
 | Knowledge notes | OKF-style Markdown in `knowledge/`, advocate-reviewed | A table or graph store |
 | App database | PostgreSQL 16 in Docker, daily backups to S3 | AWS RDS |
