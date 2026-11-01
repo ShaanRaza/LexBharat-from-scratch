@@ -407,10 +407,14 @@ so each owns a folder and never edits another's. Shared files (`pyproject.toml`,
 
 | Lane | Owns | Builds |
 |---|---|---|
-| Core + Data | `core/`, `adapters/`, `data/`, `evals/`, `tests/core/` | adapters with fakes, verifier checks 1–3 + tests, one function per pipeline step, eval scaffold |
-| Platform | `api/`, `migrations/`, `docker-compose*.yml`, `.github/`, `tests/api/` | FastAPI routes, Alembic migrations per `docs/DATA-MODEL.md`, ARM-aware Docker, CI |
-| Web | `web/` | chat, citation ticks, failure screens, Act/judgment pages on the shared design tokens |
-| Reviewer | read-only | runs all tests and checks the work against §2 and §6; reports, does not fix |
+| core | `core/` (except `verify.py`, `gate.py`), `adapters/`, `tests/core/` | adapters with fakes, one function per pipeline step, `core/contracts.py` (shared types) |
+| trust | `core/verify.py`, `core/gate.py`, `evals/`, `tests/trust/` | verifier checks 1-4 and the gate, written WITH tests that try to break them; eval runner |
+| platform | `api/`, `migrations/`, `workers/`, `infra/`, `.github/`, `tests/api/`, `tests/migrations/`, `tests/integration/` | Alembic migrations, FastAPI routes, the API-to-pipeline bridge, Docker (ARM), CI |
+| web | `web/` | chat, citation ticks, failure screens, Act/judgment pages on the shared design tokens |
+| reviewer | read-only | checks each piece as it lands against §2, §5 and §6; reports, does not fix |
+
+Order (set as task dependencies by the lead): `core/contracts.py` and `api/schemas.py` come
+first; web's API client and platform's bridge start only after those two are done.
 
 Rules for every lane: use fakes for Voyage, Gemini, Jev, Firebase, S3, Razorpay (no real keys);
 state "not verified" for anything that was not actually run; commit small and often.
