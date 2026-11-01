@@ -1,0 +1,162 @@
+# The whole backend on one machine:  docker compose -f infra/docker-compose.yml up
+# (run from the repo root; add --env-file .env if you changed POSTGRES_PASSWORD)
+#
+# Services: postgres, redis, qdrant (data), migrate (one-off), api, worker.
+# The web app (Next.js) is the Web lane's; add it here when it has a Dockerfile.
+#
+# Rules this file enforces (CLAUDE.md sections 2 and 6, infra/README.md):
+#   * Only the API is reachable from outside. Postgres, Redis and Qdrant sit on a PRIVATE
+#     network with no published ports. (Reach Qdrant's dashboard through a tunnel only.)
+#   * The server is ARM (Graviton). Each image below says whether it has an ARM build,
+#     and how sure we are. CI (.github/workflows/docker.yml) re-checks them with
+#     `docker buildx imagetools inspect`, so a wrong claim here turns CI red.
+#   * Secrets: locally from .env (gitignored); on the server from AWS Secrets Manager,
+#     never a file on the box.
+
+name: kanoon
+
+networks:
+  # `internal: true` = containers on it cannot reach the internet. Data services live here.
+  private:
+    internal: true
+  # Outbound-capable network, for the API and worker (Firebase, Voyage, Gemini, S3...).
+  outbound: {}
+
+volumes:
+  pg_data: {}
+  qdrant_storage: {}
+  redis_data: {}
+
+# Settings shared by api, worker and migrate. Real values come from .env; the hostnames
+# postgres / qdrant / redis in .env.example are these service names.
+x-app-env: &app-env
+  env_file:
+    - path: ../.env
+      required: false # lets `docker compose config` and CI work before .env exists
+
+x-app-build: &app-build
+  context: ..
+  dockerfile: infra/Dockerfile
+
+services:
+  postgres:
+    # postgres:16-bookworm. ARM: YES - the Docker Official Image is multi-arch and
+    # includes arm64v8 (known from Docker Hub's official-image docs; not pulled here;
+    # CI verifies). PostgreSQL 16 matches docs/ARCHITECTURE.md.
+    image: postgres:16-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: kanoon
+      POSTGRES_DB: kanoon
+      # Blank/unset -> the local-dev password `kanoon`, which matches DATABASE_URL's
+      # default in core/settings.py. On the server set BOTH this and DATABASE_URL.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kanoon}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      # Creates the throw-away `kanoon_test` database (first start only) for the
+      # `tests` service. Tests refuse to run against any database not named *_test.
+      - ./postgres-init:/docker-entrypoint-initdb.d:ro
+    networks: [private]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kanoon -d kanoon"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    # redis:7-alpine. ARM: YES - Docker Official Image, multi-arch with arm64v8 (same
+    # basis as above; CI verifies). Holds the answer cache (7 days) and the job queue.
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"] # keep queued jobs across restarts
+    volumes:
+      - redis_data:/data
+    networks: [private]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  qdrant:
+    # qdrant/qdrant. ARM: LIKELY YES (Qdrant publishes linux/arm64 images) but UNVERIFIED
+    # from here: Docker Hub was not reachable. CI's imagetools check is the real test.
+    # The TAG IS UNVERIFIED TOO. It must be >= the Qdrant version that created the
+    # snapshot we restore (docs/DATA-MODEL.md, "Building kanoon_v1"). Check the local
+    # Qdrant's version and set QDRANT_IMAGE_TAG before the first restore.
+    image: qdrant/qdrant:${QDRANT_IMAGE_TAG:-v1.12.4}
+    restart: unless-stopped
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    networks: [private]
+    # No `ports:` on purpose. Qdrant starts slowly with big collections: allow 60 s+.
+    healthcheck:
+      # UNVERIFIED: assumes bash exists in the image (it is Debian based). Nothing waits
+      # on this check; it only feeds `docker compose ps`.
+      test: ["CMD-SHELL", "bash -c ':> /dev/tcp/127.0.0.1/6333'"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 60s
+
+  migrate:
+    # One-off job: bring the database schema up to date (rule 4: migrations only), then
+    # exit. The api and worker wait for it to finish successfully.
+    image: kanoon-api # same image as `api`: built once, used twice
+    build: { <<: *app-build, target: api }
+    <<: *app-env
+    command: ["alembic", "-c", "migrations/alembic.ini", "upgrade", "head"]
+    depends_on:
+      postgres: { condition: service_healthy }
+    networks: [private]
+    restart: "no"
+
+  api:
+    # ARM: builds natively on arm64 (python:3.12-slim-bookworm is multi-arch).
+    image: kanoon-api
+    build: { <<: *app-build, target: api }
+    <<: *app-env
+    restart: unless-stopped
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+      qdrant: { condition: service_started }
+    networks: [private, outbound]
+    # Bound to localhost: the HTTPS reverse proxy (not built yet) sits in front and is
+    # the only thing the internet talks to. Change deliberately, not by accident.
+    ports:
+      - "127.0.0.1:8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/healthz', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  worker:
+    # ARM: builds natively; Tesseract packages exist for arm64 on Debian.
+    build: { <<: *app-build, target: worker }
+    <<: *app-env
+    restart: unless-stopped
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+      qdrant: { condition: service_started }
+    networks: [private, outbound]
+    # OCR must never slow the chat down: ONE CPU and a fixed memory cap
+    # (infra/README.md). The one-job-at-a-time rule is in workers/main.py (max_jobs=1).
+    # 2g is an ESTIMATE, not measured: set it from real OCR runs on the 20 scans.
+    cpus: 1.0
+    mem_limit: 2g
+
+  # Run the tests inside Docker:
+  #   docker compose -f infra/docker-compose.yml --profile test run --rm tests
+  tests:
+    profiles: [test]
+    build: { <<: *app-build, target: test }
+    environment:
+      # A separate database, so the tests can reset it without touching real data.
+      TEST_DATABASE_URL: postgresql+psycopg://kanoon:${POSTGRES_PASSWORD:-kanoon}@postgres:5432/kanoon_test
+    depends_on:
+      postgres: { condition: service_healthy }
+    networks: [private]

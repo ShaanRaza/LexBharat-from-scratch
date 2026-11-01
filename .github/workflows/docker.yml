@@ -1,0 +1,81 @@
+# Docker checks. Runs only when something that affects the images changes.
+#
+# Why: the server is ARM (Graviton r7g), and a Docker image with no ARM build fails only
+# at deploy time. This job proves it earlier:
+#   1. the compose file is valid;
+#   2. every image in it has a linux/arm64 build on its registry;
+#   3. our own images really BUILD for linux/arm64 (under QEMU emulation, so it is slow);
+#   4. the tests pass inside Docker (rule 5: everything runs in Docker).
+
+name: Docker
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "infra/**"
+      - "pyproject.toml"
+      - "api/**"
+      - "core/**"
+      - "adapters/**"
+      - "workers/**"
+      - "migrations/**"
+      - ".github/workflows/docker.yml"
+  pull_request:
+    paths:
+      - "infra/**"
+      - "pyproject.toml"
+      - "api/**"
+      - "core/**"
+      - "adapters/**"
+      - "workers/**"
+      - "migrations/**"
+      - ".github/workflows/docker.yml"
+
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compose:
+    name: Compose file and ARM images
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compose file is valid
+        run: docker compose -f infra/docker-compose.yml --profile test config -q
+
+      - name: Third-party images have an ARM build
+        run: |
+          # Lists the images that are pulled (not built by us) and asks each registry
+          # whether a linux/arm64 variant exists.
+          fail=0
+          for image in $(docker compose -f infra/docker-compose.yml config --images | grep -v '^kanoon-'); do
+            if docker buildx imagetools inspect "$image" | grep -q 'linux/arm64'; then
+              echo "ok   $image has linux/arm64"
+            else
+              echo "::error::$image has NO linux/arm64 build (or the tag does not exist)"
+              fail=1
+            fi
+          done
+          exit $fail
+
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build our images for ARM (api, worker)
+        run: |
+          docker buildx build --platform linux/arm64 --target api    -f infra/Dockerfile .
+          docker buildx build --platform linux/arm64 --target worker -f infra/Dockerfile .
+
+  tests-in-docker:
+    name: Tests inside Docker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run API and migration tests against the Compose postgres
+        run: docker compose -f infra/docker-compose.yml --profile test run --rm --build tests
+      - name: Stop everything
+        if: always()
+        run: docker compose -f infra/docker-compose.yml --profile test down -v

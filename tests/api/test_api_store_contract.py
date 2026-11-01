@@ -102,8 +102,11 @@ class Backend:
 
 @pytest.fixture(scope="module")
 def migrated_db():
-    if not DB_URL:
-        pytest.skip("TEST_DATABASE_URL not set")
+    # These tests DROP the whole schema, so they only run on a database named *_test.
+    if not DB_URL or not (sa.engine.make_url(DB_URL).database or "").endswith("_test"):
+        pytest.skip(
+            "TEST_DATABASE_URL not set, or its database name does not end in _test"
+        )
     eng = sa.create_engine(DB_URL, poolclass=sa.pool.NullPool)
     with eng.begin() as c:
         c.execute(sa.text("DROP SCHEMA public CASCADE"))

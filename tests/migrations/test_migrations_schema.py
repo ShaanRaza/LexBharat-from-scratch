@@ -119,7 +119,12 @@ def test_offline_downgrade_sql_drops_everything():
 # ONLINE: needs a real PostgreSQL. Skipped (not failed) when none is configured.
 # ---------------------------------------------------------------------------------------
 DB_URL = os.environ.get("TEST_DATABASE_URL")
-needs_db = pytest.mark.skipif(not DB_URL, reason="TEST_DATABASE_URL not set")
+# These tests DROP the whole schema, so they only ever run on a database named *_test.
+_SAFE = bool(DB_URL) and (sa.engine.make_url(DB_URL).database or "").endswith("_test")
+needs_db = pytest.mark.skipif(
+    not _SAFE,
+    reason="TEST_DATABASE_URL not set, or its database name does not end in _test",
+)
 
 
 def reset_schema(engine) -> None:

@@ -11,12 +11,12 @@ updates:
       interval: weekly
     open-pull-requests-limit: 5
 
-  # Uncomment at build step 2, once pyproject.toml exists:
-  # - package-ecosystem: pip
-  #   directory: /
-  #   schedule:
-  #     interval: weekly
-  #   open-pull-requests-limit: 5
+  # pyproject.toml exists (build step 2), so this is on.
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
 
   # Uncomment at build step 4, once web/package.json exists:
   # - package-ecosystem: npm
@@ -25,9 +25,9 @@ updates:
   #     interval: weekly
   #   open-pull-requests-limit: 5
 
-  # Uncomment at build step 6, once infra/ holds a Dockerfile or compose file:
-  # - package-ecosystem: docker
-  #   directory: /infra
-  #   schedule:
-  #     interval: weekly
-  #   open-pull-requests-limit: 5
+  # infra/ now holds a Dockerfile, so this is on.
+  - package-ecosystem: docker
+    directory: /infra
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5

@@ -53,9 +53,10 @@ jobs:
       #       cd /srv/app &&
       #       git pull --ff-only &&
       #       docker compose -f infra/docker-compose.yml pull &&
-      #       docker compose -f infra/docker-compose.yml up -d --remove-orphans &&
-      #       docker compose -f infra/docker-compose.yml exec -T api alembic upgrade head
+      #       docker compose -f infra/docker-compose.yml up -d --remove-orphans
       #     '
+      #   # `up` also runs the one-off `migrate` service (alembic upgrade head) first;
+      #   # the api and worker only start once it has finished successfully.
       #
       # - name: Smoke test
       #   run: |

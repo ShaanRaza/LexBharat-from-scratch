@@ -30,6 +30,25 @@ jobs:
   python:
     name: Python
     runs-on: ubuntu-latest
+    # A real, throw-away PostgreSQL so the migration tests and the database-store tests
+    # run for real (they are skipped, not failed, when this is absent).
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: kanoon
+          POSTGRES_PASSWORD: kanoon
+          POSTGRES_DB: kanoon_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U kanoon -d kanoon_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      # Must end in _test: the tests drop and rebuild this database's tables.
+      TEST_DATABASE_URL: postgresql+psycopg://kanoon:kanoon@localhost:5432/kanoon_test
     steps:
       - uses: actions/checkout@v4
 

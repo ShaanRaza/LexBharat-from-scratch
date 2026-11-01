@@ -1,0 +1,21 @@
+# Keep the build context small and keep secrets out of images.
+.git
+.github
+.env
+.env.*
+!.env.example
+**/__pycache__
+**/*.pyc
+.pytest_cache
+.ruff_cache
+.venv
+web/node_modules
+web/.next
+node_modules
+*.parquet
+*.snapshot
+qdrant_storage
+data/local
+after-11-weeks
+docs
+team
