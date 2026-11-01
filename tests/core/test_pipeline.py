@@ -241,3 +241,12 @@ async def test_all_citations_failed_returns_not_found_but_logs(settings, store):
     assert res.outcome == "not_found" and res.answer is None and not res.counted
     assert res.removed and deps.citation_log.rows
     assert not deps.cache.data and deps.usage.counts == {}
+
+
+async def test_prose_without_any_source_marker_is_refused(settings, store):
+    deps = deps_for(
+        settings, store, llm=scripted(lambda w: "Bail is a right in many cases.")
+    )
+    res = await run_pipeline(PipelineRequest("u1", "Tell me about " + QUERY), deps)
+    assert res.outcome == "not_found" and res.answer is None and not res.counted
+    assert not deps.cache.data and deps.usage.counts == {}
