@@ -13,6 +13,9 @@ from contextvars import ContextVar
 from datetime import UTC, datetime
 from typing import Any, Protocol
 
+from core.settings import get_settings
+from core.spend import AiCall, summarise
+
 
 def slugify_act(act_name: str, year: int | None) -> str:
     base = re.sub(r"[^a-z0-9]+", "-", act_name.lower()).strip("-")
@@ -34,6 +37,21 @@ class Repo(Protocol):
         self, uid: str, email: str | None, name: str | None
     ) -> dict: ...
     async def answers_this_month(self, user_id: str) -> int: ...
+    async def record_ai_call(self, user_id: str, call: AiCall) -> None: ...
+    async def create_matter(self, user_id: str, title: str, kind: str) -> dict: ...
+    async def get_matter(self, user_id: str, matter_id: str) -> dict | None: ...
+    async def matter_document_ids(self, user_id: str, matter_id: str) -> list[str]: ...
+    async def delete_matter(
+        self, user_id: str, matter_id: str, delete_conversations: bool
+    ) -> int: ...
+    async def create_document(
+        self, user_id: str, filename: str, matter_id: str | None, text: str
+    ) -> str: ...
+    async def delete_document_rows(self, user_id: str, document_id: str) -> bool: ...
+    async def document_rows_remaining(self, document_id: str) -> int: ...
+    async def audit(self, user_id: str, action: str, target_id: str) -> None: ...
+    async def deleted_documents(self, days: int) -> list[tuple[str, str]]: ...
+    async def daily_ai_spend(self, days: int = 7) -> list[dict]: ...
     async def create_conversation(
         self, user_id: str, module: str, document_id: str | None
     ) -> dict: ...
@@ -75,8 +93,12 @@ class MemoryRepo:
         self.coverage: tuple[str, str] | None = ("2026-08-31", "v2026.08")
         self.feedback: list[dict] = []
         self.consents: dict[str, list[dict]] = {}
-        self.usage: dict[str, int] = {}
+        self.usage: dict[str, int] = {}  # ANSWERS per user (the meter)
+        self.ai_calls: list[tuple[str, AiCall]] = []  # helper calls: spend, not answers
         self.invented: list[dict] = []
+        self.matters: dict[str, dict] = {}
+        self.documents: dict[str, dict] = {}  # id -> {user_id, matter_id, text}
+        self.audit_rows: list[tuple[str, str, str]] = []
 
     async def upsert_user(self, uid, email, name):
         for u in self.users.values():
@@ -92,11 +114,96 @@ class MemoryRepo:
     async def answers_this_month(self, user_id):
         return self.usage.get(user_id, 0)
 
+    async def record_ai_call(self, user_id, call):
+        self.ai_calls.append((user_id, call))
+
+    async def daily_ai_spend(self, days=7):
+        today = _now().date()
+        rows = [
+            {"day": today, "feature": c.feature, "calls": 1,
+             "tokens_in": c.tokens_in, "tokens_out": c.tokens_out}
+            for _, c in self.ai_calls
+        ]  # fmt: skip
+        rows.append(
+            {"day": today, "feature": "answer", "calls": sum(self.usage.values()),
+             "tokens_in": 0, "tokens_out": 0}
+        )  # fmt: skip
+        return summarise(rows, get_settings())
+
+    # --- matters, documents, audit (A52) -------------------------------------------
+    async def create_matter(self, user_id, title, kind):
+        now = _now()
+        m = {
+            "id": str(uuid.uuid4()), "user_id": user_id, "title": title, "kind": kind,
+            "status": "active", "archived_at": None,
+            "created_at": now, "updated_at": now,
+        }  # fmt: skip
+        self.matters[m["id"]] = m
+        return dict(m)
+
+    async def get_matter(self, user_id, matter_id):
+        m = self.matters.get(matter_id)
+        if not m or m["user_id"] != user_id:  # another user's matter looks absent
+            return None
+        return dict(m)
+
+    async def matter_document_ids(self, user_id, matter_id):
+        return [
+            i
+            for i, d in self.documents.items()
+            if d["user_id"] == user_id and d["matter_id"] == matter_id
+        ]
+
+    async def delete_matter(self, user_id, matter_id, delete_conversations):
+        if await self.get_matter(user_id, matter_id) is None:
+            return 0
+        n = 0
+        for cid, c in list(self.convs.items()):
+            if c["user_id"] == user_id and c.get("matter_id") == matter_id:
+                if delete_conversations:
+                    del self.convs[cid]
+                    self.msgs.pop(cid, None)
+                    n += 1
+                else:
+                    c["matter_id"] = None  # unfiled
+        for d in self.documents.values():
+            if d["user_id"] == user_id and d["matter_id"] == matter_id:
+                d["matter_id"] = None  # only reachable in "unfile" mode
+        del self.matters[matter_id]
+        return n
+
+    async def create_document(self, user_id, filename, matter_id, text):
+        i = str(uuid.uuid4())
+        self.documents[i] = {"user_id": user_id, "matter_id": matter_id, "text": text}
+        return i
+
+    async def delete_document_rows(self, user_id, document_id):
+        d = self.documents.get(document_id)
+        if not d or d["user_id"] != user_id:
+            return False
+        del self.documents[document_id]
+        return True
+
+    async def document_rows_remaining(self, document_id):
+        return 1 if document_id in self.documents else 0
+
+    async def audit(self, user_id, action, target_id):
+        self.audit_rows.append((user_id, action, target_id))
+
+    async def deleted_documents(self, days):
+        seen = dict.fromkeys(
+            (u, t.split(":", 1)[1])
+            for u, a, t in self.audit_rows
+            if a == "delete" and t.startswith("document:")
+        )
+        return list(seen)
+
     async def create_conversation(self, user_id, module, document_id):
         c = {
             "id": str(uuid.uuid4()), "user_id": user_id, "module": module,
-            "document_id": document_id, "title": None, "message_count": 0,
-            "rolling_summary": "", "created_at": _now(), "updated_at": _now(),
+            "document_id": document_id, "matter_id": None, "title": None,
+            "message_count": 0, "rolling_summary": "",
+            "created_at": _now(), "updated_at": _now(),
         }  # fmt: skip
         self.convs[c["id"]] = c
         self.msgs[c["id"]] = []

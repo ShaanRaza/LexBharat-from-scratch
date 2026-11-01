@@ -101,6 +101,16 @@ class Settings(BaseSettings):
     PLAN_LIMIT_STUDENT: int | None = None
     PLAN_LIMIT_PRO: int | None = None
     PLAN_LIMIT_CHAMBERS: int | None = None
+    # Helper calls (the "Improve my question" helper and next-question suggestions) are
+    # NOT answers and never touch the plan limit (A52). They are rate-limited per user
+    # per hour instead. PLACEHOLDER numbers until the load test (PRD-v2 gate 14); None
+    # switches the limit off.
+    RATE_LIMIT_IMPROVE_PER_HOUR: int | None = 60
+    RATE_LIMIT_FOLLOWUPS_PER_HOUR: int | None = 60
+    # Model price per million tokens, in whatever currency the owner reads the spend
+    # view in. Unset = tokens only, no money (nothing is invented).
+    AI_PRICE_IN_PER_MTOK: float | None = None
+    AI_PRICE_OUT_PER_MTOK: float | None = None
     UPLOAD_MAX_MB: int | None = None
     UPLOAD_MAX_PAGES: int | None = None
 

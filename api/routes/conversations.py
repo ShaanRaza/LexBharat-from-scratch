@@ -12,6 +12,8 @@ from api import bridge
 from api import schemas as s
 from api.auth import CurrentUser, User
 from api.errors import ApiError, request_id_of
+from api.ratelimit import enforce_hourly, record_spend
+from core.spend import AiCall
 
 router = APIRouter()
 
@@ -134,11 +136,19 @@ async def followups(
     question = next(
         (m["content"] for m in reversed(msgs[:idx]) if m["role"] == "user"), ""
     )
+    cs = request.app.state.core_settings
+    await enforce_hourly(
+        request, user.id, "followups", cs.RATE_LIMIT_FOLLOWUPS_PER_HOUR
+    )
     try:
-        suggestions = await pipe.followups(question, msgs[idx]["content"])
+        out = await pipe.followups(question, msgs[idx]["content"])
     except Exception:  # noqa: BLE001 (optional feature: never fail, never echo)
-        suggestions = []
-    return s.FollowupsOut(suggestions=suggestions[:3])
+        return s.FollowupsOut(suggestions=[])
+    # A paid call, but not an answer: counted as spend, never against the answer limit.
+    await record_spend(
+        request, user.id, AiCall("followups", out.tokens_in, out.tokens_out, out.model)
+    )
+    return s.FollowupsOut(suggestions=out.suggestions[:3])
 
 
 @router.post("/prompts/improve", response_model=s.ImproveOut)
@@ -150,8 +160,13 @@ async def improve_question(
     pipe = request.app.state.pipeline
     if pipe is None:
         raise ApiError(503, "service_unavailable", "The helper is unavailable.")
+    cs = request.app.state.core_settings
+    await enforce_hourly(request, user.id, "improve", cs.RATE_LIMIT_IMPROVE_PER_HOUR)
     try:
         out = await pipe.improve(body.text)
     except Exception:  # noqa: BLE001 (the helper is optional: keep the user's text)
         return s.ImproveOut(text=body.text, changed=False)
+    await record_spend(
+        request, user.id, AiCall("improve", out.tokens_in, out.tokens_out, out.model)
+    )
     return s.ImproveOut(text=out.text, changed=out.changed)

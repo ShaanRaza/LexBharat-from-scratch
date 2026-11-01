@@ -107,7 +107,7 @@ async def test_suggestions_are_filtered_after_the_model_and_never_see_labels():
         "What is bail?", "Bail is the rule [S1]. Jail is the exception (S2).",
         _Deps(FakeLLM(respond)),
     )  # fmt: skip
-    assert out == [GOOD[0], GOOD[1]]
+    assert out.suggestions == [GOOD[0], GOOD[1]]
     assert not re.search(r"\[S\d\]|\(S\d\)", seen[0])  # the model never sees S-labels
 
 
@@ -115,7 +115,7 @@ async def test_suggestions_are_filtered_after_the_model_and_never_see_labels():
     "reply", ["not json", "{}", '{"questions": "x"}', "[]", "null"]
 )
 async def test_junk_from_the_model_gives_no_suggestions(reply):
-    assert await suggest_followups("q", "a", _Deps(FakeLLM(reply))) == []
+    assert (await suggest_followups("q", "a", _Deps(FakeLLM(reply)))).suggestions == []
 
 
 async def test_model_down_gives_no_suggestions_not_an_error():
@@ -123,7 +123,7 @@ async def test_model_down_gives_no_suggestions_not_an_error():
         async def complete(self, *a, **k):
             raise LLMUnavailable("down")
 
-    assert await suggest_followups("q", "a", _Deps(Down())) == []
+    assert (await suggest_followups("q", "a", _Deps(Down()))).suggestions == []
 
 
 # ---- improve my question ---------------------------------------------------------

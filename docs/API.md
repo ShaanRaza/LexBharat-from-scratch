@@ -45,9 +45,10 @@ the login check. Judgment titles are never sent (they are party names).
 | `GET /documents/{id}` | Upload status |
 | `DELETE /documents/{id}` | **Hard delete**: file, text and vectors |
 | `POST /feedback` | Thumbs up/down plus a comment |
-| `POST /conversations/{id}/messages/{mid}/followups` | Up to 3 next-question suggestions for a saved answer. Questions only, no citation marker. Not a pipeline step; not metered |
-| `POST /prompts/improve` | "Improve my question": editable text for the input box (`{text, changed}`). Never contains a citation. Not a pipeline step; not metered |
+| `POST /conversations/{id}/messages/{mid}/followups` | Up to 3 next-question suggestions for a saved answer. Questions only, no citation marker. Not a pipeline step; **not an answer, never uses the answer limit**; rate-limited per user per hour (`RATE_LIMIT_FOLLOWUPS_PER_HOUR`, 429 `rate_limited`); counted in the daily AI spend |
+| `POST /prompts/improve` | "Improve my question": editable text for the input box (`{text, changed}`). Never contains a citation. Not a pipeline step; **never uses the answer limit**; rate-limited per user per hour (`RATE_LIMIT_IMPROVE_PER_HOUR`); counted in the daily AI spend |
 | `POST /billing/webhook` | Razorpay events (**signature checked**, no Firebase token) |
+| `DELETE /matters/{id}?mode=unfile\|everything` | Delete a matter. **`mode` is required** (the user is asked): `unfile` deletes the matter only and its work moves to unfiled; `everything` deletes the matter, its conversations and its uploads, and the uploads are genuinely hard-deleted (S3 file, every vector, database text), then re-checked. If an upload cannot be fully deleted the matter is kept (503) |
 | `GET /coverage` | What the dataset covers: the coverage sentence, the courts and instruments, what is excluded, a `placeholder`/`measured` status, the data-as-of date, credit and notice. **Public, no login.** Every word comes from `core/coverage.json` (decision A51). Never invents a category |
 | `GET /stats` | Public outcome counts by court, year and outcome label. **No login.** Supreme Court only until Phase 2 |
 | `GET /sitemap.xml` | Every public Act and stats page, for Google (served by the website) |

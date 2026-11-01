@@ -14,7 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.auth import DenyAllAuth
 from api.config import ApiSettings, get_api_settings
 from api.errors import RequestIdMiddleware, install_error_handlers
-from api.routes import content, conversations, me, misc
+from api.routes import content, conversations, matters, me, misc
 
 PREFIX = "/api/v1"
 
@@ -25,6 +25,8 @@ def create_app(
     repo=None,
     verifier=None,
     pipeline=None,
+    limiter=None,
+    docs=None,
 ) -> FastAPI:
     api_settings = api_settings or get_api_settings()
     if core_settings is None:
@@ -66,6 +68,27 @@ def create_app(
 
         app.state.pipeline = build_pipeline(core_settings, repo)
 
+    if limiter is None:
+        if api_settings.APP_ENV in ("development", "test"):
+            from adapters.cache import FakeRateLimiter
+
+            limiter = FakeRateLimiter()
+        else:
+            from adapters.cache import RedisRateLimiter
+
+            limiter = RedisRateLimiter(core_settings)
+    app.state.limiter = limiter
+
+    # Document delete machinery (S3, Qdrant uploads, document rows). Fakes only in
+    # development/test; in production it is wired when uploads are (FEATURE_UPLOADS).
+    if docs is None and api_settings.APP_ENV in ("development", "test"):
+        from adapters.qdrant import FakeVectorStore
+        from adapters.s3 import FakeFileStore
+        from core.doc_delete import DocServices
+
+        docs = DocServices(FakeFileStore(), FakeVectorStore(core_settings), repo)
+    app.state.docs = docs
+
     app.add_middleware(RequestIdMiddleware)
     app.add_middleware(
         CORSMiddleware,
@@ -75,6 +98,12 @@ def create_app(
         expose_headers=["X-Request-ID"],
     )
     install_error_handlers(app)
-    for r in (me.router, conversations.router, content.router, misc.router):
+    for r in (
+        me.router,
+        conversations.router,
+        matters.router,
+        content.router,
+        misc.router,
+    ):
         app.include_router(r, prefix=PREFIX)
     return app

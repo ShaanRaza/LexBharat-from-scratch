@@ -30,12 +30,13 @@ def repo():
 @pytest.fixture
 def make_client(repo):
     def _make(**kw):
+        core_settings = kw.pop("core_settings", None) or Settings()
         app = create_app(
             api_settings=kw.pop(
                 "api_settings",
                 ApiSettings(APP_ENV="test", WEB_ORIGIN="https://web.example"),
             ),
-            core_settings=Settings(),
+            core_settings=core_settings,
             repo=repo,
             verifier=kw.pop("verifier", FakeAuth()),
             pipeline=kw.pop("pipeline", FakePipeline(repo)),

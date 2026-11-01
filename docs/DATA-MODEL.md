@@ -45,6 +45,16 @@ table that stores an answer (saved copies, exports, share links) copies these tw
 Not created yet, on purpose: memory tables (`memory_preferences`, `matter_facts`). Memory
 retention (O13) is not settled.
 
+## AI spend view
+
+`ai_spend_daily` (a view, migration 0007) lists, per day and feature, the calls and tokens
+of every paid model call we can count: answers (from `messages`, cache hits excluded) and
+the two helpers `improve` and `followups` (from `usage_daily`, which stores their tokens
+under their own feature name). No money is stored: it is worked out when read from
+`AI_PRICE_IN_PER_MTOK` / `AI_PRICE_OUT_PER_MTOK`. **The answer meter counts only the
+`research` rows**, so helper calls never use the answer limit. Not counted yet (existing
+gap): tokens of the rewrite, gate and decision calls.
+
 ## Conversations and trust
 
 | Table | Key fields |

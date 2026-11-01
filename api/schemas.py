@@ -290,6 +290,12 @@ class MatterOut(BaseModel):
     updated_at: datetime
 
 
+class MatterDeleted(BaseModel):
+    mode: Literal["unfile", "everything"]
+    documents_deleted: int
+    conversations_deleted: int
+
+
 class AnswerProvenance(BaseModel):
     """Did the user's own material shape this stored answer? (Not the same thing as
     `Provenance` above, which is the data-as-of block.) Written when the answer is

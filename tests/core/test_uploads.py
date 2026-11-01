@@ -65,6 +65,9 @@ def test_only_the_shared_function_queries_uploads():
         for f in (ROOT / base).rglob("*.py"):
             if f.name == "uploads.py" and base == "core":
                 continue
-            if re.search(r"\.search_uploads\(", f.read_text()):
+            if re.search(
+                r"\.(search_uploads|delete_upload_vectors|count_upload_vectors)\(",
+                f.read_text(),
+            ):
                 offenders.append(str(f.relative_to(ROOT)))
     assert offenders == []

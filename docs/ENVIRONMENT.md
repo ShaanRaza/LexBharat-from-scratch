@@ -31,6 +31,7 @@ hard-code either string.**
 | Firebase | `FIREBASE_PROJECT_ID`, `FIREBASE_CREDENTIALS_JSON` | Login only |
 | Razorpay | `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET` | **Always verify the webhook signature** |
 | Monitoring | `LANGFUSE_*`, `SENTRY_DSN` | Langfuse masked, Sentry scrubbed |
+| Helper limits | `RATE_LIMIT_IMPROVE_PER_HOUR`, `RATE_LIMIT_FOLLOWUPS_PER_HOUR`, `AI_PRICE_IN_PER_MTOK`, `AI_PRICE_OUT_PER_MTOK` | Per user per hour for the two helpers that call a model but are not answers (A52, A54). **Placeholder 60**; empty switches a limit off. Prices are per million tokens; empty = the spend view shows tokens only |
 | Limits | `PLAN_LIMIT_FREE`, `PLAN_LIMIT_STUDENT`, `PLAN_LIMIT_PRO`, `PLAN_LIMIT_CHAMBERS`, `UPLOAD_MAX_MB`, `UPLOAD_MAX_PAGES` | Upload limits **undecided** — set from OCR time on real scans |
 | Feature switches | `FEATURE_UPLOADS`, `FEATURE_STATS_LIVE`, `FEATURE_MODEL_ROUTING`, `FEATURE_HINDI` | **All off at launch** except as the gates allow |
 

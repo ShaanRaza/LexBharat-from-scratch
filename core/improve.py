@@ -30,6 +30,9 @@ MAX_LENGTH = 1000
 class Improved:
     text: str  # editable text for the input box
     changed: bool  # False when the helper could not improve it (text == the user's own)
+    tokens_in: int = 0  # what the model call cost, for the spend view (A52)
+    tokens_out: int = 0
+    model: str = ""
 
 
 def safe_improvement(original: str, improved: str) -> str | None:
@@ -59,7 +62,8 @@ async def improve_question(text: str, deps: Deps) -> Improved:
     except LLMUnavailable:
         log.warning("improve helper unavailable")
         return Improved(original, False)
+    usage = dict(tokens_in=r.input_tokens, tokens_out=r.output_tokens, model=r.model)
     safe = safe_improvement(original, r.text)
     if safe is None or safe == original:
-        return Improved(original, False)
-    return Improved(safe, True)
+        return Improved(original, False, **usage)  # the call was paid for: counted
+    return Improved(safe, True, **usage)

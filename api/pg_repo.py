@@ -18,6 +18,7 @@ from sqlalchemy import Engine, create_engine, text
 from starlette.concurrency import run_in_threadpool
 
 from api.repo import _last_message, slugify_act, split_paragraphs
+from core.spend import summarise
 
 _REASON = {
     "not_retrieved": "not retrieved",
@@ -75,7 +76,8 @@ class PgRepo:
     async def answers_this_month(self, user_id):
         rows = await self._rows(
             """SELECT COALESCE(SUM(requests), 0) AS n FROM usage_daily
-               WHERE user_id = :u AND date >= date_trunc('month', current_date)""",
+               WHERE user_id = :u AND feature = 'research'
+                 AND date >= date_trunc('month', current_date)""",
             u=user_id,
         )
         return int(rows[0]["n"])
@@ -281,6 +283,116 @@ class PgRepo:
                DO UPDATE SET requests = usage_daily.requests + 1, updated_at = now()""",
             u=user_id,
         )
+
+    # --- matters, documents, audit (A52) -------------------------------------------
+    async def create_matter(self, user_id, title, kind):
+        rows = await self._exec(
+            """INSERT INTO matters (user_id, title, kind) VALUES (:u, :t, :k)
+               RETURNING *""",
+            u=user_id, t=title, k=kind,
+        )  # fmt: skip
+        return self._s(rows[0])
+
+    async def get_matter(self, user_id, matter_id):
+        rows = await self._rows(
+            "SELECT * FROM matters WHERE id = :m AND user_id = :u",
+            m=matter_id,
+            u=user_id,
+        )  # user_id filter: another user's matter looks absent
+        return self._s(rows[0]) if rows else None
+
+    async def matter_document_ids(self, user_id, matter_id):
+        rows = await self._rows(
+            "SELECT id FROM documents WHERE matter_id = :m AND user_id = :u",
+            m=matter_id, u=user_id,
+        )  # fmt: skip
+        return [str(r["id"]) for r in rows]
+
+    async def delete_matter(self, user_id, matter_id, delete_conversations):
+        """Deletes the matter row. Its conversations and documents become unfiled
+        (ON DELETE SET NULL) unless `delete_conversations`, which removes the
+        conversations (and their messages) first. Documents are NEVER deleted here:
+        core/doc_delete.py does that, with S3 and Qdrant, before this is called."""
+        n = 0
+        if delete_conversations:
+            rows = await self._exec(
+                "DELETE FROM conversations WHERE matter_id = :m AND user_id = :u RETURNING id",
+                m=matter_id, u=user_id,
+            )  # fmt: skip
+            n = len(rows)
+        await self._exec(
+            "DELETE FROM matters WHERE id = :m AND user_id = :u RETURNING id",
+            m=matter_id, u=user_id,
+        )  # fmt: skip
+        return n
+
+    async def create_document(self, user_id, filename, matter_id, text):
+        rows = await self._exec(
+            """INSERT INTO documents (user_id, filename, mime_type, size_bytes, status,
+                   matter_id) VALUES (:u, :f, 'application/pdf', :s, 'ready', :m)
+               RETURNING id""",
+            u=user_id, f=filename, s=len(text), m=matter_id,
+        )  # fmt: skip
+        doc_id = str(rows[0]["id"])
+        await self._exec(
+            """INSERT INTO document_chunks (document_id, page_no, char_start, char_end,
+                   text) VALUES (:d, 1, 0, :e, :t)""",
+            d=doc_id, e=len(text), t=text,
+        )  # fmt: skip
+        return doc_id
+
+    async def delete_document_rows(self, user_id, document_id):
+        rows = await self._exec(
+            "DELETE FROM documents WHERE id = :d AND user_id = :u RETURNING id",
+            d=document_id, u=user_id,
+        )  # fmt: skip
+        return bool(rows)  # document_chunks go with it (ON DELETE CASCADE)
+
+    async def document_rows_remaining(self, document_id):
+        rows = await self._rows(
+            """SELECT (SELECT count(*) FROM documents WHERE id = :d)
+                    + (SELECT count(*) FROM document_chunks WHERE document_id = :d) AS n""",
+            d=document_id,
+        )  # fmt: skip
+        return int(rows[0]["n"])
+
+    async def audit(self, user_id, action, target_id):
+        await self._exec(
+            "INSERT INTO audit_log (user_id, action, target_id) VALUES (:u, :a, :t)",
+            u=user_id, a=action, t=target_id,
+        )  # fmt: skip
+
+    async def deleted_documents(self, days):
+        rows = await self._rows(
+            """SELECT DISTINCT user_id, substr(target_id, 10) AS document_id
+               FROM audit_log
+               WHERE action = 'delete' AND target_id LIKE 'document:%'
+                 AND user_id IS NOT NULL AND at > now() - make_interval(days => :n)""",
+            n=days,
+        )  # fmt: skip
+        return [(str(r["user_id"]), r["document_id"]) for r in rows]
+
+    # --- helper calls: counted as spend, never as answers (A52) -----------------------
+    async def record_ai_call(self, user_id, call) -> None:
+        await self._exec(
+            """INSERT INTO usage_daily (user_id, date, feature, requests, tokens_in,
+                   tokens_out)
+               VALUES (:u, current_date, :f, 1, :ti, :to)
+               ON CONFLICT (user_id, date, feature) DO UPDATE SET
+                   requests = usage_daily.requests + 1,
+                   tokens_in = usage_daily.tokens_in + :ti,
+                   tokens_out = usage_daily.tokens_out + :to,
+                   updated_at = now()""",
+            u=user_id, f=call.feature, ti=call.tokens_in, to=call.tokens_out,
+        )  # fmt: skip
+
+    async def daily_ai_spend(self, days: int = 7) -> list[dict]:
+        rows = await self._rows(
+            """SELECT day, feature, calls, tokens_in, tokens_out FROM ai_spend_daily
+               WHERE day > current_date - :n""",
+            n=days,
+        )
+        return summarise(rows, self.settings)
 
     # --- core's ConversationStore (pipeline step 11, Save) -----------------------
     async def save(self, request: Any, result: Any) -> None:

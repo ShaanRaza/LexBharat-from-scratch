@@ -28,3 +28,22 @@ async def search_user_documents(
     if len(safe) != len(hits):
         raise PermissionError("store returned another user's upload record")
     return safe
+
+
+async def delete_user_document_vectors(
+    store: VectorStore, user_id: str, document_id: str
+) -> None:
+    """Hard delete of one document's vectors. Needs BOTH ids (the store filters on
+    both), so deleting by document_id alone cannot touch another user's file."""
+    if not user_id or not user_id.strip() or not document_id or not document_id.strip():
+        raise PermissionError("user_id and document_id are required")
+    await store.delete_upload_vectors(user_id, document_id)
+
+
+async def count_user_document_vectors(
+    store: VectorStore, user_id: str, document_id: str
+) -> int:
+    """How many vectors a document still has: the leftover check."""
+    if not user_id or not user_id.strip() or not document_id or not document_id.strip():
+        raise PermissionError("user_id and document_id are required")
+    return await store.count_upload_vectors(user_id, document_id)

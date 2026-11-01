@@ -110,6 +110,15 @@ class VectorStore(Protocol):
         to another user."""
         ...
 
+    async def delete_upload_vectors(self, user_id: str, document_id: str) -> None:
+        """Hard delete: every vector of this document (matched on BOTH user_id and
+        document_id). Only core/uploads.py may call this."""
+        ...
+
+    async def count_upload_vectors(self, user_id: str, document_id: str) -> int:
+        """How many vectors this document still has (the leftover check)."""
+        ...
+
 
 class _Points:
     """Gives scroll() results the same `.points` shape as query_points()."""
@@ -268,6 +277,49 @@ class QdrantStore:
             raise VectorStoreUnavailable(str(e)) from e
         return [self._hit(p) for p in r.points]
 
+    def _doc_filter(self, user_id: str, document_id: str):
+        from qdrant_client import models
+
+        return models.Filter(
+            must=[
+                models.FieldCondition(
+                    key="user_id", match=models.MatchValue(value=user_id)
+                ),
+                models.FieldCondition(
+                    key="document_id", match=models.MatchValue(value=document_id)
+                ),
+            ]
+        )
+
+    async def delete_upload_vectors(self, user_id, document_id):
+        if not user_id or not document_id:
+            raise PermissionError("user_id and document_id are required")
+        from qdrant_client import models
+
+        try:
+            await self._c().delete(
+                self._s.QDRANT_UPLOADS_COLLECTION,
+                points_selector=models.FilterSelector(
+                    filter=self._doc_filter(user_id, document_id)
+                ),
+                wait=True,
+            )
+        except Exception as e:
+            raise VectorStoreUnavailable(str(e)) from e
+
+    async def count_upload_vectors(self, user_id, document_id):
+        if not user_id or not document_id:
+            raise PermissionError("user_id and document_id are required")
+        try:
+            r = await self._c().count(
+                self._s.QDRANT_UPLOADS_COLLECTION,
+                count_filter=self._doc_filter(user_id, document_id),
+                exact=True,
+            )
+        except Exception as e:
+            raise VectorStoreUnavailable(str(e)) from e
+        return int(r.count)
+
     async def get_record(self, collection, record_id, user_id=None):
         is_upload = collection == self._s.QDRANT_UPLOADS_COLLECTION
         if is_upload and not user_id:
@@ -362,6 +414,30 @@ class FakeVectorStore:
             and (not document_ids or h.payload["document_id"] in document_ids)
         ]
         return self._rank(pool, text, limit)
+
+    async def delete_upload_vectors(self, user_id, document_id):
+        self._check()
+        if not user_id or not document_id:
+            raise PermissionError("user_id and document_id are required")
+        self.uploads = [
+            h
+            for h in self.uploads
+            if not (
+                h.payload["user_id"] == user_id
+                and h.payload["document_id"] == document_id
+            )
+        ]
+
+    async def count_upload_vectors(self, user_id, document_id):
+        self._check()
+        if not user_id or not document_id:
+            raise PermissionError("user_id and document_id are required")
+        return sum(
+            1
+            for h in self.uploads
+            if h.payload["user_id"] == user_id
+            and h.payload["document_id"] == document_id
+        )
 
     async def get_record(self, collection, record_id, user_id=None):
         self._check()

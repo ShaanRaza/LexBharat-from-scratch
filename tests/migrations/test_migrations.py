@@ -78,7 +78,7 @@ def test_upgrade_downgrade_upgrade_on_real_postgres(scratch_db_url):
     with engine.connect() as c:
         assert (
             c.execute(text("select version_num from alembic_version")).scalar()
-            == "0006"
+            == "0007"
         )
     engine.dispose()
 
@@ -133,4 +133,20 @@ def test_matters_matter_id_and_provenance_flags(scratch_db_url):
         c.execute(text("update conversations set matter_id=:m"), {"m": mid})
         c.execute(text("delete from matters where id=:m"), {"m": mid})
         assert c.execute(text("select matter_id from conversations")).scalar() is None
+    engine.dispose()
+
+
+@pytest.mark.skipif(
+    not os.environ.get("TEST_DATABASE_URL"), reason="TEST_DATABASE_URL not set"
+)
+def test_ai_spend_view_exists_and_is_removed_on_downgrade(scratch_db_url):
+    _alembic("upgrade", "head", url=scratch_db_url)
+    engine = create_engine(scratch_db_url)
+    assert "ai_spend_daily" in inspect(engine).get_view_names()
+    with engine.connect() as c:  # readable, and empty on a fresh database
+        assert c.execute(text("select count(*) from ai_spend_daily")).scalar() == 0
+    _alembic("downgrade", "0006", url=scratch_db_url)
+    assert (
+        "ai_spend_daily" not in inspect(create_engine(scratch_db_url)).get_view_names()
+    )
     engine.dispose()

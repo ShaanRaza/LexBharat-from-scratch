@@ -13,6 +13,7 @@ import json
 import logging
 import re
 from collections.abc import Iterable
+from dataclasses import dataclass
 from pathlib import Path
 
 from adapters.llm import LLMUnavailable
@@ -34,6 +35,14 @@ _QUESTION_WORDS = (
 )
 _STARTS_LIKE_QUESTION = re.compile(rf"^(?:{_QUESTION_WORDS})\b", re.IGNORECASE)
 _MARKER_IN_ANSWER = re.compile(r"\s*[\[(]\s*S\d+(?:\s*[,;]\s*S\d+)*\s*[\])]")
+
+
+@dataclass(frozen=True)
+class Followups:
+    suggestions: list[str]
+    tokens_in: int = 0  # what the model call cost, for the spend view (A52)
+    tokens_out: int = 0
+    model: str = ""
 
 
 def clean_followups(
@@ -60,20 +69,26 @@ def clean_followups(
     return out
 
 
-async def suggest_followups(question: str, answer_text: str, deps: Deps) -> list[str]:
-    """Input: the question and the VERIFIED, saved answer text. Output: 0-3 questions.
-    Any failure returns [] (follow-ups are optional and must never block an answer)."""
+async def suggest_followups(question: str, answer_text: str, deps: Deps) -> Followups:
+    """Input: the question and the VERIFIED, saved answer text. Output: 0-3 questions
+    plus the tokens the call used. Any failure returns no suggestions (follow-ups are
+    optional and must never block an answer)."""
     plain = _MARKER_IN_ANSWER.sub("", answer_text)  # the model never sees S-labels
     prompt = _PROMPT.read_text().format(question=question, answer=plain)
     try:
         r = await deps.llm.complete(
             prompt, model=deps.settings.MODEL_REWRITE, max_tokens=300
         )
+    except LLMUnavailable:
+        log.warning("follow-up suggestions unavailable")
+        return Followups([])
+    usage = dict(tokens_in=r.input_tokens, tokens_out=r.output_tokens, model=r.model)
+    try:
         data = json.loads(r.text)
         candidates = data["questions"]
         if not isinstance(candidates, list):
             raise TypeError("questions must be a list")
-    except (LLMUnavailable, ValueError, KeyError, TypeError):
-        log.warning("follow-up suggestions unavailable")
-        return []
-    return clean_followups(candidates)
+    except (ValueError, KeyError, TypeError):
+        log.warning("follow-up suggestions unparseable")
+        return Followups([], **usage)  # the call was paid for: still counted
+    return Followups(clean_followups(candidates), **usage)
