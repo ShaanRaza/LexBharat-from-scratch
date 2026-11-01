@@ -49,6 +49,7 @@ class Settings(BaseSettings):
 
     # --- Jev (TypeSafe AI) ---
     JEV_API_KEY: SecretStr = SecretStr("")
+    JEV_MODEL: str = "jev-latest"  # name from the API docs; not verified live
     JEV_TIMEOUT_MS: int = 800
     JEV_GATE_THRESHOLD: float = 0.6
     JEV_ENABLED_SCOPE: bool = False

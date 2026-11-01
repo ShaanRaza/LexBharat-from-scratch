@@ -60,23 +60,6 @@ def _prompt(name: str, **kw: str) -> str:
     return (_PROMPTS / f"{name}.txt").read_text().format(**kw)
 
 
-class JevClient:
-    """Real Jev (TypeSafe AI, early access). The API is not documented in this repo,
-    so this raises until wired; the fallback then decides. Not verified."""
-
-    def __init__(self, settings: Settings):
-        self._s = settings
-
-    async def decide(self, query: str, *, uploads: bool = False) -> Decision:
-        raise DecisionUnavailable("Jev client not wired yet")
-
-    async def rate_passage(self, query: str, passage: Passage) -> tuple[Rating, float]:
-        raise DecisionUnavailable("Jev client not wired yet")
-
-    async def claim_support(self, sentence: str, passage: Passage) -> Support:
-        raise DecisionUnavailable("Jev client not wired yet")
-
-
 class GeminiDecider:
     """Fixed-choice decisions through the LLM adapter. Strict parsing: anything outside
     the allowed choices is an error, never a guess."""
@@ -155,7 +138,8 @@ class FallbackDecisions:
 
     async def decide(self, query: str, *, uploads: bool = False) -> Decision:
         s = self._s
-        on = s.JEV_ENABLED_SCOPE and s.JEV_ENABLED_FILTERS and s.JEV_ENABLED_SAFETY
+        # Jev answers scope + safety; filters stay on the rewrite step (see jev.py).
+        on = s.JEV_ENABLED_SCOPE and s.JEV_ENABLED_SAFETY
         return await self._run(on, uploads, lambda b: b.decide(query, uploads=uploads))
 
     async def rate_passage(self, query: str, passage: Passage) -> tuple[Rating, float]:
