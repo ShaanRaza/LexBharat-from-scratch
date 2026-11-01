@@ -3,8 +3,9 @@
 import { API_BASE_URL, FAKE_STEP_DELAY_MS, USE_FAKE_API } from "@/lib/config";
 import { fakeAnswerFor, FAKE_ANSWER_TEXT, FAKE_CASES, FAKE_CITATIONS, FAKE_COVERAGE, FAKE_ME, FAKE_PROVENANCE, FAKE_SECTIONS, FAKE_STATS, FAKE_STATS_EMPTY } from "@/lib/fake/data";
 import { fakeConversationDetail, fakeDb, fakeRecordTurn, fakeStoredAnswer, fakeVariant, nextId, persistFakeDb, withCounts } from "@/lib/fake/store";
+import { FAKE_EVAL_TOTAL, FAKE_HELP, FAKE_INVENTED, FAKE_PLANS, FAKE_SPEND, fakeEvalAt, launchDb } from "@/lib/fake/launch";
 import { createSseParser } from "./sse";
-import type { ApiErrorBody, CaseOut, ShareCreated, ShareLink, SharedAnswerOut, ConsentIn, ConversationDetail, ConversationOut, CoverageOut, FollowupsOut, HistoryHit, MatterDeleteMode, MatterDeleted, MatterDetail, MatterKind, MatterOut, MatterStatus, ImproveOut, MeOut, SectionOut, StatsOut, StepEventData, StreamEvent } from "./types";
+import type { ConsentRow, EvalRun, HelpArticle, InventedRow, PlanOut, ReportReason, ReportRow, SpendRow, SupportIn, ApiErrorBody, CaseOut, ShareCreated, ShareLink, SharedAnswerOut, ConsentIn, ConversationDetail, ConversationOut, CoverageOut, FollowupsOut, HistoryHit, MatterDeleteMode, MatterDeleted, MatterDetail, MatterKind, MatterOut, MatterStatus, ImproveOut, MeOut, SectionOut, StatsOut, StepEventData, StreamEvent } from "./types";
 
 const BASE = `${API_BASE_URL}/api/v1`;
 
@@ -360,4 +361,124 @@ export async function getShared(token: string): Promise<SharedAnswerOut> {
   const res = await fetch(`${BASE}/s/${encodeURIComponent(token)}`, { cache: "no-store" });
   if (!res.ok) throw await failure(res);
   return res.json() as Promise<SharedAnswerOut>;
+}
+
+// ---- Launch pages ---------------------------------------------------------------------
+// Each function says which API route it needs. "EXISTS" means api/ already has it; "NEEDED"
+// means it does not, so only fake mode works today and the real call will fail with a
+// plain error (the screen shows it).
+const wait = (ms = 150) => new Promise<void>((r) => setTimeout(r, USE_FAKE_API ? Math.min(ms, FAKE_STEP_DELAY_MS) : 0));
+
+// GET /plans  (NEEDED) -> { items: PlanOut[] }. Prices and limits come from the server's plan tables.
+export async function getPlans(): Promise<PlanOut[]> {
+  if (USE_FAKE_API) return FAKE_PLANS;
+  return (await getJson<{ items: PlanOut[] }>("/plans")).items;
+}
+
+// GET /me/consents  (EXISTS) -> { items: ConsentRow[] }
+export async function listConsents(): Promise<ConsentRow[]> {
+  if (USE_FAKE_API) return structuredClone(launchDb.consents);
+  return (await getJson<{ items: ConsentRow[] }>("/me/consents")).items;
+}
+
+// DELETE /me/consents  (EXISTS) body { consent_id }
+export async function withdrawConsent(id: string): Promise<void> {
+  if (USE_FAKE_API) {
+    const c = launchDb.consents.find((x) => x.id === id);
+    if (!c) throw notFound();
+    c.withdrawn_at = new Date().toISOString();
+    return;
+  }
+  await sendJson<{ ok: boolean }>("DELETE", "/me/consents", { consent_id: id });
+}
+
+// GET /me/export  (EXISTS but returns 501 "not built yet") -> a copy of the user's data
+export async function requestExport(): Promise<{ ready: boolean }> {
+  if (USE_FAKE_API) {
+    await wait();
+    return { ready: true };
+  }
+  return getJson("/me/export");
+}
+
+// DELETE /me  (EXISTS but returns 501 "not built yet") -> { ok: true }
+export async function deleteAccount(): Promise<void> {
+  if (USE_FAKE_API) {
+    await wait();
+    return;
+  }
+  await sendJson<{ ok: boolean }>("DELETE", "/me");
+}
+
+// POST /feedback  (EXISTS) body { message_id, rating, reason?, comment? } -> { ok }
+export async function postFeedback(messageId: string, f: { rating: "up" | "down"; reason?: ReportReason; comment?: string }): Promise<void> {
+  if (USE_FAKE_API) {
+    if (f.rating === "down") {
+      launchDb.reports.unshift({ id: nextId("rep"), message_id: messageId, reason: f.reason ?? "other", comment: f.comment ?? null, status: "new", created_at: new Date().toISOString() });
+    }
+    return;
+  }
+  await postJson<{ ok: boolean }>("/feedback", { message_id: messageId, ...f });
+}
+
+// ---- Admin (needs a second factor in production; fake mode shows sample data) ----------
+// GET /admin/reports  (NEEDED) -> { items: ReportRow[] }
+export async function listReports(): Promise<ReportRow[]> {
+  if (USE_FAKE_API) return structuredClone(launchDb.reports);
+  return (await getJson<{ items: ReportRow[] }>("/admin/reports")).items;
+}
+
+// PATCH /admin/reports/{id}  (NEEDED) body { status } -> ReportRow
+export async function setReportStatus(id: string, status: ReportRow["status"]): Promise<void> {
+  if (USE_FAKE_API) {
+    const r = launchDb.reports.find((x) => x.id === id);
+    if (!r) throw notFound();
+    r.status = status;
+    return;
+  }
+  await sendJson<ReportRow>("PATCH", `/admin/reports/${encodeURIComponent(id)}`, { status });
+}
+
+// POST /admin/evals/run  (NEEDED) -> EvalRun ; GET /admin/evals/{id} (NEEDED) -> EvalRun
+export async function startEvalRun(): Promise<EvalRun> {
+  if (USE_FAKE_API) {
+    launchDb.evalDone = 0;
+    return fakeEvalAt(0);
+  }
+  return postJson<EvalRun>("/admin/evals/run", {});
+}
+export async function getEvalRun(id: string): Promise<EvalRun> {
+  if (USE_FAKE_API) {
+    launchDb.evalDone = Math.min(FAKE_EVAL_TOTAL, Math.max(0, launchDb.evalDone) + 50); // each poll advances a chunk
+    return fakeEvalAt(launchDb.evalDone);
+  }
+  return getJson<EvalRun>(`/admin/evals/${encodeURIComponent(id)}`);
+}
+
+// GET /admin/invented-citations  (NEEDED) -> { items: InventedRow[] }
+export async function listInvented(): Promise<InventedRow[]> {
+  if (USE_FAKE_API) return FAKE_INVENTED;
+  return (await getJson<{ items: InventedRow[] }>("/admin/invented-citations")).items;
+}
+
+// GET /admin/spend  (NEEDED; the repo method daily_ai_spend exists) -> { items: SpendRow[] }
+export async function getAiSpend(): Promise<SpendRow[]> {
+  if (USE_FAKE_API) return FAKE_SPEND;
+  return (await getJson<{ items: SpendRow[] }>("/admin/spend")).items;
+}
+
+// ---- Help and support ------------------------------------------------------------------
+// GET /help  (NEEDED) -> { items: HelpArticle[] }  (static content people write)
+export async function listHelp(): Promise<HelpArticle[]> {
+  if (USE_FAKE_API) return FAKE_HELP;
+  return (await getJson<{ items: HelpArticle[] }>("/help")).items;
+}
+
+// POST /support  (NEEDED) body { email, message } -> { ok }
+export async function postSupport(s: SupportIn): Promise<void> {
+  if (USE_FAKE_API) {
+    await wait();
+    return;
+  }
+  await postJson<{ ok: boolean }>("/support", s);
 }

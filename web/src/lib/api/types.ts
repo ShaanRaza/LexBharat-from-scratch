@@ -171,3 +171,51 @@ export type SharedAnswerOut = {
   expires_at: string;
   provenance: Provenance;
 };
+
+// ---- Launch pages (pricing, account, admin, help). Several routes do not exist yet: each
+// call in lib/api/client.ts says which one is needed. -----------------------------------
+export type PlanOut = {
+  id: string;
+  name: string;
+  // Text from the server's plans table (e.g. "Sample", or whatever the owner configures).
+  // The web app never contains a price: pricing is the owner's, in config (O10).
+  price_text: string;
+  limits: { label: string; value: number | null }[]; // plain numbers, never credits
+  current: boolean;
+};
+export type ConsentRow = { id: string; notice_version: string; purpose: string; given_at: string; withdrawn_at: string | null };
+
+export type ReportReason = "citation" | "answer" | "missing" | "other";
+export type ReportRow = {
+  id: string;
+  message_id: string;
+  reason: ReportReason;
+  comment: string | null;
+  status: "new" | "in_review" | "resolved";
+  created_at: string;
+};
+export type EvalRun = {
+  id: string;
+  status: "running" | "done";
+  total: number;
+  done: number;
+  passed: number;
+  failures: { id: string; kind: string; detail: string }[];
+};
+export type InventedRow = {
+  id: string;
+  at: string;
+  reason: "not retrieved" | "record missing" | "quote not found" | "claim not supported";
+  cited_text: string; // what the model wrote; shown to admins only, never to users
+};
+export type SpendRow = {
+  day: string;
+  answers: number;
+  helper_calls: number;
+  tokens_in: number;
+  tokens_out: number;
+  estimated_cost: number | null;
+  cost_per_answer: number | null;
+};
+export type HelpArticle = { slug: string; title: string; body: string[] };
+export type SupportIn = { email: string; message: string };

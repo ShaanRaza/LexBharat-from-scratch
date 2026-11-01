@@ -48,6 +48,19 @@ describe("coverage", () => {
   });
 });
 
+describe("pricing is the owner's, in config (O10)", () => {
+  it("no price or rupee amount is written in the web app outside fake data and tests", () => {
+    const bad = code
+      .filter((f) => !f.includes("/lib/fake/") && /\u20b9\s*\d|\bRs\.?\s*\d|\bINR\s*\d|\$\s*\d+(\.\d\d)?\s*(\/|per)\s*(month|year|mo)\b/i.test(readFileSync(f, "utf8")))
+      .map((f) => f.replace(SRC, ""));
+    expect(bad).toEqual([]);
+  });
+  it("the admin area is not linked from the public top bar", () => {
+    const bar = readFileSync(join(SRC, "components/ui/TopBar.tsx"), "utf8");
+    expect(bar).not.toMatch(/\/admin/);
+  });
+});
+
 describe("hard rules", () => {
   it("no product or collection name is hard-coded (read from config)", () => {
     const bad = code.filter((f) => /kanoon|lexbharat/i.test(readFileSync(f, "utf8")) && !f.endsWith("design/tokens.css"));

@@ -4,6 +4,7 @@
 import type { ConversationDetail, ConversationOut, MatterOut, StoredMessage } from "@/lib/api/types";
 import { FAKE_ANSWER_TEXT, FAKE_CITATIONS, FAKE_PROVENANCE, fakeAnswerFor } from "@/lib/fake/data";
 import { CONVERSATION_TITLES, LONG_MATTER_TITLE } from "@/lib/fake/fixtures";
+import { resetLaunchDb } from "@/lib/fake/launch";
 
 type Db = {
   matters: MatterOut[];
@@ -83,6 +84,7 @@ export function persistFakeDb() {
 
 export let fakeDb: Db = load() ?? seed();
 export const resetFakeDb = () => {
+  resetLaunchDb();
   fakeDb = seed();
   try {
     if (typeof window !== "undefined") window.localStorage.removeItem(KEY);

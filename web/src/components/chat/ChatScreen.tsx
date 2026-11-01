@@ -20,7 +20,9 @@ import { AnswerView } from "./AnswerView";
 import { FailureCard } from "./FailureCard";
 import { FollowUps } from "./FollowUps";
 import { ImproveButton, ImprovePanel } from "./ImproveHelper";
+import { Onboarding } from "./Onboarding";
 import { ProgressPanel } from "./ProgressPanel";
+import { ReportAnswer } from "./ReportAnswer";
 import { ShareControl } from "./ShareControl";
 import { SourcePane } from "./SourcePane";
 import { UsageMeter } from "./UsageMeter";
@@ -60,6 +62,7 @@ function AfterAnswer({
           origin={typeof window === "undefined" ? "" : window.location.origin}
         />
       )}
+      {answer.messageId && <ReportAnswer messageId={answer.messageId} />}
       <FollowUps suggestions={suggestions} onAsk={ask} disabled={busy} />
     </div>
   );
@@ -116,6 +119,7 @@ export function ChatScreen() {
       </div>
       <div className={split ? "grid gap-section lg:grid-cols-2" : "flex flex-col"}>
         <div className="flex min-w-0 flex-col gap-4">
+          {answers.length === 0 && <Onboarding />}
           {answers.map((a, i) => (
             <section key={i} aria-label="Answer" className="flex flex-col gap-2">
               <h2 className="text-lead font-bold">{a.question}</h2>

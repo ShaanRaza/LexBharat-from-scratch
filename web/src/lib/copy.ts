@@ -185,3 +185,55 @@ export const EMPTY = {
   coverage: { title: "Coverage has not been listed yet", hint: "This page lists what the dataset holds once it has been measured." },
   chat: { title: "Ask your first question", hint: "Write it the way you would say it. Each source in the answer is checked against the dataset." },
 } as const;
+
+// ---- Launch pages (pricing, account, admin, help). Interface words only. Anything about
+// the law, advice, consent text, retention, deletion consequences, refunds or tax is the
+// owner's and appears below only as a marked NEEDS-OWNER placeholder. ----------------------
+export const PRICING_TITLE = "Plans";
+export const PRICING_OFF = "Plans are not available yet.";
+export const PRICING_CURRENT = "Your plan";
+export const ACCOUNT_TITLE = "Account";
+export const ACCOUNT_SECTIONS = { plan: "Plan and usage", consents: "Consents", data: "Your data", delete: "Delete account" } as const;
+export const CONSENT_VERSION_LABEL = (v: string) => `Notice version ${v}`;
+export const CONSENT_GIVEN = (d: string) => `Given ${d}`;
+export const CONSENT_WITHDRAW = "Withdraw";
+export const CONSENT_WITHDRAWN = (d: string) => `Withdrawn ${d}`;
+export const CONSENTS_NONE = { title: "No consents recorded", hint: "A consent is recorded when you sign up." };
+export const EXPORT_BUTTON = "Export my data";
+export const EXPORT_READY = "Your export is ready.";
+export const EXPORT_FAILED = "Export is not available yet.";
+export const DELETE_BUTTON = "Delete my account";
+export const DELETE_CONFIRM_TITLE = "Delete your account?";
+export const DELETE_CONFIRM_BUTTON = "Delete account";
+export const DELETE_DONE = "Your account has been deleted.";
+export const DELETE_FAILED = "Account deletion is not available yet.";
+// NEEDS-OWNER: what deleting an account removes, and what is kept, is a legal statement
+// (retention is undecided, docs/RETENTION.md). Shown as a placeholder until the owner writes it.
+export const DELETE_CONSEQUENCES = "NEEDS-OWNER: what deleting your account removes and what is kept.";
+export const ADMIN_TITLE = "Admin";
+export const ADMIN_NOTICE = "Admin pages need a second factor. This screen shows sample data.";
+export const ADMIN_SECTIONS = { triage: "Triage", reports: "Reported answers", evals: "Test runner", citations: "Invented citations", spend: "AI spend" } as const;
+export const REPORT_REASONS = { citation: "A citation is wrong", answer: "The answer is wrong", missing: "Something is missing", other: "Other" } as const;
+export const REPORT_BUTTON = "Report a wrong answer";
+export const REPORT_SEND = "Send report";
+export const REPORT_THANKS = "Thank you. Your report was sent.";
+export const REPORT_FAILED = "We could not send the report. Please try again.";
+export const REPORT_EDIT_LABEL = "What was wrong? (optional)";
+export const REPORT_REASON_LABEL = "Reason";
+export const RATE_UP = "Helpful";
+export const RATE_THANKS = "Thank you for the feedback.";
+export const HELP_TITLE = "Help";
+export const HELP_CONTACT = "Contact support";
+export const HELP_NONE = { title: "No help articles yet", hint: "Articles appear here when they are published.", action: { label: "Contact support", href: "/help/contact" } };
+export const SUPPORT_EMAIL_LABEL = "Your email";
+export const SUPPORT_MESSAGE_LABEL = "How can we help?";
+export const SUPPORT_SEND = "Send";
+export const SUPPORT_THANKS = "Thank you. We have your message.";
+export const SUPPORT_FAILED = "We could not send your message. Please try again.";
+export const ONBOARDING_TITLE = "Ask your first question";
+export const ONBOARDING_STEPS = [
+  "Ask in plain words, the way you would say it.",
+  "Read the answer. Each source in it has its own mark.",
+  "Click a source to open it beside the answer.",
+] as const;
+export const ONBOARDING_DISMISS = "Got it";

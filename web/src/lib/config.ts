@@ -11,6 +11,8 @@ if (USE_FAKE_API && process.env.NODE_ENV === "production") {
 }
 // Fake mode only: how long each progress step is shown, so the panel can be seen.
 export const FAKE_STEP_DELAY_MS = Number(process.env.NEXT_PUBLIC_FAKE_STEP_DELAY_MS ?? 120);
+// The pricing page is behind a switch (O10: pricing is the owner's call). Off by default.
+export const FEATURE_PRICING = process.env.NEXT_PUBLIC_FEATURE_PRICING === "true";
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 // Frozen snapshot label (CLAUDE.md section 1). Shown on every page.

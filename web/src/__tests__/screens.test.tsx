@@ -1,5 +1,5 @@
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent, within } from "@testing-library/react";
 import { ActLookup } from "@/components/records/ActLookup";
 import { StatsView } from "@/components/records/StatsView";
 import { SignInForm } from "@/components/auth/SignInForm";
@@ -63,12 +63,16 @@ describe("sign in", () => {
 });
 
 describe("navigation", () => {
-  it("keeps every link on a phone (none is hidden by a breakpoint)", () => {
-    const { container } = render(<TopBar />);
-    for (const t of ["Acts", "Statistics", "Coverage", "Sign in", "Get early access"]) {
-      expect(screen.getByRole("link", { name: t })).toBeInTheDocument();
+  it("every link is on the desktop bar, and on a phone all of them sit behind one Menu button", () => {
+    render(<TopBar />);
+    for (const t of ["Acts", "Statistics", "Coverage", "History", "Help", "Account", "Sign in", "Get early access"]) {
+      expect(screen.getAllByRole("link", { name: t }).length).toBeGreaterThan(0); // the desktop bar
     }
-    expect(container.innerHTML).not.toMatch(/\bhidden\b/);
+    fireEvent.click(screen.getByRole("button", { name: "Menu" }));
+    const sheet = screen.getByRole("dialog", { name: "Menu" });
+    for (const t of ["Acts", "Statistics", "Coverage", "History", "Help", "Account", "Sign in", "Get early access"]) {
+      expect(within(sheet).getByRole("link", { name: t })).toBeInTheDocument(); // the same list in the sheet
+    }
   });
 });
 
