@@ -105,6 +105,9 @@ class Settings(BaseSettings):
     # NOT answers and never touch the plan limit (A52). They are rate-limited per user
     # per hour instead. PLACEHOLDER numbers until the load test (PRD-v2 gate 14); None
     # switches the limit off.
+    # How long a share link lives (PRD-v2 O14, TECH-STACK-v2: default 30 days, owner
+    # sets the final number with the retention periods, O13).
+    SHARE_LINK_EXPIRY_DAYS: int = 30
     RATE_LIMIT_IMPROVE_PER_HOUR: int | None = 60
     RATE_LIMIT_FOLLOWUPS_PER_HOUR: int | None = 60
     # Model price per million tokens, in whatever currency the owner reads the spend

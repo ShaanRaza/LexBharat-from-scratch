@@ -331,6 +331,40 @@ class MatterDetail(MatterOut):
     conversations: list["ConversationOut"] = []
 
 
+class ShareCreated(BaseModel):
+    """Shown ONCE: only a hash of the token is stored, so it cannot be shown again."""
+
+    id: UUID
+    token: str
+    path: str = Field(description="Where the public page lives, e.g. /s/<token>")
+    expires_at: datetime
+
+
+class ShareLinkOut(BaseModel):
+    id: UUID
+    message_id: UUID
+    created_at: datetime
+    expires_at: datetime
+    revoked_at: datetime | None = None
+
+
+class ShareList(BaseModel):
+    items: list[ShareLinkOut]
+
+
+class SharedAnswer(BaseModel):
+    """The PUBLIC view of one shared answer. Carries the checked citations, the
+    data-as-of date, the CC BY credit and the not-legal-advice notice. Never the
+    owner's identity, conversation, matter, judge or party names (judgment titles are
+    never sent)."""
+
+    question: str
+    text: str
+    citations: list[Citation]
+    expires_at: datetime
+    provenance: Provenance
+
+
 class MatterDeleted(BaseModel):
     mode: Literal["unfile", "everything"]
     documents_deleted: int

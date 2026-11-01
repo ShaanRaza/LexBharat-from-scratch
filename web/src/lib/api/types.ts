@@ -160,3 +160,14 @@ export type HistoryHit = {
   snippet: string;
   created_at: string;
 };
+
+// Share a saved answer by link (O14). The token is shown once; only a hash is stored.
+export type ShareCreated = { id: string; token: string; path: string; expires_at: string };
+export type ShareLink = { id: string; message_id: string; created_at: string; expires_at: string; revoked_at: string | null };
+export type SharedAnswerOut = {
+  question: string;
+  text: string;
+  citations: Citation[];
+  expires_at: string;
+  provenance: Provenance;
+};

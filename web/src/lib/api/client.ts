@@ -4,7 +4,7 @@ import { API_BASE_URL, FAKE_STEP_DELAY_MS, USE_FAKE_API } from "@/lib/config";
 import { FAKE_ANSWER_TEXT, FAKE_CASE, FAKE_CITATIONS, FAKE_COVERAGE, FAKE_ME, FAKE_PROVENANCE, FAKE_SECTIONS, FAKE_STATS } from "@/lib/fake/data";
 import { fakeConversationDetail, fakeDb, fakeRecordTurn, nextId, withCounts } from "@/lib/fake/store";
 import { createSseParser } from "./sse";
-import type { ApiErrorBody, CaseOut, ConsentIn, ConversationDetail, ConversationOut, CoverageOut, FollowupsOut, HistoryHit, MatterDeleteMode, MatterDeleted, MatterDetail, MatterKind, MatterOut, MatterStatus, ImproveOut, MeOut, SectionOut, StatsOut, StepEventData, StreamEvent } from "./types";
+import type { ApiErrorBody, CaseOut, ShareCreated, ShareLink, SharedAnswerOut, ConsentIn, ConversationDetail, ConversationOut, CoverageOut, FollowupsOut, HistoryHit, MatterDeleteMode, MatterDeleted, MatterDetail, MatterKind, MatterOut, MatterStatus, ImproveOut, MeOut, SectionOut, StatsOut, StepEventData, StreamEvent } from "./types";
 
 const BASE = `${API_BASE_URL}/api/v1`;
 
@@ -185,7 +185,8 @@ async function* fakeStream(q: string): AsyncGenerator<StreamEvent> {
     event: "citations",
     data: { citations: FAKE_CITATIONS, removed_count: 0, data_as_of: FAKE_PROVENANCE.data_as_of, credit: FAKE_PROVENANCE.credit, notice: FAKE_PROVENANCE.notice },
   };
-  yield { event: "done", data: { message_id: null, from_cache: false, refused: false } };
+  const shaped = lower.includes("upload");
+  yield { event: "done", data: { message_id: shaped ? FAKE_SHAPED_MESSAGE_ID : nextId("fake-msg"), from_cache: false, refused: false } };
 }
 
 // ---- Matters and history (PRD-v2 O11, section 4.2) ----------------------------------
@@ -194,6 +195,8 @@ async function sendJson<T>(method: "PATCH" | "DELETE", path: string, body?: unkn
   if (!res.ok) throw await failure(res);
   return res.json() as Promise<T>;
 }
+// A fake answer the server would refuse to share (shaped by an upload).
+export const FAKE_SHAPED_MESSAGE_ID = "fake-shaped-msg";
 const notFound = () => new ApiError({ code: "not_found", message: "Not found", request_id: "fake" }, 404);
 
 export async function listMatters(status: MatterStatus | "all" = "active"): Promise<MatterOut[]> {
@@ -295,4 +298,49 @@ export async function searchHistory(q: string): Promise<HistoryHit[]> {
     return hits;
   }
   return (await getJson<{ items: HistoryHit[] }>(`/history/search?q=${encodeURIComponent(q)}`)).items;
+}
+
+// ---- Share a saved answer by link (O14) ---------------------------------------------
+// Only an answer built purely from the public dataset can be shared: the server refuses
+// (403, with the reason) when an upload or a saved matter fact shaped it.
+export async function shareMessage(messageId: string): Promise<ShareCreated> {
+  if (USE_FAKE_API) {
+    if (messageId === FAKE_SHAPED_MESSAGE_ID) {
+      throw new ApiError({ code: "forbidden", message: "This answer used your uploaded document, so it cannot be shared.", request_id: "fake" }, 403);
+    }
+    const token = `fake-token-${nextId("t")}-${"x".repeat(30)}`;
+    const now = new Date();
+    const expires = new Date(now.getTime() + 30 * 86400_000).toISOString();
+    const row = { id: nextId("fake-share"), message_id: messageId, token, created_at: now.toISOString(), expires_at: expires, revoked_at: null };
+    fakeDb.shares.unshift(row);
+    return { id: row.id, token, path: `/s/${token}`, expires_at: expires };
+  }
+  return postJson<ShareCreated>(`/messages/${encodeURIComponent(messageId)}/share`, {});
+}
+
+export async function listShares(): Promise<ShareLink[]> {
+  if (USE_FAKE_API) return fakeDb.shares.map(({ token: _t, ...rest }) => rest); // eslint-disable-line @typescript-eslint/no-unused-vars
+  return (await getJson<{ items: ShareLink[] }>("/share")).items;
+}
+
+export async function revokeShare(id: string): Promise<void> {
+  if (USE_FAKE_API) {
+    const r = fakeDb.shares.find((x) => x.id === id && !x.revoked_at);
+    if (!r) throw notFound();
+    r.revoked_at = new Date().toISOString();
+    return;
+  }
+  await sendJson<{ ok: boolean }>("DELETE", `/share/${encodeURIComponent(id)}`);
+}
+
+// The PUBLIC read. Never cached: a revoked link must be gone on the very next request.
+export async function getShared(token: string): Promise<SharedAnswerOut> {
+  if (USE_FAKE_API) {
+    const r = fakeDb.shares.find((x) => x.token === token);
+    if (!r || r.revoked_at || new Date(r.expires_at) < new Date()) throw notFound();
+    return { question: "What is bail?", text: FAKE_ANSWER_TEXT, citations: FAKE_CITATIONS, expires_at: r.expires_at, provenance: FAKE_PROVENANCE };
+  }
+  const res = await fetch(`${BASE}/s/${encodeURIComponent(token)}`, { cache: "no-store" });
+  if (!res.ok) throw await failure(res);
+  return res.json() as Promise<SharedAnswerOut>;
 }

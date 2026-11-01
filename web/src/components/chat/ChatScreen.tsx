@@ -7,7 +7,7 @@ import { answerToText } from "@/lib/chat/answerText";
 import { copyText, downloadText } from "@/lib/chat/download";
 import type { AnswerState } from "@/lib/chat/state";
 import { MatterPicker } from "@/components/matters/MatterPicker";
-import { listMatters } from "@/lib/api/client";
+import { listMatters, shareMessage } from "@/lib/api/client";
 import { MATTER_FILE_UNDER } from "@/lib/copy";
 import { useLoaded } from "@/lib/matters/useLoaded";
 import { useChat } from "@/lib/chat/useChat";
@@ -21,6 +21,7 @@ import { FailureCard } from "./FailureCard";
 import { FollowUps } from "./FollowUps";
 import { ImproveButton, ImprovePanel } from "./ImproveHelper";
 import { ProgressPanel } from "./ProgressPanel";
+import { ShareControl } from "./ShareControl";
 import { SourcePane } from "./SourcePane";
 import { UsageMeter } from "./UsageMeter";
 
@@ -52,6 +53,13 @@ function AfterAnswer({
         onExport={(t) => downloadText(`${slug(PRODUCT_NAME)}-answer.txt`, t)}
         onRewrite={() => onRewrite(answer.question)}
       />
+      {answer.messageId && (
+        <ShareControl
+          create={() => shareMessage(answer.messageId!)}
+          copy={copyText}
+          origin={typeof window === "undefined" ? "" : window.location.origin}
+        />
+      )}
       <FollowUps suggestions={suggestions} onAsk={ask} disabled={busy} />
     </div>
   );

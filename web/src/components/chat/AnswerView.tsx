@@ -10,10 +10,14 @@ export function AnswerView({
   answer,
   onRetry,
   onOpenSource,
+  linkFor = citationHref,
 }: {
   answer: AnswerState;
   onRetry?: () => void;
   onOpenSource?: (c: Citation) => void;
+  // Where a citation chip links. The chat links to the in-app record; a shared page
+  // (read by people who may not be signed in) links to the record's own source.
+  linkFor?: (c: Citation) => string;
 }) {
   if (answer.failure === "outsideCoverage" || answer.failure === "notInDataset") {
     return <CoverageFailureCard kind={answer.failure} />;
@@ -32,7 +36,7 @@ export function AnswerView({
               label={seg.citation.source_id}
               status={seg.citation.status}
               dataAsOf={ce!.data_as_of}
-              href={citationHref(seg.citation)}
+              href={linkFor(seg.citation)}
               onOpen={onOpenSource && (() => onOpenSource(seg.citation))}
             />
           ),
@@ -47,7 +51,7 @@ export function AnswerView({
                 label={c.source_id}
                 status={c.status}
                 dataAsOf={ce.data_as_of}
-                href={citationHref(c)}
+                href={linkFor(c)}
                 onOpen={onOpenSource && (() => onOpenSource(c))}
               />
               <span>{citationName(c)}</span>

@@ -142,3 +142,21 @@ export const HISTORY_SEARCH = "Search";
 export const HISTORY_RECENT = "Recent conversations";
 export const HISTORY_NONE = "Nothing found in your saved work.";
 export const NAV_HISTORY = "History";
+
+// Share a saved answer by link (PRD-v2 O14). NEEDS-OWNER: this is wording about what a
+// user is told about their own material and who can read a link.
+export const SHARE_LABEL = "Share";
+export const SHARE_WORKING = "Creating link";
+export const SHARE_LINK_LABEL = "Link to this answer";
+export const SHARE_COPY_LINK = "Copy link";
+export const SHARE_NOTE = (date: string) =>
+  `Anyone who has this link can read this answer until ${date}. It is not listed in search engines. You can switch it off under Shared links.`;
+export const SHARE_FAILED = "We could not create a link. Please try again.";
+export const SHARED_TITLE = "Shared answer";
+export const SHARED_UNAVAILABLE = "This link is not available.";
+export const SHARED_LINKS_TITLE = "Shared links";
+export const SHARED_LINKS_NONE = "You have not shared any answers.";
+export const SHARED_REVOKE = "Switch off";
+export const SHARED_REVOKED = "Switched off";
+export const SHARED_EXPIRES = (date: string) => `Expires ${date}`;
+export const SHARED_MANAGE = "Manage shared links";

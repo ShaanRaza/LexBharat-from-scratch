@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { Card, SearchBar } from "@/components/ui";
 import { listConversations, searchHistory } from "@/lib/api/client";
-import { HISTORY_NONE, HISTORY_RECENT, HISTORY_SEARCH, HISTORY_SEARCH_PLACEHOLDER } from "@/lib/copy";
+import { SHARED_MANAGE, HISTORY_NONE, HISTORY_RECENT, HISTORY_SEARCH, HISTORY_SEARCH_PLACEHOLDER } from "@/lib/copy";
 import { useLoaded } from "@/lib/matters/useLoaded";
 
 // Recent conversations, and search across the user's OWN saved questions and answers.
@@ -13,6 +13,9 @@ export function HistoryScreen() {
   const found = useLoaded(() => (q ? searchHistory(q) : Promise.resolve([])), `search:${q}`);
   return (
     <div className="flex flex-col gap-4">
+      <Link href="/shared" className="text-small font-semibold text-accent underline">
+        {SHARED_MANAGE}
+      </Link>
       <SearchBar placeholder={HISTORY_SEARCH_PLACEHOLDER} submitLabel={HISTORY_SEARCH} onSubmit={(t) => setQ(t)} />
       {q === null ? (
         <section aria-label={HISTORY_RECENT} className="flex flex-col gap-2">

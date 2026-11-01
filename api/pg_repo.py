@@ -291,6 +291,77 @@ class PgRepo:
             u=user_id,
         )
 
+    # --- share links (O14) ---------------------------------------------------------
+    async def get_message_for_share(self, user_id, message_id):
+        rows = await self._rows(
+            """SELECT m.id, m.role, m.shaped_by_upload, m.shaped_by_matter_fact
+                 FROM messages m JOIN conversations c ON c.id = m.conversation_id
+                WHERE m.id = :m AND c.user_id = :u""",
+            m=message_id, u=user_id,
+        )  # fmt: skip
+        return self._s(rows[0]) if rows else None
+
+    async def create_share_link(self, user_id, message_id, token_hash, expires_at):
+        # The database trigger share_links_guard refuses an answer that is not the
+        # user's own, not an answer, or shaped by an upload or a matter fact.
+        rows = await self._exec(
+            """INSERT INTO share_links (user_id, message_id, token_hash, expires_at)
+               VALUES (:u, :m, :h, :e) RETURNING id, message_id, expires_at, created_at""",
+            u=user_id, m=message_id, h=token_hash, e=expires_at,
+        )  # fmt: skip
+        return self._s(rows[0])
+
+    async def list_share_links(self, user_id):
+        rows = await self._rows(
+            """SELECT id, message_id, expires_at, revoked_at, created_at
+                 FROM share_links WHERE user_id = :u ORDER BY created_at DESC""",
+            u=user_id,
+        )  # the token hash is never returned
+        return [self._s(r) for r in rows]
+
+    async def revoke_share_link(self, user_id, link_id):
+        rows = await self._exec(
+            """UPDATE share_links SET revoked_at = now(), updated_at = now()
+                WHERE id = :l AND user_id = :u AND revoked_at IS NULL RETURNING id""",
+            l=link_id, u=user_id,
+        )  # fmt: skip
+        return bool(rows)
+
+    async def get_shared_answer(self, token_hash):
+        """The public read: the live row is checked on EVERY call (not revoked, not
+        expired, still an unshaped assistant answer). The owner's id is used only inside
+        and is never returned."""
+        rows = await self._rows(
+            """SELECT s.user_id, s.expires_at, m.id AS message_id, m.conversation_id
+                 FROM share_links s
+                 JOIN messages m ON m.id = s.message_id
+                 JOIN conversations c ON c.id = m.conversation_id AND c.user_id = s.user_id
+                WHERE s.token_hash = :h AND s.revoked_at IS NULL AND s.expires_at > now()
+                  AND m.role = 'assistant'
+                  AND NOT m.shaped_by_upload AND NOT m.shaped_by_matter_fact""",
+            h=token_hash,
+        )  # fmt: skip
+        if not rows:
+            return None
+        r = rows[0]
+        conv = await self.get_conversation(str(r["user_id"]), str(r["conversation_id"]))
+        if conv is None:
+            return None
+        msgs = conv["messages"]
+        idx = next(
+            (i for i, m in enumerate(msgs) if str(m["id"]) == str(r["message_id"])),
+            None,
+        )
+        if idx is None:
+            return None
+        question = next(
+            (m["content"] for m in reversed(msgs[:idx]) if m["role"] == "user"), ""
+        )
+        return {
+            "question": question, "text": msgs[idx]["content"],
+            "citations": msgs[idx]["citations"], "expires_at": r["expires_at"],
+        }  # fmt: skip
+
     # --- matters, documents, audit (A52) -------------------------------------------
     async def create_matter(self, user_id, title, kind):
         rows = await self._exec(

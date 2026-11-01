@@ -38,6 +38,15 @@ class Repo(Protocol):
     ) -> dict: ...
     async def answers_this_month(self, user_id: str) -> int: ...
     async def record_ai_call(self, user_id: str, call: AiCall) -> None: ...
+    async def get_message_for_share(
+        self, user_id: str, message_id: str
+    ) -> dict | None: ...
+    async def create_share_link(
+        self, user_id: str, message_id: str, token_hash: str, expires_at: datetime
+    ) -> dict: ...
+    async def list_share_links(self, user_id: str) -> list[dict]: ...
+    async def revoke_share_link(self, user_id: str, link_id: str) -> bool: ...
+    async def get_shared_answer(self, token_hash: str) -> dict | None: ...
     async def create_matter(self, user_id: str, title: str, kind: str) -> dict: ...
     async def list_matters(self, user_id: str, status: str | None) -> list[dict]: ...
     async def update_matter(
@@ -118,6 +127,7 @@ class MemoryRepo:
         self.matters: dict[str, dict] = {}
         self.documents: dict[str, dict] = {}  # id -> {user_id, matter_id, text}
         self.audit_rows: list[tuple[str, str, str]] = []
+        self.shares: dict[str, dict] = {}  # id -> link row (token stored hashed only)
 
     async def upsert_user(self, uid, email, name):
         for u in self.users.values():
@@ -148,6 +158,91 @@ class MemoryRepo:
              "tokens_in": 0, "tokens_out": 0}
         )  # fmt: skip
         return summarise(rows, get_settings())
+
+    # --- share links (O14) ---------------------------------------------------------
+    def _find_message(self, user_id, message_id):
+        for cid, c in self.convs.items():
+            if c["user_id"] != user_id:
+                continue
+            for i, m in enumerate(self.msgs.get(cid, [])):
+                if str(m["id"]) == str(message_id):
+                    return cid, i, m
+        return None
+
+    async def get_message_for_share(self, user_id, message_id):
+        hit = self._find_message(user_id, message_id)
+        if hit is None:
+            return None
+        _, _, m = hit
+        return {
+            "id": m["id"], "role": m["role"],
+            "shaped_by_upload": bool(m.get("shaped_by_upload")),
+            "shaped_by_matter_fact": bool(m.get("shaped_by_matter_fact")),
+        }  # fmt: skip
+
+    async def create_share_link(self, user_id, message_id, token_hash, expires_at):
+        # Mirrors the database trigger: refuse what must not be shared, whoever calls.
+        m = await self.get_message_for_share(user_id, message_id)
+        if (
+            m is None
+            or m["role"] != "assistant"
+            or m["shaped_by_upload"]
+            or m["shaped_by_matter_fact"]
+        ):
+            raise ValueError("this answer cannot be shared")
+        row = {
+            "id": str(uuid.uuid4()), "user_id": user_id, "message_id": message_id,
+            "token_hash": token_hash, "expires_at": expires_at, "revoked_at": None,
+            "created_at": _now(),
+        }  # fmt: skip
+        self.shares[row["id"]] = row
+        return dict(row)
+
+    async def list_share_links(self, user_id):
+        rows = [r for r in self.shares.values() if r["user_id"] == user_id]
+        return [
+            {k: v for k, v in r.items() if k not in ("token_hash", "user_id")}
+            for r in sorted(rows, key=lambda r: r["created_at"], reverse=True)
+        ]
+
+    async def revoke_share_link(self, user_id, link_id):
+        r = self.shares.get(link_id)
+        if not r or r["user_id"] != user_id or r["revoked_at"] is not None:
+            return False
+        r["revoked_at"] = _now()
+        return True
+
+    async def get_shared_answer(self, token_hash):
+        """The public read. Checked against the stored row on EVERY call: not revoked,
+        not expired, and still an answer that may be shared. Returns no user
+        identity."""
+        link = next(
+            (r for r in self.shares.values() if r["token_hash"] == token_hash), None
+        )
+        if (
+            link is None
+            or link["revoked_at"] is not None
+            or link["expires_at"] <= _now()
+        ):
+            return None
+        hit = self._find_message(link["user_id"], link["message_id"])
+        if hit is None:
+            return None
+        cid, i, m = hit
+        if (
+            m["role"] != "assistant"
+            or m.get("shaped_by_upload")
+            or m.get("shaped_by_matter_fact")
+        ):
+            return None
+        question = next(
+            (x["content"] for x in reversed(self.msgs[cid][:i]) if x["role"] == "user"),
+            "",
+        )
+        return {
+            "question": question, "text": m["content"],
+            "citations": list(m.get("citations", [])), "expires_at": link["expires_at"],
+        }  # fmt: skip
 
     # --- matters, documents, audit (A52) -------------------------------------------
     async def create_matter(self, user_id, title, kind):

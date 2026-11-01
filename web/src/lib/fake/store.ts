@@ -9,6 +9,7 @@ type Db = {
   conversations: ConversationOut[];
   messages: Record<string, StoredMessage[]>;
   seq: number;
+  shares: { id: string; message_id: string; token: string; created_at: string; expires_at: string; revoked_at: string | null }[];
 };
 
 const NOW = "2026-11-02T10:00:00Z";
@@ -30,6 +31,7 @@ function seed(): Db {
     conversations: [conv("fake-conv-1", "What is bail?", matter.id), conv("fake-conv-2", "Limitation for a cheque notice", null)],
     messages: { "fake-conv-1": msgs("What is bail?"), "fake-conv-2": msgs("Limitation for a cheque notice") },
     seq: 100,
+    shares: [],
   };
 }
 

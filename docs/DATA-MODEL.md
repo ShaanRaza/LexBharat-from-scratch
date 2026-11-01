@@ -45,6 +45,16 @@ table that stores an answer (saved copies, exports, share links) copies these tw
 Not created yet, on purpose: memory tables (`memory_preferences`, `matter_facts`). Memory
 retention (O13) is not settled.
 
+## Share links
+
+`share_links` (migration 0009): `user_id`, `message_id`, `token_hash` (unique), `expires_at`,
+`revoked_at`. **The token is never stored**, only its SHA-256, so a leaked database does not
+leak live links. A database trigger (`share_links_guard`) refuses to create a link for a
+message that is not the same user's assistant answer, or that is shaped by an upload or a
+matter fact (the provenance flags), so the rule holds even if application code forgets it.
+The public read checks the row on every request (not revoked, not expired, still
+unshaped); there is no cache to go stale.
+
 ## AI spend view
 
 `ai_spend_daily` (a view, migration 0007) lists, per day and feature, the calls and tokens

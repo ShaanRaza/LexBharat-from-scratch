@@ -1,5 +1,5 @@
 # ruff: noqa: S603
-"""Migrations: numbered, reversible, 18 tables (docs/DATA-MODEL.md).
+"""Migrations: numbered, reversible, 19 tables (docs/DATA-MODEL.md).
 
 The offline test needs no database. The live test runs only when TEST_DATABASE_URL
 points at a throwaway PostgreSQL (it upgrades, downgrades and upgrades again).
@@ -21,7 +21,7 @@ EXPECTED = {
     "users", "subscriptions", "usage_daily", "organisations", "memberships",
     "consents", "conversations", "messages", "message_sources",
     "invented_citation_log", "feedback", "documents", "document_chunks",
-    "cases", "act_sections", "court_coverage", "audit_log", "matters",
+    "cases", "act_sections", "court_coverage", "audit_log", "matters", "share_links",
 }  # fmt: skip
 
 
@@ -33,7 +33,7 @@ def _alembic(*args: str, url: str) -> subprocess.CompletedProcess:
     )  # fmt: skip
 
 
-def test_offline_sql_creates_all_18_tables():
+def test_offline_sql_creates_all_19_tables():
     out = _alembic("upgrade", "head", "--sql", url="postgresql+psycopg://x@h/d").stdout
     created = set(re.findall(r"CREATE TABLE (\w+)", out))
     assert created - {"alembic_version"} == EXPECTED
@@ -78,7 +78,7 @@ def test_upgrade_downgrade_upgrade_on_real_postgres(scratch_db_url):
     with engine.connect() as c:
         assert (
             c.execute(text("select version_num from alembic_version")).scalar()
-            == "0008"
+            == "0009"
         )
     engine.dispose()
 

@@ -289,3 +289,121 @@ async def test_history_search_on_real_postgres_is_full_text_and_never_crosses_us
     leak = await search_my_work(repo, a, "'; DROP TABLE messages; --")
     assert isinstance(leak, list)
     assert (await repo._rows("SELECT count(*) AS n FROM messages"))[0]["n"] == 3
+
+
+# ---- share links on a real PostgreSQL (O14) ------------------------------------------
+async def _saved_answer(repo, uid, upload=False, fact=False):
+    conv = await repo.create_conversation(uid, "research", None)
+    cid = str(conv["id"])
+    await repo.add_user_message(uid, cid, "What is bail?")
+    cit = SimpleNamespace(source_id="S1", record_id="rec-1", status="verified")
+    result = SimpleNamespace(
+        provenance=AnswerProvenance(upload, fact), outcome="answered", cache_hit=False,
+        model="m", input_tokens=1, output_tokens=1,
+        answer=SimpleNamespace(text="Bail is the rule [S1].", citations=(cit,)),
+    )  # fmt: skip
+    await repo.save(PipelineRequest(uid, "What is bail?", cid), result)
+    msgs = (await repo.get_conversation(uid, cid))["messages"]
+    return cid, msgs[0]["id"], msgs[-1]["id"]
+
+
+async def test_share_links_on_real_postgres_token_hashed_revocable_expiring(
+    priced_repo,
+):
+    from datetime import UTC, datetime, timedelta
+
+    from core.share import create_share_link, hash_token
+
+    repo = priced_repo
+    uid = await _user(repo, "uid-share")
+    _, _, mid = await _saved_answer(repo, uid)
+    link = await create_share_link(repo, uid, str(mid), 30)
+
+    dump = str(await repo._rows("SELECT * FROM share_links"))
+    assert link.token not in dump  # the token itself is never stored
+    assert hash_token(link.token) in dump  # only its hash
+
+    got = await repo.get_shared_answer(hash_token(link.token))
+    assert got["question"] == "What is bail?" and got["text"].startswith(
+        "Bail is the rule"
+    )
+    assert [c["status"] for c in got["citations"]] == ["verified"]
+    assert "user_id" not in got and "email" not in str(got)  # no owner identity
+
+    assert [x["id"] for x in await repo.list_share_links(uid)] == [link.id]
+    assert "token" not in str(await repo.list_share_links(uid))
+
+    # revoke: the very next read is gone (the row is read every time)
+    assert await repo.revoke_share_link(uid, link.id) is True
+    assert await repo.get_shared_answer(hash_token(link.token)) is None
+    assert await repo.revoke_share_link(uid, link.id) is False
+
+    # expiry: a past expires_at is gone too
+    link2 = await create_share_link(repo, uid, str(mid), 30)
+    assert await repo.get_shared_answer(hash_token(link2.token)) is not None
+    await repo._exec(
+        "UPDATE share_links SET expires_at = :e WHERE id = :i RETURNING id",
+        e=datetime.now(UTC) - timedelta(seconds=1), i=link2.id,
+    )  # fmt: skip
+    assert await repo.get_shared_answer(hash_token(link2.token)) is None
+
+
+async def test_the_database_itself_refuses_a_link_for_a_shaped_answer(priced_repo):
+    """If application code forgot the rule, the trigger refuses (migration 0009)."""
+    from datetime import UTC, datetime, timedelta
+
+    from sqlalchemy.exc import DBAPIError
+
+    repo = priced_repo
+    a, b = await _user(repo, "uid-ta"), await _user(repo, "uid-tb")
+    _, q_id, clean = await _saved_answer(repo, a)
+    _, _, upload = await _saved_answer(repo, a, upload=True)
+    _, _, fact = await _saved_answer(repo, a, fact=True)
+    soon = datetime.now(UTC) + timedelta(days=1)
+
+    async def raw_insert(user_id, message_id, h):
+        await repo._exec(
+            """INSERT INTO share_links (user_id, message_id, token_hash, expires_at)
+               VALUES (:u, :m, :h, :e) RETURNING id""",
+            u=user_id, m=message_id, h=h, e=soon,
+        )  # fmt: skip
+
+    for bad, label in (
+        (upload, "upload"),
+        (fact, "fact"),
+        (q_id, "a question"),
+        (clean, "someone else"),
+    ):
+        user = b if label == "someone else" else a
+        with pytest.raises(DBAPIError) as e:
+            await raw_insert(user, bad, f"hash-{label}")
+        assert "cannot be shared" in str(e.value)
+    assert (await repo._rows("SELECT count(*) AS n FROM share_links"))[0]["n"] == 0
+    await raw_insert(a, clean, "hash-ok")  # the clean answer is fine
+    assert (await repo._rows("SELECT count(*) AS n FROM share_links"))[0]["n"] == 1
+
+
+async def test_a_link_does_not_work_if_the_answer_is_later_found_to_be_shaped(
+    priced_repo,
+):
+    from core.share import create_share_link, hash_token
+
+    repo = priced_repo
+    uid = await _user(repo, "uid-late")
+    _, _, mid = await _saved_answer(repo, uid)
+    link = await create_share_link(repo, uid, str(mid), 30)
+    await repo._exec(
+        "UPDATE messages SET shaped_by_upload = true WHERE id = :m RETURNING id", m=mid
+    )  # fmt: skip
+    assert await repo.get_shared_answer(hash_token(link.token)) is None
+
+
+async def test_deleting_the_account_or_the_answer_removes_its_links(priced_repo):
+    from core.share import create_share_link
+
+    repo = priced_repo
+    uid = await _user(repo, "uid-gone")
+    cid, _, mid = await _saved_answer(repo, uid)
+    await create_share_link(repo, uid, str(mid), 30)
+    await repo._exec("DELETE FROM conversations WHERE id = :c RETURNING id", c=cid)
+    assert (await repo._rows("SELECT count(*) AS n FROM share_links"))[0]["n"] == 0
