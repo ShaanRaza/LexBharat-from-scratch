@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useRef, useState } from "react";
 import { askQuestion, createConversation } from "@/lib/api/client";
-import { applyEvent, newAnswer, type AnswerState } from "./state";
+import { applyEvent, endOfStream, newAnswer, type AnswerState } from "./state";
 
 // Hook: holds the list of answers and runs a question. No styling here.
 export function useChat() {
@@ -28,7 +28,7 @@ export function useChat() {
         state = applyEvent(state, ev);
         write(state);
       }
-      if (state.status === "streaming") write((state = { ...state, status: "done" }));
+      write((state = endOfStream(state)));
     } catch {
       write((state = { ...state, status: "failed", failure: "serviceError" }));
     }

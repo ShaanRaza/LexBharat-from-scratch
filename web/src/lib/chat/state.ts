@@ -46,6 +46,17 @@ export function applyEvent(s: AnswerState, ev: StreamEvent): AnswerState {
   }
 }
 
+// The stream ended. If no done/error arrived (dropped connection) the answer is a
+// service error and the partial text is cleared, same as an error event.
+export function endOfStream(s: AnswerState): AnswerState {
+  return s.status === "streaming" ? { ...s, status: "failed", failure: "serviceError", text: "" } : s;
+}
+
+// Only verified/partly citations are ever shown; anything else is treated as removed.
+export function isShown(c: Citation): boolean {
+  return c.status === "verified" || c.status === "partly";
+}
+
 export type Segment =
   | { type: "text"; text: string }
   | { type: "cite"; citation: Citation };
@@ -59,7 +70,7 @@ export function toSegments(text: string, ce: CitationsEvent | null): Segment[] {
   for (const m of text.matchAll(/\[(S[1-8])\]/g)) {
     const i = m.index ?? 0;
     if (i > last) out.push({ type: "text", text: text.slice(last, i) });
-    const c = ce?.citations.find((x) => x.source_id === m[1]);
+    const c = ce?.citations.filter(isShown).find((x) => x.source_id === m[1]);
     if (c) out.push({ type: "cite", citation: c });
     last = i + m[0].length;
   }

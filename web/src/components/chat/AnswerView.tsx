@@ -1,6 +1,6 @@
 import { Card, CitationChip } from "@/components/ui";
 import { CITATION_AS_RECORDED, UNVERIFIED_NOTE } from "@/lib/copy";
-import { citationHref, toSegments, type AnswerState } from "@/lib/chat/state";
+import { citationHref, isShown, toSegments, type AnswerState } from "@/lib/chat/state";
 import { FailureCard } from "./FailureCard";
 
 export function AnswerView({ answer, onRetry }: { answer: AnswerState; onRetry?: () => void }) {
@@ -24,9 +24,9 @@ export function AnswerView({ answer, onRetry }: { answer: AnswerState; onRetry?:
         )}
       </p>
       {ce && ce.removed_count > 0 && <p className="mt-3 text-small text-partly">{UNVERIFIED_NOTE}</p>}
-      {ce && ce.citations.length > 0 && (
+      {ce && ce.citations.some(isShown) && (
         <ul className="mt-4 flex flex-col gap-2 text-small">
-          {ce.citations.map((c) => (
+          {ce.citations.filter(isShown).map((c) => (
             <li key={c.source_id} className="flex flex-wrap items-center gap-2">
               <CitationChip label={c.source_id} status={c.status} dataAsOf={ce.data_as_of} href={citationHref(c)} />
               <span>{c.title ?? c.record_id}</span>

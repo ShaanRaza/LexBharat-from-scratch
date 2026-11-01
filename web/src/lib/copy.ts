@@ -43,3 +43,10 @@ export const FAILURES = {
     hint: "You were not charged for this.",
   },
 } as const;
+
+// Sign-up consent. The real notice is a versioned document in legal/ and does not exist
+// yet (legal/README.md). NEEDS-OWNER: wording and version below are placeholders.
+export const CONSENT_NOTICE_VERSION = process.env.NEXT_PUBLIC_CONSENT_NOTICE_VERSION ?? "draft-0";
+export const CONSENT_PURPOSE = "service";
+export const CONSENT_TEXT =
+  "I have read the consent notice and privacy policy and agree to my data being used to provide this service."; // NEEDS-OWNER

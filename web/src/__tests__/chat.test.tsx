@@ -64,3 +64,24 @@ describe("ChatScreen (fake mode)", () => {
     await waitFor(() => expect(screen.getByText(FAILURES.outsideCoverage.body)).toBeInTheDocument());
   });
 });
+
+import { endOfStream, isShown } from "@/lib/chat/state";
+describe("stream safety", () => {
+  it("end of stream without done is a service error with text cleared", () => {
+    let s = applyEvent(newAnswer("q"), { event: "token", data: { text: "partial" } });
+    s = endOfStream(s);
+    expect(s.failure).toBe("serviceError");
+    expect(s.text).toBe("");
+  });
+  it("a finished answer is untouched", () => {
+    const s = applyEvent(newAnswer("q"), { event: "done", data: { message_id: null, from_cache: false, refused: false } });
+    expect(endOfStream(s)).toBe(s);
+  });
+  it("unknown statuses are not shown", () => {
+    expect(isShown({ ...FAKE_CITATIONS[0], status: "failed" as never })).toBe(false);
+  });
+  it("shows the demo banner in fake mode", () => {
+    render(<ChatScreen />);
+    expect(screen.getByText(/DEMO DATA/)).toBeInTheDocument();
+  });
+});

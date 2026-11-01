@@ -1,5 +1,6 @@
 "use client";
 import { SearchBar, StandingNotices } from "@/components/ui";
+import { DemoBanner } from "@/components/ui/DemoBanner";
 import { useChat } from "@/lib/chat/useChat";
 import { AnswerView } from "./AnswerView";
 
@@ -7,6 +8,7 @@ export function ChatScreen() {
   const { answers, ask, busy } = useChat();
   return (
     <div className="flex flex-col gap-section">
+      <DemoBanner />
       <SearchBar onSubmit={ask} disabled={busy} />
       <div className="flex flex-col gap-4">
         {answers.map((a, i) => (
@@ -18,7 +20,7 @@ export function ChatScreen() {
           </section>
         ))}
       </div>
-      <StandingNotices />
+      <StandingNotices dataAsOf={answers.findLast((a) => a.citations)?.citations?.data_as_of} />
     </div>
   );
 }
