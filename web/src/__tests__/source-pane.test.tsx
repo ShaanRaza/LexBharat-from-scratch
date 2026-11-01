@@ -40,7 +40,7 @@ describe("source pane (presentational)", () => {
     render(
       <SourcePane citation={FAKE_CITATIONS[0]} state={{ status: "section", record: FAKE_SECTIONS[0] }} dataAsOf="d" clicks={1} onClose={() => {}} />,
     );
-    expect(screen.getByText("in-force status not checked")).toBeInTheDocument();
+    expect(screen.getByText("In-force status not checked for this Act.")).toBeInTheDocument();
   });
 
   it("stacks on narrow widths: no side-by-side classes below the large breakpoint", () => {
@@ -77,7 +77,7 @@ describe("answer with the source beside it", () => {
     expect(chip).toHaveAttribute("href", "/acts/ipc-1860/420");
     fireEvent.click(chip);
     const pane = await screen.findByRole("complementary", { name: "Source" });
-    await waitFor(() => expect(within(pane).getByText("in-force status not checked")).toBeInTheDocument());
+    await waitFor(() => expect(within(pane).getByText("In-force status not checked for this Act.")).toBeInTheDocument());
   });
 
   it("a modified click is left to the browser (new tab), and Close removes the pane", async () => {

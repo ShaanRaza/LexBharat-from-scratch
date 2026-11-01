@@ -12,7 +12,7 @@ async function Coverage() {
 export default function Page() {
   return (
     <PageShell>
-      <h1 className="mb-4 text-title font-extrabold">{COVERAGE_TITLE}</h1>
+      <h1 className="mb-4 text-title font-bold">{COVERAGE_TITLE}</h1>
       <Suspense fallback={<Loading />}>
         <Coverage />
       </Suspense>

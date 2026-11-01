@@ -6,7 +6,7 @@ import { FAKE_CASE, FAKE_SECTIONS } from "@/lib/fake/data";
 describe("ActSection", () => {
   it("says in-force status not checked when act_status is unfilled", () => {
     render(<ActSection s={FAKE_SECTIONS[0]} />);
-    expect(screen.getByText("in-force status not checked")).toBeInTheDocument();
+    expect(screen.getByText("In-force status not checked for this Act.")).toBeInTheDocument();
     expect(screen.queryByText("In force")).toBeNull();
   });
   it("shows In force only when checked", () => {

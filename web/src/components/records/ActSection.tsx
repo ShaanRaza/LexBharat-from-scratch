@@ -8,7 +8,7 @@ export function ActSection({ s }: { s: SectionOut }) {
   return (
     <article>
       <p className="text-small text-ink-soft">{s.act_name}</p>
-      <h1 className="text-title font-extrabold">
+      <h1 className="text-title font-bold">
         Section {s.section}
         {s.section_title ? `: ${s.section_title}` : ""}
       </h1>

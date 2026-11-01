@@ -130,7 +130,7 @@ describe("deleting asks which delete is meant", () => {
     fakeDb.matters = []; // the server will say not found
     fireEvent.click(within(d).getByLabelText("Delete the matter and everything in it"));
     fireEvent.click(within(d).getByRole("button", { name: "Delete" }));
-    expect(await within(d).findByRole("alert")).toHaveTextContent(/could not finish deleting/);
+    expect(await within(d).findByRole("alert")).toHaveTextContent(/The matter was kept/);
     expect(push).not.toHaveBeenCalled();
   });
 });

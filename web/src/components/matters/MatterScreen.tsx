@@ -65,7 +65,7 @@ export function MatterScreen({ id }: { id: string }) {
         {matter.status === "archived" && <Label>Archived</Label>}
       </div>
       {renaming === null ? (
-        <h1 className="text-title font-extrabold">{matter.title}</h1>
+        <h1 className="text-title font-bold">{matter.title}</h1>
       ) : (
         <form
           className="flex flex-wrap items-end gap-2"
@@ -104,7 +104,7 @@ export function MatterScreen({ id }: { id: string }) {
         </p>
       )}
       <section aria-label={MATTER_CONVERSATIONS} className="flex flex-col gap-2">
-        <h2 className="text-label font-bold uppercase tracking-wide text-ink-soft">{MATTER_CONVERSATIONS}</h2>
+        <h2 className="font-sans text-label font-bold uppercase tracking-wide text-ink-soft">{MATTER_CONVERSATIONS}</h2>
         {matter.conversations.length === 0 && <p className="text-ink-soft">{MATTER_CONVERSATIONS_NONE}</p>}
         <ul className="flex flex-col gap-2">
           {matter.conversations.map((c) => (

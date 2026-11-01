@@ -19,7 +19,10 @@ export const UNCHECKED_LABEL = "Support not checked";
 export const PARTLY_LABEL = "Supports only partly";
 export const UNVERIFIED_NOTE = "One authority could not be verified and was removed.";
 export const CITATION_AS_RECORDED = "as recorded in the dataset";
-export const IN_FORCE_NOT_CHECKED = "in-force status not checked";
+// NEEDS-OWNER (draft, DESIGN-DIRECTION section 6, not approved). CLAUDE.md section 6 and
+// UX-COPY name the label "in-force status not checked"; this draft is the same words as a
+// sentence. The owner settles which.
+export const IN_FORCE_NOT_CHECKED = "In-force status not checked for this Act.";
 
 export const FAILURES = {
   notFound: {
@@ -39,7 +42,10 @@ export const FAILURES = {
   // not_in_dataset_message from GET /coverage; this is the fallback.
   notInDataset: {
     title: "Not in our dataset",
-    body: "This is not in our dataset.",
+    // NEEDS-OWNER (draft, DESIGN-DIRECTION section 6, not approved). Fallback only: the
+    // live text is not_in_dataset_message from GET /coverage. The draft contains "does
+    // not exist" inside a negation; O7 said never to say an item does not exist.
+    body: "Not in our dataset. That does not mean it does not exist \u2014 it means our snapshot does not hold it.",
     hint: "See the coverage page for what the dataset holds.",
   },
   serviceError: {
@@ -135,7 +141,10 @@ export const MATTER_DELETE_ONLY = (one: string) => `Delete the ${one.toLowerCase
 export const MATTER_DELETE_ALL = (one: string) => `Delete the ${one.toLowerCase()} and everything in it`;
 export const MATTER_DELETE_ALL_WARNING = "This also permanently deletes its conversations and uploaded files. It cannot be undone."; // NEEDS-OWNER
 export const MATTER_DELETE_TITLE = (one: string) => `Delete this ${one.toLowerCase()}?`;
-export const MATTER_DELETE_FAILED = "We could not finish deleting. Nothing else was removed and it was kept. Please try again."; // NEEDS-OWNER
+// NEEDS-OWNER (draft, DESIGN-DIRECTION section 6, not approved). Accuracy flag: files
+// deleted before the one that failed stay deleted, so "nothing was removed" is not always
+// true. The owner should settle the words.
+export const MATTER_DELETE_FAILED = "The matter was kept. One or more files could not be deleted, so nothing was removed.";
 export const HISTORY_TITLE = "History and search";
 export const HISTORY_SEARCH_PLACEHOLDER = "Search your own saved questions and answers";
 export const HISTORY_SEARCH = "Search";
@@ -149,11 +158,15 @@ export const SHARE_LABEL = "Share";
 export const SHARE_WORKING = "Creating link";
 export const SHARE_LINK_LABEL = "Link to this answer";
 export const SHARE_COPY_LINK = "Copy link";
-export const SHARE_NOTE = (date: string) =>
-  `Anyone who has this link can read this answer until ${date}. It is not listed in search engines. You can switch it off under Shared links.`;
+// NEEDS-OWNER (draft, DESIGN-DIRECTION section 6, not approved). The expiry is a separate
+// interface line (SHARE_EXPIRES) so the draft sentence stays exactly as written.
+export const SHARE_NOTE = "Anyone with this link can read this answer. It does not show your name.";
+export const SHARE_EXPIRES = (date: string) => `Expires ${date}`;
+export const SHARE_MANAGE_HINT = "You can switch it off under Shared links.";
 export const SHARE_FAILED = "We could not create a link. Please try again.";
 export const SHARED_TITLE = "Shared answer";
-export const SHARED_UNAVAILABLE = "This link is not available.";
+// NEEDS-OWNER (draft, DESIGN-DIRECTION section 6, not approved).
+export const SHARED_UNAVAILABLE = "This link is not available. It may have been switched off or expired.";
 export const SHARED_LINKS_TITLE = "Shared links";
 export const SHARED_LINKS_NONE = "You have not shared any answers.";
 export const SHARED_REVOKE = "Switch off";

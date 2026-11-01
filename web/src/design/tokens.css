@@ -1,52 +1,77 @@
 /*
-  THE design tokens file. Every colour, font, size, spacing step and corner radius
-  used anywhere in web/ is defined here and nowhere else. To reskin the product,
-  edit this file only. Components use the names (bg-accent, text-ink, rounded-card)
-  and never a raw value.
+  THE design tokens file. Every colour, font, size, spacing step, corner radius, measure
+  and motion value used anywhere in web/ is defined here and nowhere else. To reskin the
+  product, edit this file (and the font choice in fonts.ts) only. Components use the
+  names (bg-accent, text-text, rounded-card) and never a raw value.
 
-  Source of the current look: docs/KanoonBuddy-Website-Design-Doc-v2.md section 6.
+  Source of the current look: docs/DESIGN-DIRECTION.md (a DRAFT for the owner to react to
+  on localhost). Near-neutral and warm: the page should feel like paper, not a dashboard.
+  Dark mode is not in v1; every colour is a variable so it can be added without touching
+  components.
 */
 @theme {
-  /* Colours */
-  --color-page: #ffffff;
-  --color-ink: #0f1b33;
-  --color-ink-soft: #4a5670;
+  /* --- Palette (DESIGN-DIRECTION section 3) -------------------------------------- */
+  --color-bg: #fafaf9; /* page: warm off-white, easier than white for long reading */
+  --color-surface: #ffffff; /* cards, the source pane */
+  --color-text: #1c1917; /* body */
+  --color-text-muted: #57534e; /* labels, dates, the credit line */
+  --color-border: #e7e5e4; /* hairlines: borders separate, not shadows */
+  --color-accent: #1e3a5f; /* ink blue: links, focus, the primary button; sparingly */
+  --color-warn: #92400e; /* a removed citation, a failed check: muted, never alarming */
   --color-on-accent: #ffffff;
-  --color-accent: #d9480f;
-  --color-accent-hover: #b43a0a;
-  --color-panel: #fff5ee;
-  --color-tint: #ffe3d0;
-  --color-line: #f3e1d4;
-  --color-verified: #1f7a4d;
-  --color-verified-bg: #e6f4ec;
-  --color-partly: #b45309;
-  --color-partly-bg: #fdf0dc;
-  --color-unchecked: #4a5670;
-  --color-unchecked-bg: #eef0f4;
-  --color-notfound: #b45309;
-  --color-danger: #b42318;
-  --color-backdrop: #0f1b3380;
+  --color-accent-hover: #162d4a;
+  --color-tint: #e9eef5; /* the cited paragraph, small labels: a faint wash of the accent */
+  --color-backdrop: #1c191780;
 
-  /* Fonts */
-  --font-sans: var(--font-jakarta), system-ui, sans-serif;
+  /* --- Names the components already use, pointed at the palette above --------------
+     Re-pointing here means no component had to be renamed to change the look. */
+  --color-page: var(--color-bg);
+  --color-ink: var(--color-text);
+  --color-ink-soft: var(--color-text-muted);
+  --color-line: var(--color-border);
+  --color-panel: var(--color-surface);
+  /* The tick is NOT a green check (DESIGN-DIRECTION section 4): the tick does not mean
+     good law, and green reads as approval. It is a neutral outline in muted text. */
+  --color-verified: var(--color-text-muted);
+  --color-verified-bg: var(--color-surface);
+  --color-partly: var(--color-warn);
+  --color-partly-bg: var(--color-surface);
+  --color-unchecked: var(--color-text-muted);
+  --color-unchecked-bg: var(--color-bg);
+  --color-notfound: var(--color-warn);
+  --color-danger: var(--color-warn);
 
-  /* Font sizes */
+  /* --- Type (section 2) ------------------------------------------------------------
+     Headings and the wordmark: Noto Serif. Interface and body: Inter. The Devanagari
+     families sit in the stacks now so Hindi, after the launch gate, is a token swap. */
+  --font-serif: var(--font-noto-serif), var(--font-noto-serif-deva), "Noto Serif", serif;
+  --font-sans: var(--font-inter), var(--font-noto-sans-deva), system-ui, sans-serif;
+
   --text-label: 0.75rem;
   --text-small: 0.875rem;
-  --text-body: 1rem;
+  --text-body: 1rem; /* 16px is the floor on phones */
+  --text-body--line-height: 1.6;
   --text-lead: 1.125rem;
   --text-title: 1.5rem;
   --text-display: 2.25rem;
 
-  /* Spacing steps */
+  /* --- Spacing: a 4px base scale (section 5) --------------------------------------- */
+  --spacing: 0.25rem;
   --spacing-gutter: 1rem;
   --spacing-card: 1.25rem;
   --spacing-section: 2.5rem;
 
-  /* Radii and widths */
+  /* --- Radii, widths and the reading measure ---------------------------------------- */
   --radius-chip: 0.5rem;
-  --radius-card: 1rem;
+  --radius-card: 0.75rem;
   --radius-pill: 9999px;
   --container-content: 1040px;
   --container-reading: 720px;
+  --container-measure: 68ch; /* answer text: legal prose is dense, keep the line short */
+  --container-sidebar: 240px;
+
+  /* --- Motion (section 5): only where it carries meaning, 150ms or less ---------------
+     The only user of --motion-step is the progress panel (globals.css), and it is switched
+     off under prefers-reduced-motion. */
+  --motion-step: 150ms;
 }

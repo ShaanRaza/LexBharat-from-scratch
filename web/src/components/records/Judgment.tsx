@@ -16,7 +16,7 @@ export function judgmentHeading(c: CaseOut): string {
 export function Judgment({ c, highlight }: { c: CaseOut; highlight?: string }) {
   return (
     <article>
-      <h1 className="text-title font-extrabold">{judgmentHeading(c)}</h1>
+      <h1 className="text-title font-bold">{judgmentHeading(c)}</h1>
       <dl className="mt-2 text-small text-ink-soft">
         {c.court && <div>{c.court}</div>}
         {c.decision_date && <div>Decided {c.decision_date}</div>}

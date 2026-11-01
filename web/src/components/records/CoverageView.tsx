@@ -18,7 +18,7 @@ export function CoverageView({ coverage }: { coverage: CoverageOut | null }) {
       {coverage.status === "placeholder" && <Label>{COVERAGE_PLACEHOLDER}</Label>}
       <p className="leading-relaxed">{coverage.sentence}</p>
       <section aria-label={COVERAGE_COVERED}>
-        <h2 className="text-label font-bold uppercase tracking-wide text-ink-soft">{COVERAGE_COVERED}</h2>
+        <h2 className="font-sans text-label font-bold uppercase tracking-wide text-ink-soft">{COVERAGE_COVERED}</h2>
         <ul className="mt-1 list-disc pl-5">
           {[...coverage.courts, ...coverage.instruments].map((i) => (
             <li key={i.id}>{i.label}</li>
@@ -26,7 +26,7 @@ export function CoverageView({ coverage }: { coverage: CoverageOut | null }) {
         </ul>
       </section>
       <section aria-label={COVERAGE_EXCLUDED}>
-        <h2 className="text-label font-bold uppercase tracking-wide text-ink-soft">{COVERAGE_EXCLUDED}</h2>
+        <h2 className="font-sans text-label font-bold uppercase tracking-wide text-ink-soft">{COVERAGE_EXCLUDED}</h2>
         <ul className="mt-1 list-disc pl-5">
           {coverage.excluded.map((x) => (
             <li key={x}>{x}</li>

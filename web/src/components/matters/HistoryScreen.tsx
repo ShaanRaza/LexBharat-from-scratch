@@ -19,7 +19,7 @@ export function HistoryScreen() {
       <SearchBar placeholder={HISTORY_SEARCH_PLACEHOLDER} submitLabel={HISTORY_SEARCH} onSubmit={(t) => setQ(t)} />
       {q === null ? (
         <section aria-label={HISTORY_RECENT} className="flex flex-col gap-2">
-          <h2 className="text-label font-bold uppercase tracking-wide text-ink-soft">{HISTORY_RECENT}</h2>
+          <h2 className="font-sans text-label font-bold uppercase tracking-wide text-ink-soft">{HISTORY_RECENT}</h2>
           {recent.status === "ready" && recent.value!.length === 0 && <p className="text-ink-soft">{HISTORY_NONE}</p>}
           <ul className="flex flex-col gap-2">
             {recent.value?.map((c) => (

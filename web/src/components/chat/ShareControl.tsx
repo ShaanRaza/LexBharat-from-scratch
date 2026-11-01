@@ -3,7 +3,17 @@ import { useState } from "react";
 import { Button, Card, TextField } from "@/components/ui";
 import { ApiError } from "@/lib/api/client";
 import type { ShareCreated } from "@/lib/api/types";
-import { SHARE_COPY_LINK, SHARE_FAILED, SHARE_LABEL, SHARE_LINK_LABEL, SHARE_NOTE, SHARE_WORKING, COPIED } from "@/lib/copy";
+import {
+  COPIED,
+  SHARE_COPY_LINK,
+  SHARE_EXPIRES,
+  SHARE_FAILED,
+  SHARE_LABEL,
+  SHARE_LINK_LABEL,
+  SHARE_MANAGE_HINT,
+  SHARE_NOTE,
+  SHARE_WORKING,
+} from "@/lib/copy";
 
 type State =
   | { status: "idle" }
@@ -72,7 +82,10 @@ export function ShareControl({
               </span>
             )}
           </div>
-          <p className="text-small text-ink-soft">{SHARE_NOTE(state.link.expires_at.slice(0, 10))}</p>
+          <p className="text-small text-ink-soft">{SHARE_NOTE}</p>
+          <p className="text-small text-ink-soft">
+            {SHARE_EXPIRES(state.link.expires_at.slice(0, 10))}. {SHARE_MANAGE_HINT}
+          </p>
         </Card>
       )}
     </div>

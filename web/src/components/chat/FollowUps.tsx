@@ -6,7 +6,7 @@ export function FollowUps({ suggestions, onAsk, disabled }: { suggestions: strin
   if (suggestions.length === 0) return null;
   return (
     <section aria-label={FOLLOWUPS_TITLE} className="flex flex-col gap-2">
-      <h3 className="text-label font-bold uppercase tracking-wide text-ink-soft">{FOLLOWUPS_TITLE}</h3>
+      <h3 className="font-sans text-label font-bold uppercase tracking-wide text-ink-soft">{FOLLOWUPS_TITLE}</h3>
       <ul className="flex flex-col items-start gap-2">
         {suggestions.map((q) => (
           <li key={q}>

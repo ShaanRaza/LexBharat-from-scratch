@@ -1,7 +1,12 @@
+import { PartlyMark, TickMark, UncheckedMark } from "./Marks";
 import { markFor, meaningFor, type CitationStatus } from "@/lib/citation";
 
-// One chip per citation. Tick only for "verified"; warning for "partly"; no mark otherwise.
-// Never one badge for a whole answer (CLAUDE.md section 5).
+// One chip per citation, never one badge for a whole answer (CLAUDE.md section 5).
+// Text-led and neutral (docs/DESIGN-DIRECTION.md section 4): a small outline mark in muted
+// text, then the label; the words "Record found in dataset (data as of ...)" are printed
+// next to it in the citation list and carried here for screen readers and the tooltip.
+// The mark is an outline, not a green check: the tick means the record exists, not that
+// the case is good law. "partly" and "unchecked" differ by mark and by words, not by alarm.
 export function CitationChip({
   label,
   status,
@@ -20,12 +25,12 @@ export function CitationChip({
   const mark = markFor(status);
   const tone =
     mark === "tick"
-      ? "bg-verified-bg text-verified"
+      ? "border-border bg-surface text-text-muted"
       : mark === "warning"
-        ? "bg-partly-bg text-partly"
+        ? "border-warn bg-surface text-warn"
         : mark === "unchecked"
-          ? "bg-unchecked-bg text-unchecked border border-dashed border-unchecked"
-          : "bg-panel text-ink-soft";
+          ? "border-dashed border-text-muted bg-bg text-text-muted"
+          : "border-border bg-surface text-text-muted";
   const meaning = meaningFor(mark, dataAsOf);
   return (
     <a
@@ -37,11 +42,11 @@ export function CitationChip({
       }}
       title={meaning}
       data-mark={mark}
-      className={`inline-flex items-center gap-1 rounded-chip px-2 py-1 text-label font-semibold ${tone}`}
+      className={`inline-flex items-center gap-1 rounded-chip border px-2 py-0.5 align-baseline text-label font-semibold no-underline ${tone}`}
     >
-      {mark === "tick" && <span aria-hidden>✓</span>}
-      {mark === "warning" && <span aria-hidden>⚠</span>}
-      {mark === "unchecked" && <span aria-hidden>?</span>}
+      {mark === "tick" && <TickMark />}
+      {mark === "warning" && <PartlyMark />}
+      {mark === "unchecked" && <UncheckedMark />}
       <span>{label}</span>
       <span className="sr-only">{meaning}</span>
     </a>

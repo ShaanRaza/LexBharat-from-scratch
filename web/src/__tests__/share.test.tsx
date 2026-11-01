@@ -22,8 +22,8 @@ describe("the Share control", () => {
     const box = (await screen.findByLabelText("Link to this answer")) as HTMLInputElement;
     expect(box.value).toBe("https://app.example/s/tok-abc-123");
     expect(box).toHaveAttribute("readonly");
-    expect(screen.getByText(/until 2026-12-02/)).toBeInTheDocument();
-    expect(screen.getByText(/not listed in search engines/)).toBeInTheDocument();
+    expect(screen.getByText(/Expires 2026-12-02/)).toBeInTheDocument();
+    expect(screen.getByText("Anyone with this link can read this answer. It does not show your name.")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Copy link" }));
     expect(await screen.findByText("Copied")).toBeInTheDocument();
     expect(copy).toHaveBeenCalledWith("https://app.example/s/tok-abc-123");
@@ -105,7 +105,7 @@ describe("the public page", () => {
 
   it("an unavailable link says so and shows nothing else", () => {
     const { container } = render(<SharedAnswerView shared={null} />);
-    expect(screen.getByRole("alert")).toHaveTextContent("This link is not available.");
+    expect(screen.getByRole("alert")).toHaveTextContent("This link is not available. It may have been switched off or expired.");
     expect(container.textContent).not.toMatch(/Sample answer/);
   });
 

@@ -2,8 +2,45 @@
 @import "../design/tokens.css";
 
 body {
-  background: var(--color-page);
-  color: var(--color-ink);
+  background: var(--color-bg);
+  color: var(--color-text);
   font-family: var(--font-sans);
   font-size: var(--text-body);
+  line-height: 1.6;
+}
+
+/* Headings and the wordmark use the serif (a token). Small interface labels that happen to
+   be headings opt back out with the font-sans utility. */
+h1,
+h2,
+h3 {
+  font-family: var(--font-serif);
+  text-wrap: balance;
+}
+
+/* Browser surfaces that belong to no design system by default: theme them. */
+::selection {
+  background: var(--color-tint);
+  color: var(--color-text);
+}
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+a {
+  text-underline-offset: 0.2em;
+}
+
+/* The one authored motion: a progress step appearing. 150ms or less, and none at all for
+   people who ask for reduced motion. */
+@keyframes step-in {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .step-enter {
+    animation: step-in var(--motion-step) ease-out;
+  }
 }

@@ -12,7 +12,7 @@ async function Stats() {
 export default function Page() {
   return (
     <PageShell>
-      <h1 className="mb-4 text-title font-extrabold">{STATS_TITLE}</h1>
+      <h1 className="mb-4 text-title font-bold">{STATS_TITLE}</h1>
       <Suspense fallback={<Loading />}>
         <Stats />
       </Suspense>

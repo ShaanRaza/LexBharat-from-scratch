@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui";
+import { StepActiveMark, StepDoneMark } from "@/components/ui/Marks";
 import { PROGRESS_COUNTS, PROGRESS_LABELS } from "@/lib/copy";
 import type { StepEventData } from "@/lib/api/types";
 
@@ -14,9 +15,14 @@ export function ProgressPanel({ steps, done }: { steps: StepEventData[]; done?: 
           const active = !done && i === last;
           const counts = PROGRESS_COUNTS(s.found, s.kept);
           return (
-            <li key={`${s.step}-${i}`} data-state={active ? "active" : "done"} className={active ? "font-semibold text-ink" : "text-ink-soft"}>
-              <span aria-hidden>{active ? "…" : "✓"}</span> {PROGRESS_LABELS[s.step]}
-              {counts && <span className="ml-2 text-label text-ink-soft">{counts}</span>}
+            <li
+              key={`${s.step}-${i}`}
+              data-state={active ? "active" : "done"}
+              className={`step-enter flex flex-wrap items-center gap-2 ${active ? "font-semibold text-ink" : "text-ink-soft"}`}
+            >
+              {active ? <StepActiveMark /> : <StepDoneMark />}
+              <span>{PROGRESS_LABELS[s.step]}</span>
+              {counts && <span className="text-label font-normal text-ink-soft">{counts}</span>}
             </li>
           );
         })}

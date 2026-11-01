@@ -37,7 +37,7 @@ export function MattersScreen() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-title font-extrabold">{words.many}</h1>
+      <h1 className="text-title font-bold">{words.many}</h1>
       <form onSubmit={create} className="flex flex-wrap items-end gap-2">
         <div className="min-w-0 flex-1 basis-full sm:basis-0">
           <TextField label={MATTER_NEW_LABEL(words.one)} value={title} onChange={(e) => setTitle(e.target.value)} />
