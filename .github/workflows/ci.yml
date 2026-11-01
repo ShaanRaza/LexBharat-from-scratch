@@ -87,6 +87,7 @@ jobs:
       - name: Compose file is valid
         env:
           POSTGRES_PASSWORD: ci-dummy-not-a-secret
+          APP_DB_PASSWORD: ci-dummy-not-a-secret
         run: docker compose -f infra/docker-compose.yml config -q
 
       - uses: docker/setup-qemu-action@v3

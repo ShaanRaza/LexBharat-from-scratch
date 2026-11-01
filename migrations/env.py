@@ -10,9 +10,15 @@ from core.settings import get_settings
 
 
 def _url() -> str:
-    # Env var first so migrations need no other setting; fall back to config.
+    # Migrations run as the table OWNER (MIGRATION_DATABASE_URL); the application runs
+    # as the non-owning role in DATABASE_URL (A63). With no owner URL set, fall back to
+    # DATABASE_URL so local development and tests need no extra setting.
+    s = get_settings()
     return (
-        os.environ.get("DATABASE_URL") or get_settings().DATABASE_URL.get_secret_value()
+        os.environ.get("MIGRATION_DATABASE_URL")
+        or s.MIGRATION_DATABASE_URL.get_secret_value()
+        or os.environ.get("DATABASE_URL")
+        or s.DATABASE_URL.get_secret_value()
     )
 
 

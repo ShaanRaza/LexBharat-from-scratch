@@ -72,6 +72,11 @@ class Settings(BaseSettings):
     DATABASE_URL: SecretStr = SecretStr(
         "postgresql+psycopg://kanoon:kanoon@postgres:5432/kanoon"
     )
+    # The application connects as DATABASE_URL: it should be the NON-OWNING role below
+    # (data access only). Migrations connect as MIGRATION_DATABASE_URL, the table owner;
+    # empty = use DATABASE_URL (fine for local development, not for production). A63.
+    MIGRATION_DATABASE_URL: SecretStr = SecretStr("")
+    APP_DB_ROLE: str = "app_rw"
     REDIS_URL: str = "redis://redis:6379/0"
     ANSWER_CACHE_TTL_DAYS: int = 7
 
