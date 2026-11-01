@@ -45,6 +45,10 @@ class DecisionService(Protocol):
     ) -> tuple[Rating, float]: ...
     async def claim_support(self, sentence: str, passage: Passage) -> Support: ...
 
+    async def aclose(self) -> None:
+        """Optional: call at shutdown to close vendor clients. Never raises."""
+        ...
+
 
 class Backend(Protocol):
     """One decider (Jev or Gemini). Raises DecisionUnavailable on any failure."""
@@ -148,6 +152,16 @@ class FallbackDecisions:
                 )
         return await call(self._fb)
 
+    async def aclose(self) -> None:
+        """Close the Jev client if there is one. Never raises; safe to call twice."""
+        close = getattr(self._jev, "aclose", None)
+        if close is None:
+            return
+        try:
+            await close()
+        except Exception:  # noqa: BLE001
+            log.warning("closing the Jev client failed")
+
     async def decide(self, query: str, *, uploads: bool = False) -> Decision:
         s = self._s
         # Jev answers scope + safety; filters stay on the rewrite step (see jev.py).
@@ -184,6 +198,9 @@ class FakeDecisions:
         refuse_in_production()
         self.down, self.scope, self.safety, self.delay_s = down, scope, safety, delay_s
         self.seen_kinds: list[str] = []
+
+    async def aclose(self) -> None:
+        return None
 
     async def _gate(self) -> None:
         if self.delay_s:

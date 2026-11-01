@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator, Awaitable, Callable, Sequence
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Literal, Protocol
+from typing import TYPE_CHECKING, Any, Literal, Protocol
 
 if TYPE_CHECKING:  # type-only imports: keep this file free of vendor code
     from adapters.cache import AnswerCache
@@ -341,6 +341,9 @@ class Deps:
     gate: GateFn
     verify: VerifyFn
     notes: Callable[[Sequence[str]], Sequence[str]] = lambda ids: ()  # reviewed notes
+    # Called once at the start of every run. Platform passes adapters.jev.begin_run so
+    # Jev batches stay inside one run; the default does nothing.
+    begin_run: Callable[[], Any] = lambda: None
 
 
 async def run_pipeline(request: PipelineRequest, deps: Deps) -> PipelineResult:

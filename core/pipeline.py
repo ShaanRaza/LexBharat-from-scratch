@@ -12,7 +12,6 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from adapters.jev import begin_run
 from core.answer import answer, model_for
 from core.cache import cache_lookup, cache_store, key_for
 from core.contracts import (
@@ -103,7 +102,7 @@ async def _run(request: PipelineRequest, deps: Deps) -> PipelineResult:
 
 async def run_pipeline(request: PipelineRequest, deps: Deps) -> PipelineResult:
     """Steps 1-9 and 11. Any failure becomes outcome "error"; nothing partial."""
-    begin_run()  # Jev batches only calls from this run
+    deps.begin_run()  # Jev batches only calls from this run
     try:
         result = await _run(request, deps)
     except Exception as e:  # noqa: BLE001
