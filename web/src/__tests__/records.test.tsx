@@ -35,3 +35,19 @@ describe("no party names", () => {
     expect(screen.queryByText(/Sample v\. Sample/)).toBeNull();
   });
 });
+
+import { judgmentHeading } from "@/components/records/Judgment";
+describe("judgment heading and titles", () => {
+  it("falls back to court and year", () => {
+    expect(judgmentHeading({ ...FAKE_CASE, citation_string: null, case_number: null })).toBe("Supreme Court judgment, 2020");
+  });
+  it("never renders the title in chat citations", async () => {
+    const { ChatScreen } = await import("@/components/chat/ChatScreen");
+    const { fireEvent, waitFor } = await import("@testing-library/react");
+    render(<ChatScreen />);
+    fireEvent.change(screen.getByLabelText("Your question"), { target: { value: "x" } });
+    fireEvent.click(screen.getByText("Ask"));
+    await waitFor(() => expect(screen.getAllByText(/Record found/).length).toBeGreaterThan(0));
+    expect(screen.queryByText(/Sample v\. Sample/)).toBeNull();
+  });
+});

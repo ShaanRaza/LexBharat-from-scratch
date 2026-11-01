@@ -4,10 +4,19 @@ import type { CaseOut } from "@/lib/api/types";
 
 // A judgment with paragraph anchors: /cases/<id>#p12 scrolls to and highlights p12.
 // The case title is a party-name string, so it is not shown (owner to decide). Judge and party names are never shown (CLAUDE.md section 6): CaseOut has no such field.
+// Identify a judgment without its title (party names): stored citation string, else case
+// number, else court and year. Owner may later allow c.title here.
+export function judgmentHeading(c: CaseOut): string {
+  if (c.citation_string) return `${c.citation_string} (${CITATION_AS_RECORDED})`;
+  if (c.case_number) return c.case_number;
+  const year = c.decision_date?.slice(0, 4);
+  return `Supreme Court judgment${year ? `, ${year}` : ""}`;
+}
+
 export function Judgment({ c }: { c: CaseOut }) {
   return (
     <article>
-      <h1 className="text-title font-extrabold">{c.case_number ?? c.record_id}</h1>
+      <h1 className="text-title font-extrabold">{judgmentHeading(c)}</h1>
       <dl className="mt-2 text-small text-ink-soft">
         {c.court && <div>{c.court}</div>}
         {c.decision_date && <div>Decided {c.decision_date}</div>}

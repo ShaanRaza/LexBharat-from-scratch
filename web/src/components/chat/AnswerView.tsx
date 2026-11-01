@@ -1,6 +1,6 @@
 import { Card, CitationChip } from "@/components/ui";
 import { CITATION_AS_RECORDED, UNVERIFIED_NOTE } from "@/lib/copy";
-import { citationHref, isShown, toSegments, type AnswerState } from "@/lib/chat/state";
+import { citationHref, citationName, isShown, toSegments, type AnswerState } from "@/lib/chat/state";
 import { FailureCard } from "./FailureCard";
 
 export function AnswerView({ answer, onRetry }: { answer: AnswerState; onRetry?: () => void }) {
@@ -29,7 +29,7 @@ export function AnswerView({ answer, onRetry }: { answer: AnswerState; onRetry?:
           {ce.citations.filter(isShown).map((c) => (
             <li key={c.source_id} className="flex flex-wrap items-center gap-2">
               <CitationChip label={c.source_id} status={c.status} dataAsOf={ce.data_as_of} href={citationHref(c)} />
-              <span>{c.kind === "act" ? (c.title ?? c.record_id) : c.record_id}</span>
+              <span>{citationName(c)}</span>
               {c.citation_string && (
                 <span className="text-ink-soft">
                   {c.citation_string} ({CITATION_AS_RECORDED})

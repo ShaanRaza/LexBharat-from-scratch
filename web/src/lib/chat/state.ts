@@ -83,3 +83,11 @@ export function citationHref(c: Citation): string {
   if (c.kind === "act" && c.act_slug && c.section) return `/acts/${c.act_slug}/${c.section}`;
   return `/cases/${encodeURIComponent(c.record_id)}${c.anchor ? `#${c.anchor}` : ""}`;
 }
+
+// How a citation is named on screen. The title field is NOT used anywhere: for a
+// judgment it is party names (CLAUDE.md section 6). To switch titles back on, change
+// only this function (owner decision pending).
+export function citationName(c: Citation): string {
+  if (c.kind === "act") return `Act section ${c.section ?? ""} (${c.act_slug ?? c.record_id})`.replace("  ", " ");
+  return c.citation_string ?? "Supreme Court judgment";
+}
