@@ -1,6 +1,7 @@
 """Step 4 - Cache: exact match on (rewritten query + filters + model), 7 days.
 
-Only answers that passed verification are cached; upload chats never are. A cached
+Only answers that passed verification are cached; upload chats and answers shaped
+by a matter fact never are (client material must not reach another user). A cached
 answer is stored with its seal and re-checked with is_sealed() when read back, so a
 tampered or stale-key entry is a miss, not an answer."""
 
@@ -72,7 +73,7 @@ def load_result(raw: str, footer: Footer) -> PipelineResult | None:
 async def cache_lookup(
     request: PipelineRequest, key: str, footer: Footer, deps: Deps
 ) -> PipelineResult | None:
-    if request.document_ids:
+    if request.document_ids or request.matter_facts:
         return None
     raw = await deps.cache.get(key)
     return load_result(raw, footer) if raw else None
@@ -81,6 +82,6 @@ async def cache_lookup(
 async def cache_store(
     request: PipelineRequest, key: str, result: PipelineResult, deps: Deps
 ) -> None:
-    if request.document_ids or result.outcome != "answered":
+    if request.document_ids or request.matter_facts or result.outcome != "answered":
         return
     await deps.cache.set(key, dump_result(result), deps.settings.ANSWER_CACHE_TTL_DAYS)

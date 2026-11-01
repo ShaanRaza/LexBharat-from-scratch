@@ -126,6 +126,7 @@ class MemoryRepo:
         m = {
             "id": str(uuid.uuid4()), "role": "user", "content": content,
             "from_cache": False, "citations": [], "created_at": _now(),
+            "shaped_by_upload": False, "shaped_by_matter_fact": False,
         }  # fmt: skip
         self.msgs[conv_id].append(m)
         self.convs[conv_id]["message_count"] += 1
@@ -195,6 +196,8 @@ class MemoryRepo:
         m = {
             "id": str(uuid.uuid4()), "role": "assistant", "content": result.answer.text,
             "from_cache": result.cache_hit, "citations": [], "created_at": _now(),
+            "shaped_by_upload": result.provenance.shaped_by_upload,
+            "shaped_by_matter_fact": result.provenance.shaped_by_matter_fact,
         }  # fmt: skip
         self.msgs[conv_id].append(m)
         self.convs[conv_id]["message_count"] += 1

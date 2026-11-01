@@ -55,6 +55,27 @@ FailReason = Literal[
 ]
 
 
+# --- Matters and answer provenance (PRD-v2 O11, O12, O14) ---------------------------
+MatterKind = Literal[
+    "matter", "project"
+]  # a label ("Matter" / "Project"), not a feature
+MatterStatus = Literal["active", "archived"]
+
+
+@dataclass(frozen=True)
+class AnswerProvenance:
+    """Did the user's own material shape this answer? Decided by the pipeline when the
+    answer is produced and written to the database in step 11 (Save); never worked
+    out later. Sharing (O14) reads it: shareable only if neither flag is set."""
+
+    shaped_by_upload: bool = False
+    shaped_by_matter_fact: bool = False
+
+    @property
+    def shareable(self) -> bool:
+        return not (self.shaped_by_upload or self.shaped_by_matter_fact)
+
+
 # --- Input -------------------------------------------------------------------------
 @dataclass(frozen=True)
 class Turn:
@@ -71,6 +92,9 @@ class PipelineRequest:
     summary: str = ""  # rolling summary of turns older than the last 6
     plan: Literal["free", "student", "pro", "chambers"] = "free"
     document_ids: tuple[str, ...] = ()  # non-empty = upload chat (never cached)
+    # Remembered matter facts (client material, O12). Nothing fills this yet (memory is
+    # not built); if it is ever non-empty the answer is flagged and never cached.
+    matter_facts: tuple[str, ...] = ()
 
 
 # --- Passages (the S1-S8 the model sees) --------------------------------------------
@@ -257,6 +281,7 @@ class PipelineResult:
     input_tokens: int = 0
     output_tokens: int = 0
     removed: tuple[RemovedCitation, ...] = ()
+    provenance: AnswerProvenance = AnswerProvenance()
 
     def __post_init__(self) -> None:
         if self.outcome == "answered":

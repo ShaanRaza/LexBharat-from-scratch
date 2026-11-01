@@ -15,6 +15,7 @@ import logging
 from core.answer import answer, model_for
 from core.cache import cache_lookup, cache_store, key_for
 from core.contracts import (
+    AnswerProvenance,
     Deps,
     Footer,
     PipelineRequest,
@@ -37,6 +38,16 @@ def _footer(deps: Deps, personal: bool = False) -> Footer:
         snapshot_version=s.SNAPSHOT_VERSION,
         credit=s.DATA_CREDIT,
         personal_advice_flag=personal,
+    )
+
+
+def provenance_for(request: PipelineRequest, passages) -> AnswerProvenance:
+    """Step 11 input: did an upload or a matter fact shape this answer? Fails closed:
+    an upload chat counts as upload-shaped even if no upload passage survived."""
+    return AnswerProvenance(
+        shaped_by_upload=bool(request.document_ids)
+        or any(p.kind == "upload" for p in passages),
+        shaped_by_matter_fact=bool(request.matter_facts),
     )
 
 
@@ -95,6 +106,7 @@ async def _run(request: PipelineRequest, deps: Deps) -> PipelineResult:
         input_tokens=draft.input_tokens,
         output_tokens=draft.output_tokens,
         removed=verified.removed,
+        provenance=provenance_for(request, gate.passages),
     )
     await cache_store(request, key, result, deps)  # only verified answers
     return result

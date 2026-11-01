@@ -24,9 +24,7 @@ from types import SimpleNamespace
 from api import schemas as s
 from api.repo import _last_message
 from core.contracts import (
-    Citation as CoreCitation,
-)
-from core.contracts import (
+    AnswerProvenance,
     FinalEvent,
     Footer,
     PipelineRequest,
@@ -34,6 +32,9 @@ from core.contracts import (
     StreamEvent,
     TextDelta,
     Turn,
+)
+from core.contracts import (
+    Citation as CoreCitation,
 )
 
 log = logging.getLogger("api.bridge")
@@ -196,6 +197,7 @@ class FakePipeline:
                 outcome="answered", cache_hit=False,
                 answer=SimpleNamespace(text=result.answer_text, citations=()),
                 model="fake", input_tokens=0, output_tokens=0,
+                provenance=AnswerProvenance(),
             ))  # fmt: skip
         return result
 

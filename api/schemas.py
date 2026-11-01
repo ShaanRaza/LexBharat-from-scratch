@@ -253,6 +253,40 @@ class MessageCreate(BaseModel):
     content: str = Field(min_length=1, max_length=4000)
 
 
+# ---------------------------------------------------------------- matters, provenance
+
+MatterKind = Literal["matter", "project"]  # the screen says "Matter" or "Project"
+MatterStatus = Literal["active", "archived"]
+
+
+class MatterCreate(BaseModel):
+    title: str = Field(min_length=1, max_length=200)
+    kind: MatterKind = "matter"
+
+
+class MatterOut(BaseModel):
+    id: UUID
+    title: str
+    kind: MatterKind
+    status: MatterStatus
+    archived_at: datetime | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class AnswerProvenance(BaseModel):
+    """Did the user's own material shape this stored answer? (Not the same thing as
+    `Provenance` above, which is the data-as-of block.) Written when the answer is
+    saved. Sharing is allowed only when both flags are false (PRD-v2 O14)."""
+
+    shaped_by_upload: bool = False
+    shaped_by_matter_fact: bool = False
+
+    @property
+    def shareable(self) -> bool:
+        return not (self.shaped_by_upload or self.shaped_by_matter_fact)
+
+
 class MessageOut(BaseModel):
     id: UUID
     role: Literal["user", "assistant"]
@@ -260,6 +294,8 @@ class MessageOut(BaseModel):
     from_cache: bool = False
     citations: list[Citation] = []
     created_at: datetime
+    shaped_by_upload: bool = False
+    shaped_by_matter_fact: bool = False
 
 
 class ConversationDetail(ConversationOut):

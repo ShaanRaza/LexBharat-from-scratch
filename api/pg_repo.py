@@ -107,7 +107,8 @@ class PgRepo:
         if not conv:
             return None
         msgs = await self._rows(
-            "SELECT id, role, content, from_cache, created_at FROM messages "
+            "SELECT id, role, content, from_cache, created_at, shaped_by_upload, "
+            "shaped_by_matter_fact FROM messages "
             "WHERE conversation_id = :c ORDER BY created_at, id",
             c=conv_id,
         )
@@ -147,8 +148,9 @@ class PgRepo:
     async def add_user_message(self, user_id, conv_id, content):
         # The ownership check is inside the SQL: a foreign conversation inserts nothing.
         rows = await self._exec(
-            """INSERT INTO messages (conversation_id, role, content)
-               SELECT id, 'user', :t FROM conversations
+            """INSERT INTO messages (conversation_id, role, content, matter_id,
+                   shaped_by_upload, shaped_by_matter_fact)
+               SELECT id, 'user', :t, matter_id, false, false FROM conversations
                WHERE id = :c AND user_id = :u RETURNING id""",
             c=conv_id, t=content, u=user_id,
         )  # fmt: skip
@@ -291,13 +293,17 @@ class PgRepo:
                 row = c.execute(
                     text(
                         """INSERT INTO messages (conversation_id, role, content, model,
-                               tokens_in, tokens_out, from_cache)
-                           SELECT id, 'assistant', :t, :m, :ti, :to, :fc
+                               tokens_in, tokens_out, from_cache, matter_id,
+                               shaped_by_upload, shaped_by_matter_fact)
+                           SELECT id, 'assistant', :t, :m, :ti, :to, :fc, matter_id,
+                                  :su, :sm
                            FROM conversations WHERE id = :c AND user_id = :u
                            RETURNING id"""
                     ),
                     dict(c=request.conversation_id, u=request.user_id, t=a.text, m=result.model or None,
-                         ti=result.input_tokens, to=result.output_tokens, fc=result.cache_hit),
+                         ti=result.input_tokens, to=result.output_tokens, fc=result.cache_hit,
+                         su=result.provenance.shaped_by_upload,
+                         sm=result.provenance.shaped_by_matter_fact),
                 )  # fmt: skip
                 mid = row.scalar_one_or_none()
                 if mid is None:  # conversation is not this user's: write nothing

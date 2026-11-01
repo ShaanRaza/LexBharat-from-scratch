@@ -1,5 +1,5 @@
 # ruff: noqa: S603
-"""Migrations: numbered, reversible, 17 tables (docs/DATA-MODEL.md).
+"""Migrations: numbered, reversible, 18 tables (docs/DATA-MODEL.md).
 
 The offline test needs no database. The live test runs only when TEST_DATABASE_URL
 points at a throwaway PostgreSQL (it upgrades, downgrades and upgrades again).
@@ -21,7 +21,7 @@ EXPECTED = {
     "users", "subscriptions", "usage_daily", "organisations", "memberships",
     "consents", "conversations", "messages", "message_sources",
     "invented_citation_log", "feedback", "documents", "document_chunks",
-    "cases", "act_sections", "court_coverage", "audit_log",
+    "cases", "act_sections", "court_coverage", "audit_log", "matters",
 }  # fmt: skip
 
 
@@ -33,7 +33,7 @@ def _alembic(*args: str, url: str) -> subprocess.CompletedProcess:
     )  # fmt: skip
 
 
-def test_offline_sql_creates_all_17_tables():
+def test_offline_sql_creates_all_18_tables():
     out = _alembic("upgrade", "head", "--sql", url="postgresql+psycopg://x@h/d").stdout
     created = set(re.findall(r"CREATE TABLE (\w+)", out))
     assert created - {"alembic_version"} == EXPECTED
@@ -78,6 +78,59 @@ def test_upgrade_downgrade_upgrade_on_real_postgres(scratch_db_url):
     with engine.connect() as c:
         assert (
             c.execute(text("select version_num from alembic_version")).scalar()
-            == "0005"
+            == "0006"
         )
+    engine.dispose()
+
+
+@pytest.mark.skipif(
+    not os.environ.get("TEST_DATABASE_URL"), reason="TEST_DATABASE_URL not set"
+)
+def test_matters_matter_id_and_provenance_flags(scratch_db_url):
+    """0006: matter_id is nullable on every user-work table that exists, matter
+    kind is checked, and a message cannot be saved without the provenance flags."""
+    from sqlalchemy.exc import IntegrityError
+
+    _alembic("upgrade", "head", url=scratch_db_url)
+    engine = create_engine(scratch_db_url)
+    insp = inspect(engine)
+    for table in ("conversations", "messages", "documents"):
+        col = {c["name"]: c for c in insp.get_columns(table)}["matter_id"]
+        assert col["nullable"] is True, table
+    msg_cols = {c["name"]: c for c in insp.get_columns("messages")}
+    for flag in ("shaped_by_upload", "shaped_by_matter_fact"):
+        assert msg_cols[flag]["nullable"] is False
+        assert msg_cols[flag]["default"] is None  # no default: a save must say it
+    with engine.begin() as c:
+        uid = c.execute(
+            text(
+                "insert into users (firebase_uid, email) "
+                "values ('f','e@x.in') returning id"
+            )
+        ).scalar()
+        conv = c.execute(
+            text("insert into conversations (user_id) values (:u) returning id"),
+            {"u": uid},
+        ).scalar()
+    with pytest.raises(IntegrityError), engine.begin() as c:
+        c.execute(
+            text(
+                "insert into messages (conversation_id, role, content) "
+                "values (:c,'user','x')"
+            ),
+            {"c": conv},
+        )
+    with pytest.raises(IntegrityError), engine.begin() as c:
+        c.execute(
+            text("insert into matters (user_id, title, kind) values (:u,'t','bogus')"),
+            {"u": uid},
+        )
+    with engine.begin() as c:  # deleting a matter keeps the work, matter_id -> NULL
+        mid = c.execute(
+            text("insert into matters (user_id, title) values (:u,'t') returning id"),
+            {"u": uid},
+        ).scalar()
+        c.execute(text("update conversations set matter_id=:m"), {"m": mid})
+        c.execute(text("delete from matters where id=:m"), {"m": mid})
+        assert c.execute(text("select matter_id from conversations")).scalar() is None
     engine.dispose()
