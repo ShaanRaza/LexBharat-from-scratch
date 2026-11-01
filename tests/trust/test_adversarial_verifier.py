@@ -133,22 +133,14 @@ async def test_a_real_quote_still_passes_so_the_tests_above_mean_something(world
     assert [c.source_id for c in ans.citations] == ["S1"]
 
 
-QUOTE_BREAK = pytest.mark.xfail(
-    strict=True,
-    reason='BREAK: quotation marks other than "" “” ‘’ are not recognised as quotes '
-    "(_QUOTE_SPAN, core/verify.py:~96), so a fabricated «guillemet» / 「CJK」 / ‹single› "
-    "quotation skips check 3 and is ticked",
-)
-
-
 @pytest.mark.parametrize(
     "quoted",
     [
         "\u201ejail is never allowed for any accused\u201c",  # unbalanced: caught
-        pytest.param("«jail is never allowed for any accused»", marks=QUOTE_BREAK),
-        pytest.param("「jail is never allowed for any accused」", marks=QUOTE_BREAK),
-        pytest.param("‹jail is never allowed for any accused›", marks=QUOTE_BREAK),
-        pytest.param("『jail is never allowed for any accused』", marks=QUOTE_BREAK),
+        "«jail is never allowed for any accused»",
+        "「jail is never allowed for any accused」",
+        "‹jail is never allowed for any accused›",
+        "『jail is never allowed for any accused』",
     ],
 )
 async def test_a_fabricated_quotation_in_other_quotation_marks_is_removed(
@@ -268,15 +260,6 @@ async def test_a_decider_that_crashes_stops_the_answer_instead_of_passing_it(wor
 
 
 # ---- recalled authorities: obfuscation of a real case name ------------------------------
-CASE_BREAK = pytest.mark.xfail(
-    strict=True,
-    reason="BREAK: the case-name shape (core/verify.py _CITATION_SHAPES, the v./vs. "
-    "regex) is case-, space- and ASCII-sensitive and runs per sentence: 'Vs.'/'V.', a "
-    "line break inside the name, zero-width characters, all-lower-case and look-alike "
-    "letters hide a recalled case from check 1 (no marker needed)",
-)
-
-
 @pytest.mark.parametrize(
     "case",
     [
@@ -287,29 +270,22 @@ CASE_BREAK = pytest.mark.xfail(
         "Maneka\u00a0Gandhi v. Union of India",
         "Maneka Gandhi v.\u00a0Union of India",
         "Maneka Gandhi  v.  Union of India",
-        pytest.param("Maneka Gandhi V. Union of India", marks=CASE_BREAK),
-        pytest.param("Maneka Gandhi Vs. Union of India", marks=CASE_BREAK),
-        pytest.param("Maneka Gandhi\nv.\nUnion of India", marks=CASE_BREAK),
-        pytest.param("Maneka Gandhi v.\nUnion of India", marks=CASE_BREAK),
-        pytest.param("Maneka Gandhi v\u200b. Union of India", marks=CASE_BREAK),
-        pytest.param("Maneka Gandhi v.\u200bUnion of India", marks=CASE_BREAK),
-        pytest.param("Maneka Gandhi \u200bv. Union of India", marks=CASE_BREAK),
-        pytest.param("maneka gandhi v. union of india", marks=CASE_BREAK),
-        pytest.param("Maneka Gandhi v\u0455. Union of India", marks=CASE_BREAK),
-        pytest.param("Maneka Gandhi \uff56. Union of India", marks=CASE_BREAK),
+        "Maneka Gandhi V. Union of India",
+        "Maneka Gandhi Vs. Union of India",
+        "Maneka Gandhi\nv.\nUnion of India",
+        "Maneka Gandhi v.\nUnion of India",
+        "Maneka Gandhi v\u200b. Union of India",
+        "Maneka Gandhi v.\u200bUnion of India",
+        "Maneka Gandhi \u200bv. Union of India",
+        "maneka gandhi v. union of india",
+        "Maneka Gandhi v\u0455. Union of India",
+        "Maneka Gandhi \uff56. Union of India",
     ],
 )
 async def test_a_recalled_case_named_in_plain_text_is_removed(world, case):
     ans = await run(world, f"As held in {case}, liberty is wide.")
     flat = unicodedata.normalize("NFKC", ans.text).replace("\u200b", "").lower()
     assert "gandhi" not in flat
-
-
-CITE_BREAK = pytest.mark.xfail(
-    strict=True,
-    reason="BREAK: _CITATION_SHAPES (core/verify.py:~100) has no pattern for this "
-    "spelling, so an unmarked recalled citation string stays in the answer",
-)
 
 
 @pytest.mark.parametrize(
@@ -322,13 +298,13 @@ CITE_BREAK = pytest.mark.xfail(
         "[1973] 4 SCR 225",
         "air 1973 sc 1461",
         "2019 SCC OnLine SC 1234",
-        pytest.param("A.I.R. 1973 S.C. 1461", marks=CITE_BREAK),
-        pytest.param("(1973) 4 S.C.C. 225", marks=CITE_BREAK),
-        pytest.param("( 1973 ) 4 SCC 225", marks=CITE_BREAK),
-        pytest.param("(1973)4SCC225", marks=CITE_BREAK),
-        pytest.param("AIR 1973 Supreme Court 1461", marks=CITE_BREAK),
-        pytest.param("MANU/SC/0133/1973", marks=CITE_BREAK),
-        pytest.param("1973 (4) SCC 225", marks=CITE_BREAK),
+        "A.I.R. 1973 S.C. 1461",
+        "(1973) 4 S.C.C. 225",
+        "( 1973 ) 4 SCC 225",
+        "(1973)4SCC225",
+        "AIR 1973 Supreme Court 1461",
+        "MANU/SC/0133/1973",
+        "1973 (4) SCC 225",
     ],
 )
 async def test_an_unmarked_recalled_citation_string_is_removed(world, cite):
