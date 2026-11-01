@@ -146,6 +146,15 @@ Supreme Court `chunk_id` in the legislation/judgment parquet against the `chunk_
 it needs no `court` filter, it names the exact missing chunks rather than a count, and it
 reads local files instead of re-scanning 11.8M points.
 
+**An oracle is only independent if its own selection is.** If Set A is picked with an exact
+match on the parquet's own `court` column, and that column carries the same spelling variants
+as Qdrant's, then both sides are wrong in the same way and agree with each other. So Set A is
+defined twice — once from the parquet's court/language columns, and once structurally from
+`_INSC_` in `case_id` — and any disagreement between the two definitions is itself a finding.
+The same applies to "English": if the parquet's language column is as sparse as Qdrant's
+`language_code`, "English Supreme Court chunks" is not a well-defined set, and translated
+chunks mixed into Set A would show up as false "missing" alarms.
+
 Known target: the parquet holds **371,247** English Supreme Court chunks against **371,159**
 under the exact filter (**Reported**, from earlier notes). That 88-chunk difference is either
 unnamed-court points, or something else; the cross-check names them either way.
