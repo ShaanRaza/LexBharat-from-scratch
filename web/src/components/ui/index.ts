@@ -11,4 +11,5 @@ export { Sidebar } from "./Sidebar";
 export { TextField } from "./TextField";
 export { TextArea } from "./TextArea";
 export { Dialog } from "./Dialog";
+export { EmptyState } from "./EmptyState";
 export { Select } from "./Select";

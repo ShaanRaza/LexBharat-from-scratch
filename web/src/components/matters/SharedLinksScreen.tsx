@@ -1,7 +1,7 @@
 "use client";
-import { Button, Card, Label } from "@/components/ui";
+import { Button, Card, EmptyState, Label } from "@/components/ui";
 import { listShares, revokeShare } from "@/lib/api/client";
-import { SHARED_EXPIRES, SHARED_LINKS_NONE, SHARED_REVOKE, SHARED_REVOKED } from "@/lib/copy";
+import { EMPTY, SHARED_EXPIRES, SHARED_REVOKE, SHARED_REVOKED } from "@/lib/copy";
 import { useLoaded } from "@/lib/matters/useLoaded";
 
 // The links the user has made. A link can be switched off here; the public page stops
@@ -10,7 +10,7 @@ export function SharedLinksScreen() {
   const links = useLoaded(() => listShares(), "shares");
   if (links.status === "loading") return <p className="text-ink-soft">Loading</p>;
   if (links.status === "error") return <p role="alert" className="text-danger">Something went wrong. Please try again.</p>;
-  if (links.value!.length === 0) return <p className="text-ink-soft">{SHARED_LINKS_NONE}</p>;
+  if (links.value!.length === 0) return <EmptyState {...EMPTY.shared} />;
   return (
     <ul className="flex flex-col gap-2">
       {links.value!.map((l) => (

@@ -4,17 +4,18 @@ import { StatsView } from "@/components/records/StatsView";
 import { getStats } from "@/lib/api/client";
 import { STATS_TITLE } from "@/lib/copy";
 
-async function Stats() {
-  const stats = await getStats().catch(() => null);
+async function Stats({ searchParams }: { searchParams: Promise<{ fake?: string }> }) {
+  const { fake } = await searchParams; // fake mode only: ?fake=empty shows the empty state
+  const stats = await getStats(fake).catch(() => null);
   return <StatsView stats={stats} />;
 }
 
-export default function Page() {
+export default function Page({ searchParams }: { searchParams: Promise<{ fake?: string }> }) {
   return (
     <PageShell>
       <h1 className="mb-4 text-title font-bold">{STATS_TITLE}</h1>
       <Suspense fallback={<Loading />}>
-        <Stats />
+        <Stats searchParams={searchParams} />
       </Suspense>
     </PageShell>
   );

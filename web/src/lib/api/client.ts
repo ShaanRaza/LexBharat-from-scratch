@@ -1,8 +1,8 @@
 // The ONLY file in web/ that talks to the backend (CLAUDE.md section 2 rule 3).
 // Fake mode (NEXT_PUBLIC_USE_FAKE_API=true, the default) returns canned data.
 import { API_BASE_URL, FAKE_STEP_DELAY_MS, USE_FAKE_API } from "@/lib/config";
-import { FAKE_ANSWER_TEXT, FAKE_CASE, FAKE_CITATIONS, FAKE_COVERAGE, FAKE_ME, FAKE_PROVENANCE, FAKE_SECTIONS, FAKE_STATS } from "@/lib/fake/data";
-import { fakeConversationDetail, fakeDb, fakeRecordTurn, nextId, withCounts } from "@/lib/fake/store";
+import { ANSWER_EIGHT, ANSWER_REMOVED, CITATIONS_EIGHT, CITATIONS_REMOVED, FAKE_ANSWER_TEXT, FAKE_CASES, FAKE_CITATIONS, FAKE_COVERAGE, FAKE_ME, FAKE_PROVENANCE, FAKE_SECTIONS, FAKE_STATS, FAKE_STATS_EMPTY } from "@/lib/fake/data";
+import { fakeConversationDetail, fakeDb, fakeRecordTurn, fakeVariant, nextId, withCounts } from "@/lib/fake/store";
 import { createSseParser } from "./sse";
 import type { ApiErrorBody, CaseOut, ShareCreated, ShareLink, SharedAnswerOut, ConsentIn, ConversationDetail, ConversationOut, CoverageOut, FollowupsOut, HistoryHit, MatterDeleteMode, MatterDeleted, MatterDetail, MatterKind, MatterOut, MatterStatus, ImproveOut, MeOut, SectionOut, StatsOut, StepEventData, StreamEvent } from "./types";
 
@@ -41,7 +41,8 @@ async function getJson<T>(path: string): Promise<T> {
 
 export async function getCase(id: string): Promise<CaseOut> {
   if (USE_FAKE_API) {
-    if (id === FAKE_CASE.record_id) return FAKE_CASE;
+    const c = FAKE_CASES[id];
+    if (c) return c;
     throw new ApiError({ code: "not_found", message: "Not found", request_id: "fake" }, 404);
   }
   return getJson(`/cases/${encodeURIComponent(id)}`);
@@ -56,8 +57,8 @@ export async function getSection(act: string, n: string): Promise<SectionOut> {
   return getJson(`/acts/${encodeURIComponent(act)}/sections/${encodeURIComponent(n)}`);
 }
 
-export async function getStats(): Promise<StatsOut> {
-  if (USE_FAKE_API) return FAKE_STATS;
+export async function getStats(variant?: string): Promise<StatsOut> {
+  if (USE_FAKE_API) return variant === "empty" ? FAKE_STATS_EMPTY : FAKE_STATS;
   return getJson("/stats");
 }
 
@@ -180,10 +181,15 @@ async function* fakeStream(q: string): AsyncGenerator<StreamEvent> {
     yield { event: "step", data: ev };
     await pause(FAKE_STEP_DELAY_MS);
   }
-  for (const word of FAKE_ANSWER_TEXT.split(/(?<=\s)/)) yield { event: "token", data: { text: word } };
+  const variant = lower.includes("eight")
+    ? { text: ANSWER_EIGHT, citations: CITATIONS_EIGHT, removed: 0 }
+    : lower.includes("removed")
+      ? { text: ANSWER_REMOVED, citations: CITATIONS_REMOVED, removed: 1 }
+      : { text: FAKE_ANSWER_TEXT, citations: FAKE_CITATIONS, removed: 0 };
+  for (const word of variant.text.split(/(?<=\s)/)) yield { event: "token", data: { text: word } };
   yield {
     event: "citations",
-    data: { citations: FAKE_CITATIONS, removed_count: 0, data_as_of: FAKE_PROVENANCE.data_as_of, credit: FAKE_PROVENANCE.credit, notice: FAKE_PROVENANCE.notice },
+    data: { citations: variant.citations, removed_count: variant.removed, data_as_of: FAKE_PROVENANCE.data_as_of, credit: FAKE_PROVENANCE.credit, notice: FAKE_PROVENANCE.notice },
   };
   const shaped = lower.includes("upload");
   yield { event: "done", data: { message_id: shaped ? FAKE_SHAPED_MESSAGE_ID : nextId("fake-msg"), from_cache: false, refused: false } };
@@ -201,6 +207,7 @@ const notFound = () => new ApiError({ code: "not_found", message: "Not found", r
 
 export async function listMatters(status: MatterStatus | "all" = "active"): Promise<MatterOut[]> {
   if (USE_FAKE_API) {
+    if (fakeVariant() === "empty") return [];
     return fakeDb.matters.filter((m) => status === "all" || m.status === status).map(withCounts);
   }
   return (await getJson<{ items: MatterOut[] }>(`/matters?status=${status}`)).items;
@@ -269,7 +276,7 @@ export async function moveConversation(conversationId: string, matterId: string 
 }
 
 export async function listConversations(): Promise<ConversationOut[]> {
-  if (USE_FAKE_API) return fakeDb.conversations.filter((c) => c.message_count > 0);
+  if (USE_FAKE_API) return fakeVariant() === "empty" ? [] : fakeDb.conversations.filter((c) => c.message_count > 0);
   return (await getJson<{ items: ConversationOut[] }>("/conversations?limit=50")).items;
 }
 
@@ -319,7 +326,7 @@ export async function shareMessage(messageId: string): Promise<ShareCreated> {
 }
 
 export async function listShares(): Promise<ShareLink[]> {
-  if (USE_FAKE_API) return fakeDb.shares.map(({ token: _t, ...rest }) => rest); // eslint-disable-line @typescript-eslint/no-unused-vars
+  if (USE_FAKE_API) return fakeVariant() === "empty" ? [] : fakeDb.shares.map(({ token: _t, ...rest }) => rest); // eslint-disable-line @typescript-eslint/no-unused-vars
   return (await getJson<{ items: ShareLink[] }>("/share")).items;
 }
 

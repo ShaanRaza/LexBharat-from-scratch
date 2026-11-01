@@ -173,3 +173,15 @@ export const SHARED_REVOKE = "Switch off";
 export const SHARED_REVOKED = "Switched off";
 export const SHARED_EXPIRES = (date: string) => `Expires ${date}`;
 export const SHARED_MANAGE = "Manage shared links";
+
+// Empty states (interface words only; nothing about the law goes here).
+export const EMPTY = {
+  stats: { title: "No outcome counts to show yet", hint: "Counts appear here when outcome statistics are switched on." },
+  history: { title: "No saved conversations yet", hint: "Ask a question and it is saved here, where you can find it again.", action: { label: "Ask a question", href: "/" } },
+  search: { title: "Nothing found in your saved work.", hint: "Try fewer or different words." },
+  matters: { title: "", hint: "Create one above to keep related questions together." },
+  matterConversations: { title: "No conversations in this yet", hint: "Ask a question and file it here, or move an existing conversation in.", action: { label: "Ask a question", href: "/" } },
+  shared: { title: "You have not shared any answers.", hint: "Use Share under a saved answer to make a link. Links you make are listed here, where you can switch them off." },
+  coverage: { title: "Coverage has not been listed yet", hint: "This page lists what the dataset holds once it has been measured." },
+  chat: { title: "Ask your first question", hint: "Write it the way you would say it. Each source in the answer is checked against the dataset." },
+} as const;

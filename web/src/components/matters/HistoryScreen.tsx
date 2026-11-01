@@ -1,9 +1,9 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
-import { Card, SearchBar } from "@/components/ui";
+import { Card, EmptyState, SearchBar } from "@/components/ui";
 import { listConversations, searchHistory } from "@/lib/api/client";
-import { SHARED_MANAGE, HISTORY_NONE, HISTORY_RECENT, HISTORY_SEARCH, HISTORY_SEARCH_PLACEHOLDER } from "@/lib/copy";
+import { EMPTY, SHARED_MANAGE, HISTORY_RECENT, HISTORY_SEARCH, HISTORY_SEARCH_PLACEHOLDER } from "@/lib/copy";
 import { useLoaded } from "@/lib/matters/useLoaded";
 
 // Recent conversations, and search across the user's OWN saved questions and answers.
@@ -20,12 +20,12 @@ export function HistoryScreen() {
       {q === null ? (
         <section aria-label={HISTORY_RECENT} className="flex flex-col gap-2">
           <h2 className="font-sans text-label font-bold uppercase tracking-wide text-ink-soft">{HISTORY_RECENT}</h2>
-          {recent.status === "ready" && recent.value!.length === 0 && <p className="text-ink-soft">{HISTORY_NONE}</p>}
+          {recent.status === "ready" && recent.value!.length === 0 && <EmptyState {...EMPTY.history} />}
           <ul className="flex flex-col gap-2">
             {recent.value?.map((c) => (
               <li key={c.id}>
                 <Link href={`/conversations/${c.id}`}>
-                  <Card>{c.title ?? "Untitled conversation"}</Card>
+                  <Card className="break-words">{c.title ?? "Untitled conversation"}</Card>
                 </Link>
               </li>
             ))}
@@ -33,7 +33,7 @@ export function HistoryScreen() {
         </section>
       ) : (
         <section aria-label="Results" className="flex flex-col gap-2">
-          {found.status === "ready" && found.value!.length === 0 && <p className="text-ink-soft">{HISTORY_NONE}</p>}
+          {found.status === "ready" && found.value!.length === 0 && <EmptyState {...EMPTY.search} />}
           <ul className="flex flex-col gap-2">
             {found.value?.map((h) => (
               <li key={`${h.conversation_id}-${h.message_id ?? "title"}`}>

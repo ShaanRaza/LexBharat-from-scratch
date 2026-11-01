@@ -31,6 +31,16 @@ a {
   text-underline-offset: 0.2em;
 }
 
+/* The source pane beside the answer scrolls on its own, so a 48-paragraph judgment never
+   pushes the answer out of view. Only at the large breakpoint (below it the pane stacks). */
+@media (min-width: 64rem) {
+  .pane-scroll {
+    max-height: calc(100dvh - var(--spacing-pane-top) - var(--spacing-gutter));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}
+
 /* The one authored motion: a progress step appearing. 150ms or less, and none at all for
    people who ask for reduced motion. */
 @keyframes step-in {

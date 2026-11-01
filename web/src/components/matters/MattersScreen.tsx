@@ -1,15 +1,16 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
-import { Button, Card, Label, TextField } from "@/components/ui";
+import { Button, Card, EmptyState, Label, TextField } from "@/components/ui";
 import { createMatter, listMatters } from "@/lib/api/client";
 import {
+  EMPTY,
   MATTERS_NONE,
   MATTER_CREATE,
   MATTER_NEW_LABEL,
   MATTER_SHOW_ARCHIVED,
 } from "@/lib/copy";
-import { wordsFor } from "@/lib/matters/label";
+import { countOf, wordsFor } from "@/lib/matters/label";
 import { useLoaded } from "@/lib/matters/useLoaded";
 import { useDefaultKind } from "@/lib/matters/useRole";
 
@@ -61,17 +62,19 @@ export function MattersScreen() {
           Something went wrong. Please try again.
         </p>
       )}
-      {list.status === "ready" && list.value!.length === 0 && <p className="text-ink-soft">{MATTERS_NONE(words.many)}</p>}
+      {list.status === "ready" && list.value!.length === 0 && (
+        <EmptyState title={MATTERS_NONE(words.many)} hint={EMPTY.matters.hint} />
+      )}
       <ul className="flex flex-col gap-2">
         {list.value?.map((m) => (
           <li key={m.id}>
             <Link href={`/matters/${m.id}`}>
               <Card className="flex flex-wrap items-center justify-between gap-2">
-                <span className="font-semibold">{m.title}</span>
+                <span className="min-w-0 break-words font-semibold">{m.title}</span>
                 <span className="flex items-center gap-2 text-small text-ink-soft">
                   <Label>{wordsFor(m.kind).one}</Label>
                   {m.status === "archived" && <Label>Archived</Label>}
-                  {m.conversation_count} conversations
+                  {countOf(m.conversation_count, "conversation")}
                 </span>
               </Card>
             </Link>

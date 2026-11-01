@@ -59,7 +59,9 @@
   --spacing: 0.25rem;
   --spacing-gutter: 1rem;
   --spacing-card: 1.25rem;
+  --spacing-card-sm: 0.75rem; /* card padding on a phone (375px is the design width) */
   --spacing-section: 2.5rem;
+  --spacing-pane-top: 5rem; /* gap above the sticky source pane (under the top bar) */
 
   /* --- Radii, widths and the reading measure ---------------------------------------- */
   --radius-chip: 0.5rem;

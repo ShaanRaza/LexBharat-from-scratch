@@ -41,7 +41,7 @@ export function ConversationScreen({ id }: { id: string }) {
   }));
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-title font-bold">{c.title ?? "Untitled conversation"}</h1>
+      <h1 className="break-words text-title font-bold">{c.title ?? "Untitled conversation"}</h1>
       <MatterPicker
         label={MATTER_FILE_UNDER}
         matters={matters.value ?? []}

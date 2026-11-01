@@ -28,18 +28,30 @@ export function SourcePane({
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
-  // Jump to the cited paragraph once the record is on screen; on a narrow screen the
-  // pane sits below the answer, so bring the pane itself into view first.
+  // Jump to the cited paragraph once the record is on screen. Beside the answer (large
+  // screens) the pane scrolls on its own, so only the pane moves and the answer stays put.
+  // Stacked below the answer (phones) the page scrolls to the pane, then to the paragraph.
   useEffect(() => {
     const el = ref.current;
     if (!el || state.status === "loading") return;
+    const cited = el.querySelector<HTMLElement>('[data-cited="true"]');
+    const beside = typeof window.matchMedia === "function" && window.matchMedia("(min-width: 64rem)").matches;
+    if (beside && el.scrollTo) {
+      const top = cited ? cited.getBoundingClientRect().top - el.getBoundingClientRect().top + el.scrollTop - 112 : 0;
+      el.scrollTo({ top: Math.max(0, top) });
+      return;
+    }
     el.scrollIntoView?.({ block: "nearest" });
-    el.querySelector('[data-cited="true"]')?.scrollIntoView?.({ block: "center" });
+    cited?.scrollIntoView?.({ block: "center" });
   }, [state.status, citation.anchor, clicks]);
 
   return (
-    <aside aria-label="Source" ref={ref} className="flex flex-col gap-3 lg:sticky lg:top-20 lg:self-start">
-      <Card className="flex flex-wrap items-center justify-between gap-2">
+    <aside
+      aria-label="Source"
+      ref={ref}
+      className="pane-scroll flex min-w-0 flex-col gap-3 lg:sticky lg:top-(--spacing-pane-top) lg:self-start"
+    >
+      <Card className="z-10 flex lg:sticky lg:top-0 flex-wrap items-center justify-between gap-2">
         <span className="flex flex-wrap items-center gap-2 text-small">
           <CitationChip label={citation.source_id} status={citation.status} dataAsOf={dataAsOf} href={citationHref(citation)} />
           <span className="text-ink-soft">{meaningFor(markFor(citation.status), dataAsOf)}</span>

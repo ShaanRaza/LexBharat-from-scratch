@@ -1,6 +1,34 @@
 // Canned data for fake mode. All of it is sample content, labelled "Sample" in the UI.
+//
+// HOW TO TRIGGER THE REALISTIC CASES (fake mode only). Real law is not tidy, so the layout
+// is checked against these, at 1280px and 375px, not only against the three short passages.
+//
+//   Ask a question containing...                 you get...
+//     eight       an answer with the full 8 citations (S1-S8, verified/partly/unchecked,
+//                 judgments and Acts, long stored citation string, 200-character Act title)
+//     removed     a verifier-removed-a-citation result (removed_count 1, with the note)
+//     nothing     the empty result: not found in the dataset
+//     notheld     a refusal with its own message: not in our dataset
+//     highcourt   the out-of-coverage refusal
+//     limit       the usage-limit screen
+//     fail        the service-failure screen
+//     upload      an answer the server would refuse to share (shaped by an upload)
+//     (anything else)  the short 3-citation sample answer
+//
+//   Open a record id (the answer's chips link to these)...
+//     /cases/sc-long-001                    a 48-paragraph judgment (p7 is very long, p13 holds
+//                                           an unbroken 150-character address, p4 is one line)
+//     /acts/long-title-act-1999/7           an Act with a 200-character title
+//     /acts/subclause-act-1999/12           an Act section with nested sub-clauses (a)(i)(A)
+//
+//   Add ?fake=empty to /stats, /history, /matters, /shared, /coverage to see the empty state.
+//   The default fake database has a matter with a very long title and 60 conversations, and a
+//   matter with none. Tests use the small database (NEXT_PUBLIC_FAKE_DB=minimal).
 import type { CaseOut, Citation, CoverageOut, MeOut, SectionOut, StatsOut, Provenance } from "@/lib/api/types";
 import { CC_BY_CREDIT, NOT_LEGAL_ADVICE_API } from "@/lib/copy";
+import { LONG_CASE, LONG_CASE_ID, longSections } from "@/lib/fake/fixtures";
+
+export { ANSWER_EIGHT, ANSWER_REMOVED, CITATIONS_EIGHT, CITATIONS_REMOVED } from "@/lib/fake/fixtures";
 
 export const FAKE_PROVENANCE: Provenance = {
   data_as_of: "2026-08-31",
@@ -46,7 +74,13 @@ export const FAKE_CASE: CaseOut = {
   provenance: FAKE_PROVENANCE,
 };
 
+export const FAKE_CASES: Record<string, CaseOut> = {
+  [FAKE_CASE.record_id]: FAKE_CASE,
+  [LONG_CASE_ID]: { ...LONG_CASE, provenance: FAKE_PROVENANCE },
+};
+
 export const FAKE_SECTIONS: SectionOut[] = [
+  ...longSections(FAKE_PROVENANCE),
   {
     act_slug: "ipc-1860", act_name: "Indian Penal Code, 1860", act_year: 1860,
     section: "420", section_title: "Cheating and dishonestly inducing delivery of property",
@@ -91,3 +125,5 @@ export const FAKE_COVERAGE: CoverageOut = {
   measured_at: null,
   provenance: FAKE_PROVENANCE,
 };
+
+export const FAKE_STATS_EMPTY: StatsOut = { live: false, provenance: FAKE_PROVENANCE, rows: [] };

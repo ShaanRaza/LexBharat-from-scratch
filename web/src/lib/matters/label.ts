@@ -11,3 +11,6 @@ export function wordsFor(kind: MatterKind) {
 export function defaultKind(role: string | null | undefined): MatterKind {
   return role === "student" ? "project" : "matter";
 }
+
+// "1 conversation", "60 conversations".
+export const countOf = (n: number, noun: string) => `${n} ${noun}${n === 1 ? "" : "s"}`;

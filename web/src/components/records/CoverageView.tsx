@@ -1,5 +1,5 @@
-import { Card, Label, StandingNotices } from "@/components/ui";
-import { COVERAGE_COVERED, COVERAGE_EXCLUDED, COVERAGE_PLACEHOLDER, FAILURES } from "@/lib/copy";
+import { Card, EmptyState, Label, StandingNotices } from "@/components/ui";
+import { EMPTY, COVERAGE_COVERED, COVERAGE_EXCLUDED, COVERAGE_PLACEHOLDER, FAILURES } from "@/lib/copy";
 import type { CoverageOut } from "@/lib/api/types";
 
 // What the dataset holds, exactly as the API says (one source: core/coverage.json). It
@@ -17,6 +17,7 @@ export function CoverageView({ coverage }: { coverage: CoverageOut | null }) {
     <div className="flex flex-col gap-4">
       {coverage.status === "placeholder" && <Label>{COVERAGE_PLACEHOLDER}</Label>}
       <p className="leading-relaxed">{coverage.sentence}</p>
+      {coverage.courts.length + coverage.instruments.length === 0 && <EmptyState {...EMPTY.coverage} />}
       <section aria-label={COVERAGE_COVERED}>
         <h2 className="font-sans text-label font-bold uppercase tracking-wide text-ink-soft">{COVERAGE_COVERED}</h2>
         <ul className="mt-1 list-disc pl-5">

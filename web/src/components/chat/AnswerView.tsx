@@ -50,25 +50,28 @@ export function AnswerView({
         </p>
       )}
       {ce && ce.citations.some(isShown) && (
-        <ul className="mt-4 flex flex-col gap-2 text-small">
+        <ul className="mt-4 flex flex-col gap-3 text-small">
           {ce.citations.filter(isShown).map((c) => (
-            <li key={c.source_id} className="flex flex-wrap items-center gap-x-2 gap-y-1 break-words">
-              <CitationChip
-                label={c.source_id}
-                status={c.status}
-                dataAsOf={ce.data_as_of}
-                href={linkFor(c)}
-                onOpen={onOpenSource && (() => onOpenSource(c))}
-              />
-              <span className="min-w-0 break-words">{citationName(c)}</span>
-              <span className="text-ink-soft">{meaningFor(markFor(c.status), ce.data_as_of)}</span>
-              {c.citation_string && (
-                <span className="min-w-0 break-words text-ink-soft">
-                  {c.citation_string} ({CITATION_AS_RECORDED})
+            <li key={c.source_id} className="flex min-w-0 flex-col gap-1 break-words">
+              <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                <CitationChip
+                  label={c.source_id}
+                  status={c.status}
+                  dataAsOf={ce.data_as_of}
+                  href={linkFor(c)}
+                  onOpen={onOpenSource && (() => onOpenSource(c))}
+                />
+                {/* A judgment is named by its stored citation string, shown once and exactly
+                    as recorded; an Act by its section. */}
+                <span className="min-w-0 break-words font-semibold">
+                  {c.kind === "judgment" && c.citation_string
+                    ? `${c.citation_string} (${CITATION_AS_RECORDED})`
+                    : citationName(c)}
                 </span>
-              )}
+              </span>
+              <span className="text-ink-soft">{meaningFor(markFor(c.status), ce.data_as_of)}</span>
               {c.url && (
-                <a href={c.url} className="text-accent underline" rel="noreferrer">
+                <a href={c.url} className="w-fit break-all text-accent underline" rel="noreferrer">
                   Source
                 </a>
               )}

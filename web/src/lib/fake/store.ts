@@ -3,6 +3,7 @@
 // only in the page's memory; `resetFakeDb()` gives tests a clean copy.
 import type { ConversationDetail, ConversationOut, MatterOut, StoredMessage } from "@/lib/api/types";
 import { FAKE_ANSWER_TEXT, FAKE_CITATIONS, FAKE_PROVENANCE } from "@/lib/fake/data";
+import { CONVERSATION_TITLES, LONG_MATTER_TITLE } from "@/lib/fake/fixtures";
 
 type Db = {
   matters: MatterOut[];
@@ -13,6 +14,18 @@ type Db = {
 };
 
 const NOW = "2026-11-02T10:00:00Z";
+
+// Tests use the small database so they stay exact; the browser gets the realistic one.
+const MINIMAL = process.env.NEXT_PUBLIC_FAKE_DB === "minimal";
+
+/** `?fake=empty` on a page: show that page's empty state (fake mode, browser only). */
+export function fakeVariant(): string | null {
+  try {
+    return typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("fake");
+  } catch {
+    return null;
+  }
+}
 
 function seed(): Db {
   const matter: MatterOut = {
@@ -26,13 +39,24 @@ function seed(): Db {
     { id: `${q}-u`, role: "user", content: q, from_cache: false, citations: [], created_at: NOW },
     { id: `${q}-a`, role: "assistant", content: FAKE_ANSWER_TEXT, from_cache: false, citations: FAKE_CITATIONS, created_at: NOW },
   ];
-  return {
+  const db: Db = {
     matters: [matter],
     conversations: [conv("fake-conv-1", "What is bail?", matter.id), conv("fake-conv-2", "Limitation for a cheque notice", null)],
     messages: { "fake-conv-1": msgs("What is bail?"), "fake-conv-2": msgs("Limitation for a cheque notice") },
     seq: 100,
     shares: [],
   };
+  if (!MINIMAL) {
+    // A matter with a very long title and 60 conversations, and one with none.
+    db.matters.push(
+      { ...matter, id: "fake-matter-long", title: LONG_MATTER_TITLE },
+      { ...matter, id: "fake-matter-empty", title: "Sample matter with no conversations" },
+    );
+    CONVERSATION_TITLES.forEach((t, i) => {
+      db.conversations.push(conv(`fake-conv-long-${i + 1}`, t, "fake-matter-long"));
+    });
+  }
+  return db;
 }
 
 export let fakeDb: Db = seed();

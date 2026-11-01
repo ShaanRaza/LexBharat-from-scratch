@@ -2,13 +2,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Button, Card, Label, TextField } from "@/components/ui";
+import { Button, Card, EmptyState, Label, TextField } from "@/components/ui";
 import { deleteMatter, getMatter, updateMatter } from "@/lib/api/client";
 import {
   MATTER_ARCHIVE,
   MATTER_CANCEL,
   MATTER_CONVERSATIONS,
-  MATTER_CONVERSATIONS_NONE,
+  EMPTY,
   MATTER_DELETE,
   MATTER_RENAME,
   MATTER_RESTORE,
@@ -65,7 +65,7 @@ export function MatterScreen({ id }: { id: string }) {
         {matter.status === "archived" && <Label>Archived</Label>}
       </div>
       {renaming === null ? (
-        <h1 className="text-title font-bold">{matter.title}</h1>
+        <h1 className="break-words text-title font-bold">{matter.title}</h1>
       ) : (
         <form
           className="flex flex-wrap items-end gap-2"
@@ -105,12 +105,12 @@ export function MatterScreen({ id }: { id: string }) {
       )}
       <section aria-label={MATTER_CONVERSATIONS} className="flex flex-col gap-2">
         <h2 className="font-sans text-label font-bold uppercase tracking-wide text-ink-soft">{MATTER_CONVERSATIONS}</h2>
-        {matter.conversations.length === 0 && <p className="text-ink-soft">{MATTER_CONVERSATIONS_NONE}</p>}
+        {matter.conversations.length === 0 && <EmptyState {...EMPTY.matterConversations} />}
         <ul className="flex flex-col gap-2">
           {matter.conversations.map((c) => (
             <li key={c.id}>
               <Link href={`/conversations/${c.id}`}>
-                <Card>{c.title ?? "Untitled conversation"}</Card>
+                <Card className="break-words">{c.title ?? "Untitled conversation"}</Card>
               </Link>
             </li>
           ))}

@@ -1,5 +1,6 @@
 import { Card, StandingNotices } from "@/components/ui";
 import { CITATION_AS_RECORDED } from "@/lib/copy";
+import { headingSize } from "@/lib/heading";
 import type { CaseOut } from "@/lib/api/types";
 
 // A judgment with paragraph anchors: /cases/<id>#p12 scrolls to and highlights p12.
@@ -16,14 +17,14 @@ export function judgmentHeading(c: CaseOut): string {
 export function Judgment({ c, highlight }: { c: CaseOut; highlight?: string }) {
   return (
     <article>
-      <h1 className="text-title font-bold">{judgmentHeading(c)}</h1>
-      <dl className="mt-2 text-small text-ink-soft">
+      <h1 className={`${headingSize(judgmentHeading(c))} break-words font-bold`}>{judgmentHeading(c)}</h1>
+      <dl className="mt-2 break-words text-small text-ink-soft">
         {c.court && <div>{c.court}</div>}
         {c.decision_date && <div>Decided {c.decision_date}</div>}
         {c.case_number && <div>{c.case_number}</div>}
       </dl>
       {c.url && (
-        <a href={c.url} rel="noreferrer" className="mt-2 inline-block text-small text-accent underline">
+        <a href={c.url} rel="noreferrer" className="mt-2 inline-block break-all text-small text-accent underline">
           Open the original PDF
         </a>
       )}
@@ -34,7 +35,7 @@ export function Judgment({ c, highlight }: { c: CaseOut; highlight?: string }) {
             id={p.anchor}
             data-cited={p.anchor === highlight ? "true" : undefined}
             aria-current={p.anchor === highlight ? "true" : undefined}
-            className={`scroll-mt-20 rounded-chip p-2 leading-relaxed target:bg-tint ${p.anchor === highlight ? "bg-tint" : ""}`}
+            className={`scroll-mt-20 break-words rounded-chip p-2 target:bg-tint ${p.anchor === highlight ? "bg-tint" : ""}`}
           >
             <span className="mr-2 text-label font-bold text-ink-soft">{p.anchor}</span>
             {p.text}

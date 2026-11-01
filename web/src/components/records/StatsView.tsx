@@ -1,5 +1,5 @@
-import { Card, Label, StandingNotices } from "@/components/ui";
-import { FAILURES, SAMPLE_LABEL, STATS_DESCRIPTIVE_NOTE } from "@/lib/copy";
+import { Card, EmptyState, Label, StandingNotices } from "@/components/ui";
+import { EMPTY, FAILURES, SAMPLE_LABEL, STATS_DESCRIPTIVE_NOTE } from "@/lib/copy";
 import type { StatsOut } from "@/lib/api/types";
 
 // Counts only (CLAUDE.md section 6): no percentages, no "chances", no prediction.
@@ -17,6 +17,9 @@ export function StatsView({ stats }: { stats: StatsOut | null }) {
     <div className="flex flex-col gap-3">
       {!stats.live && <Label>{SAMPLE_LABEL}</Label>}
       <p className="text-ink-soft">{STATS_DESCRIPTIVE_NOTE}</p>
+      {stats.rows.length === 0 ? (
+        <EmptyState {...EMPTY.stats} />
+      ) : (
       <div className="overflow-x-auto">
         <table className="w-full text-left text-small">
           <thead>
@@ -39,6 +42,7 @@ export function StatsView({ stats }: { stats: StatsOut | null }) {
           </tbody>
         </table>
       </div>
+      )}
       <StandingNotices dataAsOf={stats.provenance.data_as_of} />
     </div>
   );
