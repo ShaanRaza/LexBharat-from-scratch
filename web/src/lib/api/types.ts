@@ -74,3 +74,17 @@ export type SectionOut = {
 };
 
 export type ConsentIn = { notice_version: string; purpose: string };
+
+export type Plan = "free" | "student" | "pro" | "chambers";
+
+export type MeOut = {
+  id: string;
+  email: string | null;
+  name: string | null;
+  plan: Plan;
+  answers_left_this_month: number | null; // null = limit not configured yet
+};
+
+// Descriptive counts only. Never a prediction or a win chance.
+export type StatsRow = { court: string; year: number; outcome_label: string; count: number };
+export type StatsOut = { rows: StatsRow[]; live: boolean; provenance: Provenance };

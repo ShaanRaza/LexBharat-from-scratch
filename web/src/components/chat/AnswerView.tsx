@@ -1,4 +1,5 @@
 import { Card, CitationChip } from "@/components/ui";
+import { markFor, meaningFor } from "@/lib/citation";
 import { CITATION_AS_RECORDED, UNVERIFIED_NOTE } from "@/lib/copy";
 import { citationHref, citationName, isShown, toSegments, type AnswerState } from "@/lib/chat/state";
 import { FailureCard } from "./FailureCard";
@@ -30,6 +31,7 @@ export function AnswerView({ answer, onRetry }: { answer: AnswerState; onRetry?:
             <li key={c.source_id} className="flex flex-wrap items-center gap-2">
               <CitationChip label={c.source_id} status={c.status} dataAsOf={ce.data_as_of} href={citationHref(c)} />
               <span>{citationName(c)}</span>
+              <span className="text-ink-soft">{meaningFor(markFor(c.status), ce.data_as_of)}</span>
               {c.citation_string && (
                 <span className="text-ink-soft">
                   {c.citation_string} ({CITATION_AS_RECORDED})

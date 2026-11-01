@@ -7,6 +7,10 @@ export const CC_BY_CREDIT = "Data: Open India Law by Vaquill AI, CC BY 4.0";
 export const NOT_LEGAL_ADVICE = (productName: string) =>
   `${productName} gives information, not legal advice.`;
 
+// The notice string the API puts in the citations event (api/schemas.py). Used by fake
+// mode so it matches the real wire value. See the open question about two wordings.
+export const NOT_LEGAL_ADVICE_API = "This is legal research, not legal advice.";
+
 export const PERSONAL_ADVICE_OPENER =
   "This tool cannot advise on your own situation. Please consult an advocate."; // NEEDS-OWNER (doc gives the meaning, not the sentence)
 
@@ -51,3 +55,13 @@ export const CONSENT_NOTICE_VERSION = process.env.NEXT_PUBLIC_CONSENT_NOTICE_VER
 export const CONSENT_PURPOSE = "service";
 export const CONSENT_TEXT =
   "I have read the consent notice and privacy policy and agree to my data being used to provide this service."; // NEEDS-OWNER
+
+// Stats page. NEEDS-OWNER: UX-COPY gives the rule ("descriptive, never a prediction")
+// but not the sentences below.
+export const STATS_TITLE = "Supreme Court outcome counts";
+export const STATS_DESCRIPTIVE_NOTE =
+  "These are counts of recorded outcomes. They describe past decisions and do not predict any case."; // NEEDS-OWNER
+
+// Plain numbers, never credits (UX-COPY "Copy rules").
+export const ANSWERS_LEFT = (n: number) => `${n} research ${n === 1 ? "answer" : "answers"} left this month`;
+export const SAMPLE_LABEL = "Sample";

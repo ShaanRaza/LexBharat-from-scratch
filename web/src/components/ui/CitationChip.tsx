@@ -1,5 +1,4 @@
-import { markFor, type CitationStatus } from "@/lib/citation";
-import { PARTLY_LABEL, UNCHECKED_LABEL, VERIFICATION_LABEL } from "@/lib/copy";
+import { markFor, meaningFor, type CitationStatus } from "@/lib/citation";
 
 // One chip per citation. Tick only for "verified"; warning for "partly"; no mark otherwise.
 // Never one badge for a whole answer (CLAUDE.md section 5).
@@ -23,14 +22,7 @@ export function CitationChip({
         : mark === "unchecked"
           ? "bg-unchecked-bg text-unchecked border border-dashed border-unchecked"
           : "bg-panel text-ink-soft";
-  const meaning =
-    mark === "tick"
-      ? `${VERIFICATION_LABEL} (data as of ${dataAsOf})`
-      : mark === "warning"
-        ? `${PARTLY_LABEL} (data as of ${dataAsOf})`
-        : mark === "unchecked"
-          ? UNCHECKED_LABEL
-          : "Not verified";
+  const meaning = meaningFor(mark, dataAsOf);
   return (
     <a
       href={href}

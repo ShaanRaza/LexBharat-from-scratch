@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Button, Card } from "@/components/ui";
+import { Button, Card, TextField } from "@/components/ui";
 import { postConsent } from "@/lib/api/client";
 import { CONSENT_NOTICE_VERSION, CONSENT_PURPOSE, CONSENT_TEXT } from "@/lib/copy";
 import { canSubmit } from "@/lib/auth/consent";
@@ -27,15 +27,7 @@ export function SignupForm() {
   if (state === "done") return <Card>Thank you. We have recorded your consent.</Card>;
   return (
     <form onSubmit={submit} className="flex flex-col gap-4">
-      <label className="flex flex-col gap-1 text-small font-semibold">
-        Email
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="rounded-chip border border-line bg-page px-3 py-2 text-body font-normal"
-        />
-      </label>
+      <TextField label="Email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
       <label className="flex items-start gap-2 text-small">
         <input type="checkbox" checked={consented} onChange={(e) => setConsented(e.target.checked)} className="mt-1" />
         <span>{CONSENT_TEXT}</span>

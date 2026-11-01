@@ -1,9 +1,9 @@
 // The ONLY file in web/ that talks to the backend (CLAUDE.md section 2 rule 3).
 // Fake mode (NEXT_PUBLIC_USE_FAKE_API=true, the default) returns canned data.
 import { API_BASE_URL, USE_FAKE_API } from "@/lib/config";
-import { FAKE_ANSWER_TEXT, FAKE_CASE, FAKE_CITATIONS, FAKE_PROVENANCE, FAKE_SECTIONS } from "@/lib/fake/data";
+import { FAKE_ANSWER_TEXT, FAKE_CASE, FAKE_CITATIONS, FAKE_ME, FAKE_PROVENANCE, FAKE_SECTIONS, FAKE_STATS } from "@/lib/fake/data";
 import { createSseParser } from "./sse";
-import type { ApiErrorBody, CaseOut, ConsentIn, SectionOut, StreamEvent } from "./types";
+import type { ApiErrorBody, CaseOut, ConsentIn, MeOut, SectionOut, StatsOut, StreamEvent } from "./types";
 
 const BASE = `${API_BASE_URL}/api/v1`;
 
@@ -53,6 +53,22 @@ export async function getSection(act: string, n: string): Promise<SectionOut> {
     throw new ApiError({ code: "not_found", message: "Not found", request_id: "fake" }, 404);
   }
   return getJson(`/acts/${encodeURIComponent(act)}/sections/${encodeURIComponent(n)}`);
+}
+
+export async function getStats(): Promise<StatsOut> {
+  if (USE_FAKE_API) return FAKE_STATS;
+  return getJson("/stats");
+}
+
+export async function getMe(): Promise<MeOut> {
+  if (USE_FAKE_API) return FAKE_ME;
+  return getJson("/me");
+}
+
+// Fake mode only: sample sections so the Act lookup page has something to click.
+// Returns nothing against the real API (there is no Acts index route in docs/API.md).
+export function sampleSections(): { act_slug: string; act_name: string; section: string }[] {
+  return USE_FAKE_API ? FAKE_SECTIONS.map(({ act_slug, act_name, section }) => ({ act_slug, act_name, section })) : [];
 }
 
 export async function postConsent(c: ConsentIn): Promise<void> {

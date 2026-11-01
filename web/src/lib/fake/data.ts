@@ -1,12 +1,12 @@
 // Canned data for fake mode. All of it is sample content, labelled "Sample" in the UI.
-import type { CaseOut, Citation, SectionOut, Provenance } from "@/lib/api/types";
-import { CC_BY_CREDIT } from "@/lib/copy";
+import type { CaseOut, Citation, MeOut, SectionOut, StatsOut, Provenance } from "@/lib/api/types";
+import { CC_BY_CREDIT, NOT_LEGAL_ADVICE_API } from "@/lib/copy";
 
 export const FAKE_PROVENANCE: Provenance = {
   data_as_of: "2026-08-31",
   snapshot_version: "v2026.08",
   credit: CC_BY_CREDIT,
-  notice: "This is legal research, not legal advice.",
+  notice: NOT_LEGAL_ADVICE_API,
 };
 
 export const FAKE_ANSWER_TEXT =
@@ -62,3 +62,19 @@ export const FAKE_SECTIONS: SectionOut[] = [
     in_force: true, act_status_checked: true, provenance: FAKE_PROVENANCE,
   },
 ];
+
+export const FAKE_ME: MeOut = {
+  id: "fake-user", email: null, name: null, plan: "free", answers_left_this_month: 3,
+};
+
+// Sample counts, labelled "Sample" in the UI. Counts only.
+export const FAKE_STATS: StatsOut = {
+  live: false,
+  provenance: FAKE_PROVENANCE,
+  rows: [
+    { court: "Supreme Court of India", year: 2020, outcome_label: "Allowed", count: 120 },
+    { court: "Supreme Court of India", year: 2020, outcome_label: "Dismissed", count: 340 },
+    { court: "Supreme Court of India", year: 2021, outcome_label: "Allowed", count: 95 },
+    { court: "Supreme Court of India", year: 2021, outcome_label: "Dismissed", count: 410 },
+  ],
+};
