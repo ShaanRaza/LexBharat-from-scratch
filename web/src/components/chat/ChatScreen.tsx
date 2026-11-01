@@ -71,7 +71,7 @@ export function ChatScreen() {
     ask(q);
   };
   return (
-    <div className={`flex flex-col gap-section ${split ? "w-full" : "mx-auto w-full max-w-reading"}`}>
+    <div className={`flex flex-col gap-section ${split ? "w-full" : "w-full max-w-reading"}`}>
       <div className="flex w-full max-w-reading flex-col gap-section">
         <DemoBanner />
         <SearchBar

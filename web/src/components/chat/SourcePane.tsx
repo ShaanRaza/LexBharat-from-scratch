@@ -4,6 +4,7 @@ import { ActSection } from "@/components/records/ActSection";
 import { Judgment } from "@/components/records/Judgment";
 import { Button, Card, CitationChip, Loading } from "@/components/ui";
 import { FAILURES } from "@/lib/copy";
+import { markFor, meaningFor } from "@/lib/citation";
 import { citationHref } from "@/lib/chat/state";
 import type { SourceState } from "@/lib/chat/useSource";
 import type { Citation } from "@/lib/api/types";
@@ -41,6 +42,7 @@ export function SourcePane({
       <Card className="flex flex-wrap items-center justify-between gap-2">
         <span className="flex flex-wrap items-center gap-2 text-small">
           <CitationChip label={citation.source_id} status={citation.status} dataAsOf={dataAsOf} href={citationHref(citation)} />
+          <span className="text-ink-soft">{meaningFor(markFor(citation.status), dataAsOf)}</span>
         </span>
         <Button variant="secondary" onClick={onClose}>
           Close source

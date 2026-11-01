@@ -45,7 +45,7 @@ export function SearchBar({
           onChange={(e) => set(e.target.value)}
           placeholder={placeholder}
           aria-label="Your question"
-          className="min-w-0 flex-1 rounded-pill border border-line bg-page px-5 py-3 text-body text-ink outline-none focus:border-accent"
+          className="min-w-0 basis-full rounded-pill sm:flex-1 sm:basis-0 border border-line bg-page px-5 py-3 text-body text-ink outline-none focus:border-accent"
         />
         <Button type="submit" disabled={disabled}>
           Ask
