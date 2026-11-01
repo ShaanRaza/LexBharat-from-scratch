@@ -18,18 +18,28 @@ verified against the dataset**.
 The trust promise is the product. An answer with a fabricated citation is worse than no
 answer. Everything below exists to protect that.
 
-### v1 scope — do not widen it
+### v1 scope — widened by the owner on 2 Nov 2026
 
-| In v1 | Not in v1 |
+The owner widened v1 to a **production-ready product**. The full list, with the gate each
+feature must pass, is [`docs/PRD-v2.md`](docs/PRD-v2.md) section 4; the stack for it is
+[`docs/TECH-STACK-v2.md`](docs/TECH-STACK-v2.md). Where those two disagree, the Tech Stack
+wins. Summary:
+
+| In v1 (built before public launch) | Later |
 |---|---|
-| Supreme Court judgments | All High Courts (phase 2: Bombay, Telangana, Kerala) |
-| `acts_india` (Central Acts) | Tribunals |
-| Research chat with verified citations | Drafting / review / compare (P1) |
-| Act + section lookup (free, public) | Hindi UI (P1) |
-| Supreme Court outcome statistics (free, public) | Counter-arguments, moot court, study buddy (P2) |
-| Upload-and-chat (built, behind a switch) | Data-refresh pipeline (post-MVP backlog, decision D2) |
+| Supreme Court judgments; `acts_india` (which part: **open decision O7**) | High Courts: Bombay, Telangana, Kerala (after the launch gate; data prep may start now) |
+| Research chat with verified citations; Act + section lookup (free, public) | Counter-arguments, moot court, study buddy (branching features, after the gate) |
+| Plans, billing, accounts, consents, delete and export, feedback, admin page | Hindi (after its tests pass) |
+| Judgment reader, talk with a single judgment, saved answers, export to Word/PDF | "Still good law?" signal (research item, not promised) |
+| Free public pages, share cards, Supreme Court outcome statistics (counts only; live after the hand check) | Data-refresh pipeline (backlog, decision D2) |
+| Chambers team accounts | Tribunals |
+| Upload-and-chat, drafting, review/compare: **built, switched on only when each passes its own gate** | **Not building:** outcome prediction; anything that lists or ranks advocates |
 
-Data is a frozen snapshot, **v2026.08**. There is no refresh pipeline in v1. Every result,
+Widening scope never loosens the trust rules below. Every feature that writes legal text
+goes through the gate and the verifier afterwards. The launch gate is
+[`docs/PRD-v2.md`](docs/PRD-v2.md) section 7.
+
+Data is a frozen snapshot, **v2026.08**. There is no refresh pipeline yet. Every result,
 stats page and Act page shows its **data-as-of date**.
 
 ### Naming — everything is a placeholder
