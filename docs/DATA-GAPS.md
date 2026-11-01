@@ -94,3 +94,58 @@ promising no currency.
 2. The Part 6 inventory settles whether High Court text exists anywhere in the collections.
 3. The trust lane confirms no-text records cannot reach a user with a tick.
 4. Nothing here is promoted above **Reported** until re-run against the data we serve.
+
+## 5. Court names are not canonical — a filter on one spelling misses most of a court
+
+**Measured** from the Part 3 tally over 2,760,000 consecutive `legal_corpus_v2` points
+(a uniform slice, about 26% of the scan), 2 Nov 2026. `court` holds **38 distinct values**,
+and several courts appear under more than one of them:
+
+| Court | Values seen | Counts in the slice |
+|---|---|---|
+| Rajasthan | `High Court Of Rajasthan` / `High Court of Rajasthan` | 316,091 / 453 |
+| Bombay | `Bombay High Court` / `High Court of Bombay` | 32,084 / 183 |
+| Patna | `Patna High Court` / `High Court of Patna` | 27,874 / 307 |
+| Orissa | `Orissa High Court` / `High Court of Orissa` | 116,837 / 127 |
+| Madras | `Madras High Court` / `High Court of Madras` | 32,139 / 89 |
+| Calcutta | `Calcutta High Court` / `High Court of Calcutta` | 225 / 4 |
+| Gauhati | `Gauhati High Court` / `High Court of Gauhati` | 6,555 / 63 |
+| Allahabad | `Allahabad High Court` / `High Court of Allahabad` | 772 / 1 |
+
+Also: **`High Court  for State of Telangana` carries two spaces** after "Court". Telangana is
+one of the three courts named for phase 2 (PRD-v2 section 4.3), so a filter written from the
+obvious spelling returns nothing at all.
+
+**Rules that follow:**
+
+- Never filter a court by a single literal. Normalise case and whitespace and merge known
+  variants, in one shared place, the way coverage categories live in one file (A51).
+- Never report a per-court count without merging variants first. Allahabad reads as 772 or
+  as 1 depending on which spelling you pick.
+- **`Supreme Court of India` has no variant** — checked against all 38 values for any
+  casing, whitespace, "Hon'ble" or abbreviation form. So the copy's exact-match filter is
+  not skipping Supreme Court points on account of the name (**Checked**, 2 Nov 2026).
+
+### The unnamed points are still open
+
+**17,815 points in the slice (0.65%) have no usable `court`** — the tally cannot separate a
+missing field, a null and the literal string "None". An exact-match filter misses all of
+them, and a verification pass built on the same filter would not notice. The Supreme Court
+rate in the slice is 3.1%, so most of these are probably not Supreme Court, but that is weak
+evidence, not proof. Resolved by the parquet cross-check in section 6.
+
+## 6. Verify completeness against an independent source, not the same filter
+
+The copy selects Supreme Court chunks with `court = "Supreme Court of India"`. Checking that
+copy by re-enumerating the originals **with the same filter** cannot detect a point the
+filter never matched — it is the same question asked twice.
+
+So the primary completeness check is a **parquet cross-check**: compare every English
+Supreme Court `chunk_id` in the legislation/judgment parquet against the `chunk_id` values in
+`kanoon_v1`, both directions, with duplicate detection. The parquet is an independent oracle,
+it needs no `court` filter, it names the exact missing chunks rather than a count, and it
+reads local files instead of re-scanning 11.8M points.
+
+Known target: the parquet holds **371,247** English Supreme Court chunks against **371,159**
+under the exact filter (**Reported**, from earlier notes). That 88-chunk difference is either
+unnamed-court points, or something else; the cross-check names them either way.
