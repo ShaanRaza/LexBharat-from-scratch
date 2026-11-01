@@ -1,0 +1,4 @@
+Does the passage help answer the question? Reply with JSON only:
+{{"rating": one of answers|partly|not_relevant, "score": number from 0 to 1}}
+Question: {query}
+Passage: {passage}

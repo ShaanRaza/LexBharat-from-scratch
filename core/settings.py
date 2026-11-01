@@ -20,6 +20,11 @@ class Settings(BaseSettings):
     CORPUS_COLLECTION: str = "kanoon_v1"
     SNAPSHOT_VERSION: str = "v2026.08"
     DATA_AS_OF: str = ""
+    DATA_CREDIT: str = "Data: Open India Law by Vaquill AI, CC BY 4.0"
+
+    # --- Citation seal (HMAC key; must be stable across processes so cached
+    # --- answers still verify; never hard-code, set in AWS Secrets Manager / .env)
+    SEAL_KEY: SecretStr = SecretStr("")
 
     # --- AI gateway (LiteLLM) ---
     MODEL_FREE: str = "gemini/gemini-2.5-flash-lite"

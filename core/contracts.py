@@ -152,6 +152,7 @@ class DraftAnswer:  # step 8 output, step 9 input. NEVER shown to a user.
     model: str
     input_tokens: int = 0
     output_tokens: int = 0
+    question: str = ""  # the rewritten question, for invented_citation_log
 
 
 @dataclass(frozen=True)
@@ -161,7 +162,9 @@ class Citation:
     source_id: str  # "S1".."S8"
     record_id: str
     status: CitationStatus
-    citation_string: str | None  # exactly as recorded; label "as recorded in the dataset"
+    citation_string: (
+        str | None
+    )  # exactly as recorded; label "as recorded in the dataset"
     pdf_url: str | None
     source_url: str | None
     title: str | None = None
@@ -180,34 +183,46 @@ class RemovedCitation:  # goes to invented_citation_log, never to the user's scr
     sentence: str = ""
 
 
-_SEAL = object()
-
-
 @dataclass(frozen=True)
 class VerifiedAnswer:  # step 9 output (written by trust)
-    """Text with failed citations already removed. Build it ONLY with seal_answer()."""
+    """Text with failed citations already removed.
+
+    `_seal` is an HMAC over the content, made only by core/verify.py. Changing any
+    field afterwards (dataclasses.replace, mutation) invalidates it. Always check with
+    is_sealed(); never build one by hand.
+    """
 
     text: str
     citations: tuple[Citation, ...]
     removed: tuple[RemovedCitation, ...] = ()
-    _seal: object = field(default=None, repr=False, compare=False)
+    _seal: bytes = field(default=b"", repr=False, compare=False)
 
     @property
     def sealed(self) -> bool:
-        return self._seal is _SEAL
+        return is_sealed(self)
 
     @property
     def had_removals(self) -> bool:
         return bool(self.removed)
 
 
-def seal_answer(
-    text: str,
-    citations: Sequence[Citation],
-    removed: Sequence[RemovedCitation] = (),
-) -> VerifiedAnswer:
-    """Only core/verify.py should call this. show() refuses anything not sealed."""
-    return VerifiedAnswer(text, tuple(citations), tuple(removed), _seal=_SEAL)
+_seal_checker: Callable[[VerifiedAnswer], bool] | None = None
+
+
+def register_seal_checker(fn: Callable[[VerifiedAnswer], bool]) -> None:
+    """core/verify.py calls this once at import. A second call is refused."""
+    global _seal_checker
+    if _seal_checker is not None:
+        raise RuntimeError("seal checker already registered")
+    _seal_checker = fn
+
+
+def is_sealed(answer: object) -> bool:
+    """True only for a VerifiedAnswer whose content matches its seal. If no verifier
+    has registered a checker, nothing is sealed (fail closed)."""
+    if not isinstance(answer, VerifiedAnswer) or _seal_checker is None:
+        return False
+    return _seal_checker(answer)
 
 
 # --- Output ---------------------------------------------------------------------------
@@ -217,9 +232,11 @@ class Footer:
 
     data_as_of: str
     snapshot_version: str
-    credit: str = "Data: Open India Law by Vaquill AI, CC BY 4.0"
+    credit: str = ""  # filled from settings.DATA_CREDIT (CC BY 4.0 line)
     not_legal_advice: bool = True
-    personal_advice_flag: bool = False  # answer should open by declining personal advice
+    personal_advice_flag: bool = (
+        False  # answer should open by declining personal advice
+    )
 
 
 @dataclass(frozen=True)
@@ -236,6 +253,13 @@ class PipelineResult:
     input_tokens: int = 0
     output_tokens: int = 0
     removed: tuple[RemovedCitation, ...] = ()
+
+    def __post_init__(self) -> None:
+        if self.outcome == "answered":
+            if self.answer is None or not is_sealed(self.answer):
+                raise ValueError("an answered result needs a sealed VerifiedAnswer")
+        elif self.answer is not None:
+            raise ValueError("only an answered result may carry an answer")
 
 
 # Stream events (step 10). Text first; the checked citations arrive as ONE final event.
@@ -282,6 +306,14 @@ class UsageMeter(Protocol):
     async def count_one(self, user_id: str) -> None: ...
 
 
+class CitationLog(Protocol):
+    """Writes invented_citation_log rows (real one: PostgreSQL, platform)."""
+
+    async def write(
+        self, question: str, model: str, removed: Sequence[RemovedCitation]
+    ) -> None: ...
+
+
 class ConversationStore(Protocol):
     """Step 11 target. Real one is PostgreSQL (platform); fake in adapters/memory.py."""
 
@@ -301,6 +333,7 @@ class Deps:
     cache: AnswerCache
     usage: UsageMeter
     store: ConversationStore
+    citation_log: CitationLog
     gate: GateFn
     verify: VerifyFn
     notes: Callable[[Sequence[str]], Sequence[str]] = lambda ids: ()  # reviewed notes
