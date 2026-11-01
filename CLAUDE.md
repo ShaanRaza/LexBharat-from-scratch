@@ -215,12 +215,16 @@ as stored, labelled "as recorded in the dataset".
 
 ## 7. Do not use
 
-- **CrewAI** or any multi-agent orchestrator **inside the product**. A fixed pipeline is
-  what guarantees every answer passes the verifier.
 - **Full LangChain.** Small pieces (e.g. text splitters) are fine. The framework is not.
-- **LangGraph** — not now. Month 6 at the earliest, only for features with real branching
-  (counter-arguments, moot court), and only with the verifier still forced.
-- Agents are for **building** this product, not for **running** it.
+- **Any orchestration that lets an answer skip the verifier.** Agent orchestration inside
+  the product is now **allowed** (owner decision, 1 Nov 2026), but only where the final
+  answer always passes through the citation verifier (§5) and the gate (step 7) afterwards,
+  with the verifier code outside the agents' control. The 11-step research pipeline in §4
+  stays a fixed pipeline; orchestration is for features with real branching
+  (counter-arguments, moot court, drafting, review).
+- **CrewAI / LangGraph for the research pipeline itself.** Not needed; the fixed pipeline is
+  cheaper, faster and easier to debug. Use them only for the branching features above, and
+  record the choice in `docs/DECISIONS.md` first.
 
 ---
 
@@ -248,24 +252,30 @@ So, on every non-trivial change:
 Writing more code faster is not the goal. The goal is a product its owner can defend to an
 advocate, a regulator and the next engineer.
 
-### Who leads the design
+### Who decides (agent-built mode, from 1 Nov 2026)
 
-On the code the owner must be able to defend — **`core/`, the citation verifier, the
-adapters, the data model, and any product or legal decision** — the **owner leads**:
+The owner has asked for the build to be done **completely by agents**. So agents decide
+technical design themselves, including `core/`, the adapters and the data model. What
+changes is *how visible* the decision is:
 
-1. Lay out the options and the trade-offs. Recommend one; do not just pick it silently.
-2. Wait for the call on anything that changes behaviour the owner would have to explain.
+1. Make the call. Pick the simplest option that follows the seven rules in §2.
+2. **Record every non-obvious choice in `docs/DECISIONS.md` in the same commit**: the choice,
+   the one alternative ruled out, and why, in one or two lines.
 3. Then build, explaining as in §8 above.
-4. Push back when the chosen option is worse. Agreeing with a bad call is not helpful.
+4. Push back on a bad instruction, in the commit message or the final report.
 
-On **boilerplate** — Docker Compose, CI config, lint setup, scaffolding, formatting — just
-do it. Hand-designing a `docker-compose.yml` teaches nothing and wastes the owner's time.
+**Still the owner's call. Stop, do the preparatory work, and write the question into the
+final report** — do not guess — for:
 
-The test: *would the owner have to defend this choice to an advocate, a regulator or the
-next engineer?* If yes, they decide. If no, decide it yourself and say what you did.
+- anything that changes what a user is told about the law (UX copy about advice, privilege,
+  the not-legal-advice line, BCI Rule 36 wording);
+- weakening or skipping any verifier check (§5), or changing the 50 → 10 → 8 passage counts;
+- pricing, plans, the product name, retention periods;
+- spending money or using a real API key or production system;
+- anything in `docs/DECISIONS.md` marked open that needs a lawyer, an advocate or Vaquill.
 
 > If the **Vibe Wise** plugin is loaded in this session, its learning-first mode takes
-> precedence and this section is the fallback.
+> precedence over this section.
 
 ## 9. How to work here
 
@@ -284,14 +294,18 @@ next engineer?* If yes, they decide. If no, decide it yourself and say what you 
    the PRD, read the **whole** document, or summarise it section by section first. (The
    first docs here were drafted after reading 3 of 59 PRD pages and had to be corrected.)
 
-7. **One task = one GitHub issue = one branch = one pull request = one Claude session.**
-   Start with `/start-task <issue>` and end with `/finish-task <issue>`, which checks the
-   work, opens the pull request and updates the issue. If a task outgrows one session,
-   finish a clean slice and propose a follow-up issue. Don't stretch the session.
+7. **Two ways to work, pick one per session.**
+   - **Single task (default for people):** one GitHub issue = one branch = one pull request
+     = one Claude session. Start with `/start-task <issue>`, end with `/finish-task <issue>`.
+     If a task outgrows one session, finish a clean slice and propose a follow-up issue.
+   - **Agent build (owner-run, see §12):** one branch (`shan/agent-build`), several agents
+     working in parallel on separate folders, one pull request to `main`. The owner reviews
+     and merges. Agents never push to `main`.
 
 ### Environment
 
-The owner is on **macOS**.
+The owner is on **macOS**. Agent builds may run on Linux in the cloud: anything you write
+must still work on macOS and on the ARM server.
 
 - Use macOS/BSD-compatible commands. There is **no GNU `timeout`** — use `gtimeout`, or a
   background-and-kill pattern.
@@ -384,3 +398,19 @@ things expected to break first on a 16 GB server.
 | Which skills did we plan, use or reject? | [`skills-used/README.md`](skills-used/README.md) |
 | Who works on what, and how does work reach `main`? | [`team/README.md`](team/README.md) |
 | What does the product look like after 11 weeks, and what's next? | [`after-11-weeks/`](after-11-weeks/README.md) |
+
+## 12. Agent build lanes (branch `shan/agent-build`)
+
+Used when the owner runs an agent build (§9.7). Agents work in parallel in **one checkout**,
+so each owns a folder and never edits another's. Shared files (`pyproject.toml`, `CLAUDE.md`,
+`docs/DECISIONS.md`) are edited only by the lead agent.
+
+| Lane | Owns | Builds |
+|---|---|---|
+| Core + Data | `core/`, `adapters/`, `data/`, `evals/`, `tests/core/` | adapters with fakes, verifier checks 1–3 + tests, one function per pipeline step, eval scaffold |
+| Platform | `api/`, `migrations/`, `docker-compose*.yml`, `.github/`, `tests/api/` | FastAPI routes, Alembic migrations per `docs/DATA-MODEL.md`, ARM-aware Docker, CI |
+| Web | `web/` | chat, citation ticks, failure screens, Act/judgment pages on the shared design tokens |
+| Reviewer | read-only | runs all tests and checks the work against §2 and §6; reports, does not fix |
+
+Rules for every lane: use fakes for Voyage, Gemini, Jev, Firebase, S3, Razorpay (no real keys);
+state "not verified" for anything that was not actually run; commit small and often.
