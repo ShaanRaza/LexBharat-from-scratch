@@ -12,7 +12,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+        env_ignore_empty=True,  # blank .env lines mean "not set"
     )
 
     # --- Environment ("production" turns on the safety checks below) ---
@@ -26,7 +29,9 @@ class Settings(BaseSettings):
     DATA_CREDIT: str = "Data: Open India Law by Vaquill AI, CC BY 4.0"
 
     # --- Citation seal (HMAC key; must be stable across processes so cached
-    # --- answers still verify; never hard-code, set in AWS Secrets Manager / .env)
+    # --- answers still verify; never hard-code, set in AWS Secrets Manager / .env).
+    # --- No default: every entry point (API, worker) must call
+    # --- core.verify.assert_seal_key_configured() at startup.
     SEAL_KEY: SecretStr = SecretStr("")
 
     # --- AI gateway (LiteLLM) ---
@@ -55,7 +60,6 @@ class Settings(BaseSettings):
     # --- Qdrant ---
     QDRANT_URL: str = "http://qdrant:6333"
     QDRANT_API_KEY: SecretStr = SecretStr("")
-    QDRANT_COLLECTION: str = "kanoon_v1"
     QDRANT_UPLOADS_COLLECTION: str = "user_documents"
 
     # --- PostgreSQL / Redis ---
