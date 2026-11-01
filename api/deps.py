@@ -10,6 +10,8 @@ At startup we call core.verify.assert_seal_key_configured(): no SEAL_KEY, no boo
 
 from __future__ import annotations
 
+import logging
+
 from core.contracts import Deps, run_pipeline, stream_events
 
 
@@ -27,6 +29,7 @@ class RealPipeline:
 def build_pipeline(core_settings, repo) -> RealPipeline:
     from adapters.cache import RedisCache
     from adapters.decisions import FallbackDecisions, GeminiDecider, JevClient
+    from adapters.jev import begin_run
     from adapters.llm import LiteLLMClient
     from adapters.qdrant import QdrantStore
     from adapters.voyage import VoyageClient
@@ -51,5 +54,19 @@ def build_pipeline(core_settings, repo) -> RealPipeline:
         citation_log=repo,
         gate=gate,
         verify=verify,
+        begin_run=begin_run,
     )
     return RealPipeline(deps)
+
+
+async def close_pipeline(pipeline) -> None:
+    """Shutdown hook: close the decisions service (the Jev client). Safe when the
+    pipeline was never built (None / fake mode) or has no aclose; never raises."""
+    deps = getattr(pipeline, "deps", None)
+    aclose = getattr(getattr(deps, "decisions", None), "aclose", None)
+    if aclose is None:
+        return
+    try:
+        await aclose()
+    except Exception:  # noqa: BLE001  shutdown must never fail
+        logging.getLogger("api.deps").warning("decisions aclose failed")

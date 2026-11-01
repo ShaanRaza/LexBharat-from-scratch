@@ -6,6 +6,8 @@ verifier, pipeline). In production they are built from config.
 
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -30,7 +32,14 @@ def create_app(
 
         core_settings = get_settings()
 
-    app = FastAPI(title="Research API", version="1")
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        yield
+        from api.deps import close_pipeline
+
+        await close_pipeline(getattr(app.state, "pipeline", None))
+
+    app = FastAPI(title="Research API", version="1", lifespan=lifespan)
     app.state.core_settings = core_settings
     app.state.api_settings = api_settings
     app.state.verifier = verifier or DenyAllAuth()  # fail closed by default

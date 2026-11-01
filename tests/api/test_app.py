@@ -221,3 +221,69 @@ async def test_worker_refuses_to_start_without_seal_key(monkeypatch):
     get_settings.cache_clear()
     await WorkerSettings.on_startup({})
     get_settings.cache_clear()
+
+
+class _Closable:
+    def __init__(self, boom=False):
+        self.closed, self.boom = 0, boom
+
+    async def aclose(self):
+        self.closed += 1
+        if self.boom:
+            raise RuntimeError("x")
+
+
+def _pipe(decisions):
+    from types import SimpleNamespace
+
+    return SimpleNamespace(deps=SimpleNamespace(decisions=decisions))
+
+
+def test_shutdown_closes_decisions_once(make_client):
+    from fastapi.testclient import TestClient
+
+    dec = _Closable()
+    c = make_client(pipeline=_pipe(dec))
+    with TestClient(c.app):
+        assert dec.closed == 0
+    assert dec.closed == 1
+
+
+def test_shutdown_is_safe_without_a_pipeline_or_aclose(make_client):
+    from fastapi.testclient import TestClient
+
+    c = make_client()
+    c.app.state.pipeline = None  # fail-closed 503 mode
+    with TestClient(c.app):
+        pass
+    c.app.state.pipeline = _pipe(object())  # no aclose
+    with TestClient(c.app):
+        pass
+    c.app.state.pipeline = _pipe(_Closable(boom=True))  # aclose raises
+    with TestClient(c.app):
+        pass
+
+
+async def test_worker_shutdown_safe_and_closes():
+    from workers.main import on_shutdown
+
+    await on_shutdown({})  # never built a pipeline
+    dec = _Closable()
+    await on_shutdown({"pipeline": _pipe(dec)})
+    assert dec.closed == 1
+
+
+def test_only_api_deps_imports_begin_run():
+    import pathlib
+    import re
+
+    root = pathlib.Path(__file__).resolve().parents[2]
+    hits = [
+        str(p.relative_to(root))
+        for d in ("api", "workers", "core")
+        for p in (root / d).rglob("*.py")
+        if re.search(
+            r"adapters\.jev import[^\n]*begin_run|jev\.begin_run", p.read_text()
+        )
+    ]
+    assert hits == ["api/deps.py"]

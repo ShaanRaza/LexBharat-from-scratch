@@ -21,8 +21,16 @@ async def ping(ctx: dict) -> str:
     return "pong"
 
 
+async def on_shutdown(ctx: dict) -> None:
+    """Close the Jev client if this worker ever built a pipeline (none yet)."""
+    from api.deps import close_pipeline
+
+    await close_pipeline(ctx.get("pipeline"))
+
+
 class WorkerSettings:
     functions = [ping]
     on_startup = on_startup
+    on_shutdown = on_shutdown
     max_jobs = 1  # one job at a time
     redis_settings = RedisSettings.from_dsn(get_settings().REDIS_URL)
