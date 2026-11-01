@@ -85,6 +85,9 @@ class Passage:
     pdf_url: str | None = None
     source_url: str | None = None
     title: str | None = None
+    act_slug: str | None = None  # acts only
+    section: str | None = None  # acts only
+    anchor: str | None = None
     act_status: str | None = None  # show in-force flag only when filled
     page: int | None = None  # uploads only
     char_start: int | None = None
@@ -163,6 +166,10 @@ class Citation:
     source_url: str | None
     title: str | None = None
     quote: str | None = None
+    kind: Literal["judgment", "act"] = "judgment"
+    anchor: str | None = None  # paragraph/page anchor when known
+    act_slug: str | None = None  # acts only
+    section: str | None = None  # acts only
 
 
 @dataclass(frozen=True)
