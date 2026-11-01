@@ -142,7 +142,7 @@ async def test_memory_repo_methods_are_user_scoped(repo):
 
 
 def test_no_pipeline_means_503_and_nothing_stored(make_client, repo):
-    c = make_client(pipeline=None)
+    c = make_client()
     c.app.state.pipeline = None
     conv = c.post("/api/v1/conversations", json={}, headers=auth()).json()
     r = c.post(
