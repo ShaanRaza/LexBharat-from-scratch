@@ -109,3 +109,36 @@ export const COVERAGE_TITLE = "What the dataset covers";
 export const COVERAGE_PLACEHOLDER = "Placeholder: the dataset has not been measured yet";
 export const COVERAGE_COVERED = "Covered";
 export const COVERAGE_EXCLUDED = "Not covered";
+
+// Matters (PRD-v2 O11): the word is the kind label, "Matter" for advocates and "Project"
+// for students; it is not a second feature. NEEDS-OWNER: interface words, not legal text.
+export const MATTER_WORDS = {
+  matter: { one: "Matter", many: "Matters" },
+  project: { one: "Project", many: "Projects" },
+} as const;
+export const MATTERS_NONE = (many: string) => `You have no ${many.toLowerCase()} yet.`;
+export const MATTER_UNFILED = "Unfiled";
+export const MATTER_NEW_LABEL = (one: string) => `New ${one.toLowerCase()} name`;
+export const MATTER_CREATE = "Create";
+export const MATTER_RENAME = "Rename";
+export const MATTER_SAVE = "Save";
+export const MATTER_CANCEL = "Cancel";
+export const MATTER_ARCHIVE = "Archive";
+export const MATTER_RESTORE = "Restore";
+export const MATTER_DELETE = "Delete";
+export const MATTER_SHOW_ARCHIVED = "Show archived";
+export const MATTER_FILE_UNDER = "File this conversation under";
+export const MATTER_CONVERSATIONS = "Conversations";
+export const MATTER_CONVERSATIONS_NONE = "No conversations yet.";
+// The two things "delete" can mean. The user must pick one: there is no default.
+export const MATTER_DELETE_ONLY = (one: string) => `Delete the ${one.toLowerCase()} only, and move its work to unfiled`;
+export const MATTER_DELETE_ALL = (one: string) => `Delete the ${one.toLowerCase()} and everything in it`;
+export const MATTER_DELETE_ALL_WARNING = "This also permanently deletes its conversations and uploaded files. It cannot be undone."; // NEEDS-OWNER
+export const MATTER_DELETE_TITLE = (one: string) => `Delete this ${one.toLowerCase()}?`;
+export const MATTER_DELETE_FAILED = "We could not finish deleting. Nothing else was removed and it was kept. Please try again."; // NEEDS-OWNER
+export const HISTORY_TITLE = "History and search";
+export const HISTORY_SEARCH_PLACEHOLDER = "Search your own saved questions and answers";
+export const HISTORY_SEARCH = "Search";
+export const HISTORY_RECENT = "Recent conversations";
+export const HISTORY_NONE = "Nothing found in your saved work.";
+export const NAV_HISTORY = "History";

@@ -6,6 +6,10 @@ import { PRODUCT_NAME } from "@/lib/config";
 import { answerToText } from "@/lib/chat/answerText";
 import { copyText, downloadText } from "@/lib/chat/download";
 import type { AnswerState } from "@/lib/chat/state";
+import { MatterPicker } from "@/components/matters/MatterPicker";
+import { listMatters } from "@/lib/api/client";
+import { MATTER_FILE_UNDER } from "@/lib/copy";
+import { useLoaded } from "@/lib/matters/useLoaded";
 import { useChat } from "@/lib/chat/useChat";
 import { useFollowups } from "@/lib/chat/useFollowups";
 import { useImprove } from "@/lib/chat/useImprove";
@@ -56,7 +60,9 @@ function AfterAnswer({
 // Chat on the left; the cited record opens on the right. Below the large breakpoint the
 // two stack (answer first, source under it) instead of sitting side by side.
 export function ChatScreen() {
-  const { answers, ask, busy, conversationId } = useChat();
+  const [matterId, setMatterId] = useState<string | null>(null);
+  const matters = useLoaded(() => listMatters("active"), "chat-matters");
+  const { answers, ask, busy, conversationId } = useChat(matterId);
   const left = useUsage();
   const source = useSource();
   const improve = useImprove();
@@ -94,6 +100,9 @@ export function ChatScreen() {
             />
           }
         />
+        {(matters.value?.length ?? 0) > 0 && (
+          <MatterPicker label={MATTER_FILE_UNDER} matters={matters.value ?? []} value={matterId} onChange={setMatterId} />
+        )}
         <UsageMeter left={left} />
         {left === 0 && <FailureCard kind="usageLimit" />}
       </div>

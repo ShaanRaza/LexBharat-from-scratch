@@ -78,7 +78,7 @@ def test_upgrade_downgrade_upgrade_on_real_postgres(scratch_db_url):
     with engine.connect() as c:
         assert (
             c.execute(text("select version_num from alembic_version")).scalar()
-            == "0007"
+            == "0008"
         )
     engine.dispose()
 

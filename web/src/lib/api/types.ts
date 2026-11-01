@@ -86,6 +86,7 @@ export type MeOut = {
   id: string;
   email: string | null;
   name: string | null;
+  role?: "advocate" | "student" | "in-house" | "other" | null;
   plan: Plan;
   answers_left_this_month: number | null; // null = limit not configured yet
 };
@@ -110,4 +111,52 @@ export type CoverageOut = {
   excluded: string[];
   measured_at: string | null;
   provenance: Provenance;
+};
+
+// Matters (PRD-v2 O11). "Matter" or "Project" is only the `kind` label.
+export type MatterKind = "matter" | "project";
+export type MatterStatus = "active" | "archived";
+export type MatterOut = {
+  id: string;
+  title: string;
+  kind: MatterKind;
+  status: MatterStatus;
+  archived_at: string | null;
+  created_at: string;
+  updated_at: string;
+  conversation_count: number;
+  document_count: number;
+};
+export type ConversationOut = {
+  id: string;
+  module: "research" | "document";
+  title: string | null;
+  message_count: number;
+  matter_id: string | null;
+  created_at: string;
+  updated_at: string;
+};
+export type MatterDetail = MatterOut & { conversations: ConversationOut[] };
+export type MatterDeleteMode = "unfile" | "everything";
+export type MatterDeleted = { mode: MatterDeleteMode; documents_deleted: number; conversations_deleted: number };
+
+export type StoredMessage = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  from_cache: boolean;
+  citations: Citation[];
+  created_at: string;
+};
+export type ConversationDetail = ConversationOut & { messages: StoredMessage[]; provenance: Provenance | null };
+
+// A match in the user's own saved work (never anyone else's).
+export type HistoryHit = {
+  kind: "conversation" | "message";
+  conversation_id: string;
+  message_id: string | null;
+  matter_id: string | null;
+  title: string | null;
+  snippet: string;
+  created_at: string;
 };

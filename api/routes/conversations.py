@@ -25,8 +25,17 @@ async def create_conversation(
     if body.document_id is not None or body.module == "document":
         if not request.app.state.core_settings.FEATURE_UPLOADS:
             raise ApiError(403, "feature_disabled", "Uploads are not available yet.")
-    return await request.app.state.repo.create_conversation(
-        user.id, body.module, str(body.document_id) if body.document_id else None
+    repo = request.app.state.repo
+    matter_id = str(body.matter_id) if body.matter_id else None
+    if matter_id and await repo.get_matter(user.id, matter_id) is None:
+        raise ApiError(
+            404, "not_found", "Matter not found."
+        )  # not theirs: looks absent
+    return await repo.create_conversation(
+        user.id,
+        body.module,
+        str(body.document_id) if body.document_id else None,
+        matter_id,
     )
 
 
@@ -35,10 +44,29 @@ async def list_conversations(
     request: Request,
     cursor: str | None = None,
     limit: int = Query(20, ge=1, le=100),
+    matter_id: str | None = None,
+    unfiled: bool = False,
     user: CurrentUser = User,
 ):
-    items, nxt = await request.app.state.repo.list_conversations(user.id, cursor, limit)
+    items, nxt = await request.app.state.repo.list_conversations(
+        user.id, cursor, limit, matter_id=matter_id, unfiled=unfiled
+    )
     return s.ConversationList(items=items, next_cursor=nxt)
+
+
+@router.patch("/conversations/{conv_id}", response_model=s.ConversationOut)
+async def move_conversation(
+    conv_id: str, body: s.ConversationMove, request: Request, user: CurrentUser = User
+):
+    """File a conversation under a matter, move it to another, or unfile it (null)."""
+    repo = request.app.state.repo
+    ok = await repo.set_conversation_matter(
+        user.id, conv_id, str(body.matter_id) if body.matter_id else None
+    )
+    if not ok:  # not their conversation, or not their matter: both look absent
+        raise ApiError(404, "not_found", "Conversation or matter not found.")
+    conv = await repo.get_conversation(user.id, conv_id)
+    return conv
 
 
 @router.get("/conversations/{conv_id}", response_model=s.ConversationDetail)

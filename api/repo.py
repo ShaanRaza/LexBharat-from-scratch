@@ -39,6 +39,16 @@ class Repo(Protocol):
     async def answers_this_month(self, user_id: str) -> int: ...
     async def record_ai_call(self, user_id: str, call: AiCall) -> None: ...
     async def create_matter(self, user_id: str, title: str, kind: str) -> dict: ...
+    async def list_matters(self, user_id: str, status: str | None) -> list[dict]: ...
+    async def update_matter(
+        self, user_id: str, matter_id: str, title: str | None, status: str | None
+    ) -> dict | None: ...
+    async def set_conversation_matter(
+        self, user_id: str, conv_id: str, matter_id: str | None
+    ) -> bool: ...
+    async def search_user_work(
+        self, user_id: str, q: str, limit: int
+    ) -> list[dict]: ...
     async def get_matter(self, user_id: str, matter_id: str) -> dict | None: ...
     async def matter_document_ids(self, user_id: str, matter_id: str) -> list[str]: ...
     async def delete_matter(
@@ -53,10 +63,19 @@ class Repo(Protocol):
     async def deleted_documents(self, days: int) -> list[tuple[str, str]]: ...
     async def daily_ai_spend(self, days: int = 7) -> list[dict]: ...
     async def create_conversation(
-        self, user_id: str, module: str, document_id: str | None
+        self,
+        user_id: str,
+        module: str,
+        document_id: str | None,
+        matter_id: str | None = None,
     ) -> dict: ...
     async def list_conversations(
-        self, user_id: str, cursor: str | None, limit: int
+        self,
+        user_id: str,
+        cursor: str | None,
+        limit: int,
+        matter_id: str | None = None,
+        unfiled: bool = False,
     ) -> tuple[list[dict], str | None]: ...
     async def get_conversation(self, user_id: str, conv_id: str) -> dict | None: ...
     async def add_user_message(
@@ -141,11 +160,80 @@ class MemoryRepo:
         self.matters[m["id"]] = m
         return dict(m)
 
+    def _counts(self, user_id, matter_id):
+        return {
+            "conversation_count": sum(
+                1
+                for c in self.convs.values()
+                if c["user_id"] == user_id and c.get("matter_id") == matter_id
+            ),
+            "document_count": sum(
+                1
+                for d in self.documents.values()
+                if d["user_id"] == user_id and d["matter_id"] == matter_id
+            ),
+        }
+
     async def get_matter(self, user_id, matter_id):
         m = self.matters.get(matter_id)
         if not m or m["user_id"] != user_id:  # another user's matter looks absent
             return None
-        return dict(m)
+        return {**m, **self._counts(user_id, matter_id)}
+
+    async def list_matters(self, user_id, status):
+        rows = [
+            {**m, **self._counts(user_id, m["id"])}
+            for m in self.matters.values()
+            if m["user_id"] == user_id and (status is None or m["status"] == status)
+        ]
+        return sorted(rows, key=lambda m: (m["updated_at"], m["id"]), reverse=True)
+
+    async def update_matter(self, user_id, matter_id, title, status):
+        m = self.matters.get(matter_id)
+        if not m or m["user_id"] != user_id:
+            return None
+        if title is not None:
+            m["title"] = title
+        if status is not None and status != m["status"]:
+            m["status"] = status
+            m["archived_at"] = _now() if status == "archived" else None
+        m["updated_at"] = _now()
+        return await self.get_matter(user_id, matter_id)
+
+    async def set_conversation_matter(self, user_id, conv_id, matter_id):
+        c = self.convs.get(conv_id)
+        if not c or c["user_id"] != user_id:
+            return False
+        if matter_id is not None and await self.get_matter(user_id, matter_id) is None:
+            return False  # never file work under someone else's matter
+        c["matter_id"] = matter_id
+        c["updated_at"] = _now()
+        return True
+
+    async def search_user_work(self, user_id, q, limit):
+        words = [w.lower() for w in q.split()]
+        out = []
+        for cid, c in self.convs.items():
+            if c["user_id"] != user_id:
+                continue
+            title = c.get("title") or ""
+            if words and all(w in title.lower() for w in words):
+                out.append(
+                    {"kind": "conversation", "user_id": user_id, "conversation_id": cid,
+                     "message_id": None, "matter_id": c.get("matter_id"),
+                     "title": c.get("title"), "snippet": title,
+                     "created_at": c["updated_at"]}
+                )  # fmt: skip
+            for m in self.msgs.get(cid, []):
+                if words and all(w in m["content"].lower() for w in words):
+                    out.append(
+                        {"kind": "message", "user_id": user_id, "conversation_id": cid,
+                         "message_id": m["id"], "matter_id": c.get("matter_id"),
+                         "title": c.get("title"), "snippet": m["content"][:160],
+                         "created_at": m["created_at"]}
+                    )  # fmt: skip
+        out.sort(key=lambda r: r["created_at"], reverse=True)
+        return out[:limit]
 
     async def matter_document_ids(self, user_id, matter_id):
         return [
@@ -198,10 +286,10 @@ class MemoryRepo:
         )
         return list(seen)
 
-    async def create_conversation(self, user_id, module, document_id):
+    async def create_conversation(self, user_id, module, document_id, matter_id=None):
         c = {
             "id": str(uuid.uuid4()), "user_id": user_id, "module": module,
-            "document_id": document_id, "matter_id": None, "title": None,
+            "document_id": document_id, "matter_id": matter_id, "title": None,
             "message_count": 0, "rolling_summary": "",
             "created_at": _now(), "updated_at": _now(),
         }  # fmt: skip
@@ -209,9 +297,17 @@ class MemoryRepo:
         self.msgs[c["id"]] = []
         return c
 
-    async def list_conversations(self, user_id, cursor, limit):
+    async def list_conversations(
+        self, user_id, cursor, limit, matter_id=None, unfiled=False
+    ):
         rows = sorted(
-            (c for c in self.convs.values() if c["user_id"] == user_id),
+            (
+                c
+                for c in self.convs.values()
+                if c["user_id"] == user_id
+                and (matter_id is None or c.get("matter_id") == matter_id)
+                and (not unfiled or c.get("matter_id") is None)
+            ),
             key=lambda c: (c["created_at"], c["id"]),
             reverse=True,
         )

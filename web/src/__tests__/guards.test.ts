@@ -67,6 +67,8 @@ describe("hard rules", () => {
   });
   it("no judge, bench or party fields in the API types", () => {
     const t = readFileSync(join(SRC, "lib/api/types.ts"), "utf8").split("\n").filter((l) => !l.trim().startsWith("//")).join("\n");
-    expect(t).not.toMatch(/judge|bench|petitioner|respondent|appellant|advocate/i);
+    // A FIELD named after a judge, party or advocate is refused. The account role value
+    // "advocate" (what kind of user someone is) is not a field about a person in a record.
+    expect(t).not.toMatch(/\b(judges?|bench|petitioners?|respondents?|appellants?|advocates?)\??\s*:/i);
   });
 });

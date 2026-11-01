@@ -82,20 +82,27 @@ class PgRepo:
         )
         return int(rows[0]["n"])
 
-    async def create_conversation(self, user_id, module, document_id):
+    async def create_conversation(self, user_id, module, document_id, matter_id=None):
+        # The matter must be this user's: a foreign matter id inserts NULL (unfiled).
         rows = await self._exec(
-            """INSERT INTO conversations (user_id, module, document_id)
-               VALUES (:u, :m, :d) RETURNING *""",
-            u=user_id, m=module, d=document_id,
+            """INSERT INTO conversations (user_id, module, document_id, matter_id)
+               VALUES (:u, :m, :d,
+                       (SELECT id FROM matters WHERE id = :mt AND user_id = :u))
+               RETURNING *""",
+            u=user_id, m=module, d=document_id, mt=matter_id,
         )  # fmt: skip
         return self._s(rows[0])
 
-    async def list_conversations(self, user_id, cursor, limit):
+    async def list_conversations(
+        self, user_id, cursor, limit, matter_id=None, unfiled=False
+    ):
         off = int(cursor) if cursor else 0
         rows = await self._rows(
             """SELECT * FROM conversations WHERE user_id = :u
+                 AND (CAST(:mt AS uuid) IS NULL OR matter_id = CAST(:mt AS uuid))
+                 AND (NOT :uf OR matter_id IS NULL)
                ORDER BY created_at DESC, id DESC LIMIT :l OFFSET :o""",
-            u=user_id, l=limit + 1, o=off,
+            u=user_id, mt=matter_id, uf=unfiled, l=limit + 1, o=off,
         )  # fmt: skip
         nxt = str(off + limit) if len(rows) > limit else None
         return [self._s(r) for r in rows[:limit]], nxt
@@ -293,13 +300,91 @@ class PgRepo:
         )  # fmt: skip
         return self._s(rows[0])
 
+    _MATTER_SQL = """SELECT m.*,
+        (SELECT count(*) FROM conversations c
+          WHERE c.matter_id = m.id AND c.user_id = m.user_id) AS conversation_count,
+        (SELECT count(*) FROM documents d
+          WHERE d.matter_id = m.id AND d.user_id = m.user_id) AS document_count
+        FROM matters m"""
+
     async def get_matter(self, user_id, matter_id):
         rows = await self._rows(
-            "SELECT * FROM matters WHERE id = :m AND user_id = :u",
-            m=matter_id,
-            u=user_id,
-        )  # user_id filter: another user's matter looks absent
+            self._MATTER_SQL + " WHERE m.id = :m AND m.user_id = :u",
+            m=matter_id, u=user_id,
+        )  # user_id filter: another user's matter looks absent  # fmt: skip
         return self._s(rows[0]) if rows else None
+
+    async def list_matters(self, user_id, status):
+        rows = await self._rows(
+            self._MATTER_SQL + """ WHERE m.user_id = :u
+                 AND (CAST(:s AS text) IS NULL OR m.status = CAST(:s AS text))
+               ORDER BY m.updated_at DESC, m.id DESC""",
+            u=user_id, s=status,
+        )  # fmt: skip
+        return [self._s(r) for r in rows]
+
+    async def update_matter(self, user_id, matter_id, title, status):
+        rows = await self._exec(
+            """UPDATE matters SET
+                 title = COALESCE(CAST(:t AS text), title),
+                 status = COALESCE(CAST(:s AS text), status),
+                 archived_at = CASE
+                   WHEN CAST(:s AS text) = 'archived' AND status <> 'archived' THEN now()
+                   WHEN CAST(:s AS text) = 'active' THEN NULL
+                   ELSE archived_at END,
+                 updated_at = now()
+               WHERE id = :m AND user_id = :u RETURNING id""",
+            t=title, s=status, m=matter_id, u=user_id,
+        )  # fmt: skip
+        return await self.get_matter(user_id, matter_id) if rows else None
+
+    async def set_conversation_matter(self, user_id, conv_id, matter_id):
+        # Both the conversation AND the matter must be this user's.
+        rows = await self._exec(
+            """UPDATE conversations SET matter_id = CAST(:mt AS uuid), updated_at = now()
+               WHERE id = :c AND user_id = :u
+                 AND (CAST(:mt AS uuid) IS NULL OR EXISTS
+                      (SELECT 1 FROM matters WHERE id = CAST(:mt AS uuid) AND user_id = :u))
+               RETURNING id""",
+            mt=matter_id, c=conv_id, u=user_id,
+        )  # fmt: skip
+        return bool(rows)
+
+    async def search_user_work(self, user_id, q, limit):
+        """PostgreSQL full text over this user's conversation titles and messages. The
+        user_id filter is in BOTH halves; core/user_search.py checks the rows again."""
+        rows = await self._rows(
+            """SELECT * FROM (
+                 SELECT 'conversation' AS kind, c.user_id, c.id AS conversation_id,
+                        NULL::uuid AS message_id, c.matter_id, c.title,
+                        ts_headline('english', COALESCE(c.title, ''), qy,
+                                    'StartSel=, StopSel=, MaxFragments=1, MaxWords=25')
+                          AS snippet,
+                        c.updated_at AS created_at,
+                        ts_rank(to_tsvector('english', COALESCE(c.title, '')), qy) AS rank
+                   FROM conversations c, websearch_to_tsquery('english', :q) qy
+                  WHERE c.user_id = :u
+                    AND to_tsvector('english', COALESCE(c.title, '')) @@ qy
+                 UNION ALL
+                 SELECT 'message', c.user_id, m.conversation_id, m.id, c.matter_id,
+                        c.title,
+                        ts_headline('english', m.content, qy,
+                                    'StartSel=, StopSel=, MaxFragments=1, MaxWords=25'),
+                        m.created_at, ts_rank(to_tsvector('english', m.content), qy)
+                   FROM messages m
+                   JOIN conversations c ON c.id = m.conversation_id,
+                        websearch_to_tsquery('english', :q) qy
+                  WHERE c.user_id = :u
+                    AND to_tsvector('english', m.content) @@ qy
+               ) t ORDER BY rank DESC, created_at DESC LIMIT :l""",
+            q=q, u=user_id, l=limit,
+        )  # fmt: skip
+        out = []
+        for r in rows:
+            r = self._s(r)
+            r.pop("rank", None)
+            out.append(r)
+        return out
 
     async def matter_document_ids(self, user_id, matter_id):
         rows = await self._rows(

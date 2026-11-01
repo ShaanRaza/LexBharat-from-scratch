@@ -1,13 +1,21 @@
 "use client";
-import { useCallback, useRef, useState } from "react";
-import { askQuestion, createConversation } from "@/lib/api/client";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { askQuestion, createConversation, moveConversation } from "@/lib/api/client";
 import { applyEvent, endOfStream, newAnswer, type AnswerState } from "./state";
 
 // Hook: holds the list of answers and runs a question. No styling here.
-export function useChat() {
+export function useChat(matterId: string | null = null) {
   const [answers, setAnswers] = useState<AnswerState[]>([]);
   const conv = useRef<string | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  // Which matter new work is filed under. A conversation that already exists is moved
+  // when the choice changes; one that does not exist yet is created in it.
+  const matter = useRef<string | null>(matterId);
+  useEffect(() => {
+    if (matter.current === matterId) return;
+    matter.current = matterId;
+    if (conv.current) moveConversation(conv.current, matterId).catch(() => {});
+  }, [matterId]);
 
   const ask = useCallback(async (question: string) => {
     let state = newAnswer(question);
@@ -25,7 +33,7 @@ export function useChat() {
     write(state);
     try {
       if (conv.current === null) {
-        conv.current = await createConversation();
+        conv.current = await createConversation(matter.current);
         setConversationId(conv.current);
       }
       for await (const ev of askQuestion(conv.current, question)) {

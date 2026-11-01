@@ -9,6 +9,7 @@ export function SearchBar({
   onSubmit,
   disabled = false,
   placeholder = "Ask a legal question in plain words",
+  submitLabel = "Ask",
   initial = "",
   value,
   onChange,
@@ -18,6 +19,7 @@ export function SearchBar({
   onSubmit: (text: string) => void;
   disabled?: boolean;
   placeholder?: string;
+  submitLabel?: string;
   initial?: string;
   value?: string;
   onChange?: (text: string) => void;
@@ -48,7 +50,7 @@ export function SearchBar({
           className="min-w-0 basis-full rounded-pill sm:flex-1 sm:basis-0 border border-line bg-page px-5 py-3 text-body text-ink outline-none focus:border-accent"
         />
         <Button type="submit" disabled={disabled}>
-          Ask
+          {submitLabel}
         </Button>
         {actions}
       </form>

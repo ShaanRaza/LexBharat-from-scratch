@@ -14,7 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.auth import DenyAllAuth
 from api.config import ApiSettings, get_api_settings
 from api.errors import RequestIdMiddleware, install_error_handlers
-from api.routes import content, conversations, matters, me, misc
+from api.routes import content, conversations, history, matters, me, misc
 
 PREFIX = "/api/v1"
 
@@ -99,6 +99,7 @@ def create_app(
     )
     install_error_handlers(app)
     for r in (
+        history.router,
         me.router,
         conversations.router,
         matters.router,

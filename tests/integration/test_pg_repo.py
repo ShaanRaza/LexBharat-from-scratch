@@ -214,3 +214,78 @@ async def test_delete_matter_only_on_real_postgres_unfiles_and_deletes_nothing(
     ] is None
     for d in docs:  # nothing deleted, nothing orphaned: still the user's, still there
         assert await svc.files.exists(uid, d)
+
+
+async def _user(repo, uid):
+    return str((await repo.upsert_user(uid, None, None))["id"])
+
+
+async def test_matters_on_real_postgres_crud_counts_and_isolation(priced_repo):
+    repo = priced_repo
+    a, b = await _user(repo, "uid-ma"), await _user(repo, "uid-mb")
+    m = await repo.create_matter(a, "State v Doe", "matter")
+    mid = str(m["id"])
+    c1 = await repo.create_conversation(a, "research", None, mid)
+    assert str(c1["matter_id"]) == mid
+    await repo.create_document(a, "f.pdf", mid, "text")
+    got = await repo.get_matter(a, mid)
+    assert (got["conversation_count"], got["document_count"]) == (1, 1)
+    assert await repo.get_matter(b, mid) is None  # another user's matter looks absent
+
+    # a foreign matter id can never be used to file work
+    stolen = await repo.create_conversation(b, "research", None, mid)
+    assert stolen["matter_id"] is None  # inserted unfiled, not under Alice's matter
+    mine_b = await repo.create_conversation(b, "research", None)
+    assert await repo.set_conversation_matter(b, str(mine_b["id"]), mid) is False
+    assert (
+        await repo.set_conversation_matter(b, str(c1["id"]), None) is False
+    )  # not hers
+
+    # rename, archive, restore
+    u = await repo.update_matter(a, mid, "Renamed", "archived")
+    assert u["title"] == "Renamed" and u["status"] == "archived" and u["archived_at"]
+    assert [x["id"] for x in await repo.list_matters(a, "active")] == []
+    assert len(await repo.list_matters(a, "archived")) == 1
+    u = await repo.update_matter(a, mid, None, "active")
+    assert u["status"] == "active" and u["archived_at"] is None
+    assert await repo.update_matter(b, mid, "x", None) is None
+
+    # move between matters and unfile; list filters
+    m2 = await repo.create_matter(a, "Other", "project")
+    assert await repo.set_conversation_matter(a, str(c1["id"]), str(m2["id"]))
+    inside, _ = await repo.list_conversations(a, None, 10, matter_id=str(m2["id"]))
+    assert [str(x["id"]) for x in inside] == [str(c1["id"])]
+    assert await repo.set_conversation_matter(a, str(c1["id"]), None)
+    unfiled, _ = await repo.list_conversations(a, None, 10, unfiled=True)
+    assert [str(x["id"]) for x in unfiled] == [str(c1["id"])]
+
+
+async def test_history_search_on_real_postgres_is_full_text_and_never_crosses_users(
+    priced_repo,
+):
+    from core.user_search import search_my_work
+
+    repo = priced_repo
+    a, b = await _user(repo, "uid-sa"), await _user(repo, "uid-sb")
+    ca = await repo.create_conversation(a, "research", None)
+    cb = await repo.create_conversation(b, "research", None)
+    for uid, conv, q in (
+        (a, ca, "bails for cheque dishonour"),
+        (b, cb, "bail for cheque dishonour"),
+    ):
+        qid = await repo.add_user_message(uid, str(conv["id"]), q)
+        assert qid
+    await repo.add_user_message(b, str(cb["id"]), "zebracrossing is only in Bob's chat")
+
+    hits_a = await search_my_work(repo, a, "bail cheque")  # "bails" stems to "bail"
+    assert hits_a and {str(h["conversation_id"]) for h in hits_a} == {str(ca["id"])}
+    hits_b = await search_my_work(repo, b, "bail cheque")
+    assert {str(h["conversation_id"]) for h in hits_b} == {str(cb["id"])}
+    assert (
+        await search_my_work(repo, a, "zebracrossing") == []
+    )  # Bob's word, not Alice's
+    assert await search_my_work(repo, b, "zebracrossing")
+    # operators in the query are plain words, not SQL or tsquery syntax
+    leak = await search_my_work(repo, a, "'; DROP TABLE messages; --")
+    assert isinstance(leak, list)
+    assert (await repo._rows("SELECT count(*) AS n FROM messages"))[0]["n"] == 3

@@ -2,8 +2,9 @@
 // Fake mode (NEXT_PUBLIC_USE_FAKE_API=true, the default) returns canned data.
 import { API_BASE_URL, FAKE_STEP_DELAY_MS, USE_FAKE_API } from "@/lib/config";
 import { FAKE_ANSWER_TEXT, FAKE_CASE, FAKE_CITATIONS, FAKE_COVERAGE, FAKE_ME, FAKE_PROVENANCE, FAKE_SECTIONS, FAKE_STATS } from "@/lib/fake/data";
+import { fakeConversationDetail, fakeDb, fakeRecordTurn, nextId, withCounts } from "@/lib/fake/store";
 import { createSseParser } from "./sse";
-import type { ApiErrorBody, CaseOut, ConsentIn, CoverageOut, FollowupsOut, ImproveOut, MeOut, SectionOut, StatsOut, StepEventData, StreamEvent } from "./types";
+import type { ApiErrorBody, CaseOut, ConsentIn, ConversationDetail, ConversationOut, CoverageOut, FollowupsOut, HistoryHit, MatterDeleteMode, MatterDeleted, MatterDetail, MatterKind, MatterOut, MatterStatus, ImproveOut, MeOut, SectionOut, StatsOut, StepEventData, StreamEvent } from "./types";
 
 const BASE = `${API_BASE_URL}/api/v1`;
 
@@ -106,9 +107,14 @@ export async function postConsent(c: ConsentIn): Promise<void> {
   if (!res.ok) throw await failure(res);
 }
 
-export async function createConversation(): Promise<string> {
-  if (USE_FAKE_API) return "fake-conversation";
-  const res = await fetch(`${BASE}/conversations`, { method: "POST", headers: await headers(), body: JSON.stringify({ module: "research" }) });
+export async function createConversation(matterId: string | null = null): Promise<string> {
+  if (USE_FAKE_API) {
+    const id = nextId("fake-conv");
+    const now = new Date().toISOString();
+    fakeDb.conversations.unshift({ id, module: "research", title: null, message_count: 0, matter_id: matterId, created_at: now, updated_at: now });
+    return id;
+  }
+  const res = await fetch(`${BASE}/conversations`, { method: "POST", headers: await headers(), body: JSON.stringify({ module: "research", matter_id: matterId }) });
   if (!res.ok) throw await failure(res);
   return (await res.json()).id as string;
 }
@@ -116,6 +122,7 @@ export async function createConversation(): Promise<string> {
 // Streams one answer as typed events. Order on the wire: token*, citations once, done.
 export async function* askQuestion(conversationId: string, content: string): AsyncGenerator<StreamEvent> {
   if (USE_FAKE_API) {
+    fakeRecordTurn(conversationId, content);
     yield* fakeStream(content);
     return;
   }
@@ -179,4 +186,113 @@ async function* fakeStream(q: string): AsyncGenerator<StreamEvent> {
     data: { citations: FAKE_CITATIONS, removed_count: 0, data_as_of: FAKE_PROVENANCE.data_as_of, credit: FAKE_PROVENANCE.credit, notice: FAKE_PROVENANCE.notice },
   };
   yield { event: "done", data: { message_id: null, from_cache: false, refused: false } };
+}
+
+// ---- Matters and history (PRD-v2 O11, section 4.2) ----------------------------------
+async function sendJson<T>(method: "PATCH" | "DELETE", path: string, body?: unknown): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, { method, headers: await headers(), body: body === undefined ? undefined : JSON.stringify(body) });
+  if (!res.ok) throw await failure(res);
+  return res.json() as Promise<T>;
+}
+const notFound = () => new ApiError({ code: "not_found", message: "Not found", request_id: "fake" }, 404);
+
+export async function listMatters(status: MatterStatus | "all" = "active"): Promise<MatterOut[]> {
+  if (USE_FAKE_API) {
+    return fakeDb.matters.filter((m) => status === "all" || m.status === status).map(withCounts);
+  }
+  return (await getJson<{ items: MatterOut[] }>(`/matters?status=${status}`)).items;
+}
+
+export async function createMatter(title: string, kind: MatterKind): Promise<MatterOut> {
+  if (USE_FAKE_API) {
+    const now = new Date().toISOString();
+    const m: MatterOut = { id: nextId("fake-matter"), title: title.trim(), kind, status: "active", archived_at: null, created_at: now, updated_at: now, conversation_count: 0, document_count: 0 };
+    fakeDb.matters.unshift(m);
+    return m;
+  }
+  return postJson<MatterOut>("/matters", { title, kind });
+}
+
+export async function getMatter(id: string): Promise<MatterDetail> {
+  if (USE_FAKE_API) {
+    const m = fakeDb.matters.find((x) => x.id === id);
+    if (!m) throw notFound();
+    return { ...withCounts(m), conversations: fakeDb.conversations.filter((c) => c.matter_id === id) };
+  }
+  return getJson<MatterDetail>(`/matters/${encodeURIComponent(id)}`);
+}
+
+export async function updateMatter(id: string, change: { title?: string; status?: MatterStatus }): Promise<MatterOut> {
+  if (USE_FAKE_API) {
+    const m = fakeDb.matters.find((x) => x.id === id);
+    if (!m) throw notFound();
+    if (change.title !== undefined) m.title = change.title.trim();
+    if (change.status !== undefined) {
+      m.archived_at = change.status === "archived" ? new Date().toISOString() : null;
+      m.status = change.status;
+    }
+    return withCounts(m);
+  }
+  return sendJson<MatterOut>("PATCH", `/matters/${encodeURIComponent(id)}`, change);
+}
+
+// `mode` has no default on purpose: the user is asked which one they mean.
+export async function deleteMatter(id: string, mode: MatterDeleteMode): Promise<MatterDeleted> {
+  if (USE_FAKE_API) {
+    if (!fakeDb.matters.some((m) => m.id === id)) throw notFound();
+    let conversations_deleted = 0;
+    if (mode === "everything") {
+      const gone = fakeDb.conversations.filter((c) => c.matter_id === id);
+      conversations_deleted = gone.length;
+      fakeDb.conversations = fakeDb.conversations.filter((c) => c.matter_id !== id);
+      gone.forEach((c) => delete fakeDb.messages[c.id]);
+    } else {
+      fakeDb.conversations.forEach((c) => c.matter_id === id && (c.matter_id = null));
+    }
+    fakeDb.matters = fakeDb.matters.filter((m) => m.id !== id);
+    return { mode, documents_deleted: 0, conversations_deleted };
+  }
+  return sendJson<MatterDeleted>("DELETE", `/matters/${encodeURIComponent(id)}?mode=${mode}`);
+}
+
+export async function moveConversation(conversationId: string, matterId: string | null): Promise<ConversationOut> {
+  if (USE_FAKE_API) {
+    const c = fakeDb.conversations.find((x) => x.id === conversationId);
+    if (!c || (matterId && !fakeDb.matters.some((m) => m.id === matterId))) throw notFound();
+    c.matter_id = matterId;
+    return c;
+  }
+  return sendJson<ConversationOut>("PATCH", `/conversations/${encodeURIComponent(conversationId)}`, { matter_id: matterId });
+}
+
+export async function listConversations(): Promise<ConversationOut[]> {
+  if (USE_FAKE_API) return fakeDb.conversations.filter((c) => c.message_count > 0);
+  return (await getJson<{ items: ConversationOut[] }>("/conversations?limit=50")).items;
+}
+
+export async function getConversation(id: string): Promise<ConversationDetail> {
+  if (USE_FAKE_API) {
+    const c = fakeConversationDetail(id);
+    if (!c) throw notFound();
+    return c;
+  }
+  return getJson<ConversationDetail>(`/conversations/${encodeURIComponent(id)}`);
+}
+
+// Search the user's OWN saved work. The server filters on the user; the browser sends
+// only the words.
+export async function searchHistory(q: string): Promise<HistoryHit[]> {
+  if (USE_FAKE_API) {
+    const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+    const hits: HistoryHit[] = [];
+    for (const c of fakeDb.conversations) {
+      for (const m of fakeDb.messages[c.id] ?? []) {
+        if (words.length && words.every((w) => m.content.toLowerCase().includes(w))) {
+          hits.push({ kind: "message", conversation_id: c.id, message_id: m.id, matter_id: c.matter_id, title: c.title, snippet: m.content.slice(0, 160), created_at: m.created_at });
+        }
+      }
+    }
+    return hits;
+  }
+  return (await getJson<{ items: HistoryHit[] }>(`/history/search?q=${encodeURIComponent(q)}`)).items;
 }

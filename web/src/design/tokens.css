@@ -25,6 +25,7 @@
   --color-unchecked-bg: #eef0f4;
   --color-notfound: #b45309;
   --color-danger: #b42318;
+  --color-backdrop: #0f1b3380;
 
   /* Fonts */
   --font-sans: var(--font-jakarta), system-ui, sans-serif;

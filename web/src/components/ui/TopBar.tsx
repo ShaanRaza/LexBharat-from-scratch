@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { MattersNavLink } from "@/components/matters/MattersNavLink";
 import { PRODUCT_NAME } from "@/lib/config";
 
 const LINKS = [
+  { href: "/history", label: "History" },
   { href: "/acts", label: "Acts" },
   { href: "/stats", label: "Statistics" },
   { href: "/coverage", label: "Coverage" },
@@ -17,6 +19,7 @@ export function TopBar() {
           {PRODUCT_NAME}
         </Link>
         <nav aria-label="Main" className="flex flex-wrap items-center gap-x-4 gap-y-1 text-small font-semibold">
+          <MattersNavLink />
           {LINKS.map((l) => (
             <Link key={l.href} href={l.href} className="text-ink-soft hover:text-ink">
               {l.label}

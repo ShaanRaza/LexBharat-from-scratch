@@ -249,6 +249,7 @@ Module = Literal["research", "document"]
 class ConversationCreate(BaseModel):
     module: Module = "research"
     document_id: UUID | None = None
+    matter_id: UUID | None = None
 
 
 class ConversationOut(BaseModel):
@@ -257,6 +258,7 @@ class ConversationOut(BaseModel):
     title: str | None = None
     message_count: int = 0
     document_id: UUID | None = None
+    matter_id: UUID | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -280,6 +282,13 @@ class MatterCreate(BaseModel):
     kind: MatterKind = "matter"
 
 
+class MatterUpdate(BaseModel):
+    """Rename and/or archive. At least one field."""
+
+    title: str | None = Field(default=None, min_length=1, max_length=200)
+    status: MatterStatus | None = None
+
+
 class MatterOut(BaseModel):
     id: UUID
     title: str
@@ -288,6 +297,38 @@ class MatterOut(BaseModel):
     archived_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
+    conversation_count: int = 0
+    document_count: int = 0
+
+
+class MatterList(BaseModel):
+    items: list[MatterOut]
+
+
+class ConversationMove(BaseModel):
+    """File a conversation under a matter, or null to unfile it."""
+
+    matter_id: UUID | None
+
+
+class HistoryHit(BaseModel):
+    """One match in the user's own saved work. Never another user's."""
+
+    kind: Literal["conversation", "message"]
+    conversation_id: UUID
+    message_id: UUID | None = None
+    matter_id: UUID | None = None
+    title: str | None = None
+    snippet: str
+    created_at: datetime
+
+
+class HistorySearch(BaseModel):
+    items: list[HistoryHit]
+
+
+class MatterDetail(MatterOut):
+    conversations: list["ConversationOut"] = []
 
 
 class MatterDeleted(BaseModel):

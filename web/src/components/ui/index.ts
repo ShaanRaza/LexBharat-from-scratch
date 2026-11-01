@@ -10,3 +10,5 @@ export { TopBar } from "./TopBar";
 export { Sidebar } from "./Sidebar";
 export { TextField } from "./TextField";
 export { TextArea } from "./TextArea";
+export { Dialog } from "./Dialog";
+export { Select } from "./Select";

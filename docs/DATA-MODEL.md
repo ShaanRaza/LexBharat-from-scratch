@@ -55,6 +55,13 @@ under their own feature name). No money is stored: it is worked out when read fr
 `research` rows**, so helper calls never use the answer limit. Not counted yet (existing
 gap): tokens of the rewrite, gate and decision calls.
 
+## History search
+
+Two full-text indexes (migration 0008) let a user search their own saved work:
+`ix_messages_content_fts` on `to_tsvector('english', content)` and
+`ix_conversations_title_fts` on the conversation title. The search is PostgreSQL full text;
+every query filters on `user_id`, and `core/user_search.py` checks each row again.
+
 ## Conversations and trust
 
 | Table | Key fields |
