@@ -87,20 +87,11 @@ async def test_tampered_cache_entry_is_a_miss(settings, store):
     assert not again.cache_hit and again.outcome == "answered"
 
 
-async def test_cache_hit_still_served_at_the_usage_limit(settings, store):
-    deps = deps_for(settings, store, usage=FakeUsageMeter(limit=1))
-    req = PipelineRequest("u1", "Tell me about " + QUERY)
-    assert (await run_pipeline(req, deps)).outcome == "answered"
-    assert (await run_pipeline(req, deps)).cache_hit
-    other = PipelineRequest("u1", "Tell me about " + QUERY + " again")
-    deps.llm = scripted(lambda w: w + " [S1].")
-    assert (await run_pipeline(other, deps)).cache_hit  # same rewritten query
-
-
 async def test_usage_limit(settings, store):
     deps = deps_for(settings, store, usage=FakeUsageMeter(limit=0))
     res = await run_pipeline(PipelineRequest("u1", QUERY), deps)
     assert res.outcome == "usage_limit" and res.answer is None and not res.counted
+    assert deps.llm.prompts == [] and deps.embedder.calls == 0  # no AI cost
 
 
 async def test_out_of_scope_stops_before_search_and_writing(settings, store):

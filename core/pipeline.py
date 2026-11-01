@@ -42,6 +42,10 @@ def _footer(deps: Deps, personal: bool = False) -> Footer:
 
 async def _run(request: PipelineRequest, deps: Deps) -> PipelineResult:
     footer = _footer(deps)
+    # Usage check first: an over-limit user must cost no AI call (TESTING.md).
+    # Trade-off: they also cannot read cached answers until the limit resets.
+    if not await deps.usage.allowed(request.user_id, request.plan):
+        return PipelineResult("usage_limit", None, footer, "usage_limit")
     memory = remember(request)  # 1
     rq = await rewrite(request, memory, deps)  # 2
     # 3: decisions run in parallel with the Voyage embedding
@@ -61,8 +65,6 @@ async def _run(request: PipelineRequest, deps: Deps) -> PipelineResult:
     hit = await cache_lookup(request, key, footer, deps)
     if hit is not None:
         return hit  # free: not counted against the limit
-    if not await deps.usage.allowed(request.user_id, request.plan):
-        return PipelineResult("usage_limit", None, footer, "usage_limit")
     found = await search(request, rq, decision, vector, deps)  # 5
     top = await rerank(rq, found.passages, deps)  # 6
     gate = await deps.gate(rq, top, deps)  # 7
