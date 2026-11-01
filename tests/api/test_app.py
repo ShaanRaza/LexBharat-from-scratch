@@ -283,7 +283,9 @@ def test_only_api_deps_imports_begin_run():
         for d in ("api", "workers", "core")
         for p in (root / d).rglob("*.py")
         if re.search(
-            r"adapters\.jev import[^\n]*begin_run|jev\.begin_run", p.read_text()
+            r"^\s*(from adapters\.jev import[^\n]*begin_run|import adapters\.jev)",
+            p.read_text(),
+            re.M,
         )
     ]
     assert hits == ["api/deps.py"]
