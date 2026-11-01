@@ -30,6 +30,7 @@ from core.share import (
     create_share_link,
     hash_token,
 )
+from tests.pg_roles import app_login
 
 PG = pytest.param(
     "postgres",
@@ -86,7 +87,10 @@ class Memory:
 
 class Postgres:
     def __init__(self):
-        self.engine = make_engine(os.environ["TEST_DATABASE_URL"])
+        # The code under test connects as the application role; cleanup is the owner's.
+        self.owner_url = os.environ["TEST_DATABASE_URL"]
+        self._login = app_login(self.owner_url)
+        self.engine = make_engine(self._login.__enter__())
         self.repo = PgRepo(self.engine, Settings(_env_file=None))
 
     def sql(self, statement, **p):
@@ -135,8 +139,12 @@ class Postgres:
         )
 
     async def close(self):
-        self.sql("TRUNCATE users, share_links CASCADE")
         self.engine.dispose()
+        self._login.__exit__(None, None, None)
+        owner = make_engine(self.owner_url)
+        with owner.begin() as c:
+            c.execute(text("TRUNCATE users, share_links CASCADE"))
+        owner.dispose()
 
 
 async def attempt(b, uid, mid):

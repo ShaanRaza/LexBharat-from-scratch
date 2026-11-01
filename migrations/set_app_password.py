@@ -38,9 +38,11 @@ def main() -> None:
         os.environ.get("MIGRATION_DATABASE_URL")
         or s.MIGRATION_DATABASE_URL.get_secret_value()
         or os.environ.get("DATABASE_URL")
-        or s.DATABASE_URL.get_secret_value()
     )
-    set_password(owner, s.APP_DB_ROLE, os.environ.get("APP_DB_PASSWORD", ""))
+    if not owner:
+        raise SystemExit("MIGRATION_DATABASE_URL (the table owner) is not set")
+    password = os.environ.get("APP_DB_PASSWORD") or s.APP_DB_PASSWORD.get_secret_value()
+    set_password(owner, s.APP_DB_ROLE, password)
     print(f"login enabled for role {s.APP_DB_ROLE}")  # never the password
 
 

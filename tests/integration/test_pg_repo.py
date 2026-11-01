@@ -8,19 +8,29 @@ from sqlalchemy import text
 
 from api.pg_repo import PgRepo, make_engine
 from core.contracts import AnswerProvenance, PipelineRequest, RemovedCitation
+from tests.pg_roles import app_login
 
 pytestmark = pytest.mark.skipif(
     not os.environ.get("TEST_DATABASE_URL"), reason="TEST_DATABASE_URL not set"
 )
 
 
+def _clean(owner_url: str) -> None:
+    """Clean up AS THE OWNER: TRUNCATE is a schema-level power the application lacks."""
+    owner = make_engine(owner_url)
+    with owner.begin() as c:
+        c.execute(text("TRUNCATE users, invented_citation_log CASCADE"))
+    owner.dispose()
+
+
 @pytest.fixture
 def repo():
-    eng = make_engine(os.environ["TEST_DATABASE_URL"])
-    yield PgRepo(eng, SimpleNamespace(PLAN_LIMIT_FREE=1))
-    with eng.begin() as c:
-        c.execute(text("TRUNCATE users, invented_citation_log CASCADE"))
-    eng.dispose()
+    owner_url = os.environ["TEST_DATABASE_URL"]
+    with app_login(owner_url) as app_url:  # the code under test is the application role
+        eng = make_engine(app_url)
+        yield PgRepo(eng, SimpleNamespace(PLAN_LIMIT_FREE=1))
+        eng.dispose()
+    _clean(owner_url)
 
 
 async def test_conversation_save_isolation_usage_and_log(repo):
@@ -73,17 +83,18 @@ async def test_conversation_save_isolation_usage_and_log(repo):
 def priced_repo():
     from core.settings import Settings
 
-    eng = make_engine(os.environ["TEST_DATABASE_URL"])
+    owner_url = os.environ["TEST_DATABASE_URL"]
     s = Settings(
         _env_file=None,
         PLAN_LIMIT_FREE=1,
         AI_PRICE_IN_PER_MTOK=1.0,
         AI_PRICE_OUT_PER_MTOK=2.0,
     )
-    yield PgRepo(eng, s)
-    with eng.begin() as c:
-        c.execute(text("TRUNCATE users, invented_citation_log CASCADE"))
-    eng.dispose()
+    with app_login(owner_url) as app_url:
+        eng = make_engine(app_url)
+        yield PgRepo(eng, s)
+        eng.dispose()
+    _clean(owner_url)
 
 
 async def test_helper_calls_never_spend_the_answer_limit_but_are_in_the_daily_spend(

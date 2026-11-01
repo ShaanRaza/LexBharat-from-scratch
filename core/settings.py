@@ -70,13 +70,15 @@ class Settings(BaseSettings):
 
     # --- PostgreSQL / Redis ---
     DATABASE_URL: SecretStr = SecretStr(
-        "postgresql+psycopg://kanoon:kanoon@postgres:5432/kanoon"
+        "postgresql+psycopg://app_rw:app_rw@postgres:5432/kanoon"
     )
-    # The application connects as DATABASE_URL: it should be the NON-OWNING role below
-    # (data access only). Migrations connect as MIGRATION_DATABASE_URL, the table owner;
-    # empty = use DATABASE_URL (fine for local development, not for production). A63.
+    # The application connects as DATABASE_URL, the NON-OWNING role APP_DB_ROLE (data
+    # access only), in development exactly as in production (A63, A64). Migrations
+    # connect as MIGRATION_DATABASE_URL, the table owner; it must be set, in .env or the
+    # process environment, wherever `alembic` runs.
     MIGRATION_DATABASE_URL: SecretStr = SecretStr("")
     APP_DB_ROLE: str = "app_rw"
+    APP_DB_PASSWORD: SecretStr = SecretStr("")  # read only by set_app_password
     REDIS_URL: str = "redis://redis:6379/0"
     ANSWER_CACHE_TTL_DAYS: int = 7
 

@@ -380,3 +380,51 @@ def test_downgrade_takes_the_privileges_away_in_this_database(scratch_db_url):
         c.execute(text(f"ALTER ROLE {APP_ROLE} NOLOGIN PASSWORD NULL"))
     owner.dispose()
     _alembic("upgrade", "head", url=scratch_db_url)  # and back up again
+
+
+def test_alembic_refuses_to_migrate_as_the_application_role(monkeypatch):
+    """Falling back to the app's own URL would fail with a confusing 'permission denied'.
+    It must say what to do instead."""
+    from migrations import dburl
+
+    monkeypatch.delenv("MIGRATION_DATABASE_URL", raising=False)
+    monkeypatch.setenv("DATABASE_URL", f"postgresql+psycopg://{APP_ROLE}:x@h/d")
+    with pytest.raises(RuntimeError, match="table owner"):
+        dburl.migration_url()
+
+
+def test_a_developers_dotenv_cannot_redirect_a_test_or_tool_run_of_alembic(monkeypatch):
+    """A process-level DATABASE_URL (how every test points alembic at a scratch database)
+    beats MIGRATION_DATABASE_URL from .env, so a developer's .env can never send a test
+    migration (or a downgrade) to their own database."""
+    from core.settings import Settings
+    from migrations import dburl
+
+    scratch = "postgresql+psycopg://kanoon:x@localhost/scratch"
+    monkeypatch.delenv("MIGRATION_DATABASE_URL", raising=False)
+    monkeypatch.setenv("DATABASE_URL", scratch)
+    dev = Settings(
+        _env_file=None,
+        MIGRATION_DATABASE_URL="postgresql+psycopg://kanoon:x@localhost/devdb",
+    )
+    monkeypatch.setattr(dburl, "get_settings", lambda: dev)
+    assert dburl.migration_url() == scratch
+
+
+def test_the_process_migration_url_wins_and_dotenv_is_used_when_nothing_else_is_set(
+    monkeypatch,
+):
+    from core.settings import Settings
+    from migrations import dburl
+
+    dev = Settings(
+        _env_file=None, MIGRATION_DATABASE_URL="postgresql+psycopg://kanoon:x@h/devdb"
+    )
+    monkeypatch.setattr(dburl, "get_settings", lambda: dev)
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.delenv("MIGRATION_DATABASE_URL", raising=False)
+    assert dburl.migration_url().endswith("/devdb")  # .env, when no process variable
+    monkeypatch.setenv(
+        "MIGRATION_DATABASE_URL", "postgresql+psycopg://kanoon:x@h/other"
+    )
+    assert dburl.migration_url().endswith("/other")

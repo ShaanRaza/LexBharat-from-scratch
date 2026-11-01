@@ -53,11 +53,16 @@ def db_url():
 
 @pytest.fixture
 def repo(db_url):
-    eng = create_engine(db_url)
-    yield PgRepo(eng, Settings(_env_file=None))
-    with eng.begin() as c:
+    from tests.pg_roles import app_login
+
+    with app_login(db_url) as app_url:  # the code under test is the application role
+        eng = create_engine(app_url)
+        yield PgRepo(eng, Settings(_env_file=None))
+        eng.dispose()
+    owner = create_engine(db_url)  # cleanup is the owner's (TRUNCATE)
+    with owner.begin() as c:
         c.execute(text("TRUNCATE users CASCADE"))
-    eng.dispose()
+    owner.dispose()
 
 
 async def user(repo, uid):

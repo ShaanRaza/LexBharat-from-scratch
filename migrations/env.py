@@ -1,25 +1,10 @@
 """Alembic environment. The database URL comes from config (core/settings.py),
 never from alembic.ini, so a secret is never written into a file."""
 
-import os
-
 from alembic import context
 from sqlalchemy import create_engine
 
-from core.settings import get_settings
-
-
-def _url() -> str:
-    # Migrations run as the table OWNER (MIGRATION_DATABASE_URL); the application runs
-    # as the non-owning role in DATABASE_URL (A63). With no owner URL set, fall back to
-    # DATABASE_URL so local development and tests need no extra setting.
-    s = get_settings()
-    return (
-        os.environ.get("MIGRATION_DATABASE_URL")
-        or s.MIGRATION_DATABASE_URL.get_secret_value()
-        or os.environ.get("DATABASE_URL")
-        or s.DATABASE_URL.get_secret_value()
-    )
+from migrations.dburl import migration_url as _url
 
 
 def run_migrations_offline() -> None:

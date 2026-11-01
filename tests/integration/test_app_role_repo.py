@@ -8,12 +8,10 @@ which connects as the owner, stayed green. This runs the real flows as the app r
 from __future__ import annotations
 
 import os
-import uuid
 from types import SimpleNamespace
 
 import pytest
 from sqlalchemy import text
-from sqlalchemy.engine import make_url
 
 from api.pg_repo import PgRepo, make_engine
 from core.contracts import AnswerProvenance, PipelineRequest
@@ -22,27 +20,23 @@ from core.settings import Settings
 from core.share import create_share_link, hash_token
 from core.spend import AiCall
 from core.user_search import search_my_work
-from migrations.set_app_password import set_password
+from tests.pg_roles import app_login
 
 pytestmark = pytest.mark.skipif(
     not os.environ.get("TEST_DATABASE_URL"), reason="TEST_DATABASE_URL not set"
 )
-ROLE = "app_rw"
 
 
 @pytest.fixture
 def repo():
     owner_url = os.environ["TEST_DATABASE_URL"]
-    password = "test-only-" + uuid.uuid4().hex  # throwaway cluster, never a real secret
-    set_password(owner_url, ROLE, password)
-    app_url = make_url(owner_url).set(username=ROLE, password=password)
+    with app_login(owner_url) as app_url:
+        app = make_engine(app_url)
+        yield PgRepo(app, Settings(_env_file=None))
+        app.dispose()
     owner = make_engine(owner_url)
-    app = make_engine(app_url.render_as_string(hide_password=False))
-    yield PgRepo(app, Settings(_env_file=None))
-    app.dispose()
     with owner.begin() as c:
         c.execute(text("TRUNCATE users CASCADE"))  # the OWNER cleans up
-        c.execute(text(f"ALTER ROLE {ROLE} NOLOGIN PASSWORD NULL"))
     owner.dispose()
 
 

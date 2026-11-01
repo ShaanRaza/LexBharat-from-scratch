@@ -25,7 +25,7 @@ hard-code either string.**
 | Voyage | `VOYAGE_API_KEY`, `VOYAGE_EMBED_MODEL`, `VOYAGE_RERANK_MODEL` | voyage-4 must match the stored vectors |
 | Jev | `JEV_API_KEY`, `JEV_ENABLED_SCOPE`, `JEV_ENABLED_FILTERS`, `JEV_ENABLED_GATE`, `JEV_ENABLED_CLAIM`, `JEV_ENABLED_SAFETY`, `JEV_TIMEOUT_MS`, `JEV_GATE_THRESHOLD` | **One on/off switch per use**, so one can be turned off without touching the others. Timeout 800 ms; threshold starts at 0.6 |
 | Qdrant | `QDRANT_URL`, `QDRANT_API_KEY`, `QDRANT_UPLOADS_COLLECTION` | Never exposed to the internet |
-| PostgreSQL | `DATABASE_URL`, `MIGRATION_DATABASE_URL`, `APP_DB_ROLE`, `APP_DB_PASSWORD` | **Two database roles, see "Database roles" below.** The application connects as `DATABASE_URL` (the non-owning role); migrations run as `MIGRATION_DATABASE_URL` (the table owner) |
+| PostgreSQL | `DATABASE_URL`, `MIGRATION_DATABASE_URL`, `APP_DB_ROLE`, `APP_DB_PASSWORD` | **Two database roles, see "Database roles" below.** The application, in development and production, connects as `DATABASE_URL` (the non-owning role); migrations run as `MIGRATION_DATABASE_URL` (the table owner) |
 | Redis | `REDIS_URL`, `ANSWER_CACHE_TTL_DAYS` | Cache TTL 7 days |
 | S3 | `AWS_REGION`, `S3_BUCKET_UPLOADS`, `S3_BUCKET_BACKUPS`, `S3_KMS_KEY_ID` | Mumbai, encrypted |
 | Firebase | `FIREBASE_PROJECT_ID`, `FIREBASE_CREDENTIALS_JSON` | Login only |
@@ -89,14 +89,36 @@ How it is set up:
    that is built from `APP_DB_ROLE` and `APP_DB_PASSWORD`; set both (and `POSTGRES_PASSWORD`,
    the owner's) before `docker compose up`.
 
-On a laptop `MIGRATION_DATABASE_URL` may stay empty and `DATABASE_URL` may be the owner:
-that is fine for development and the test suite, and the guarantees are only advisory
-there. **In staging and production `DATABASE_URL` must be the application role.** Do not
-make the application role the owner, add `TRIGGER`, `TRUNCATE` or `REFERENCES`, or give it
-a superuser or `CREATEROLE`; `tests/migrations/test_migrations.py` fails if it can do any
-of the things in the table above.
+**Development is the same as production (A64).** The default `DATABASE_URL` (in
+`core/settings.py` and `.env.example`) is the application role, so a local run has exactly
+the privileges production has and cannot switch the triggers off. `MIGRATION_DATABASE_URL`
+(the owner) is set in `.env.example` and used only by `alembic` and
+`python -m migrations.set_app_password`. First run on a laptop:
+`alembic upgrade head && python -m migrations.set_app_password`.
 
-**Managed PostgreSQL (RDS):** the master user it creates is the owner/near-superuser. Use
-it only for migrations; connect the application as `APP_DB_ROLE`. Not verified against a real
-RDS instance. A PostgreSQL role is cluster-wide: if several databases on one cluster use
+**What a developer must do to their local `.env`:** set `DATABASE_URL` to the app role
+(`postgresql+psycopg://app_rw:<APP_DB_PASSWORD>@<host>:5432/<db>`), add the owner URL you
+had in `DATABASE_URL` before as `MIGRATION_DATABASE_URL`, add `APP_DB_ROLE` and
+`APP_DB_PASSWORD`, then run the two commands above. `alembic` refuses, with a plain
+message, to migrate as the application role, and a process-level `DATABASE_URL` always
+beats `.env` for alembic, so a developer's `.env` can never send a test migration to their
+own database.
+
+**What the test suite genuinely needs the owner for, and why:** only the harness, never
+the code under test. Migrations (alembic), `CREATE`/`DROP DATABASE` for scratch databases,
+`TRUNCATE` to clean up between tests, and `ALTER ROLE ... PASSWORD` to give the app role a
+throwaway login: all schema-level powers the application correctly lacks, so they use
+`TEST_DATABASE_URL` (the owner). Everything under test (`PgRepo` and every flow above it)
+connects as the application role through `tests/pg_roles.py`, and tests that exist to prove
+the owner/app boundary (`tests/migrations`) connect as each deliberately. No privilege was
+granted to the application role to make a test pass.
+
+**Managed PostgreSQL (RDS):** the master user the service creates owns the tables it
+creates and is a near-superuser (`rds_superuser`), so the same discipline applies: **the
+application must never connect as the master user.** Use it only for migrations and for
+`migrations.set_app_password`; connect the API and worker as `APP_DB_ROLE`, and keep the
+master password out of the application's environment and secrets. If migrations are run by
+a different login than the one that first created the tables, make sure ownership is
+consistent, or the owner-only rule above does not hold. Not verified against a real RDS
+instance. A PostgreSQL role is cluster-wide: if several databases on one cluster use
 the same role name, the downgrade of `0011` only revokes this database's privileges.
