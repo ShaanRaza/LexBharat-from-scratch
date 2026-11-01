@@ -13,9 +13,10 @@ whether Jev is up, down or timing out:
 A citation that fails is REMOVED. If that leaves a sentence with no surviving citation
 the sentence is removed too (an uncited claim is worse than none). One note is added
 saying an authority could not be verified, and a row per failure goes to
-invented_citation_log with the reason. Survivors get status "verified" or "partly";
-there is no "unverified" status. If Jev is down, check 4 did not run, so the best a
-citation can be is "partly" (never a full tick without check 4).
+invented_citation_log with the reason. Survivors get status "verified", "partly" or
+"unchecked"; there is no "unverified" status. If Jev and Gemini are both down, check 4
+did not run, so the citation is "unchecked" (shown as "Support not checked", no tick).
+"partly" is kept only for a real "partly" rating.
 
 The result is sealed with contracts.seal_answer(); show() accepts nothing else.
 Citation strings are copied from the passage exactly as stored, never retyped.
@@ -195,12 +196,12 @@ async def _fetch_record(passage: Passage, deps: Deps) -> str | None:
 
 
 async def _claim_support(sentence: str, passage: Passage, deps: Deps) -> CitationStatus:
-    """Check 4. Jev down/timeout -> 'partly': checks 1-3 passed, 4 did not run."""
+    """Check 4. Decider down/timeout -> 'unchecked': checks 1-3 passed, 4 did not."""
     clean = _MARKER.sub("", sentence).strip()
     try:
         support = await deps.decisions.claim_support(clean, passage)
-    except (DecisionUnavailable, TimeoutError):  # no check 4 -> never a full tick
-        return "partly"
+    except (DecisionUnavailable, TimeoutError):  # no check 4 -> no tick at all
+        return "unchecked"
     if support == "supports":
         return "verified"
     if support == "partly":
@@ -210,6 +211,9 @@ async def _claim_support(sentence: str, passage: Passage, deps: Deps) -> Citatio
 
 class _ClaimNotSupported(Exception):
     pass
+
+
+_STRENGTH = {"unchecked": 0, "partly": 1, "verified": 2}  # keep the weakest
 
 
 def _to_citation(
@@ -344,7 +348,7 @@ async def verify(
         kept_sentences.append((sentence, sep))
         for label, cit in passed.items():
             prev = citations.get(label)
-            if prev is None or (prev.status == "verified" and cit.status == "partly"):
+            if prev is None or _STRENGTH[cit.status] < _STRENGTH[prev.status]:
                 citations[label] = cit
 
     text = "".join(s + sep for s, sep in kept_sentences).strip()

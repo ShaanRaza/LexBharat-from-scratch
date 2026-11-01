@@ -26,7 +26,8 @@ OTHER_TEXT = (
 
 
 @pytest.fixture(autouse=True)
-def seal_key(monkeypatch):
+def seal_key(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)  # hermetic: never read the developer's real .env
     monkeypatch.setenv("SEAL_KEY", "test-only-seal-key")
     get_settings.cache_clear()
     yield

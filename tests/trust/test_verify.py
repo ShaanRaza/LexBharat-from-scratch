@@ -101,7 +101,7 @@ def test_normalise_keeps_case_and_words():
 async def test_jev_down_good_citation_is_only_partly(world_jev_down):
     w = world_jev_down
     ans = await verify(w.draft(GOOD), w.passages, w.deps)
-    assert [(c.source_id, c.status) for c in ans.citations] == [("S1", "partly")]
+    assert [(c.source_id, c.status) for c in ans.citations] == [("S1", "unchecked")]
 
 
 @pytest.mark.parametrize("bad", ["S7", "S1"])
@@ -127,7 +127,7 @@ async def test_jev_timeout_behaves_like_down(world):
 
     world.decisions.claim_support = boom
     ans = await verify(world.draft(GOOD), world.passages, world.deps)
-    assert ans.citations[0].status == "partly"
+    assert ans.citations[0].status == "unchecked"
 
 
 async def test_jev_partly_gives_partly_not_verified(world):
@@ -143,7 +143,7 @@ async def test_jev_partly_gives_partly_not_verified(world):
 async def test_no_citation_is_ever_unchecked(world):
     text = GOOD + ' Also "made up quote" [S2]. Also nonsense words here [S9].'
     ans = await verify(world.draft(text), world.passages, world.deps)
-    assert {c.status for c in ans.citations} <= {"verified", "partly"}
+    assert {c.status for c in ans.citations} <= {"verified", "partly", "unchecked"}
     assert all(c.source_id == "S1" for c in ans.citations)
 
 
@@ -204,7 +204,7 @@ async def test_decision_unavailable_never_gives_verified(world):
 
     world.decisions.claim_support = both_down
     ans = await verify(world.draft(GOOD), world.passages, world.deps)
-    assert [c.status for c in ans.citations] == ["partly"]
+    assert [c.status for c in ans.citations] == ["unchecked"]
 
 
 # --- reviewer attacks (quote bypasses, splitter, recalled cases) ---------------------
@@ -348,3 +348,24 @@ async def test_citations_only_for_markers_in_surviving_text(world):
     ans = await verify(world.draft(text), world.passages, world.deps)
     assert [c.source_id for c in ans.citations] == ["S1"]
     assert "[S2]" not in ans.text
+
+
+async def test_jev_down_never_verified_never_partly(world_jev_down):
+    w = world_jev_down
+    ans = await verify(w.draft(GOOD), w.passages, w.deps)
+    assert {c.status for c in ans.citations} == {"unchecked"}
+
+
+async def test_same_source_twice_keeps_the_weakest_status(world):
+    calls = iter(["supports", "partly"])
+
+    async def mixed(*a, **k):
+        return next(calls)
+
+    world.decisions.claim_support = mixed
+    text = (
+        "Bail is the rule and jail the exception [S1]. "
+        "Liberty is protected by Article 21 [S1]."
+    )
+    ans = await verify(world.draft(text), world.passages, world.deps)
+    assert [c.status for c in ans.citations] == ["partly"]
