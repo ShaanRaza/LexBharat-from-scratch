@@ -89,8 +89,11 @@ async def remove_matter(
         raise ApiError(
             503,
             "service_unavailable",
-            "We could not finish deleting one of the uploaded files, so nothing "
-            "else was removed and the matter was kept. Please try again.",
+            # NEEDS-OWNER: draft wording (DESIGN-DIRECTION section 6). Note it says
+            # "nothing was removed", but files deleted before the failing one stay
+            # deleted (core/doc_delete.py): the owner should decide the exact words.
+            "The matter was kept. One or more files could not be deleted, so "
+            "nothing was removed.",
         ) from e
     return s.MatterDeleted(
         mode=r.mode,

@@ -26,17 +26,17 @@ def _public_error(request: Request, status: int, code: str, message: str):
     return r
 
 
-# NEEDS-OWNER: the wording of these refusals is the owner's (it is about what a user is
-# told regarding their own material).
+# NEEDS-OWNER: draft wording from docs/DESIGN-DIRECTION.md section 6, not approved.
+# It is about what a user is told regarding their own material: the owner's to settle.
+SHARE_REFUSED_OWN_MATERIAL = (
+    "This answer used your own uploaded file or saved case notes, "
+    "so it cannot be shared by link."
+)
 REFUSALS = {
     "not_an_answer": "Only an answer can be shared.",
-    "shaped_by_upload": (
-        "This answer used your uploaded document, so it cannot be shared."
-    ),
+    "shaped_by_upload": SHARE_REFUSED_OWN_MATERIAL,
+    "shaped_by_matter_fact": SHARE_REFUSED_OWN_MATERIAL,
     "unknown_provenance": "This answer cannot be shared.",
-    "shaped_by_matter_fact": (
-        "This answer used facts saved to your matter, so it cannot be shared."
-    ),
 }
 
 

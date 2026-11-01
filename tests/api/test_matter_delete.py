@@ -72,7 +72,7 @@ async def test_a_delete_that_cannot_finish_keeps_the_matter_and_says_so(
     r = _delete(c, mid, "everything")
     assert r.status_code == 503 and r.json()["error"]["code"] == "service_unavailable"
     assert mid in repo.matters  # kept: nothing was silently orphaned
-    assert "could not finish deleting" in r.json()["error"]["message"]
+    assert "The matter was kept" in r.json()["error"]["message"]
 
 
 def test_needs_a_login(client):

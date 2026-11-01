@@ -69,6 +69,8 @@ class Coverage:
     buckets: dict[str, str]
     measured_at: str | None = None
     generated_by: str | None = None
+    # How the sentence refers to the instruments (page lists them); empty = name them.
+    instruments_phrase: str = ""
 
     @property
     def covered_labels(self) -> list[str]:
@@ -114,6 +116,7 @@ def _parse(raw: dict) -> Coverage:
         buckets=buckets,
         measured_at=raw.get("measured_at"),
         generated_by=raw.get("generated_by"),
+        instruments_phrase=raw.get("instruments_phrase", ""),
     )
 
 
@@ -130,7 +133,11 @@ def coverage_sentence(product_name: str, cov: Coverage | None = None) -> str:
     return cov.sentence_template.format(
         product=product_name,
         covered=_join(cov.covered_labels),
+        courts=_join([c.covered_label for c in cov.courts]),
+        instruments=cov.instruments_phrase
+        or _join([i.covered_label for i in cov.instruments]),
         excluded=_join(list(cov.excluded)),
+        excluded_list=", ".join(cov.excluded),
     )
 
 

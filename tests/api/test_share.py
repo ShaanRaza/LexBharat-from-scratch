@@ -50,7 +50,7 @@ async def test_creating_a_link_is_refused_for_an_upload_shaped_answer(client, re
     mid = await _shaped_answer(client, repo, upload=True)
     r = _share(client, mid)
     assert r.status_code == 403 and r.json()["error"]["code"] == "forbidden"
-    assert "uploaded document" in r.json()["error"]["message"]
+    assert "uploaded file or saved case notes" in r.json()["error"]["message"]
     assert repo.shares == {}  # no row, so no token exists
     assert client.get(f"{API}/share", headers=auth()).json()["items"] == []
 
@@ -58,7 +58,8 @@ async def test_creating_a_link_is_refused_for_an_upload_shaped_answer(client, re
 async def test_creating_a_link_is_refused_for_a_matter_fact_shaped_answer(client, repo):
     mid = await _shaped_answer(client, repo, fact=True)
     r = _share(client, mid)
-    assert r.status_code == 403 and "matter" in r.json()["error"]["message"]
+    assert r.status_code == 403
+    assert "uploaded file or saved case notes" in r.json()["error"]["message"]
     assert repo.shares == {}
 
 

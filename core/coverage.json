@@ -4,8 +4,9 @@
   "measured_at": null,
   "generated_by": null,
   "sentence_approved": false,
-  "sentence_template": "{product} covers {covered}, as listed on our coverage page. It does not include {excluded}, or anything after the data-as-of date.",
-  "not_in_dataset_message": "This is not in our dataset.",
+  "sentence_template": "{product} covers {courts} and {instruments}. It does not include {excluded_list}, or anything after the data-as-of date.",
+  "instruments_phrase": "the Acts listed on our coverage page",
+  "not_in_dataset_message": "Not in our dataset. That does not mean it does not exist — it means our snapshot does not hold it.",
   "courts": [
     {
       "id": "supreme_court",
