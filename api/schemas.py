@@ -140,7 +140,9 @@ class Citation(BaseModel):
     citation_string: str | None = Field(
         default=None, description="Shown as 'as recorded in the dataset'"
     )
-    url: str = Field(description="pdf_url or source_url of the record")
+    url: str | None = Field(
+        default=None, description="pdf_url or source_url of the record, if any"
+    )
     status: CitationStatus
 
 
@@ -171,6 +173,16 @@ class TokenEvent(BaseModel):
 class DoneEvent(BaseModel):
     message_id: UUID | None = None
     from_cache: bool = False
+    reason: Literal["out_of_scope", "not_found"] | None = Field(
+        default=None,
+        description="Set when refused. Usage limit is NOT here: it arrives as an "
+        "error event with code quota_exceeded.",
+    )
+    message_key: str | None = Field(
+        default=None,
+        description="Set when refused: key into docs/UX-COPY.md, e.g. "
+        "'out_of_scope:needs_high_court' or 'not_found'. The website owns the wording.",
+    )
     refused: bool = Field(
         default=False,
         description="True when out of scope or nothing found; no answer was written",
@@ -352,7 +364,7 @@ class DocumentOut(BaseModel):
     fail_reason: str | None = None
 
 
-# ---------------------------------------------------------------- feedback / orgs / misc
+# --------------------------------------------------------------- feedback, orgs
 
 
 class FeedbackIn(BaseModel):

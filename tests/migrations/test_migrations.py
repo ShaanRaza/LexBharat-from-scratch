@@ -1,3 +1,4 @@
+# ruff: noqa: S603
 """Migrations: numbered, reversible, 17 tables (docs/DATA-MODEL.md).
 
 The offline test needs no database. The live test runs only when TEST_DATABASE_URL
