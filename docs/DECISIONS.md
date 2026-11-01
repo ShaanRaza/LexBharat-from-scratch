@@ -131,6 +131,11 @@ touch the trust promise or what users see.
 | A26 | web | Client is hand-written from `api/schemas.py` until `/openapi.json` generation exists | Generated client | No generator wired yet; CLAUDE.md §2 rule 3 says generate later |
 | A28 | core | One corpus setting, `CORPUS_COLLECTION`; blank values in `.env` mean unset (`env_ignore_empty`); `SEAL_KEY` has no default and every entry point (API, worker) calls `assert_seal_key_configured()` | A second `QDRANT_COLLECTION` setting | Two names for one collection can drift; a blank number must not crash the app |
 | A29 | platform | `POSTGRES_PASSWORD` is required in compose (no default); CI runs the web tests | A default password | A default must not be usable in production |
+| A30 | core | **Real Jev adapter** (`adapters/jev.py`, `typesafe-sdk` 0.7.x, `AsyncTypeSafeClient`, key passed in explicitly from `JEV_API_KEY`). Jev answers scope and safety (one request, two Choice questions), the gate (confidence is the score; the gate applies 0.6) and claim support. All five `JEV_ENABLED_*` switches stay false | Reading the key inside the adapter | CLAUDE.md §2 rule 2 |
+| A31 | core | Filters stay on the rewrite step (regex), not Jev | A Jev filters question | The docs give no natural fit for court, year and Act lists |
+| A32 | core | A Jev "supports" below 0.6 confidence becomes "partly" | Trusting the top choice at any confidence | Weak support must never earn a full tick |
+| A33 | core | Calls made in the same event-loop tick are merged into one Jev request (one Choice question per item, up to 255) | Changing trust's gate to call a batch method | Keeps `core/gate.py` and `core/verify.py` untouched. **Not verified:** whether items in one request are rated independently; the docs' cookbooks send one passage per request. Test against the live service before turning `JEV_ENABLED_GATE` or `JEV_ENABLED_CLAIM` on |
+| A34 | core | Upload text is refused at two layers: `FallbackDecisions` skips Jev, and `JevClient` raises before building any request | One layer only | CLAUDE.md §6: upload text never reaches Jev |
 | A27 | lead | Added `pydantic>=2`, `litellm`, ruff `S`/`BLE` security rules and `pythonpath` to `pyproject.toml`; `SEAL_KEY`, `DATA_CREDIT`, `ENVIRONMENT` names to `.env.example` | n/a | Boilerplate |
 
 ### Needs the owner (collected from the team)

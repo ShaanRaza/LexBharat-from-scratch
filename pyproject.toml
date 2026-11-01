@@ -20,6 +20,7 @@ dependencies = [
     "qdrant-client",
     "httpx",
     "litellm",
+    "typesafe-sdk>=0.7,<0.8",
 ]
 
 [project.optional-dependencies]
