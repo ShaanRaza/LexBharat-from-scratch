@@ -116,9 +116,9 @@ _STRAY_QUOTE = re.compile(rf"[{_DQ}‹›「」『』‚‛]")
 # letters are folded to Latin and whitespace (line breaks included) is one space. The
 # answer text itself is never changed by this.
 _CITATION_SHAPES = (
-    # AIR 1973 SC 1461 / AIR 1965 Guj. 23 / AIR 1940 Madras 29 / AIR 1973 Supreme Court
-    # 1461 / AIR1973SC1461: the court is any short word (High Courts are written Guj.,
-    # Bom, Madras, All ...), so a High Court AIR citation is recognised too.
+    # AIR 1973 SC 1461 / AIR 1965 Guj. 23 / AIR 1940 Madras 29 / AIR1973SC1461: the
+    # court part is any short word or the spelled-out form, so the many court
+    # abbreviations used in AIR citations are all recognised.
     re.compile(
         r"\bAIR\s*\d{4}\s*(?:Supreme\s+Court|[A-Za-z]{2,10})\.?\s*\d+", re.IGNORECASE
     ),
