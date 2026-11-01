@@ -290,3 +290,46 @@ async def test_paragraph_breaks_are_kept(world):
     text = "Bail is the rule [S1].\n\nSecond paragraph [S2]."
     ans = await verify(world.draft(text), world.passages, world.deps)
     assert "\n\n" in ans.text
+
+
+# --- reviewer round 2 ---
+async def test_quote_in_sentence_without_marker_is_checked(world_jev_down):
+    w = world_jev_down
+    text = "The Court said “murder is lawful.” It follows. [S1]"
+    ans = await verify(w.draft(text), w.passages, w.deps)
+    assert "murder" not in ans.text
+    assert "quote_not_found" in reasons(w)
+
+
+async def test_uncited_quote_that_is_in_a_passage_is_kept(world):
+    text = (
+        "The Court said “bail is the rule”. "
+        "Bail is the rule and jail the exception [S1]."
+    )
+    ans = await verify(world.draft(text), world.passages, world.deps)
+    assert "bail is the rule" in ans.text and reasons(world) == []
+
+
+async def test_backtick_quotes_fail_closed(world_jev_down):
+    w = world_jev_down
+    ans = await verify(
+        w.draft("The Court said ``murder is lawful'' [S1]."), w.passages, w.deps
+    )
+    assert ans.citations == () and reasons(w) == ["quote_not_found"]
+
+
+@pytest.mark.parametrize("shape", ["AIR1978SC597", "1978 AIR 597", "AIR 1978 SC 597"])
+async def test_unmarked_citation_string_shapes_removed(world, shape):
+    ans = await verify(
+        world.draft(f"Settled law is in {shape} on this point."),
+        world.passages,
+        world.deps,
+    )
+    assert reasons(world) == ["not_retrieved"] and shape not in ans.text
+
+
+async def test_full_width_brackets_parse_as_markers(world):
+    ans = await verify(
+        world.draft("Bail is the rule ［S1］."), world.passages, world.deps
+    )
+    assert [c.source_id for c in ans.citations] == ["S1"]

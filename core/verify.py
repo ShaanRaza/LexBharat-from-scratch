@@ -86,11 +86,14 @@ _ABBREVIATIONS = (
 _NOT_ABBREV = "".join(rf"(?<!\b{a}\.)" for a in _ABBREVIATIONS)
 _BOUNDARY = re.compile(rf"(?<=[.!?]){_NOT_ABBREV}\s+(?=[A-Z\"“‘\[(])|\n+")
 # Quoted spans: curly or straight double quotes, curly or word-bounded single quotes.
+_FULL_WIDTH_BRACKETS = str.maketrans("\uff3b\uff3d\uff08\uff09", "[]()")
 _QUOTE_SPAN = re.compile(r"“[^”]*”|\"[^\"]*\"|‘[^’]*’|(?<!\w)'[^']+'(?!\w)")
 
 # Citation-shaped text that is NOT tied to a source marker (a case the model recalled).
 _CITATION_SHAPES = (
-    re.compile(r"\bAIR\s+\d{4}\s+(?:SC|[A-Z]{2,4})\s+\d+", re.IGNORECASE),
+    re.compile(r"\bAIR\s*\d{4}\s*(?:SC|[A-Z]{2,4})\s*\d+", re.IGNORECASE),
+    re.compile(r"\b\d{4}\s+AIR\s*(?:SC\s*)?\d+", re.IGNORECASE),
+    re.compile(r"\bSCC\s*OnLine\b[\w\s]{0,12}\d+", re.IGNORECASE),
     re.compile(r"\(\d{4}\)\s*\d+\s*SCC\b", re.IGNORECASE),
     re.compile(r"\[\d{4}\]\s*(?:SUPP\.?\s*)?\d*\s*S\.?C\.?R\.?\s*\d+", re.IGNORECASE),
     re.compile(
@@ -138,9 +141,12 @@ def _quotes(sentence: str) -> list[str]:
 
 
 def _unbalanced_quotes(sentence: str) -> bool:
-    """A stray quote mark means we cannot tell what is quoted: fail closed."""
+    """A stray or unrecognised quote mark (stray, backtick) means we cannot tell
+    what is quoted: fail closed."""
     return (
-        sentence.count("\u201c") != sentence.count("\u201d")
+        "`" in sentence
+        or "\u00b4" in sentence
+        or sentence.count("\u201c") != sentence.count("\u201d")
         or sentence.count("\u2018") != sentence.count("\u2019")
         or sentence.count('"') % 2 == 1
     )
@@ -225,11 +231,19 @@ def _to_citation(
     )
 
 
+def _squash(text: str) -> str:
+    """Letters and digits only, so 'AIR1978SC597' equals 'AIR 1978 SC 597'."""
+    return re.sub(r"\W", "", text).casefold()
+
+
 def _unretrieved_authority(sentence: str, passages: Sequence[Passage]) -> bool:
     """True if the sentence names a case/citation that is in none of the passages."""
     haystack = " ".join(
         [normalise(p.text) for p in passages]
         + [normalise(p.citation_string or "") for p in passages]
+    )
+    squashed = _squash(
+        " ".join(p.text + " " + (p.citation_string or "") for p in passages)
     )
     names = " ".join(_norm_case_name(p.title or "") for p in passages)
     body = _norm_case_name(haystack)
@@ -238,6 +252,8 @@ def _unretrieved_authority(sentence: str, passages: Sequence[Passage]) -> bool:
         for m in shape.finditer(plain):
             found = m.group(0)
             if normalise(found) in haystack:
+                continue
+            if _squash(found) and _squash(found) in squashed:
                 continue
             if _norm_case_name(found) in names or _norm_case_name(found) in body:
                 continue
@@ -250,7 +266,8 @@ async def verify(
 ) -> VerifiedAnswer:
     """Run checks 1-4 on every citation, remove failures, log them, seal the answer."""
     by_label = {p.source_id: p for p in passages if p.source_id}
-    sentences = _split(draft.text.strip())
+    draft_text = draft.text.translate(_FULL_WIDTH_BRACKETS).strip()
+    sentences = _split(draft_text)
 
     kept_sentences: list[tuple[str, str]] = []
     citations: dict[str, Citation] = {}
@@ -263,6 +280,13 @@ async def verify(
                 labels.append(label.upper())
         quotes = _quotes(sentence)
         unbalanced = _unbalanced_quotes(sentence)
+
+        # Quoted words anywhere in the answer, cited or not, must be in a passage.
+        if not labels and (quotes or unbalanced):
+            pool = f" {' '.join(normalise(p.text) for p in passages)} "
+            if unbalanced or any(f" {normalise(q)} " not in pool for q in quotes):
+                removed.append(RemovedCitation("", None, "quote_not_found", sentence))
+                continue
 
         # A real case named in the text but never retrieved this turn (check 1).
         if _unretrieved_authority(sentence, passages):
