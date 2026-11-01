@@ -39,9 +39,7 @@ def upgrade() -> None:
         sa.Column("plan", sa.Text, nullable=False, server_default="free"),
         sa.Column("status", sa.Text, nullable=False, server_default="active"),
         one_of("role", ["advocate", "student", "in-house", "other"], "ck_users_role"),
-        one_of(
-            "plan", ["free", "student", "pro", "chambers"], "ck_users_plan"
-        ),
+        one_of("plan", ["free", "student", "pro", "chambers"], "ck_users_plan"),
         one_of("status", ["active", "suspended", "deleted"], "ck_users_status"),
     )
 
@@ -101,7 +99,9 @@ def upgrade() -> None:
         sa.Column("status", sa.Text, nullable=False, server_default="invited"),
         one_of("role", ["admin", "member"], "ck_memberships_role"),
         one_of("status", ["invited", "active", "removed"], "ck_memberships_status"),
-        sa.UniqueConstraint("organisation_id", "user_id", name="uq_memberships_org_user"),
+        sa.UniqueConstraint(
+            "organisation_id", "user_id", name="uq_memberships_org_user"
+        ),
         sa.Index("ix_memberships_user_id", "user_id"),
     )
 
@@ -115,7 +115,9 @@ def upgrade() -> None:
         sa.Column("requests", sa.Integer, nullable=False, server_default="0"),
         sa.Column("tokens_in", sa.BigInteger, nullable=False, server_default="0"),
         sa.Column("tokens_out", sa.BigInteger, nullable=False, server_default="0"),
-        sa.Column("cost_estimate", sa.Numeric(12, 6), nullable=False, server_default="0"),
+        sa.Column(
+            "cost_estimate", sa.Numeric(12, 6), nullable=False, server_default="0"
+        ),
         sa.UniqueConstraint("user_id", "date", "feature", name="uq_usage_daily_key"),
     )
 

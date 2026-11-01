@@ -8,12 +8,16 @@ Revises: 0003
 """
 
 import sqlalchemy as sa
-from lb_migration_helpers import create_table, drop_table, id_col, one_of
+from lb_migration_helpers import create_table, drop_table, id_col
 
 revision = "0004"
 down_revision = "0003"
 branch_labels = None
 depends_on = None
+
+
+_SLUG = "btrim(regexp_replace(lower(act_name), '[^a-z0-9]+', '-', 'g'), '-')"
+_SLUG_BASE = f"regexp_replace({_SLUG}, '-[0-9]{{4}}$', '')"
 
 
 def upgrade() -> None:
@@ -32,7 +36,9 @@ def upgrade() -> None:
         sa.Column("outcome_label", sa.Text),
         sa.Column("is_final_outcome", sa.Boolean),
         # True only for rows in the 50-judgment hand-check sample.
-        sa.Column("outcome_checked", sa.Boolean, nullable=False, server_default=sa.false()),
+        sa.Column(
+            "outcome_checked", sa.Boolean, nullable=False, server_default=sa.false()
+        ),
         sa.Column("pdf_url", sa.Text),
         sa.Column("full_text", sa.Text),
         sa.CheckConstraint(
@@ -59,7 +65,15 @@ def upgrade() -> None:
         # Filled for only 1,568 of 22,264 acts. NULL => "in-force status not checked".
         sa.Column("act_status", sa.Text),
         sa.Column("source_url", sa.Text),
-        sa.Index("ix_act_sections_lookup", sa.text("lower(act_name)"), "section_number"),
+        # URL-friendly names made by PostgreSQL itself, so they can never drift from
+        # act_name: 'The Indian Penal Code, 1860' -> 'the-indian-penal-code-1860'
+        # (act_slug) and 'the-indian-penal-code' (act_slug_base, trailing year dropped).
+        # api/store.py::act_slug uses the same rule.
+        sa.Column("act_slug", sa.Text, sa.Computed(_SLUG, persisted=True)),
+        sa.Column("act_slug_base", sa.Text, sa.Computed(_SLUG_BASE, persisted=True)),
+        # The public Act page looks a section up by slug: target under 500 ms.
+        sa.Index("ix_act_sections_slug", "act_slug", "section_number"),
+        sa.Index("ix_act_sections_slug_base", "act_slug_base", "section_number"),
     )
 
     # The data-as-of date per court, shown on every result, stats page and Act page.

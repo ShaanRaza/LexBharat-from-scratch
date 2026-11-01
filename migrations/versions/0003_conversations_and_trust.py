@@ -97,7 +97,12 @@ def upgrade() -> None:
         sa.Column("reason", sa.Text, nullable=False),
         one_of(
             "reason",
-            ["not_retrieved", "record_missing", "quote_not_found", "claim_not_supported"],
+            [
+                "not_retrieved",
+                "record_missing",
+                "quote_not_found",
+                "claim_not_supported",
+            ],
             "ck_invented_citation_reason",
         ),
         sa.Index("ix_invented_citation_message_id", "message_id"),

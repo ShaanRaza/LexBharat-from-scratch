@@ -25,7 +25,10 @@ def upgrade() -> None:
         sa.Column("ip", sa.Text),
         sa.Column("request_id", sa.Text),
         sa.Column(
-            "at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")
+            "at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("now()"),
         ),
         one_of(
             "action",
