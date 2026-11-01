@@ -205,3 +205,88 @@ async def test_decision_unavailable_never_gives_verified(world):
     world.decisions.claim_support = both_down
     ans = await verify(world.draft(GOOD), world.passages, world.deps)
     assert [c.status for c in ans.citations] == ["partly"]
+
+
+# --- reviewer attacks (quote bypasses, splitter, recalled cases) ---------------------
+async def test_quote_containing_sentence_break_is_still_checked(world_jev_down):
+    w = world_jev_down
+    text = "The Court said “Bail is the rule. Therefore murder is lawful.” [S1]"
+    ans = await verify(w.draft(text), w.passages, w.deps)
+    assert ans.citations == () and reasons(w) == ["quote_not_found"]
+    assert "murder" not in ans.text
+
+
+async def test_single_quoted_text_is_checked(world_jev_down):
+    w = world_jev_down
+    ans = await verify(
+        w.draft("It held 'bail is abolished in all cases' [S1]."), w.passages, w.deps
+    )
+    assert ans.citations == () and reasons(w) == ["quote_not_found"]
+
+
+async def test_curly_single_quotes_are_checked(world_jev_down):
+    w = world_jev_down
+    ans = await verify(w.draft("It held ‘bail is abolished’ [S1]."), w.passages, w.deps)
+    assert reasons(w) == ["quote_not_found"] and ans.citations == ()
+
+
+async def test_mismatched_quote_marks_fail_closed(world_jev_down):
+    w = world_jev_down
+    ans = await verify(w.draft('It said “bail is the rule" [S1].'), w.passages, w.deps)
+    assert ans.citations == () and reasons(w) == ["quote_not_found"]
+
+
+async def test_unpaired_quote_mark_fails_closed(world_jev_down):
+    w = world_jev_down
+    ans = await verify(w.draft('It said "bail is the rule [S1].'), w.passages, w.deps)
+    assert ans.citations == () and reasons(w) == ["quote_not_found"]
+
+
+async def test_apostrophe_is_not_a_quote(world):
+    ans = await verify(
+        world.draft("The court's view: bail is the rule [S1]."),
+        world.passages,
+        world.deps,
+    )
+    assert [c.source_id for c in ans.citations] == ["S1"]
+
+
+async def test_quote_must_match_whole_words(world_jev_down):
+    w = world_jev_down
+    await verify(w.draft('It said "ail is the rule" [S1].'), w.passages, w.deps)
+    assert reasons(w) == ["quote_not_found"]
+
+
+async def test_recalled_case_without_dot_is_removed(world):
+    text = "In Kesavananda Bharati v State of Kerala the basic structure was held."
+    ans = await verify(world.draft(text), world.passages, world.deps)
+    assert "Kesavananda" not in ans.text and reasons(world) == ["not_retrieved"]
+
+
+async def test_in_re_case_is_removed(world):
+    await verify(
+        world.draft("See In re Special Courts Bill for the rule."),
+        world.passages,
+        world.deps,
+    )
+    assert reasons(world) == ["not_retrieved"]
+
+
+async def test_abbreviations_do_not_split_sentences(world):
+    text = "Held in Tata Pvt. Ltd. v. Union that bail is the rule [S1]. Another point."
+    ans = await verify(world.draft(text), world.passages, world.deps)
+    assert reasons(world) == ["not_retrieved"]  # Tata case never retrieved
+    assert "Held in Tata Pvt." not in ans.text.replace("Note", "")
+
+
+async def test_paren_marker_is_parsed(world):
+    ans = await verify(
+        world.draft("Bail is the rule (S1)."), world.passages, world.deps
+    )
+    assert [c.source_id for c in ans.citations] == ["S1"]
+
+
+async def test_paragraph_breaks_are_kept(world):
+    text = "Bail is the rule [S1].\n\nSecond paragraph [S2]."
+    ans = await verify(world.draft(text), world.passages, world.deps)
+    assert "\n\n" in ans.text

@@ -17,6 +17,7 @@ import asyncio
 from collections.abc import Sequence
 from dataclasses import replace
 
+from adapters.decisions import DecisionUnavailable
 from core.contracts import (
     GATE_MAX_PASSAGES,
     RERANK_TOP_K,
@@ -39,7 +40,7 @@ async def _rate_one(
     """
     try:  # the adapter itself picks Jev or the Gemini fallback from the switches
         return await deps.decisions.rate_passage(query.query, passage)
-    except Exception:  # noqa: BLE001  any failure -> rerank score
+    except (DecisionUnavailable, TimeoutError):  # no decider -> rerank score
         return "partly", passage.score
 
 

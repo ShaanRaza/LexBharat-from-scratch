@@ -31,6 +31,8 @@ import unicodedata
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 
+from adapters.decisions import DecisionUnavailable
+from adapters.qdrant import VectorStoreUnavailable
 from core.contracts import (
     Citation,
     CitationStatus,
@@ -52,13 +54,39 @@ NOTE_MANY = (
     "Note: {n} authorities cited in this answer could not be verified and were removed."
 )
 
-_MARKER = re.compile(r"\[\s*(S\d+(?:\s*[,;]\s*S\d+)*)\s*\]", re.IGNORECASE)
-# Split at ". Capital" but not after "v." / "No." / "Art." (case name = one unit).
-_SENTENCE_END = re.compile(
-    r"(?<=[.!?])(?<!\bv\.)(?<!\bvs\.)(?<!\bNo\.)(?<!\bNos\.)(?<!\bArt\.)"
-    r"(?<!\bSec\.)(?<!\bs\.)(?<!\bR\.)(?<!\bSCC\.)\s+(?=[A-Z\"“\[(])"
+_MARKER = re.compile(r"[\[(]\s*(S\d+(?:\s*[,;]\s*S\d+)*)\s*[\])]", re.IGNORECASE)
+# Words ending in a dot that do NOT end a sentence (a case name is one unit).
+_ABBREVIATIONS = (
+    "v",
+    "vs",
+    "No",
+    "Nos",
+    "Art",
+    "Sec",
+    "s",
+    "R",
+    "SCC",
+    "Pvt",
+    "Ltd",
+    "Dr",
+    "Mr",
+    "Mrs",
+    "Ms",
+    "Smt",
+    "Shri",
+    "Ors",
+    "Anr",
+    "Co",
+    "Inc",
+    "St",
+    "Hon",
+    "Addl",
+    "Dy",
 )
-_QUOTE = re.compile(r"“([^”]+)”|\"([^\"]+)\"")
+_NOT_ABBREV = "".join(rf"(?<!\b{a}\.)" for a in _ABBREVIATIONS)
+_BOUNDARY = re.compile(rf"(?<=[.!?]){_NOT_ABBREV}\s+(?=[A-Z\"“‘\[(])|\n+")
+# Quoted spans: curly or straight double quotes, curly or word-bounded single quotes.
+_QUOTE_SPAN = re.compile(r"“[^”]*”|\"[^\"]*\"|‘[^’]*’|(?<!\w)'[^']+'(?!\w)")
 
 # Citation-shaped text that is NOT tied to a source marker (a case the model recalled).
 _CITATION_SHAPES = (
@@ -66,9 +94,10 @@ _CITATION_SHAPES = (
     re.compile(r"\(\d{4}\)\s*\d+\s*SCC\b", re.IGNORECASE),
     re.compile(r"\[\d{4}\]\s*(?:SUPP\.?\s*)?\d*\s*S\.?C\.?R\.?\s*\d+", re.IGNORECASE),
     re.compile(
-        r"\b[A-Z][\w.&'\-]*(?:\s+[A-Z][\w.&'\-]*){0,5}\s+(?:v\.|vs\.?|versus)\s+"
+        r"\b[A-Z][\w.&'\-]*(?:\s+[A-Z][\w.&'\-]*){0,5}\s+(?:v\.?|vs\.?|versus)\s+"
         r"[A-Z][\w.&'\-]*(?:\s+[A-Z][\w.&'\-]*){0,5}"
     ),
+    re.compile(r"\bIn re\s+[A-Z][\w.&'\-]*(?:\s+[A-Z][\w.&'\-]*){0,5}"),
 )
 
 
@@ -95,12 +124,41 @@ class _Fail:
     reason: FailReason
 
 
+def _quote_spans(text: str) -> list[tuple[int, int]]:
+    return [m.span() for m in _QUOTE_SPAN.finditer(text)]
+
+
 def _quotes(sentence: str) -> list[str]:
     out = []
-    for m in _QUOTE.finditer(_MARKER.sub("", sentence)):
-        q = (m.group(1) or m.group(2) or "").strip()
+    for start, end in _quote_spans(sentence):
+        q = sentence[start + 1 : end - 1].strip()
         if normalise(q):
             out.append(q)
+    return out
+
+
+def _unbalanced_quotes(sentence: str) -> bool:
+    """A stray quote mark means we cannot tell what is quoted: fail closed."""
+    return (
+        sentence.count("\u201c") != sentence.count("\u201d")
+        or sentence.count("\u2018") != sentence.count("\u2019")
+        or sentence.count('"') % 2 == 1
+    )
+
+
+def _split(text: str) -> list[tuple[str, str]]:
+    """Cut into (sentence, separator-after). Never cuts inside a quoted span."""
+    spans = _quote_spans(text)
+    out: list[tuple[str, str]] = []
+    pos = 0
+    for m in _BOUNDARY.finditer(text):
+        if any(a < m.start() < b for a, b in spans):
+            continue
+        if m.start() > pos:
+            out.append((text[pos : m.start()], m.group(0)))
+        pos = m.end()
+    if pos < len(text):
+        out.append((text[pos:], ""))
     return out
 
 
@@ -125,7 +183,7 @@ async def _fetch_record(passage: Passage, deps: Deps) -> str | None:
         record = await deps.vectors.get_record(
             collection, passage.record_id, user_id=user_id
         )
-    except Exception:  # noqa: BLE001  cannot confirm -> missing (fail closed)
+    except (VectorStoreUnavailable, PermissionError):  # cannot confirm -> missing
         return None
     return _record_text(record)
 
@@ -135,7 +193,7 @@ async def _claim_support(sentence: str, passage: Passage, deps: Deps) -> Citatio
     clean = _MARKER.sub("", sentence).strip()
     try:
         support = await deps.decisions.claim_support(clean, passage)
-    except Exception:  # noqa: BLE001  Jev+Gemini down -> never a full tick
+    except (DecisionUnavailable, TimeoutError):  # no check 4 -> never a full tick
         return "partly"
     if support == "supports":
         return "verified"
@@ -192,18 +250,19 @@ async def verify(
 ) -> VerifiedAnswer:
     """Run checks 1-4 on every citation, remove failures, log them, seal the answer."""
     by_label = {p.source_id: p for p in passages if p.source_id}
-    sentences = _SENTENCE_END.split(draft.text.strip()) if draft.text.strip() else []
+    sentences = _split(draft.text.strip())
 
-    kept_sentences: list[str] = []
+    kept_sentences: list[tuple[str, str]] = []
     citations: dict[str, Citation] = {}
     removed: list[RemovedCitation] = []
 
-    for sentence in sentences:
+    for sentence, sep in sentences:
         labels: list[str] = []
         for m in _MARKER.finditer(sentence):
             for label in re.split(r"\s*[,;]\s*", m.group(1)):
                 labels.append(label.upper())
         quotes = _quotes(sentence)
+        unbalanced = _unbalanced_quotes(sentence)
 
         # A real case named in the text but never retrieved this turn (check 1).
         if _unretrieved_authority(sentence, passages):
@@ -228,10 +287,11 @@ async def verify(
                 failed.add(label)
                 continue
             norm_record = normalise(record_text)
-            bad_quote = next(
-                (q for q in quotes if normalise(q) not in norm_record), None
+            padded = f" {norm_record} "
+            bad_quote = unbalanced or any(
+                f" {normalise(q)} " not in padded for q in quotes
             )
-            if bad_quote is not None:  # check 3
+            if bad_quote:  # check 3
                 removed.append(
                     RemovedCitation(
                         label, passage.record_id, "quote_not_found", sentence
@@ -255,13 +315,13 @@ async def verify(
             continue  # every citation failed: drop the now-unsupported sentence
         if failed:  # strip only the failed markers, keep the survivors
             sentence = _strip_markers(sentence, failed)
-        kept_sentences.append(sentence)
+        kept_sentences.append((sentence, sep))
         for label, cit in passed.items():
             prev = citations.get(label)
             if prev is None or (prev.status == "verified" and cit.status == "partly"):
                 citations[label] = cit
 
-    text = " ".join(kept_sentences)
+    text = "".join(s + sep for s, sep in kept_sentences).strip()
     if removed:
         n = len({(r.source_id, r.record_id, r.sentence) for r in removed})
         note = NOTE_ONE if n == 1 else NOTE_MANY.format(n=n)
