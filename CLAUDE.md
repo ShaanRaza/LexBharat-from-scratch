@@ -298,7 +298,7 @@ final report** — do not guess — for:
    - **Single task (default for people):** one GitHub issue = one branch = one pull request
      = one Claude session. Start with `/start-task <issue>`, end with `/finish-task <issue>`.
      If a task outgrows one session, finish a clean slice and propose a follow-up issue.
-   - **Agent build (owner-run, see §12):** one branch (`shan/agent-build`), several agents
+   - **Agent build (owner-run, see §12):** one branch (`shan/agent-team`), several agents
      working in parallel on separate folders, one pull request to `main`. The owner reviews
      and merges. Agents never push to `main`.
 
@@ -399,7 +399,7 @@ things expected to break first on a 16 GB server.
 | Who works on what, and how does work reach `main`? | [`team/README.md`](team/README.md) |
 | What does the product look like after 11 weeks, and what's next? | [`after-11-weeks/`](after-11-weeks/README.md) |
 
-## 12. Agent build lanes (branch `shan/agent-build`)
+## 12. Agent team lanes (branch `shan/agent-team`)
 
 Used when the owner runs an agent build (§9.7). Agents work in parallel in **one checkout**,
 so each owns a folder and never edits another's. Shared files (`pyproject.toml`, `CLAUDE.md`,

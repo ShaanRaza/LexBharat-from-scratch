@@ -48,7 +48,7 @@ each needs a person, a hand check or a lawyer.**
 | D6 | Not-legal-advice notice | On every answer, stats page and Act page; stronger when Jev flags personal advice | BCI Rule 36 + the information/advice line |
 | — | Keyword search | BM25 sparse vectors inside Qdrant | Settles the PRD's PostgreSQL-FTS vs Qdrant choice; also covers "Voyage is down" |
 | — | Agent framework inside the product | **Research pipeline: none, fixed 11 steps. Orchestration allowed for branching features** (owner decision, 1 Nov 2026) | Verifier and gate must always run after any orchestrator; see CLAUDE.md §7 |
-| — | How the v1 build is run | **Agent build on one branch `shan/agent-build`**, 3 build lanes + reviewer, one PR to `main` | Owner asked for agent-built work; folders partitioned to avoid conflicts (CLAUDE.md §12) |
+| — | How the v1 build is run | **Agent build on one branch `shan/agent-team`**, 3 build lanes + reviewer, one PR to `main` | Owner asked for agent-built work; folders partitioned to avoid conflicts (CLAUDE.md §12) |
 | — | Send upload text to Jev | **Never.** Upload chats use Gemini (paid tier) for those checks | Privilege and DPDP risk; Jev runs in the US |
 | — | Answer cache lifetime | 7 days | Tune from real use |
 | — | Re-embed SC chunks with a header | Keep Vaquill's vectors as they are | Compare on the test questions in build step 1 |
