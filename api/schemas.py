@@ -112,9 +112,10 @@ class ConsentWithdraw(BaseModel):
 # ---------------------------------------------------------------- citations
 
 CitationKind = Literal["judgment", "act"]
-# "verified" and "partly" show a tick. "unchecked" (Jev and Gemini both down) shows
-# the label "Support not checked" and NO tick: checks 1-3 passed, claim support was
-# not rated. A failed citation is removed, never shown.
+# Only "verified" shows a tick. "partly" (a real partly rating) shows a warning mark.
+# "unchecked" (Jev and Gemini both down) shows the label "Support not checked" and NO
+# tick: checks 1-3 passed, claim support was not rated. A failed citation is removed,
+# never shown.
 CitationStatus = Literal["verified", "partly", "unchecked"]
 
 
