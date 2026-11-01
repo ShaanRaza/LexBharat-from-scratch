@@ -1,0 +1,38 @@
+"use client";
+import { useCallback, useRef, useState } from "react";
+import { askQuestion, createConversation } from "@/lib/api/client";
+import { applyEvent, newAnswer, type AnswerState } from "./state";
+
+// Hook: holds the list of answers and runs a question. No styling here.
+export function useChat() {
+  const [answers, setAnswers] = useState<AnswerState[]>([]);
+  const conv = useRef<string | null>(null);
+
+  const ask = useCallback(async (question: string) => {
+    let state = newAnswer(question);
+    const idx = { current: -1 };
+    const write = (s: AnswerState) =>
+      setAnswers((a) => {
+        if (idx.current === -1) {
+          idx.current = a.length;
+          return [...a, s];
+        }
+        const copy = [...a];
+        copy[idx.current] = s;
+        return copy;
+      });
+    write(state);
+    try {
+      conv.current ??= await createConversation();
+      for await (const ev of askQuestion(conv.current, question)) {
+        state = applyEvent(state, ev);
+        write(state);
+      }
+      if (state.status === "streaming") write((state = { ...state, status: "done" }));
+    } catch {
+      write((state = { ...state, status: "failed", failure: "serviceError" }));
+    }
+  }, []);
+
+  return { answers, ask, busy: answers.some((a) => a.status === "streaming") };
+}
