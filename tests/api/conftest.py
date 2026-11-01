@@ -9,6 +9,19 @@ from api.repo import MemoryRepo
 from core.settings import Settings
 
 
+@pytest.fixture(autouse=True)
+def _hermetic_settings(monkeypatch):
+    """Never read a developer's real .env in tests."""
+    from api.config import ApiSettings
+    from core.settings import get_settings
+
+    for cls in (Settings, ApiSettings):
+        monkeypatch.setitem(cls.model_config, "env_file", None)
+    get_settings.cache_clear()
+    yield
+    get_settings.cache_clear()
+
+
 @pytest.fixture
 def repo():
     return MemoryRepo()

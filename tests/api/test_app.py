@@ -189,3 +189,35 @@ def test_real_pipeline_wires_core_gate_and_verifier(monkeypatch, repo):
     assert pipe.deps.gate is core.gate.gate and pipe.deps.verify is core.verify.verify
     assert pipe.deps.usage is repo and pipe.deps.store is repo
     get_settings.cache_clear()
+
+
+def test_unchecked_status_goes_over_the_wire_exactly():
+    from api.bridge import to_wire_citation
+    from core.contracts import Citation as CoreCitation
+
+    c = CoreCitation(
+        source_id="S1", record_id="r", status="unchecked", citation_string=None,
+        pdf_url="https://x.invalid/a.pdf", source_url=None,
+    )  # fmt: skip
+    assert to_wire_citation(c).model_dump()["status"] == "unchecked"
+
+
+def test_unknown_status_is_rejected_by_the_wire_schema():
+    from api.schemas import Citation
+
+    with pytest.raises(ValueError):
+        Citation(source_id="S1", kind="act", record_id="r", status="failed")
+
+
+async def test_worker_refuses_to_start_without_seal_key(monkeypatch):
+    from core.settings import get_settings
+    from workers.main import WorkerSettings
+
+    monkeypatch.setenv("SEAL_KEY", "")
+    get_settings.cache_clear()
+    with pytest.raises(RuntimeError):
+        await WorkerSettings.on_startup({})
+    monkeypatch.setenv("SEAL_KEY", "test-seal-key")
+    get_settings.cache_clear()
+    await WorkerSettings.on_startup({})
+    get_settings.cache_clear()

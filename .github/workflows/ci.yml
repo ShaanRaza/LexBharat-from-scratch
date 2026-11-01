@@ -85,6 +85,8 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Compose file is valid
+        env:
+          POSTGRES_PASSWORD: ci-dummy-not-a-secret
         run: docker compose -f infra/docker-compose.yml config -q
 
       - uses: docker/setup-qemu-action@v3
@@ -137,3 +139,8 @@ jobs:
         if: steps.detect.outputs.found == 'true'
         working-directory: web
         run: npm run build
+
+      - name: Unit tests
+        if: steps.detect.outputs.found == 'true'
+        working-directory: web
+        run: npm test

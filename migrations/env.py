@@ -1,6 +1,8 @@
 """Alembic environment. The database URL comes from config (core/settings.py),
 never from alembic.ini, so a secret is never written into a file."""
 
+import os
+
 from alembic import context
 from sqlalchemy import create_engine
 
@@ -8,7 +10,10 @@ from core.settings import get_settings
 
 
 def _url() -> str:
-    return get_settings().DATABASE_URL.get_secret_value()
+    # Env var first so migrations need no other setting; fall back to config.
+    return (
+        os.environ.get("DATABASE_URL") or get_settings().DATABASE_URL.get_secret_value()
+    )
 
 
 def run_migrations_offline() -> None:

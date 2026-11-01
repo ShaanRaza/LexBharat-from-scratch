@@ -135,7 +135,7 @@ class PgRepo:
                     "url": s["url"],
                     "act_slug": slugify_act(s["act_name"], s["act_year"]) if s["is_act"] else None,
                     "section": s["section_number"] if s["is_act"] else None,
-                    "status": "verified" if s["support"] != "partly" else "partly",
+                    "status": {"partly": "partly", None: "unchecked"}.get(s["support"], "verified"),
                 }
             )  # fmt: skip
         out = self._s(conv[0])
@@ -311,7 +311,7 @@ class PgRepo:
                                ON CONFLICT DO NOTHING"""
                         ),
                         dict(m=mid, s=cit.source_id, r=cit.record_id, k=rank,
-                             sup="supports" if cit.status == "verified" else "partly"),
+                             sup={"verified": "supports", "partly": "partly"}.get(cit.status)),
                     )  # fmt: skip
                 c.execute(
                     text(

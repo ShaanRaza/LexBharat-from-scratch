@@ -8,6 +8,12 @@ FEATURE_UPLOADS). Run:  arq workers.main.WorkerSettings
 from arq.connections import RedisSettings
 
 from core.settings import get_settings
+from core.verify import assert_seal_key_configured
+
+
+async def on_startup(ctx: dict) -> None:
+    """Refuse to start without SEAL_KEY (same rule as the API)."""
+    assert_seal_key_configured()
 
 
 async def ping(ctx: dict) -> str:
@@ -17,5 +23,6 @@ async def ping(ctx: dict) -> str:
 
 class WorkerSettings:
     functions = [ping]
+    on_startup = on_startup
     max_jobs = 1  # one job at a time
     redis_settings = RedisSettings.from_dsn(get_settings().REDIS_URL)
