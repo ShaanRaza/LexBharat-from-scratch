@@ -203,3 +203,12 @@ class FakeDecisions:
         s, p = set(words(sentence)), set(words(passage.text))
         r = len(s & p) / (len(s) or 1)
         return "supports" if r >= 0.6 else "partly" if r >= 0.3 else "does_not_support"
+
+
+def __getattr__(name: str):
+    """Keep `from adapters.decisions import JevClient` working; it lives in jev.py."""
+    if name == "JevClient":
+        from adapters.jev import JevClient  # noqa: PLC0415
+
+        return JevClient
+    raise AttributeError(name)
