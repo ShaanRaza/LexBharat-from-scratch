@@ -6,6 +6,10 @@ import { listConversations, searchHistory } from "@/lib/api/client";
 import { EMPTY, SHARED_MANAGE, HISTORY_RECENT, HISTORY_SEARCH, HISTORY_SEARCH_PLACEHOLDER } from "@/lib/copy";
 import { useLoaded } from "@/lib/matters/useLoaded";
 
+// A saved answer carries [S1] markers. In a search result they would look like checked
+// citations without being shown with their ticks, so the snippet shows plain words only.
+export const plainSnippet = (s: string) => s.replace(/\s*[\[(]\s*S\d+(?:\s*[,;]\s*S?\d+)*\s*[\])]/gi, "");
+
 // Recent conversations, and search across the user's OWN saved questions and answers.
 export function HistoryScreen() {
   const [q, setQ] = useState<string | null>(null);
@@ -40,7 +44,7 @@ export function HistoryScreen() {
                 <Link href={`/conversations/${h.conversation_id}`}>
                   <Card>
                     <span className="font-semibold">{h.title ?? "Untitled conversation"}</span>
-                    <span className="mt-1 block text-small text-ink-soft">{h.snippet}</span>
+                    <span className="mt-1 block break-words text-small text-ink-soft">{plainSnippet(h.snippet)}</span>
                   </Card>
                 </Link>
               </li>

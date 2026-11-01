@@ -132,3 +132,10 @@ describe("empty states are screens, not blank tables", () => {
     expect(screen.getByText("Coverage has not been listed yet")).toBeInTheDocument();
   });
 });
+
+import { plainSnippet } from "@/components/matters/HistoryScreen";
+describe("history snippets", () => {
+  it("never show a bare citation marker", () => {
+    expect(plainSnippet("punished under section 420 [S1]. The Court [S2, S3] held (S4) it.")).toBe("punished under section 420. The Court held it.");
+  });
+});

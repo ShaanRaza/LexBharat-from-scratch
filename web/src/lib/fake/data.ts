@@ -28,7 +28,9 @@ import type { CaseOut, Citation, CoverageOut, MeOut, SectionOut, StatsOut, Prove
 import { CC_BY_CREDIT, NOT_LEGAL_ADVICE_API } from "@/lib/copy";
 import { LONG_CASE, LONG_CASE_ID, longSections } from "@/lib/fake/fixtures";
 
-export { ANSWER_EIGHT, ANSWER_REMOVED, CITATIONS_EIGHT, CITATIONS_REMOVED } from "@/lib/fake/fixtures";
+import { ANSWER_EIGHT, ANSWER_REMOVED, CITATIONS_EIGHT, CITATIONS_REMOVED } from "@/lib/fake/fixtures";
+
+export { ANSWER_EIGHT, ANSWER_REMOVED, CITATIONS_EIGHT, CITATIONS_REMOVED };
 
 export const FAKE_PROVENANCE: Provenance = {
   data_as_of: "2026-08-31",
@@ -127,3 +129,11 @@ export const FAKE_COVERAGE: CoverageOut = {
 };
 
 export const FAKE_STATS_EMPTY: StatsOut = { live: false, provenance: FAKE_PROVENANCE, rows: [] };
+
+// The answer a question gets in fake mode, chosen by keyword (see the trigger list above).
+export function fakeAnswerFor(question: string): { text: string; citations: Citation[]; removed: number } {
+  const q = question.toLowerCase();
+  if (q.includes("eight")) return { text: ANSWER_EIGHT, citations: CITATIONS_EIGHT, removed: 0 };
+  if (q.includes("removed")) return { text: ANSWER_REMOVED, citations: CITATIONS_REMOVED, removed: 1 };
+  return { text: FAKE_ANSWER_TEXT, citations: FAKE_CITATIONS, removed: 0 };
+}

@@ -1,8 +1,8 @@
 // The ONLY file in web/ that talks to the backend (CLAUDE.md section 2 rule 3).
 // Fake mode (NEXT_PUBLIC_USE_FAKE_API=true, the default) returns canned data.
 import { API_BASE_URL, FAKE_STEP_DELAY_MS, USE_FAKE_API } from "@/lib/config";
-import { ANSWER_EIGHT, ANSWER_REMOVED, CITATIONS_EIGHT, CITATIONS_REMOVED, FAKE_ANSWER_TEXT, FAKE_CASES, FAKE_CITATIONS, FAKE_COVERAGE, FAKE_ME, FAKE_PROVENANCE, FAKE_SECTIONS, FAKE_STATS, FAKE_STATS_EMPTY } from "@/lib/fake/data";
-import { fakeConversationDetail, fakeDb, fakeRecordTurn, fakeVariant, nextId, withCounts } from "@/lib/fake/store";
+import { fakeAnswerFor, FAKE_ANSWER_TEXT, FAKE_CASES, FAKE_CITATIONS, FAKE_COVERAGE, FAKE_ME, FAKE_PROVENANCE, FAKE_SECTIONS, FAKE_STATS, FAKE_STATS_EMPTY } from "@/lib/fake/data";
+import { fakeConversationDetail, fakeDb, fakeRecordTurn, fakeStoredAnswer, fakeVariant, nextId, persistFakeDb, withCounts } from "@/lib/fake/store";
 import { createSseParser } from "./sse";
 import type { ApiErrorBody, CaseOut, ShareCreated, ShareLink, SharedAnswerOut, ConsentIn, ConversationDetail, ConversationOut, CoverageOut, FollowupsOut, HistoryHit, MatterDeleteMode, MatterDeleted, MatterDetail, MatterKind, MatterOut, MatterStatus, ImproveOut, MeOut, SectionOut, StatsOut, StepEventData, StreamEvent } from "./types";
 
@@ -113,6 +113,7 @@ export async function createConversation(matterId: string | null = null): Promis
     const id = nextId("fake-conv");
     const now = new Date().toISOString();
     fakeDb.conversations.unshift({ id, module: "research", title: null, message_count: 0, matter_id: matterId, created_at: now, updated_at: now });
+    persistFakeDb();
     return id;
   }
   const res = await fetch(`${BASE}/conversations`, { method: "POST", headers: await headers(), body: JSON.stringify({ module: "research", matter_id: matterId }) });
@@ -123,8 +124,8 @@ export async function createConversation(matterId: string | null = null): Promis
 // Streams one answer as typed events. Order on the wire: token*, citations once, done.
 export async function* askQuestion(conversationId: string, content: string): AsyncGenerator<StreamEvent> {
   if (USE_FAKE_API) {
-    fakeRecordTurn(conversationId, content);
-    yield* fakeStream(content);
+    const assistantId = fakeRecordTurn(conversationId, content);
+    yield* fakeStream(content, assistantId);
     return;
   }
   const res = await fetch(`${BASE}/conversations/${conversationId}/messages`, {
@@ -162,7 +163,7 @@ const FAKE_STEPS: StepEventData[] = [
   { step: "verifying", found: null, kept: null },
 ];
 
-async function* fakeStream(q: string): AsyncGenerator<StreamEvent> {
+async function* fakeStream(q: string, assistantId: string | null = null): AsyncGenerator<StreamEvent> {
   const rid = "fake-request";
   const lower = q.toLowerCase();
   const err = (code: ApiErrorBody["code"]): StreamEvent => ({ event: "error", data: { code, message: code, request_id: rid } });
@@ -181,18 +182,14 @@ async function* fakeStream(q: string): AsyncGenerator<StreamEvent> {
     yield { event: "step", data: ev };
     await pause(FAKE_STEP_DELAY_MS);
   }
-  const variant = lower.includes("eight")
-    ? { text: ANSWER_EIGHT, citations: CITATIONS_EIGHT, removed: 0 }
-    : lower.includes("removed")
-      ? { text: ANSWER_REMOVED, citations: CITATIONS_REMOVED, removed: 1 }
-      : { text: FAKE_ANSWER_TEXT, citations: FAKE_CITATIONS, removed: 0 };
+  const variant = fakeAnswerFor(q);
   for (const word of variant.text.split(/(?<=\s)/)) yield { event: "token", data: { text: word } };
   yield {
     event: "citations",
     data: { citations: variant.citations, removed_count: variant.removed, data_as_of: FAKE_PROVENANCE.data_as_of, credit: FAKE_PROVENANCE.credit, notice: FAKE_PROVENANCE.notice },
   };
   const shaped = lower.includes("upload");
-  yield { event: "done", data: { message_id: shaped ? FAKE_SHAPED_MESSAGE_ID : nextId("fake-msg"), from_cache: false, refused: false } };
+  yield { event: "done", data: { message_id: shaped ? FAKE_SHAPED_MESSAGE_ID : (assistantId ?? nextId("fake-msg")), from_cache: false, refused: false } };
 }
 
 // ---- Matters and history (PRD-v2 O11, section 4.2) ----------------------------------
@@ -218,6 +215,7 @@ export async function createMatter(title: string, kind: MatterKind): Promise<Mat
     const now = new Date().toISOString();
     const m: MatterOut = { id: nextId("fake-matter"), title: title.trim(), kind, status: "active", archived_at: null, created_at: now, updated_at: now, conversation_count: 0, document_count: 0 };
     fakeDb.matters.unshift(m);
+    persistFakeDb();
     return m;
   }
   return postJson<MatterOut>("/matters", { title, kind });
@@ -241,6 +239,7 @@ export async function updateMatter(id: string, change: { title?: string; status?
       m.archived_at = change.status === "archived" ? new Date().toISOString() : null;
       m.status = change.status;
     }
+    persistFakeDb();
     return withCounts(m);
   }
   return sendJson<MatterOut>("PATCH", `/matters/${encodeURIComponent(id)}`, change);
@@ -260,6 +259,7 @@ export async function deleteMatter(id: string, mode: MatterDeleteMode): Promise<
       fakeDb.conversations.forEach((c) => c.matter_id === id && (c.matter_id = null));
     }
     fakeDb.matters = fakeDb.matters.filter((m) => m.id !== id);
+    persistFakeDb();
     return { mode, documents_deleted: 0, conversations_deleted };
   }
   return sendJson<MatterDeleted>("DELETE", `/matters/${encodeURIComponent(id)}?mode=${mode}`);
@@ -270,6 +270,7 @@ export async function moveConversation(conversationId: string, matterId: string 
     const c = fakeDb.conversations.find((x) => x.id === conversationId);
     if (!c || (matterId && !fakeDb.matters.some((m) => m.id === matterId))) throw notFound();
     c.matter_id = matterId;
+    persistFakeDb();
     return c;
   }
   return sendJson<ConversationOut>("PATCH", `/conversations/${encodeURIComponent(conversationId)}`, { matter_id: matterId });
@@ -320,6 +321,7 @@ export async function shareMessage(messageId: string): Promise<ShareCreated> {
     const expires = new Date(now.getTime() + 30 * 86400_000).toISOString();
     const row = { id: nextId("fake-share"), message_id: messageId, token, created_at: now.toISOString(), expires_at: expires, revoked_at: null };
     fakeDb.shares.unshift(row);
+    persistFakeDb();
     return { id: row.id, token, path: `/s/${token}`, expires_at: expires };
   }
   return postJson<ShareCreated>(`/messages/${encodeURIComponent(messageId)}/share`, {});
@@ -335,6 +337,7 @@ export async function revokeShare(id: string): Promise<void> {
     const r = fakeDb.shares.find((x) => x.id === id && !x.revoked_at);
     if (!r) throw notFound();
     r.revoked_at = new Date().toISOString();
+    persistFakeDb();
     return;
   }
   await sendJson<{ ok: boolean }>("DELETE", `/share/${encodeURIComponent(id)}`);
@@ -345,7 +348,14 @@ export async function getShared(token: string): Promise<SharedAnswerOut> {
   if (USE_FAKE_API) {
     const r = fakeDb.shares.find((x) => x.token === token);
     if (!r || r.revoked_at || new Date(r.expires_at) < new Date()) throw notFound();
-    return { question: "What is bail?", text: FAKE_ANSWER_TEXT, citations: FAKE_CITATIONS, expires_at: r.expires_at, provenance: FAKE_PROVENANCE };
+    const stored = fakeStoredAnswer(r.message_id);
+    return {
+      question: stored?.question ?? "What is bail?",
+      text: stored?.answer.content ?? FAKE_ANSWER_TEXT,
+      citations: stored?.answer.citations ?? FAKE_CITATIONS,
+      expires_at: r.expires_at,
+      provenance: FAKE_PROVENANCE,
+    };
   }
   const res = await fetch(`${BASE}/s/${encodeURIComponent(token)}`, { cache: "no-store" });
   if (!res.ok) throw await failure(res);

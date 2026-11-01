@@ -2,7 +2,7 @@
 // matters screen can be clicked through with no backend. Labelled sample data. It lives
 // only in the page's memory; `resetFakeDb()` gives tests a clean copy.
 import type { ConversationDetail, ConversationOut, MatterOut, StoredMessage } from "@/lib/api/types";
-import { FAKE_ANSWER_TEXT, FAKE_CITATIONS, FAKE_PROVENANCE } from "@/lib/fake/data";
+import { FAKE_ANSWER_TEXT, FAKE_CITATIONS, FAKE_PROVENANCE, fakeAnswerFor } from "@/lib/fake/data";
 import { CONVERSATION_TITLES, LONG_MATTER_TITLE } from "@/lib/fake/fixtures";
 
 type Db = {
@@ -59,9 +59,36 @@ function seed(): Db {
   return db;
 }
 
-export let fakeDb: Db = seed();
+// Fake mode keeps its database in this browser's localStorage, so a second tab (for example
+// one opening a shared link) sees what the first tab made. Tests use the small database and
+// never touch localStorage. Every access is guarded: private windows throw.
+const KEY = "fake-db-v1";
+function load(): Db | null {
+  if (MINIMAL || typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(KEY);
+    return raw ? (JSON.parse(raw) as Db) : null;
+  } catch {
+    return null;
+  }
+}
+export function persistFakeDb() {
+  if (MINIMAL || typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(KEY, JSON.stringify(fakeDb));
+  } catch {
+    // storage full or blocked: the fake just stays in this tab's memory
+  }
+}
+
+export let fakeDb: Db = load() ?? seed();
 export const resetFakeDb = () => {
   fakeDb = seed();
+  try {
+    if (typeof window !== "undefined") window.localStorage.removeItem(KEY);
+  } catch {
+    // ignore
+  }
 };
 export const nextId = (p: string) => `${p}-${++fakeDb.seq}`;
 
@@ -74,15 +101,33 @@ export function fakeConversationDetail(id: string): ConversationDetail | null {
   return c ? { ...c, messages: fakeDb.messages[id] ?? [], provenance: FAKE_PROVENANCE } : null;
 }
 
-// Fake mode: remember a question and its sample answer so History can find it.
-export function fakeRecordTurn(conversationId: string, question: string) {
+// Fake mode: remember a question and its sample answer so History and Share can find it.
+// Returns the id of the stored answer (the done event carries it, as the real API does).
+export function fakeRecordTurn(conversationId: string, question: string): string | null {
+  const id = recordTurn(conversationId, question);
+  persistFakeDb();
+  return id;
+}
+function recordTurn(conversationId: string, question: string): string | null {
   const c = fakeDb.conversations.find((x) => x.id === conversationId);
-  if (!c) return;
+  if (!c) return null;
   c.title ??= question.slice(0, 80);
   c.message_count += 2;
+  const a = fakeAnswerFor(question);
   const list = (fakeDb.messages[conversationId] ??= []);
+  const assistantId = nextId("fake-msg");
   list.push(
     { id: nextId("fake-msg"), role: "user", content: question, from_cache: false, citations: [], created_at: NOW },
-    { id: nextId("fake-msg"), role: "assistant", content: FAKE_ANSWER_TEXT, from_cache: false, citations: FAKE_CITATIONS, created_at: NOW },
+    { id: assistantId, role: "assistant", content: a.text, from_cache: false, citations: a.citations, created_at: NOW },
   );
+  return assistantId;
+}
+
+// The stored answer behind a message id, with the question that led to it.
+export function fakeStoredAnswer(messageId: string) {
+  for (const list of Object.values(fakeDb.messages)) {
+    const i = list.findIndex((m) => m.id === messageId && m.role === "assistant");
+    if (i >= 0) return { question: [...list.slice(0, i)].reverse().find((m) => m.role === "user")?.content ?? "", answer: list[i] };
+  }
+  return null;
 }

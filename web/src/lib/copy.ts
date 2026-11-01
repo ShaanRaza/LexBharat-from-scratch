@@ -146,7 +146,7 @@ export const MATTER_DELETE_TITLE = (one: string) => `Delete this ${one.toLowerCa
 // true. The owner should settle the words.
 export const MATTER_DELETE_FAILED = "The matter was kept. One or more files could not be deleted, so nothing was removed.";
 export const HISTORY_TITLE = "History and search";
-export const HISTORY_SEARCH_PLACEHOLDER = "Search your own saved questions and answers";
+export const HISTORY_SEARCH_PLACEHOLDER = "Search your saved work";
 export const HISTORY_SEARCH = "Search";
 export const HISTORY_RECENT = "Recent conversations";
 export const HISTORY_NONE = "Nothing found in your saved work.";
