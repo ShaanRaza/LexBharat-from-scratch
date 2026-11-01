@@ -9,10 +9,12 @@ import os
 import re
 import subprocess
 import sys
+import uuid
 from pathlib import Path
 
 import pytest
 from sqlalchemy import create_engine, inspect, text
+from sqlalchemy.engine import make_url
 
 ROOT = Path(__file__).resolve().parents[2]
 EXPECTED = {
@@ -44,12 +46,29 @@ def test_no_password_or_judge_columns_anywhere():
         assert banned not in low
 
 
+@pytest.fixture
+def scratch_db_url():
+    """A brand-new empty database on the TEST_DATABASE_URL server, dropped afterwards.
+    The downgrade-to-base test works here, so it can never disturb other tests that
+    expect the main test database to be migrated (order never matters)."""
+    base = make_url(os.environ["TEST_DATABASE_URL"])
+    name = f"mig_{uuid.uuid4().hex[:10]}"
+    admin = create_engine(base.set(database="postgres"), isolation_level="AUTOCOMMIT")
+    with admin.connect() as c:
+        c.execute(text(f'CREATE DATABASE "{name}"'))
+    try:
+        yield base.set(database=name).render_as_string(hide_password=False)
+    finally:
+        with admin.connect() as c:
+            c.execute(text(f'DROP DATABASE IF EXISTS "{name}" WITH (FORCE)'))
+        admin.dispose()
+
+
 @pytest.mark.skipif(
     not os.environ.get("TEST_DATABASE_URL"), reason="TEST_DATABASE_URL not set"
 )
-def test_upgrade_downgrade_upgrade_on_real_postgres():
-    url = os.environ["TEST_DATABASE_URL"]
-    _alembic("downgrade", "base", url=url)
+def test_upgrade_downgrade_upgrade_on_real_postgres(scratch_db_url):
+    url = scratch_db_url
     _alembic("upgrade", "head", url=url)
     engine = create_engine(url)
     assert set(inspect(engine).get_table_names()) - {"alembic_version"} == EXPECTED
