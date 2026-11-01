@@ -1,15 +1,20 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
+import { AppProviders } from "@/components/AppProviders";
+import { config } from "@/lib/config";
 
-const jakarta = Plus_Jakarta_Sans({
-  variable: "--font-jakarta",
-  subsets: ["latin"],
-  weight: ["400", "600", "700", "800"],
+// The font file is self-hosted (src/fonts) so builds work offline and no
+// font name is written in code. The family name lives only in the file itself.
+const brandFont = localFont({
+  src: "../fonts/brand-sans.woff2",
+  variable: "--font-brand",
+  weight: "200 800",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: process.env.NEXT_PUBLIC_PRODUCT_NAME ?? "Legal research",
+  title: config.productName,
   description: "Legal research with verified citations",
 };
 
@@ -19,8 +24,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${jakarta.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="en" className={`${brandFont.variable} h-full antialiased`}>
+      <body className="min-h-full flex flex-col">
+        <AppProviders>{children}</AppProviders>
+      </body>
     </html>
   );
 }

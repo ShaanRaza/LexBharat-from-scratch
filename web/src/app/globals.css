@@ -1,21 +1,76 @@
 @import "tailwindcss";
 
+/*
+  DESIGN TOKENS - the ONLY file in web/ that may contain raw colours, font
+  names, sizes, spacing or radii. To reskin the site, edit this block.
+  Components use the names (bg-panel, text-muted, rounded-card ...), never values.
+*/
 @theme {
+  /* Colours (existing look: navy text, orange accent, warm panels) */
   --color-text: #0F1B33;
+  --color-muted: #55617A;
+  --color-page: #FFFFFF;
   --color-accent: #D9480F;
   --color-accent-hover: #B43A0A;
+  --color-on-accent: #FFFFFF;
   --color-panel: #FFF5EE;
   --color-tint: #FFE3D0;
   --color-line: #F3E1D4;
+  /* "Record found" tick */
   --color-verified: #1F7A4D;
+  --color-verified-tint: #E6F4EC;
+  /* "Not found" / "Not verified" / warning */
   --color-notfound: #B45309;
+  --color-notfound-tint: #FDF1DF;
+  /* Service errors */
+  --color-danger: #B42318;
+  --color-danger-tint: #FDECEA;
 
-  --font-sans: var(--font-jakarta), system-ui, sans-serif;
+  /* Fonts. --font-brand is set in layout.tsx from the self-hosted file. */
+  --font-sans: var(--font-brand), system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-weight-body: 400;
+  --font-weight-label: 600;
+  --font-weight-heading: 800;
+
+  /* Type sizes */
+  --text-label: 0.75rem;
+  --text-label--line-height: 1rem;
+  --text-small: 0.875rem;
+  --text-small--line-height: 1.375rem;
+  --text-body: 1rem;
+  --text-body--line-height: 1.75rem;
+  --text-lead: 1.125rem;
+  --text-lead--line-height: 1.75rem;
+  --text-title: 1.5rem;
+  --text-title--line-height: 2rem;
+  --text-display: 2.25rem;
+  --text-display--line-height: 2.75rem;
+
+  /* Radii */
+  --radius-control: 0.625rem;
+  --radius-card: 1rem;
+  --radius-pill: 9999px;
+
+  /* Layout sizes */
   --container-content: 1040px;
+  --container-reading: 44rem;
+  --container-sidebar: 16rem;
+  --spacing-topbar: 3.5rem;
+  --spacing-gutter: 1rem;
+
+  /* Light, thin shadow only (design doc: no heavy shadows) */
+  --shadow-card: 0 1px 2px rgb(15 27 51 / 0.06);
 }
 
 body {
-  background: #ffffff;
+  background: var(--color-page);
   color: var(--color-text);
   font-family: var(--font-sans);
+}
+
+/* A paragraph reached through a link like /cases/123#p12 is highlighted. */
+:target {
+  background: var(--color-tint);
+  scroll-margin-top: calc(var(--spacing-topbar) + 1rem);
 }
