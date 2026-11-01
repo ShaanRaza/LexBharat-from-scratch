@@ -11,6 +11,7 @@ export const PERSONAL_ADVICE_OPENER =
   "This tool cannot advise on your own situation. Please consult an advocate."; // NEEDS-OWNER (doc gives the meaning, not the sentence)
 
 export const VERIFICATION_LABEL = "Record found in dataset";
+export const UNCHECKED_LABEL = "Support not checked";
 export const PARTLY_LABEL = "Supports only partly";
 export const UNVERIFIED_NOTE = "One authority could not be verified and was removed.";
 export const CITATION_AS_RECORDED = "as recorded in the dataset";

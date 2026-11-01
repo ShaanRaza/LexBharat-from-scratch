@@ -22,7 +22,7 @@ describe("applyEvent", () => {
   it("ignores a second citations event", () => {
     let s = applyEvent(newAnswer("q"), { event: "citations", data: ce });
     s = applyEvent(s, { event: "citations", data: { ...ce, citations: [] } });
-    expect(s.citations?.citations).toHaveLength(2);
+    expect(s.citations?.citations).toHaveLength(3);
   });
   it("maps error codes to failure screens", () => {
     const e = (code: never) => failureFor({ code, message: "", request_id: "" });

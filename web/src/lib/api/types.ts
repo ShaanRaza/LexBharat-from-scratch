@@ -10,7 +10,7 @@ export type ErrorCode =
 export type ApiErrorBody = { code: ErrorCode; message: string; request_id: string };
 
 export type CitationKind = "judgment" | "act";
-export type CitationStatus = "verified" | "partly";
+export type CitationStatus = "verified" | "partly" | "unchecked";
 
 export type Citation = {
   source_id: string; // S1..S8

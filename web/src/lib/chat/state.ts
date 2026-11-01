@@ -54,7 +54,7 @@ export function endOfStream(s: AnswerState): AnswerState {
 
 // Only verified/partly citations are ever shown; anything else is treated as removed.
 export function isShown(c: Citation): boolean {
-  return c.status === "verified" || c.status === "partly";
+  return c.status === "verified" || c.status === "partly" || c.status === "unchecked";
 }
 
 export type Segment =

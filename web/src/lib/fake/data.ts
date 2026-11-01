@@ -10,7 +10,7 @@ export const FAKE_PROVENANCE: Provenance = {
 };
 
 export const FAKE_ANSWER_TEXT =
-  "Sample answer. Cheating and dishonestly inducing delivery of property is punished under section 420 of the Indian Penal Code [S1]. The Court discussed the ingredients of the offence in a sample judgment [S2].";
+  "Sample answer. Cheating and dishonestly inducing delivery of property is punished under section 420 of the Indian Penal Code [S1]. The Court discussed the ingredients of the offence in a sample judgment [S2]. A further sample point is not checked [S3].";
 
 export const FAKE_CITATIONS: Citation[] = [
   {
@@ -22,6 +22,11 @@ export const FAKE_CITATIONS: Citation[] = [
     source_id: "S2", kind: "judgment", anchor: "p12", act_slug: null, section: null,
     record_id: "sc-sample-001", title: "Sample v. Sample (judgment)",
     citation_string: "(2020) 1 SCC 1", url: "https://example.invalid/sample/sc-001.pdf", status: "partly",
+  },
+  {
+    source_id: "S3", kind: "judgment", anchor: "p13", act_slug: null, section: null,
+    record_id: "sc-sample-001", title: "Sample v. Sample (judgment)",
+    citation_string: "(2020) 1 SCC 1", url: "https://example.invalid/sample/sc-001.pdf", status: "unchecked",
   },
 ];
 
