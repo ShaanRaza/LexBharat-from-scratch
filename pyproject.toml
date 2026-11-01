@@ -19,6 +19,7 @@ dependencies = [
     "arq",
     "qdrant-client",
     "httpx",
+    "litellm",
 ]
 
 [project.optional-dependencies]
@@ -40,6 +41,12 @@ packages = ["api", "core", "adapters", "workers", "data"]
 [tool.ruff]
 line-length = 88
 target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "S", "BLE"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
