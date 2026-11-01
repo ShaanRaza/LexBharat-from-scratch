@@ -52,6 +52,7 @@ class Settings(BaseSettings):
     JEV_MODEL: str = "jev-latest"  # name from the API docs; not verified live
     JEV_TIMEOUT_MS: int = 800
     JEV_GATE_THRESHOLD: float = 0.6
+    JEV_CLAIM_THRESHOLD: float = 0.6  # below this, Jev 'supports' becomes 'partly'
     JEV_ENABLED_SCOPE: bool = False
     JEV_ENABLED_FILTERS: bool = False
     JEV_ENABLED_GATE: bool = False

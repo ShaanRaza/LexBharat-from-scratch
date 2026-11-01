@@ -20,6 +20,10 @@ What is confirmed from the TypeSafe docs (read 2026-11-01) and what is not:
   passage per request, so batching here is our reading of "ask all questions in one
   request"; nothing has run against the real service (no key yet).
 
+Known limits: the client is never closed (shutdown hook not written); gate calls from
+different users in the same event-loop tick share one request (no upload text is ever
+in it); JEV_TIMEOUT_MS (800) covers a whole batch incl. cold connection - unmeasured.
+
 Rules enforced here:
 - Upload text NEVER reaches Jev: any call flagged `uploads`, or any passage of kind
   "upload", raises before a request is built.
@@ -46,6 +50,14 @@ from core.contracts import (
 from core.settings import Settings
 
 log = logging.getLogger(__name__)
+_warned: set[str] = set()
+
+
+def _warn_once(msg: str) -> None:
+    if msg not in _warned:
+        _warned.add(msg)
+        log.warning(msg)
+
 
 MAX_QUESTIONS_PER_REQUEST = 255  # Choice option limit is 255; we also cap batch size
 
@@ -131,7 +143,7 @@ class JevClient:
         self._client = client
         self._choice = choice
         self._rate = _Coalescer(self._rate_batch)
-        self._claim = _Coalescer(self._claim_batch)
+        self._lock = asyncio.Lock()
         self.input_tokens = 0
         self.output_tokens = 0
         self.requests = 0
@@ -148,6 +160,7 @@ class JevClient:
             try:
                 from typesafe_sdk import Choice  # noqa: PLC0415
             except ImportError as e:
+                _warn_once("typesafe-sdk is not installed; Jev is unavailable")
                 raise DecisionUnavailable("typesafe-sdk is not installed") from e
             self._choice = Choice
         return self._choice(instructions=instructions, criteria=criteria)
@@ -156,12 +169,13 @@ class JevClient:
         """One Jev request. Any failure becomes DecisionUnavailable."""
         key = self._key()
         try:
-            if self._client is None:
-                from typesafe_sdk import AsyncTypeSafeClient  # noqa: PLC0415
+            async with self._lock:  # build the client once
+                if self._client is None:
+                    from typesafe_sdk import AsyncTypeSafeClient  # noqa: PLC0415
 
-                self._client = AsyncTypeSafeClient(
-                    api_key=key, timeout=self._s.JEV_TIMEOUT_MS / 1000
-                )
+                    self._client = AsyncTypeSafeClient(
+                        api_key=key, timeout=self._s.JEV_TIMEOUT_MS / 1000
+                    )
             resp = await self._client.system_one(
                 state=state, questions=questions, model=self._s.JEV_MODEL
             )
@@ -248,10 +262,13 @@ class JevClient:
     # --- job (c): claim support ---------------------------------------------------
     async def claim_support(self, sentence: str, passage: Passage) -> Support:
         self._refuse_upload(passage)
-        return await self._claim.submit((sentence, passage.text))
+        # One request per claim, NOT batched: batched answers are unverified and a
+        # wrong claim check changes a citation tick. Revisit once the live test
+        # shows batched == single answers.
+        return (await self._claim_batch([(sentence, passage.text)]))[0]
 
     async def _claim_batch(self, items: list[tuple[str, str]]) -> list[Support]:
-        threshold = self._s.JEV_GATE_THRESHOLD
+        threshold = self._s.JEV_CLAIM_THRESHOLD
         out: list[Support] = []
         for i in range(0, len(items), MAX_QUESTIONS_PER_REQUEST):
             chunk = items[i : i + MAX_QUESTIONS_PER_REQUEST]

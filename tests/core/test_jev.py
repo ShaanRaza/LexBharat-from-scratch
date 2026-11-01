@@ -62,15 +62,16 @@ async def test_each_passage_gets_its_own_answer_in_the_batch():
     assert [r for r, _ in out] == ["answers", "not_relevant", "not_relevant"]
 
 
-async def test_claims_are_one_request_and_weak_support_is_downgraded():
-    conf = {"i0": 0.95, "i1": 0.3}
-    c = FakeJevSDKClient(lambda n, q: ("supports", conf[n]))
-    j = jev(c)
-    a, b = await asyncio.gather(
-        j.claim_support("s0", P(0)), j.claim_support("s1", P(1))
-    )
-    assert len(c.calls) == 1
-    assert (a, b) == ("supports", "partly")  # 0.3 < JEV_GATE_THRESHOLD (0.6)
+async def test_claims_are_single_requests_and_weak_support_is_downgraded():
+    conf = {"i0": 0.95}
+    c = FakeJevSDKClient(lambda n, q: ("supports", conf.get(n, 0.3)))
+    j = jev(c, JEV_CLAIM_THRESHOLD=0.7)
+    a = await j.claim_support("s0", P(0))
+    assert a == "supports"
+    j2 = jev(FakeJevSDKClient(lambda n, q: ("supports", 0.5)), JEV_CLAIM_THRESHOLD=0.7)
+    assert await j2.claim_support("s1", P(1)) == "partly"
+    two = await asyncio.gather(j.claim_support("a", P(0)), j.claim_support("b", P(1)))
+    assert len(c.calls) == 3 and len(two) == 2  # never batched
 
 
 async def test_error_becomes_decision_unavailable():
