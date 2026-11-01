@@ -36,7 +36,9 @@ MEMORY_FULL_TURNS = 6
 
 # --- Vocabulary -------------------------------------------------------------------
 Outcome = Literal["answered", "not_found", "out_of_scope", "usage_limit", "error"]
-CitationStatus = Literal["verified", "partly"]  # unverified never exists past verify
+# "unchecked" = support not checked (Jev and Gemini both down): NO tick.
+# "partly" = a real "partly" rating. A failed citation is removed, never a status.
+CitationStatus = Literal["verified", "partly", "unchecked"]
 PassageKind = Literal["judgment", "act_section", "upload"]
 SafetyClass = Literal["normal", "personal_advice", "trick"]
 ScopeClass = Literal[
