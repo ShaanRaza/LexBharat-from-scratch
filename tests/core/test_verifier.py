@@ -9,7 +9,7 @@ from __future__ import annotations
 import dataclasses
 
 import pytest
-from conftest import ARNESH_TEXT, make_corpus, make_settings
+from core_helpers import ARNESH_TEXT, make_corpus, make_settings
 
 from adapters.jev import DecisionAdapter, FakeDecisionBackend
 from core.constants import (

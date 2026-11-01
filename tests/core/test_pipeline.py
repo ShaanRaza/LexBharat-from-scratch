@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import inspect
 
-from conftest import make_corpus, make_deps, source_id_for
+from core_helpers import make_corpus, make_deps, source_id_for
 
 from adapters.gemini import FakeLLM
 from adapters.jev import FakeDecisionBackend

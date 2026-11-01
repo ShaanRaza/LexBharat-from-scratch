@@ -1,0 +1,41 @@
+[
+  {
+    "record_id": "sample-sc-arnesh",
+    "source_type": "judgment",
+    "title": "Sample: Arnesh Kumar v. State of Bihar",
+    "court": "supreme_court",
+    "year": 2014,
+    "citation": "(2014) 8 SCC 273",
+    "pdf_url": "https://example.invalid/sample-arnesh.pdf",
+    "text": "The power to arrest must be exercised with care and caution. Arrest brings humiliation and curtails freedom. The police officer must justify the arrest."
+  },
+  {
+    "record_id": "sample-act-crpc-438",
+    "source_type": "act",
+    "title": "Sample: Code of Criminal Procedure, 1973, Section 438",
+    "act_name": "Code of Criminal Procedure, 1973",
+    "section_number": "438",
+    "source_url": "https://example.invalid/sample-crpc-438",
+    "text": "When any person has reason to believe that he may be arrested on an accusation of having committed a non-bailable offence, he may apply for a direction that he shall be released on bail in the event of arrest."
+  },
+  {
+    "record_id": "sample-sc-siddharam",
+    "source_type": "judgment",
+    "title": "Sample: Siddharam Satlingappa Mhetre v. State of Maharashtra",
+    "court": "supreme_court",
+    "year": 2011,
+    "citation": "(2011) 1 SCC 694",
+    "pdf_url": "https://example.invalid/sample-siddharam.pdf",
+    "text": "Anticipatory bail in economic offences needs the court to weigh the gravity of the offence and the stage of investigation before granting protection from arrest."
+  },
+  {
+    "record_id": "sample-sc-limitation",
+    "source_type": "judgment",
+    "title": "Sample: limitation for filing a civil suit",
+    "court": "supreme_court",
+    "year": 2005,
+    "citation": "(2005) 2 SCC 100",
+    "pdf_url": "https://example.invalid/sample-limitation.pdf",
+    "text": "A civil suit must be filed within the period of limitation prescribed by the Limitation Act. Delay can be condoned only on sufficient cause being shown."
+  }
+]

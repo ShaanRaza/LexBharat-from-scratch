@@ -6,7 +6,7 @@ import hashlib
 import hmac
 
 import pytest
-from conftest import make_corpus, make_settings
+from core_helpers import make_corpus, make_settings
 
 from adapters.cache import FakeCache
 from adapters.firebase import AuthUser, FakeAuth, InvalidToken
