@@ -1,7 +1,7 @@
 // Turns raw SSE text into typed events. Pure: no network, so it is easy to test.
 import type { StreamEvent } from "./types";
 
-const KNOWN = new Set(["token", "citations", "done", "error"]);
+const KNOWN = new Set(["step", "token", "citations", "done", "error"]);
 
 // Feed it chunks as they arrive; it keeps the unfinished tail between calls.
 export function createSseParser() {

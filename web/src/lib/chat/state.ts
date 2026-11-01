@@ -1,11 +1,13 @@
 // Chat logic with no styling in it. A reducer folds stream events into one answer.
-import type { ApiErrorBody, Citation, CitationsEvent, StreamEvent } from "@/lib/api/types";
+import type { ApiErrorBody, Citation, CitationsEvent, StepEventData, StreamEvent } from "@/lib/api/types";
 
 export type FailureKind = "notFound" | "outsideCoverage" | "usageLimit" | "serviceError";
 
 export type AnswerState = {
   question: string;
   text: string;
+  // Progress so far, in the order received. Names and counts only (never a citation).
+  steps: StepEventData[];
   // null until the single citations event arrives. While null no citation is shown.
   citations: CitationsEvent | null;
   status: "streaming" | "done" | "failed";
@@ -14,7 +16,7 @@ export type AnswerState = {
 };
 
 export function newAnswer(question: string): AnswerState {
-  return { question, text: "", citations: null, status: "streaming", failure: null, refused: false };
+  return { question, text: "", steps: [], citations: null, status: "streaming", failure: null, refused: false };
 }
 
 export function failureFor(e: ApiErrorBody): FailureKind {
@@ -28,6 +30,8 @@ export function failureFor(e: ApiErrorBody): FailureKind {
 
 export function applyEvent(s: AnswerState, ev: StreamEvent): AnswerState {
   switch (ev.event) {
+    case "step":
+      return { ...s, steps: [...s.steps, ev.data] };
     case "token":
       return { ...s, text: s.text + ev.data.text };
     case "citations":
@@ -42,14 +46,14 @@ export function applyEvent(s: AnswerState, ev: StreamEvent): AnswerState {
         failure: ev.data.refused && !s.failure ? (ev.data.reason === "out_of_scope" ? "outsideCoverage" : "notFound") : s.failure,
       };
     case "error":
-      return { ...s, status: "failed", failure: failureFor(ev.data), text: "" };
+      return { ...s, status: "failed", failure: failureFor(ev.data), text: "", steps: [] };
   }
 }
 
 // The stream ended. If no done/error arrived (dropped connection) the answer is a
 // service error and the partial text is cleared, same as an error event.
 export function endOfStream(s: AnswerState): AnswerState {
-  return s.status === "streaming" ? { ...s, status: "failed", failure: "serviceError", text: "" } : s;
+  return s.status === "streaming" ? { ...s, status: "failed", failure: "serviceError", text: "", steps: [] } : s;
 }
 
 // Only verified/partly citations are ever shown; anything else is treated as removed.

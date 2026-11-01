@@ -16,6 +16,7 @@ in production: ApiSettings refuses to load, and `assert_fake_allowed` checks aga
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from collections.abc import AsyncIterator, Awaitable, Callable
 from dataclasses import dataclass
@@ -27,8 +28,10 @@ from core.contracts import (
     AnswerProvenance,
     FinalEvent,
     Footer,
+    OnStep,
     PipelineRequest,
     PipelineResult,
+    StepEvent,
     StreamEvent,
     TextDelta,
     Turn,
@@ -39,7 +42,7 @@ from core.contracts import (
 
 log = logging.getLogger("api.bridge")
 
-Runner = Callable[[PipelineRequest], Awaitable[PipelineResult]]
+Runner = Callable[[PipelineRequest, OnStep], Awaitable[PipelineResult]]
 Streamer = Callable[[PipelineResult], AsyncIterator[StreamEvent]]
 
 
@@ -92,17 +95,36 @@ async def stream_answer(
     credit: str,
     request_id: str,
 ) -> AsyncIterator[tuple[str, dict]]:
-    """Yield (event_name, json_data) pairs. Never raises: failures become `error`."""
+    """Yield (event_name, json_data) pairs. Never raises: failures become `error`.
+
+    Order: `step` events while the pipeline runs (names and counts only), then, only
+    after the pipeline (including the verifier) has finished, token*, citations, done.
+    One channel: step events cannot arrive after the citations event."""
     holder: dict = {}
     _last_message.set(holder)  # the store (step 11) writes the saved message id here
+    steps: asyncio.Queue[StepEvent] = asyncio.Queue()
+    task = asyncio.ensure_future(runner(request, steps.put_nowait))
     try:
-        result = await runner(request)
+        while True:
+            getter = asyncio.ensure_future(steps.get())
+            await asyncio.wait({task, getter}, return_when=asyncio.FIRST_COMPLETED)
+            if getter.done():
+                yield "step", _step_wire(getter.result())
+                continue
+            getter.cancel()
+            break
+        while not steps.empty():  # events queued just before the pipeline finished
+            yield "step", _step_wire(steps.get_nowait())
+        result = task.result()
     except Exception:  # never echo exception text: it can hold document text
         log.exception("pipeline failed request_id=%s", request_id)
         yield _error(
             "service_unavailable", "We could not answer right now.", request_id
         )
         return
+    finally:
+        if not task.done():  # client went away: stop the work
+            task.cancel()
 
     if result.outcome == "usage_limit":
         yield _error("quota_exceeded", "You have reached your limit.", request_id)
@@ -140,6 +162,12 @@ async def stream_answer(
     yield "done", done.model_dump(mode="json")
 
 
+def _step_wire(ev: StepEvent) -> dict:
+    return s.StepEvent(step=ev.step, found=ev.found, kept=ev.kept).model_dump(
+        mode="json"
+    )
+
+
 def _error(code: str, message: str, request_id: str) -> tuple[str, dict]:
     return "error", s.ErrorEvent(
         code=code, message=message, request_id=request_id
@@ -174,7 +202,11 @@ class FakePipeline:
             data_as_of="2026-08-31", snapshot_version="v2026.08"
         )
 
-    async def run(self, request: PipelineRequest) -> FakeResult:
+    async def run(
+        self, request: PipelineRequest, on_step: OnStep | None = None
+    ) -> FakeResult:
+        if on_step is not None:
+            on_step(StepEvent("understanding"))
         if "boom" in request.message:
             raise RuntimeError("fake failure")
         if "limit" in request.message:
@@ -183,6 +215,14 @@ class FakePipeline:
             return FakeResult(
                 "out_of_scope", self.footer, message_key="out_of_scope:fake"
             )
+        if on_step is not None:  # the rest of the steps, like the real pipeline
+            for ev in (
+                StepEvent("searching"),
+                StepEvent("checking", found=23),
+                StepEvent("writing", found=23, kept=8),
+                StepEvent("verifying"),
+            ):
+                on_step(ev)
         cit = CoreCitation(
             source_id="S1", record_id="fake-record-1", status="verified",
             citation_string="(fake) 1 SCC 1", pdf_url="https://example.invalid/fake.pdf",

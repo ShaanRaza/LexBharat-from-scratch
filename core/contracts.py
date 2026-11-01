@@ -309,6 +309,39 @@ class FinalEvent:
 StreamEvent = TextDelta | FinalEvent
 
 
+# Live progress (PRD-v2 section 4.2). A step event says WHICH step is running and
+# HOW MANY passages there are. It can hold nothing else: no case name, citation,
+# quote, record id or any text. Verified citations still arrive only as the ONE
+# FinalEvent (step 10).
+StepName = Literal["understanding", "searching", "checking", "writing", "verifying"]
+STEP_NAMES: tuple[str, ...] = (
+    "understanding",  # steps 1-3: remember, rewrite, decide
+    "searching",  # steps 5-6: search, re-rank
+    "checking",  # step 7: gate (found = passages the search returned)
+    "writing",  # step 8: answer (found, kept = passages that survived the gate)
+    "verifying",  # step 9: the citation verifier is running
+)
+
+
+@dataclass(frozen=True)
+class StepEvent:
+    step: StepName
+    found: int | None = None
+    kept: int | None = None
+
+    def __post_init__(self) -> None:
+        if self.step not in STEP_NAMES:
+            raise ValueError(f"unknown step name: {self.step!r}")
+        for n in (self.found, self.kept):
+            # bool is an int subclass: refuse it too. Only counts, never text.
+            bad_type = isinstance(n, bool) or not isinstance(n, int)
+            if n is not None and (bad_type or n < 0):
+                raise ValueError("a step event carries counts only")
+
+
+OnStep = Callable[[StepEvent], None]
+
+
 # --- Interfaces for steps owned by another lane ---------------------------------
 class GateFn(Protocol):
     """Step 7, implemented in core/gate.py (trust)."""
@@ -371,11 +404,14 @@ class Deps:
     begin_run: Callable[[], Any] = lambda: None
 
 
-async def run_pipeline(request: PipelineRequest, deps: Deps) -> PipelineResult:
-    """THE entry point. Runs steps 1-9 and 11; use stream_events() for step 10."""
+async def run_pipeline(
+    request: PipelineRequest, deps: Deps, on_step: OnStep | None = None
+) -> PipelineResult:
+    """THE entry point. Runs steps 1-9 and 11; use stream_events() for step 10.
+    `on_step` (optional) is told which step is running, with counts only."""
     from core.pipeline import run_pipeline as _run  # lazy: avoids an import cycle
 
-    return await _run(request, deps)
+    return await _run(request, deps, on_step)
 
 
 def stream_events(result: PipelineResult) -> AsyncIterator[StreamEvent]:

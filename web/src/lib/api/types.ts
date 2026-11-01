@@ -33,7 +33,12 @@ export type CitationsEvent = {
   notice: string;
 };
 
+// Live progress: a step name and counts only. Never a case name, citation, quote or id.
+export type StepName = "understanding" | "searching" | "checking" | "writing" | "verifying";
+export type StepEventData = { step: StepName; found: number | null; kept: number | null };
+
 export type StreamEvent =
+  | { event: "step"; data: StepEventData }
   | { event: "token"; data: { text: string } }
   | { event: "citations"; data: CitationsEvent }
   | { event: "done"; data: { message_id: string | null; from_cache: boolean; refused: boolean; reason?: "out_of_scope" | "not_found" | null; message_key?: string | null } }

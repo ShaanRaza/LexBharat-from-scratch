@@ -18,8 +18,10 @@ from core.contracts import (
     AnswerProvenance,
     Deps,
     Footer,
+    OnStep,
     PipelineRequest,
     PipelineResult,
+    StepEvent,
 )
 from core.decide import decide
 from core.memory import remember
@@ -41,6 +43,17 @@ def _footer(deps: Deps, personal: bool = False) -> Footer:
     )
 
 
+def _emit(on_step: OnStep | None, event: StepEvent) -> None:
+    """Tell the caller which step is running. Never lets a progress problem touch the
+    answer: a failing callback is logged and ignored."""
+    if on_step is None:
+        return
+    try:
+        on_step(event)
+    except Exception:  # noqa: BLE001
+        log.warning("progress callback failed", exc_info=True)
+
+
 def provenance_for(request: PipelineRequest, passages) -> AnswerProvenance:
     """Step 11 input: did an upload or a matter fact shape this answer? Fails closed:
     an upload chat counts as upload-shaped even if no upload passage survived."""
@@ -51,12 +64,15 @@ def provenance_for(request: PipelineRequest, passages) -> AnswerProvenance:
     )
 
 
-async def _run(request: PipelineRequest, deps: Deps) -> PipelineResult:
+async def _run(
+    request: PipelineRequest, deps: Deps, on_step: OnStep | None = None
+) -> PipelineResult:
     footer = _footer(deps)
     # Usage check first: an over-limit user must cost no AI call (TESTING.md).
     # Trade-off: they also cannot read cached answers until the limit resets.
     if not await deps.usage.allowed(request.user_id, request.plan):
         return PipelineResult("usage_limit", None, footer, "usage_limit")
+    _emit(on_step, StepEvent("understanding"))
     memory = remember(request)  # 1
     rq = await rewrite(request, memory, deps)  # 2
     # 3: decisions run in parallel with the Voyage embedding
@@ -76,14 +92,21 @@ async def _run(request: PipelineRequest, deps: Deps) -> PipelineResult:
     hit = await cache_lookup(request, key, footer, deps)
     if hit is not None:
         return hit  # free: not counted against the limit
+    _emit(on_step, StepEvent("searching"))
     found = await search(request, rq, decision, vector, deps)  # 5
     top = await rerank(rq, found.passages, deps)  # 6
+    _emit(on_step, StepEvent("checking", found=len(found.passages)))
     gate = await deps.gate(rq, top, deps)  # 7
     if not gate.passages:
         return PipelineResult(
             "not_found", None, footer, "not_found", confidence=gate.confidence
         )
+    _emit(
+        on_step,
+        StepEvent("writing", found=len(found.passages), kept=len(gate.passages)),
+    )
     draft = await answer(request, rq, decision, gate, deps)  # 8
+    _emit(on_step, StepEvent("verifying"))
     verified = await deps.verify(draft, gate.passages, deps)  # 9
     if not verified.citations:
         # No surviving citation (all failed, or none were written): not an answer.
@@ -112,11 +135,13 @@ async def _run(request: PipelineRequest, deps: Deps) -> PipelineResult:
     return result
 
 
-async def run_pipeline(request: PipelineRequest, deps: Deps) -> PipelineResult:
+async def run_pipeline(
+    request: PipelineRequest, deps: Deps, on_step: OnStep | None = None
+) -> PipelineResult:
     """Steps 1-9 and 11. Any failure becomes outcome "error"; nothing partial."""
     deps.begin_run()  # Jev batches only calls from this run
     try:
-        result = await _run(request, deps)
+        result = await _run(request, deps, on_step)
     except Exception as e:  # noqa: BLE001
         log.exception("pipeline failed")
         result = PipelineResult(

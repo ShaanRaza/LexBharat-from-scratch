@@ -9,6 +9,10 @@ There are no `/auth/signup` or `/auth/login` routes: Firebase handles those in t
 
 Chat answers stream over **server-sent events (SSE)**:
 
+0. First, `step` events, one per pipeline stage as it starts: `understanding`, `searching`,
+   `checking` (with `found`), `writing` (with `found` and `kept`), `verifying`. A step event
+   is a **name and counts only**, never a case name, citation, quote or record id. They ride
+   the same stream (no second channel), so none can arrive after the first token.
 1. Text arrives **word by word**.
 2. Then **one** `citations` event, after verification — the full checked set, each with a
    tick or a warning mark, a link to `pdf_url` or `source_url`, the data-as-of date, the
@@ -16,7 +20,7 @@ Chat answers stream over **server-sent events (SSE)**:
 3. Then a `done` event.
 
 A user must **never** see a citation appear and then vanish. Nothing citation-shaped goes
-out before step 2.
+out before step 2, and step 2 is sent only after the verifier has finished.
 
 **As built (`api/schemas.py`):** `citations` carries `removed_count`, `data_as_of`, `credit`
 and `notice`. A refusal is a single `done` with `refused: true`, a `reason`

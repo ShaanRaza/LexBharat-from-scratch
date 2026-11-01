@@ -173,6 +173,16 @@ class TokenEvent(BaseModel):
     text: str
 
 
+class StepEvent(BaseModel):
+    """Live progress. Step name and counts ONLY: never a case name, citation, quote or
+    record id. Sent before any token; the checked citations still arrive as the one
+    `citations` event after verification."""
+
+    step: Literal["understanding", "searching", "checking", "writing", "verifying"]
+    found: int | None = Field(default=None, ge=0)
+    kept: int | None = Field(default=None, ge=0)
+
+
 class DoneEvent(BaseModel):
     message_id: UUID | None = None
     from_cache: bool = False
@@ -203,6 +213,11 @@ class SSETokenFrame(BaseModel):
     data: TokenEvent
 
 
+class SSEStepFrame(BaseModel):
+    event: Literal["step"] = "step"
+    data: StepEvent
+
+
 class SSECitationsFrame(BaseModel):
     event: Literal["citations"] = "citations"
     data: CitationsEvent
@@ -219,11 +234,12 @@ class SSEErrorFrame(BaseModel):
 
 
 SSEFrame = Annotated[
-    SSETokenFrame | SSECitationsFrame | SSEDoneFrame | SSEErrorFrame,
+    SSEStepFrame | SSETokenFrame | SSECitationsFrame | SSEDoneFrame | SSEErrorFrame,
     Field(discriminator="event"),
 ]
-"""Order on the wire: token* , citations (exactly once, unless refused or error),
-done. After an `error` event the stream ends with no `done`."""
+"""Order on the wire: step* , token* , citations (exactly once, unless refused or
+error), done. Step events all arrive before the first token. After an `error` event
+the stream ends with no `done`."""
 
 # ---------------------------------------------------------------- conversations
 

@@ -9,6 +9,8 @@ export const USE_FAKE_API = process.env.NEXT_PUBLIC_USE_FAKE_API === "true";
 if (USE_FAKE_API && process.env.NODE_ENV === "production") {
   throw new Error("NEXT_PUBLIC_USE_FAKE_API must not be true in production");
 }
+// Fake mode only: how long each progress step is shown, so the panel can be seen.
+export const FAKE_STEP_DELAY_MS = Number(process.env.NEXT_PUBLIC_FAKE_STEP_DELAY_MS ?? 120);
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 // Frozen snapshot label (CLAUDE.md section 1). Shown on every page.

@@ -19,8 +19,8 @@ class RealPipeline:
     def __init__(self, deps: Deps):
         self.deps = deps
 
-    async def run(self, request):
-        return await run_pipeline(request, self.deps)
+    async def run(self, request, on_step=None):
+        return await run_pipeline(request, self.deps, on_step)
 
     def stream(self, result):
         return stream_events(result)

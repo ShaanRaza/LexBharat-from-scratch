@@ -4,5 +4,5 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   resolve: { tsconfigPaths: true },
-  test: { env: { NEXT_PUBLIC_USE_FAKE_API: "true" }, environment: "jsdom", setupFiles: ["./vitest.setup.ts"], globals: true },
+  test: { env: { NEXT_PUBLIC_USE_FAKE_API: "true", NEXT_PUBLIC_FAKE_STEP_DELAY_MS: "0" }, environment: "jsdom", setupFiles: ["./vitest.setup.ts"], globals: true },
 });

@@ -65,3 +65,14 @@ export const STATS_DESCRIPTIVE_NOTE =
 // Plain numbers, never credits (UX-COPY "Copy rules").
 export const ANSWERS_LEFT = (n: number) => `${n} research ${n === 1 ? "answer" : "answers"} left this month`;
 export const SAMPLE_LABEL = "Sample";
+
+// Live progress panel (PRD-v2 section 4.2). Plain status words, not legal wording.
+export const PROGRESS_LABELS = {
+  understanding: "Understanding your question",
+  searching: "Searching",
+  checking: "Checking sources",
+  writing: "Writing",
+  verifying: "Verifying citations",
+} as const;
+export const PROGRESS_COUNTS = (found: number | null, kept: number | null) =>
+  found === null ? "" : kept === null ? `${found} passages found` : `${found} passages found, ${kept} kept`;

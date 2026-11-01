@@ -1,9 +1,9 @@
 // The ONLY file in web/ that talks to the backend (CLAUDE.md section 2 rule 3).
 // Fake mode (NEXT_PUBLIC_USE_FAKE_API=true, the default) returns canned data.
-import { API_BASE_URL, USE_FAKE_API } from "@/lib/config";
+import { API_BASE_URL, FAKE_STEP_DELAY_MS, USE_FAKE_API } from "@/lib/config";
 import { FAKE_ANSWER_TEXT, FAKE_CASE, FAKE_CITATIONS, FAKE_ME, FAKE_PROVENANCE, FAKE_SECTIONS, FAKE_STATS } from "@/lib/fake/data";
 import { createSseParser } from "./sse";
-import type { ApiErrorBody, CaseOut, ConsentIn, MeOut, SectionOut, StatsOut, StreamEvent } from "./types";
+import type { ApiErrorBody, CaseOut, ConsentIn, MeOut, SectionOut, StatsOut, StepEventData, StreamEvent } from "./types";
 
 const BASE = `${API_BASE_URL}/api/v1`;
 
@@ -112,6 +112,15 @@ export async function* askQuestion(conversationId: string, content: string): Asy
 
 // Fake mode: typing "limit", "nothing", "highcourt" or "fail" in the question
 // triggers the failure screens so they can be seen without a backend.
+const pause = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+const FAKE_STEPS: StepEventData[] = [
+  { step: "understanding", found: null, kept: null },
+  { step: "searching", found: null, kept: null },
+  { step: "checking", found: 23, kept: null },
+  { step: "writing", found: 23, kept: 8 },
+  { step: "verifying", found: null, kept: null },
+];
+
 async function* fakeStream(q: string): AsyncGenerator<StreamEvent> {
   const rid = "fake-request";
   const lower = q.toLowerCase();
@@ -120,6 +129,10 @@ async function* fakeStream(q: string): AsyncGenerator<StreamEvent> {
   if (lower.includes("highcourt")) return yield err("out_of_scope");
   if (lower.includes("nothing")) return yield err("not_found_in_dataset");
   if (lower.includes("fail")) return yield err("service_unavailable");
+  for (const ev of FAKE_STEPS) {
+    yield { event: "step", data: ev };
+    await pause(FAKE_STEP_DELAY_MS);
+  }
   for (const word of FAKE_ANSWER_TEXT.split(/(?<=\s)/)) yield { event: "token", data: { text: word } };
   yield {
     event: "citations",
