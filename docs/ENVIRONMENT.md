@@ -24,7 +24,7 @@ hard-code either string.**
 | Google / Gemini | `GEMINI_API_KEY` | **Paid tier only** |
 | Voyage | `VOYAGE_API_KEY`, `VOYAGE_EMBED_MODEL`, `VOYAGE_RERANK_MODEL` | voyage-4 must match the stored vectors |
 | Jev | `JEV_API_KEY`, `JEV_ENABLED_SCOPE`, `JEV_ENABLED_FILTERS`, `JEV_ENABLED_GATE`, `JEV_ENABLED_CLAIM`, `JEV_ENABLED_SAFETY`, `JEV_TIMEOUT_MS`, `JEV_GATE_THRESHOLD` | **One on/off switch per use**, so one can be turned off without touching the others. Timeout 800 ms; threshold starts at 0.6 |
-| Qdrant | `QDRANT_URL`, `QDRANT_API_KEY`, `QDRANT_COLLECTION`, `QDRANT_UPLOADS_COLLECTION` | Never exposed to the internet |
+| Qdrant | `QDRANT_URL`, `QDRANT_API_KEY`, `QDRANT_UPLOADS_COLLECTION` | Never exposed to the internet |
 | PostgreSQL | `DATABASE_URL` | Alembic migrations only |
 | Redis | `REDIS_URL`, `ANSWER_CACHE_TTL_DAYS` | Cache TTL 7 days |
 | S3 | `AWS_REGION`, `S3_BUCKET_UPLOADS`, `S3_BUCKET_BACKUPS`, `S3_KMS_KEY_ID` | Mumbai, encrypted |
@@ -49,3 +49,15 @@ hard-code either string.**
 - Never commit a real key. `.env.example` carries **names only**.
 - Never print a secret in a log line, an error message, a Langfuse trace or a Sentry report.
 - Rotate anything that reaches a chat window, a screenshot or a commit.
+
+
+## API and Docker Compose only
+
+These are read by `api/config.py` and `infra/docker-compose.yml`, not by `core/settings.py`, so they are not listed in `.env.example`:
+
+| Name | What it does |
+|---|---|
+| `APP_ENV` | API environment. Defaults to `production`. The fake pipeline needs `development` or `test` **and** `ENVIRONMENT` not `production` |
+| `POSTGRES_PASSWORD` | **Required** by Docker Compose (no default). Set it in your shell or `.env` before `docker compose up` |
+| `WEB_ORIGIN` | The website's address, for CORS |
+| `FAKE_PIPELINE` | Canned answers for demos. Refused in production |

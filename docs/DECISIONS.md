@@ -112,7 +112,7 @@ touch the trust promise or what users see.
 | A7 | core | Older conversation turns fold into the summary by truncation, not an LLM call | An LLM summary per turn | Cost; revisit with real use |
 | A8 | core | Contracts are stdlib dataclasses; platform maps them to its own schemas | Pydantic in `core/` | Keeps `core/` independent of the API |
 | A9 | core | Year-range filters applied in Python after search; exact section and case-number lookups use payload filters | Qdrant range filters | Simplest first version; measure later |
-| A10 | trust | **OWNER.** Jev and Gemini both down on check 4 gives `partly`, never `verified`, citation kept | Removing every citation during an outage | An outage must not wipe all citations; checks 1-3 still run and still remove |
+| A10 | trust | **OWNER-APPROVED (1 Nov 2026).** Jev and Gemini both down on check 4 gives status `unchecked`, shown as **"Support not checked" with no tick** (not `partly`); checks 1-3 still run and still remove; `partly` is kept only for a real Jev/Gemini "partly" rating; the weakest status wins when a source is cited twice | `partly` during an outage; removing every citation | An outage must not wipe all citations, and `partly` looks like a checked-but-weak result |
 | A11 | trust | A sentence whose only citations all fail is dropped, not left uncited | Leaving an uncited claim | Every claim carries a verified citation |
 | A12 | trust | Unbalanced or unpairable quote marks fail closed (citation removed as `quote_not_found`); every quote anywhere in the answer must appear in a retrieved passage | Guessing what was quoted | A quote that cannot be matched cannot be trusted |
 | A13 | trust | Gate with the decision adapter unavailable uses the re-rank score against the same 0.6 threshold | Pass-through or refuse-all | Pass-through weakens the gate |
@@ -129,11 +129,13 @@ touch the trust promise or what users see.
 | A24 | web | A stream that ends without `done` is a service error and the partial text is cleared | Leaving partial text | No answer without citations |
 | A25 | web | **OWNER.** Case titles are shown nowhere (they are party names, CLAUDE.md §6); a judgment is named by its stored citation string, else case number, else "Supreme Court judgment, year". API also drops judgment titles | Showing the title | Reversible in `citationName()` and `judgmentHeading()` |
 | A26 | web | Client is hand-written from `api/schemas.py` until `/openapi.json` generation exists | Generated client | No generator wired yet; CLAUDE.md §2 rule 3 says generate later |
+| A28 | core | One corpus setting, `CORPUS_COLLECTION`; blank values in `.env` mean unset (`env_ignore_empty`); `SEAL_KEY` has no default and every entry point (API, worker) calls `assert_seal_key_configured()` | A second `QDRANT_COLLECTION` setting | Two names for one collection can drift; a blank number must not crash the app |
+| A29 | platform | `POSTGRES_PASSWORD` is required in compose (no default); CI runs the web tests | A default password | A default must not be usable in production |
 | A27 | lead | Added `pydantic>=2`, `litellm`, ruff `S`/`BLE` security rules and `pythonpath` to `pyproject.toml`; `SEAL_KEY`, `DATA_CREDIT`, `ENVIRONMENT` names to `.env.example` | n/a | Boilerplate |
 
 ### Needs the owner (collected from the team)
 
-- A1, A10, A14, A25 above.
+- A1, A14, A25 above (A10 is owner-approved).
 - Wording shown to users: usage-limit, service-error and personal-advice-opener sentences, the removal note, the consent text and notice version are **placeholders** (marked `NEEDS-OWNER` in `web/src/lib/copy.ts`). `docs/UX-COPY.md` describes but does not quote them.
 - What `cases.title` holds, and whether it may ever be shown.
 - Upgrade Next.js 16.4.0? `npm run build` prints a known-vulnerability notice and alternates between passing and failing; nobody ran the upgrade.
