@@ -74,6 +74,17 @@ async def _run(request: PipelineRequest, deps: Deps) -> PipelineResult:
         )
     draft = await answer(request, rq, decision, gate, deps)  # 8
     verified = await deps.verify(draft, gate.passages, deps)  # 9
+    if not verified.citations and verified.removed:
+        # Every citation failed: what is left is only the removal note. Not an answer.
+        # (verify() already wrote the removals to invented_citation_log.)
+        return PipelineResult(
+            "not_found",
+            None,
+            footer,
+            "not_found",
+            confidence=gate.confidence,
+            removed=verified.removed,
+        )
     result = PipelineResult(
         "answered",
         verified,

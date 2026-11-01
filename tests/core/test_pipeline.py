@@ -231,3 +231,13 @@ async def test_model_follows_plan_from_config(settings, store):
         PipelineRequest("u1", "Tell me about " + QUERY, plan="student"), deps
     )
     assert res.model == settings.MODEL_STUDENT
+
+
+async def test_all_citations_failed_returns_not_found_but_logs(settings, store):
+    deps = deps_for(
+        settings, store, llm=scripted(lambda w: "A claim from memory [S9].")
+    )
+    res = await run_pipeline(PipelineRequest("u1", "Tell me about " + QUERY), deps)
+    assert res.outcome == "not_found" and res.answer is None and not res.counted
+    assert res.removed and deps.citation_log.rows
+    assert not deps.cache.data and deps.usage.counts == {}
