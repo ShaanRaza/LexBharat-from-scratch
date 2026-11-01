@@ -390,6 +390,7 @@ things expected to break first on a 16 GB server.
 | How does verification work in detail? | [`docs/CITATION-VERIFIER.md`](docs/CITATION-VERIFIER.md) |
 | **What exactly does the user see when something fails?** | [`docs/UX-COPY.md`](docs/UX-COPY.md) |
 | What do I build next? | [`docs/BUILD-ORDER.md`](docs/BUILD-ORDER.md) |
+| What features are planned after the P0 core? | [`docs/FEATURES-PLAN.md`](docs/FEATURES-PLAN.md) |
 | When does this ship? | [`docs/ROADMAP.md`](docs/ROADMAP.md) |
 | What are we measuring, and what gates launch? | [`docs/METRICS.md`](docs/METRICS.md) |
 | What could go wrong? | [`docs/RISKS.md`](docs/RISKS.md) |
