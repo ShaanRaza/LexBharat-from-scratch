@@ -35,9 +35,10 @@ file. Nothing here promotes an Estimate to a fact.
 | O4 | Orchestration inside the product is allowed for branching features only, with the verifier and gate always running afterwards, outside the agents' control | 1 Nov 2026 | **Decided** (see CLAUDE.md section 7) |
 | O5 | Outcome **prediction** is not built. Outcome statistics stay descriptive counts | 2 Nov 2026 | **Decided** (CLAUDE.md hard rule; the original PRD said "ship with warnings, or skip") |
 | O6 | High Courts: add Bombay, Telangana, Kerala after the Supreme Court side passes the launch gate. Data preparation may start now | proposed | **Open** (owner to confirm; default shown) |
-| O7 | Acts coverage: serve **all of `acts_india`** (about 22,264 acts, 1,098,577 points) or only acts with `act_status` filled (about 74,509 points, 1,568 acts) | | **Open, important.** See section 3, row 7 |
-| O8 | Final product name | | Open (trademark search first; the PRD recommends Praman) |
+| O7 | Acts coverage: **serve what the dataset actually holds, and say exactly what that is.** The owner has only what is on her drive and believes many Acts may be missing. So: (1) measure what is there, by Act, jurisdiction and instrument type; (2) publish that as a coverage page; (3) when a lookup finds nothing, say "not in our dataset", never "does not exist"; (4) the coverage message names only what the measurement shows. Which Acts are in is a measurement, not a promise | 2 Nov 2026 | **Decided** (the measurement itself is still to do; see section 3, row 7) |
+| O8 | Product name: **LexBharat** (replaces the working name KanoonBuddy; Praman is dropped). A trademark search with IP India must still be done **before** any domain, logo or brand spend | 2 Nov 2026 | **Decided** (trademark search pending) |
 | O9 | GST: prices shown with or without GST | | Open (accountant) |
+| O10 | Pricing: decided later. ₹199, ₹499 and ₹299 stay hypotheses. Prices and limits live in config, never in code, so billing can be built and tested with placeholder plans | 2 Nov 2026 | **Deferred by the owner** |
 
 ## 3. Facts in the original PRD that are wrong, changed or newly known
 
@@ -49,7 +50,7 @@ file. Nothing here promotes an Estimate to a fact.
 | 4 | Court field name unknown | Select English Supreme Court with `court = "Supreme Court of India"`. `language_code` is mostly empty and uses upper-case `EN`; do not filter on it | Reported |
 | 5 | Keyword search works on all `acts_india` points | **19,835 of 74,509** Central Act points (26.6%) have sparse vectors that do not match the encoder, so keyword search silently misses them. A repair script exists (`data/sparse_fix.py`) and has **not** been run on live data | Measured (full scan of those points), reported |
 | 6 | Gemini 2.5 Flash-Lite for the free plan | Retired for new accounts. Config now uses `gemini/gemini-3.5-flash-lite` (decision A36). Model names stay in config | Checked live, 2 Nov 2026 |
-| 7 | v1 serves `acts_india` (22,264 acts) and the failure message says "central and state Acts and regulations" | The repo's data copy plan takes **74,509 Central Act points**, which almost equals the **74,484** rows with `act_status` filled. That is about 7% of the 1,098,577 `acts_india` points. Either the narrowing was deliberate or the copy leaves out state Acts and regulators that the PRD counts as v1. The 308-point gap between Qdrant and parquet is also unexplained | **Needs verification** (decision O7). Until settled, do not change the coverage message in either direction |
+| 7 | v1 serves `acts_india` (22,264 acts) and the failure message says "central and state Acts and regulations" | The repo's data copy plan takes **74,509 Central Act points**, which almost equals the **74,484** rows with `act_status` filled. That is about 7% of the 1,098,577 `acts_india` points. Either the narrowing was deliberate or the copy leaves out state Acts and regulators that the PRD counts as v1. The 308-point gap between Qdrant and parquet is also unexplained | **Decided (O7): serve what the data holds.** To do: count Acts by jurisdiction and instrument type from the legislation parquet files and from `acts_india`, and explain the 308-point gap. Until that count exists, do not change the coverage message in either direction |
 | 8 | Server needs 42 to 55 GB of vectors | Recalculated from item 2: about (371,159 + up to 1,098,577) points x about 13.5 KB is roughly **20 GB** of disk and about **1.5 to 2 GB** of memory with scalar quantization if all of `acts_india` is served | Estimate (PRD's own per-point rule applied to the reported counts) |
 | 9 | Failure state "the retrieved sources are shown with links but no written answer" | Not yet built: the API sends only an error event. See UX-COPY and decision A40 | Open |
 
@@ -85,6 +86,7 @@ built before launch; switched on only when its own gate (right-hand column) pass
 | **Saved answers, folders and notes** (new) | Launch | Lawyers keep research for weeks |
 | **Export an answer to Word or PDF with citations intact** (new) | Launch | The citation string is copied exactly as recorded |
 | **Onboarding, empty states, help centre, support inbox** (new) | Launch | |
+| **Coverage page** (new): every Act and regulator in the dataset with its section count, which courts are covered, the data-as-of date | Launch | Built from measured counts only; no category listed that the data does not hold (O7) |
 | Upload and chat (OCR, per-user isolation, hard delete) | Launch-switch | Advocate's written opinion; Voyage's written no-training and retention terms; interviews show advocates would upload; virus scan and injection tests pass |
 | **Drafting from templates** (first list of 20) | Launch-switch | Template wording written or signed off by the advocate advisor; drafts that cite law go through the verifier |
 | **Review and compare drafts** | Launch-switch | Risk review flags are labelled as information, not advice; advocate samples 20 outputs |
@@ -230,17 +232,20 @@ stands: time build steps 1 and 2, then re-plan.
 
 Owner decisions O6 to O9 above, and:
 
-- Which of the two coverage statements is true for Acts (row 7 of section 3).
+- The exact coverage sentence shown to users (the owner's wording). It may name only what the measured coverage table shows (O7). Suggested shape, for approval: "LexBharat covers Supreme Court judgments and the Acts and regulations listed on our coverage page. It does not include High Courts, district courts, tribunals, or anything after the data-as-of date."
 - Wording shown to users, including the two not-legal-advice sentences, the removal note,
   the consent text and the stats and sign-in text (placeholders marked `NEEDS-OWNER`).
 - Retention periods and what `DELETE /me` keeps (counsel).
 - What `cases.title` holds and whether it may ever be shown.
 - The pass rule for the 50-judgment Supreme Court hand check (agree it with the advocate *before* checking).
 - Upload size and page limits; upload auto-delete period (advocate's opinion).
-- Final prices: ₹199 and ₹499 are hypotheses; the website design doc's ₹799 is a labelled sample.
+- Final prices: deferred by the owner (O10). ₹199 and ₹499 are hypotheses; the website design doc's ₹799 is a labelled sample.
 
 ## 11. Change log
 
+- **2 Nov 2026 (later):** O7 decided (serve what the data holds, with a public coverage
+  page); O8 decided (name is LexBharat); O10 added (pricing deferred). "KanoonBuddy" in
+  this file and the original PDFs means the product now called LexBharat.
 - **2 Nov 2026:** first revision. Widened v1 (O1); recorded owner decisions O1 to O9;
   corrected nine facts (section 3); added production, safety, legal and quality
   requirements (section 5); added the buy list (section 6); replaced the launch gate with

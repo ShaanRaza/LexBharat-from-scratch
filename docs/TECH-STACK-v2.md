@@ -89,7 +89,7 @@ given. The author of this file re-ran none of it.
 | `acts_india` sparse vectors | assumed fine | 19,835 of 74,509 Central Act points do not match the encoder (Measured, full scan of those points). Repair script `data/sparse_fix.py` (`plan`, `apply --confirm`, `restore`), **not yet run on live data**. Whether the other `acts_india` points are affected is **unknown** |
 | Dense vectors | all voyage-4 | judgment chunk = voyage-4 (cosine 1.0000); one Central Act chunk = voyage-4-large (0.9994). One chunk each only |
 | Payload indexes | assumed | **none exist.** Filtered scans on unindexed fields over the 11.8M-point collection time out. Indexes on `court`, `jurisdiction`, `section_number`, `act_status` and any other filter field are mandatory before real use |
-| Acts scope | `acts_india`, 1,098,577 points | the working copy takes only 74,509 Central Act points (decision O7 in PRD-v2). If all of `acts_india` is served, the copy and the repair script must cover it |
+| Acts scope | `acts_india`, 1,098,577 points | **Decided (O7): serve what the data holds.** The working copy so far takes only 74,509 Central Act points. After it finishes, a second job copies the rest of `acts_india` into the same collection (owner's go needed; about 15 GB read from the slow drive, Estimate). A coverage table (Act, jurisdiction, instrument type, section count) is measured from the parquet files and drives the public coverage page |
 
 **Rules that follow (new, binding on core and platform lanes):**
 
@@ -231,7 +231,7 @@ monthly total to anyone until a quote-based table replaces this section.**
 
 | Decision | Options | Working choice | What settles it |
 |---|---|---|---|
-| Acts scope (O7) | all of `acts_india`, or acts with status only | undecided | Count acts by jurisdiction in `acts_india`; owner decides |
+| Acts scope (O7) | all of `acts_india`, or acts with status only | **Decided: serve what the data holds** | Count acts by jurisdiction and instrument type; second copy job for the rest of `acts_india` |
 | Embedding model per collection | voyage-4, voyage-4-large, mixed | per-collection setting, value pending | Check 1 and check 2 |
 | Sparse repair for `acts_india` | repair, or rebuild from text | repair on a copy first | Rehearsal results; owner's go |
 | Managed database size and Multi-AZ | single zone with backups, or two zones | single zone | Quote; downtime tolerance |

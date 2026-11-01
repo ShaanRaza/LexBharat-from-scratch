@@ -10,7 +10,8 @@ should fix this file.
 
 ## 1. What this is
 
-**KanoonBuddy** (working name; entity **LexBharat**) is an AI legal research tool for
+**LexBharat** (final name, decided 2 Nov 2026; older docs and the original PDFs still say
+"KanoonBuddy", which means the same product; the trademark search is still pending) is an AI legal research tool for
 Indian lawyers and law students. A user asks a legal question in plain language and gets
 a short plain answer where **every claim carries a citation that has been mechanically
 verified against the dataset**.
@@ -27,7 +28,7 @@ wins. Summary:
 
 | In v1 (built before public launch) | Later |
 |---|---|
-| Supreme Court judgments; `acts_india` (which part: **open decision O7**) | High Courts: Bombay, Telangana, Kerala (after the launch gate; data prep may start now) |
+| Supreme Court judgments; `acts_india` (whatever the data holds, **decision O7**: measured and shown on a coverage page, never over-claimed) | High Courts: Bombay, Telangana, Kerala (after the launch gate; data prep may start now) |
 | Research chat with verified citations; Act + section lookup (free, public) | Counter-arguments, moot court, study buddy (branching features, after the gate) |
 | Plans, billing, accounts, consents, delete and export, feedback, admin page | Hindi (after its tests pass) |
 | Judgment reader, talk with a single judgment, saved answers, export to Word/PDF | "Still good law?" signal (research item, not promised) |
@@ -44,9 +45,10 @@ stats page and Act page shows its **data-as-of date**.
 
 ### Naming — everything is a placeholder
 
-The product name, the collection name `kanoon_v1` and the folder name `kanoonbuddy/` are
-**all placeholders**, pending a trademark search. Each lives in **one config value**
+The product name is **LexBharat** (decided). The collection name `kanoon_v1` and the folder
+name `kanoonbuddy/` are internal placeholders. Each lives in **one config value**
 (`PRODUCT_NAME`, `CORPUS_COLLECTION`), so renaming is a config change, not a code change.
+Do not rename the collection while the data copy is running.
 
 - **Never hard-code a product or collection name.** Read it from config.
 - **Prefer neutral internal names in anything new** — `research_v1`, not a brand word.
