@@ -68,13 +68,18 @@ async def ask(
 ):
     app = request.app
     repo = app.state.repo
-    if await repo.get_conversation(user.id, conv_id) is None:
-        raise ApiError(404, "not_found", "Conversation not found.")
-    await repo.add_user_message(conv_id, body.content)
-    turns, summary = await repo.history(conv_id)
     pipe = app.state.pipeline
-    if pipe is None:
+    if pipe is None:  # check first so a 503 does not store the user's message
         raise ApiError(503, "service_unavailable", "Answers are unavailable right now.")
+    conv = await repo.get_conversation(user.id, conv_id)
+    if conv is None:
+        raise ApiError(404, "not_found", "Conversation not found.")
+    if conv.get("document_id"):  # upload chat is not wired to core yet
+        raise ApiError(403, "feature_disabled", "Uploads are not available yet.")
+    qid = await repo.add_user_message(user.id, conv_id, body.content)
+    if qid is None:
+        raise ApiError(404, "not_found", "Conversation not found.")
+    turns, summary = await repo.history(user.id, conv_id, qid)
     req = bridge.build_request(
         user.id, user.plan, conv_id, body.content, turns, summary
     )

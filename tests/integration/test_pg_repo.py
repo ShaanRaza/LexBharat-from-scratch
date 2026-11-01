@@ -29,7 +29,9 @@ async def test_conversation_save_isolation_usage_and_log(repo):
     assert (await repo.upsert_user("uid-a", None, None))["id"] == a["id"]
 
     conv = await repo.create_conversation(a["id"], "research", None)
-    await repo.add_user_message(conv["id"], "Q?")
+    qid = await repo.add_user_message(a["id"], conv["id"], "Q?")
+    assert await repo.add_user_message(b["id"], conv["id"], "evil") is None
+    assert await repo.history(b["id"], conv["id"], qid) == ([], "")
     assert await repo.get_conversation(b["id"], conv["id"]) is None  # isolation
 
     cit = SimpleNamespace(source_id="S1", record_id="r1", status="verified")
@@ -41,6 +43,9 @@ async def test_conversation_save_isolation_usage_and_log(repo):
     got = await repo.get_conversation(a["id"], conv["id"])
     assert [m["role"] for m in got["messages"]] == ["user", "assistant"]
     assert got["message_count"] == 2
+    # Bob's save into Alice's conversation writes nothing.
+    await repo.save(PipelineRequest(b["id"], "x", conv["id"]), result)
+    assert len((await repo.get_conversation(a["id"], conv["id"]))["messages"]) == 2
 
     assert await repo.allowed(a["id"], "free") is True
     await repo.count_one(a["id"])

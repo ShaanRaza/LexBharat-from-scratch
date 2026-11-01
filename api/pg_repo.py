@@ -131,7 +131,7 @@ class PgRepo:
                 {
                     "source_id": s["source_id"], "record_id": s["record_id"],
                     "kind": "act" if s["is_act"] else "judgment",
-                    "title": s["title"], "citation_string": s["citation_string"],
+                    "title": s["title"] if s["is_act"] else None, "citation_string": s["citation_string"],
                     "url": s["url"],
                     "act_slug": slugify_act(s["act_name"], s["act_year"]) if s["is_act"] else None,
                     "section": s["section_number"] if s["is_act"] else None,
@@ -144,29 +144,37 @@ class PgRepo:
         ]
         return out
 
-    async def add_user_message(self, conv_id, content):
+    async def add_user_message(self, user_id, conv_id, content):
+        # The ownership check is inside the SQL: a foreign conversation inserts nothing.
         rows = await self._exec(
             """INSERT INTO messages (conversation_id, role, content)
-               VALUES (:c, 'user', :t) RETURNING id""",
-            c=conv_id, t=content,
+               SELECT id, 'user', :t FROM conversations
+               WHERE id = :c AND user_id = :u RETURNING id""",
+            c=conv_id, t=content, u=user_id,
         )  # fmt: skip
+        if not rows:
+            return None
         await self._exec(
             """UPDATE conversations SET message_count = message_count + 1,
-               title = COALESCE(title, left(:t, 80)), updated_at = now() WHERE id = :c""",
-            c=conv_id, t=content,
+               title = COALESCE(title, left(:t, 80)), updated_at = now()
+               WHERE id = :c AND user_id = :u""",
+            c=conv_id, t=content, u=user_id,
         )  # fmt: skip
         return str(rows[0]["id"])
 
-    async def history(self, conv_id):
+    async def history(self, user_id, conv_id, exclude_id):
         rows = await self._rows(
-            "SELECT role, content FROM messages WHERE conversation_id = :c "
-            "ORDER BY created_at, id",
-            c=conv_id,
-        )
+            """SELECT m.role, m.content FROM messages m
+               JOIN conversations cv ON cv.id = m.conversation_id
+               WHERE cv.id = :c AND cv.user_id = :u AND m.id <> :x
+               ORDER BY m.created_at, m.id""",
+            c=conv_id, u=user_id, x=exclude_id,
+        )  # fmt: skip
         conv = await self._rows(
-            "SELECT rolling_summary FROM conversations WHERE id = :c", c=conv_id
-        )
-        turns = [(r["role"], r["content"]) for r in rows[:-1]]  # last = this question
+            "SELECT rolling_summary FROM conversations WHERE id = :c AND user_id = :u",
+            c=conv_id, u=user_id,
+        )  # fmt: skip
+        turns = [(r["role"], r["content"]) for r in rows]
         return turns, (conv[0]["rolling_summary"] or "") if conv else ""
 
     async def get_case(self, record_id):
@@ -278,18 +286,22 @@ class PgRepo:
             return
         a = result.answer
 
-        def _write() -> str:
+        def _write() -> str | None:
             with self.engine.begin() as c:
                 row = c.execute(
                     text(
                         """INSERT INTO messages (conversation_id, role, content, model,
                                tokens_in, tokens_out, from_cache)
-                           VALUES (:c, 'assistant', :t, :m, :ti, :to, :fc) RETURNING id"""
+                           SELECT id, 'assistant', :t, :m, :ti, :to, :fc
+                           FROM conversations WHERE id = :c AND user_id = :u
+                           RETURNING id"""
                     ),
-                    dict(c=request.conversation_id, t=a.text, m=result.model or None,
+                    dict(c=request.conversation_id, u=request.user_id, t=a.text, m=result.model or None,
                          ti=result.input_tokens, to=result.output_tokens, fc=result.cache_hit),
                 )  # fmt: skip
-                mid = row.scalar_one()
+                mid = row.scalar_one_or_none()
+                if mid is None:  # conversation is not this user's: write nothing
+                    return None
                 for rank, cit in enumerate(a.citations, 1):
                     c.execute(
                         text(
@@ -312,7 +324,7 @@ class PgRepo:
 
         mid = await run_in_threadpool(_write)
         holder = _last_message.get(None)
-        if holder is not None:
+        if holder is not None and mid is not None:
             holder["id"] = mid
 
     # --- core's CitationLog ----------------------------------------------------

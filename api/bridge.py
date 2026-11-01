@@ -55,7 +55,8 @@ def to_wire_citation(c: CoreCitation) -> s.Citation:
         act_slug=c.act_slug,
         section=c.section,
         record_id=c.record_id,
-        title=c.title,
+        # Judgment titles are "X v. Y" party names: never sent (CLAUDE.md section 6).
+        title=c.title if c.kind == "act" else None,
         citation_string=c.citation_string,  # exactly as stored, never retyped
         url=c.pdf_url or c.source_url,
         status=c.status,

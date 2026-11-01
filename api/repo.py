@@ -41,8 +41,12 @@ class Repo(Protocol):
         self, user_id: str, cursor: str | None, limit: int
     ) -> tuple[list[dict], str | None]: ...
     async def get_conversation(self, user_id: str, conv_id: str) -> dict | None: ...
-    async def add_user_message(self, conv_id: str, content: str) -> str: ...
-    async def history(self, conv_id: str) -> tuple[list[tuple[str, str]], str]: ...
+    async def add_user_message(
+        self, user_id: str, conv_id: str, content: str
+    ) -> str | None: ...
+    async def history(
+        self, user_id: str, conv_id: str, exclude_id: str
+    ) -> tuple[list[tuple[str, str]], str]: ...
     async def get_case(self, record_id: str) -> dict | None: ...
     async def get_section(self, act_slug: str, number: str) -> dict | None: ...
     async def data_as_of(self) -> tuple[str, str] | None: ...
@@ -115,7 +119,10 @@ class MemoryRepo:
             return None
         return {**c, "messages": list(self.msgs[conv_id])}
 
-    async def add_user_message(self, conv_id, content):
+    async def add_user_message(self, user_id, conv_id, content):
+        c = self.convs.get(conv_id)
+        if not c or c["user_id"] != user_id:
+            return None
         m = {
             "id": str(uuid.uuid4()), "role": "user", "content": content,
             "from_cache": False, "citations": [], "created_at": _now(),
@@ -126,8 +133,15 @@ class MemoryRepo:
             self.convs[conv_id]["title"] = content[:80]
         return m["id"]
 
-    async def history(self, conv_id):
-        turns = [(m["role"], m["content"]) for m in self.msgs[conv_id][:-1]]
+    async def history(self, user_id, conv_id, exclude_id):
+        c = self.convs.get(conv_id)
+        if not c or c["user_id"] != user_id:
+            return [], ""
+        turns = [
+            (m["role"], m["content"])
+            for m in self.msgs[conv_id]
+            if m["id"] != exclude_id
+        ]
         return turns, self.convs[conv_id]["rolling_summary"] or ""
 
     async def get_case(self, record_id):
@@ -175,7 +189,8 @@ class MemoryRepo:
 
     async def save(self, request: Any, result: Any) -> None:
         conv_id = request.conversation_id
-        if conv_id not in self.msgs or result.outcome != "answered":
+        c = self.convs.get(conv_id)
+        if not c or c["user_id"] != request.user_id or result.outcome != "answered":
             return
         m = {
             "id": str(uuid.uuid4()), "role": "assistant", "content": result.answer.text,

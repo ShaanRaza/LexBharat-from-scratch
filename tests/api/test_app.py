@@ -130,3 +130,37 @@ def test_case_has_no_judge_or_party_fields(client, repo):
 def test_openapi_published(client):
     spec = client.get("/openapi.json").json()
     assert "/api/v1/conversations/{conv_id}/messages" in spec["paths"]
+
+
+async def test_memory_repo_methods_are_user_scoped(repo):
+    a = await repo.upsert_user("a", None, None)
+    b = await repo.upsert_user("b", None, None)
+    conv = await repo.create_conversation(a["id"], "research", None)
+    assert await repo.add_user_message(b["id"], conv["id"], "x") is None
+    assert await repo.history(b["id"], conv["id"], "none") == ([], "")
+    assert await repo.get_conversation(b["id"], conv["id"]) is None
+
+
+def test_no_pipeline_means_503_and_nothing_stored(make_client, repo):
+    c = make_client(pipeline=None)
+    c.app.state.pipeline = None
+    conv = c.post("/api/v1/conversations", json={}, headers=auth()).json()
+    r = c.post(
+        f"/api/v1/conversations/{conv['id']}/messages",
+        json={"content": "hi"}, headers=auth(),
+    )  # fmt: skip
+    assert r.status_code == 503
+    assert repo.msgs[conv["id"]] == []
+
+
+def test_judgment_titles_never_leave_the_server(client):
+    from tests.api.conftest import parse_sse
+
+    conv = client.post("/api/v1/conversations", json={}, headers=auth()).json()
+    r = client.post(
+        f"/api/v1/conversations/{conv['id']}/messages",
+        json={"content": "q"}, headers=auth(),
+    )  # fmt: skip
+    assert "Fake v. Fake" not in r.text
+    cit = [d for n, d in parse_sse(r.text) if n == "citations"][0]
+    assert cit["citations"][0]["title"] is None

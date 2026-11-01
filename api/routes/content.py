@@ -29,7 +29,8 @@ async def get_case(record_id: str, request: Request, user: CurrentUser = User):
         raise ApiError(404, "not_found", "Judgment not found.")
     # Only listed fields: no judges, no party names (unreliable in the dataset).
     return s.CaseOut(
-        record_id=case["record_id"], title=case.get("title"), court=case.get("court"),
+        record_id=case["record_id"], title=None,  # parties: never shown
+         court=case.get("court"),
         decision_date=case.get("decision_date"), case_number=case.get("case_number"),
         citation_string=case.get("citation_string"), url=case.get("url"),
         paragraphs=case["paragraphs"], provenance=await _prov(request),
