@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
 
     # --- Product ---
-    PRODUCT_NAME: str = "KanoonBuddy"
+    PRODUCT_NAME: str = "LexBharat"
     CORPUS_COLLECTION: str = "kanoon_v1"
     SNAPSHOT_VERSION: str = "v2026.08"
     DATA_AS_OF: str = ""

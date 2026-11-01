@@ -25,6 +25,7 @@ services:
       dockerfile: infra/Dockerfile.web
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api/v1}
+        NEXT_PUBLIC_PRODUCT_NAME: ${NEXT_PUBLIC_PRODUCT_NAME:-${PRODUCT_NAME:-LexBharat}}
     ports: ["3000:3000"]
     depends_on: [api]
     networks: [private]

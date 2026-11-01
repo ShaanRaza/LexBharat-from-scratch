@@ -59,5 +59,6 @@ These are read by `api/config.py` and `infra/docker-compose.yml`, not by `core/s
 |---|---|
 | `APP_ENV` | API environment. Defaults to `production`. The fake pipeline needs `development` or `test` **and** `ENVIRONMENT` not `production` |
 | `POSTGRES_PASSWORD` | **Required** by Docker Compose (no default). Set it in your shell or `.env` before `docker compose up` |
+| `NEXT_PUBLIC_PRODUCT_NAME` | The product name shown by the website. Baked in at build time. Compose passes it as a build argument, falling back to `PRODUCT_NAME`, then `LexBharat`. The website's own code default is neutral ("Legal research") so no brand word is hard-coded in `web/` |
 | `WEB_ORIGIN` | The website's address, for CORS |
 | `FAKE_PIPELINE` | Canned answers for demos. Refused in production |

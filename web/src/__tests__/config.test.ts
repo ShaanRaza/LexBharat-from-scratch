@@ -12,3 +12,18 @@ describe("fake mode guard", () => {
     await expect(import("@/lib/config")).rejects.toThrow(/production/);
   });
 });
+
+describe("product name comes from config", () => {
+  afterEach(() => { vi.unstubAllEnvs(); vi.resetModules(); });
+  it("uses NEXT_PUBLIC_PRODUCT_NAME when set", async () => {
+    vi.stubEnv("NEXT_PUBLIC_PRODUCT_NAME", "LexBharat");
+    vi.resetModules();
+    expect((await import("@/lib/config")).PRODUCT_NAME).toBe("LexBharat");
+  });
+  it("falls back to a neutral word, never a brand", async () => {
+    vi.stubEnv("NEXT_PUBLIC_PRODUCT_NAME", undefined as unknown as string);
+    delete process.env.NEXT_PUBLIC_PRODUCT_NAME;
+    vi.resetModules();
+    expect((await import("@/lib/config")).PRODUCT_NAME).toBe("Legal research");
+  });
+});

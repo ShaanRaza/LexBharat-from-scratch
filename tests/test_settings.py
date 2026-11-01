@@ -13,7 +13,7 @@ def _fresh() -> Settings:
 
 def test_defaults_load():
     s = _fresh()
-    assert s.PRODUCT_NAME == "KanoonBuddy"
+    assert s.PRODUCT_NAME == "LexBharat"
     assert s.CORPUS_COLLECTION == "kanoon_v1"
     assert s.SNAPSHOT_VERSION == "v2026.08"
     assert s.JEV_TIMEOUT_MS == 800
@@ -45,3 +45,17 @@ def test_secrets_never_print():
     assert "super-secret-value" not in str(s)
     assert "super-secret-value" not in s.model_dump_json()
     assert s.GEMINI_API_KEY.get_secret_value() == "super-secret-value"
+
+
+def test_no_brand_word_hard_coded_in_code():
+    """The product name lives in config only (CLAUDE.md section 1). The old working
+    name must not appear in code; the new default is allowed only in settings."""
+    old = "kanoon" + "buddy"
+    new = "lexbharat"
+    bad = []
+    for base in ("api", "core", "adapters", "workers", "evals", "data", "migrations"):
+        for f in (ROOT / base).rglob("*.py"):
+            text = f.read_text(encoding="utf-8").lower()
+            if old in text or (new in text and f != ROOT / "core" / "settings.py"):
+                bad.append(str(f.relative_to(ROOT)))
+    assert bad == [], bad
