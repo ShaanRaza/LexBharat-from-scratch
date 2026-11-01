@@ -21,11 +21,6 @@ export function Judgment({ c }: { c: CaseOut }) {
         {c.court && <div>{c.court}</div>}
         {c.decision_date && <div>Decided {c.decision_date}</div>}
         {c.case_number && <div>{c.case_number}</div>}
-        {c.citation_string && (
-          <div>
-            {c.citation_string} ({CITATION_AS_RECORDED})
-          </div>
-        )}
       </dl>
       {c.url && (
         <a href={c.url} rel="noreferrer" className="mt-2 inline-block text-small text-accent underline">
