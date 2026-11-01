@@ -36,6 +36,7 @@ def test_blank_seal_key_still_rejected_in_production(tmp_path, monkeypatch):
     import pytest
 
     monkeypatch.delenv("SEAL_KEY", raising=False)
+    monkeypatch.delenv("ENVIRONMENT", raising=False)
     env = tmp_path / "prod.env"
     env.write_text("ENVIRONMENT=production\nSEAL_KEY=\n")
     with pytest.raises(ValueError):
