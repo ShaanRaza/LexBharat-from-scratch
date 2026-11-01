@@ -45,6 +45,8 @@ the login check. Judgment titles are never sent (they are party names).
 | `GET /documents/{id}` | Upload status |
 | `DELETE /documents/{id}` | **Hard delete**: file, text and vectors |
 | `POST /feedback` | Thumbs up/down plus a comment |
+| `POST /conversations/{id}/messages/{mid}/followups` | Up to 3 next-question suggestions for a saved answer. Questions only, no citation marker. Not a pipeline step; not metered |
+| `POST /prompts/improve` | "Improve my question": editable text for the input box (`{text, changed}`). Never contains a citation. Not a pipeline step; not metered |
 | `POST /billing/webhook` | Razorpay events (**signature checked**, no Firebase token) |
 | `GET /stats` | Public outcome counts by court, year and outcome label. **No login.** Supreme Court only until Phase 2 |
 | `GET /sitemap.xml` | Every public Act and stats page, for Google (served by the website) |

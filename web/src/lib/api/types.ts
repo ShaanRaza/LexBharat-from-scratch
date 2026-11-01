@@ -93,3 +93,7 @@ export type MeOut = {
 // Descriptive counts only. Never a prediction or a win chance.
 export type StatsRow = { court: string; year: number; outcome_label: string; count: number };
 export type StatsOut = { rows: StatsRow[]; live: boolean; provenance: Provenance };
+
+// Next-question suggestions and the "Improve my question" helper (question text only).
+export type FollowupsOut = { suggestions: string[] };
+export type ImproveOut = { text: string; changed: boolean };

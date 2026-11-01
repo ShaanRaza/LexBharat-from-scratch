@@ -13,6 +13,8 @@ from __future__ import annotations
 import logging
 
 from core.contracts import Deps, run_pipeline, stream_events
+from core.followups import suggest_followups
+from core.improve import improve_question
 
 
 class RealPipeline:
@@ -24,6 +26,14 @@ class RealPipeline:
 
     def stream(self, result):
         return stream_events(result)
+
+    # Question helpers. Not pipeline steps; both call one cheap model and filter the
+    # reply in plain Python (core/followups.py, core/improve.py).
+    async def followups(self, question, answer_text):
+        return await suggest_followups(question, answer_text, self.deps)
+
+    async def improve(self, text):
+        return await improve_question(text, self.deps)
 
 
 def build_pipeline(core_settings, repo) -> RealPipeline:

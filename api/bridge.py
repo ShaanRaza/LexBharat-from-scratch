@@ -39,6 +39,7 @@ from core.contracts import (
 from core.contracts import (
     Citation as CoreCitation,
 )
+from core.improve import Improved
 
 log = logging.getLogger("api.bridge")
 
@@ -240,6 +241,18 @@ class FakePipeline:
                 provenance=AnswerProvenance(),
             ))  # fmt: skip
         return result
+
+    async def followups(self, question: str, answer_text: str) -> list[str]:
+        return [
+            "What is the difference between bail and anticipatory bail?",
+            "Which factors does a court weigh when deciding bail?",
+        ]
+
+    async def improve(self, text: str) -> Improved:
+        t = " ".join(text.split()).rstrip("?.! ")
+        return Improved(
+            f"Sample improved wording: what is the law on {t.lower()}?", True
+        )
 
     async def stream(self, result: FakeResult) -> AsyncIterator[StreamEvent]:
         for word in result.answer_text.split(" "):

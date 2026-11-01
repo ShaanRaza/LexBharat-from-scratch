@@ -319,6 +319,29 @@ class ConversationDetail(ConversationOut):
     provenance: Provenance | None = None
 
 
+# ---------------------------------------------------------------- question helpers
+
+
+class FollowupsOut(BaseModel):
+    """Next-question suggestions for a saved answer. QUESTIONS ONLY: each is one short
+    sentence ending in "?", with no citation marker. Running one is an ordinary new
+    question through the full pipeline."""
+
+    suggestions: list[str] = Field(default_factory=list, max_length=3)
+
+
+class ImproveIn(BaseModel):
+    text: str = Field(min_length=1, max_length=4000)
+
+
+class ImproveOut(BaseModel):
+    """Editable text for the input box. Never contains a citation. `changed` is false
+    when the helper could not improve the text (then `text` is the user's own)."""
+
+    text: str
+    changed: bool
+
+
 # ---------------------------------------------------------------- search / cases / acts
 
 

@@ -76,3 +76,20 @@ export const PROGRESS_LABELS = {
 } as const;
 export const PROGRESS_COUNTS = (found: number | null, kept: number | null) =>
   found === null ? "" : kept === null ? `${found} passages found` : `${found} passages found, ${kept} kept`;
+
+// Answer actions, follow-ups and the improve helper. Plain interface words, not legal
+// wording.
+export const ACTION_COPY = "Copy";
+export const ACTION_EXPORT = "Export";
+export const ACTION_REWRITE = "Rewrite";
+export const COPIED = "Copied";
+export const COPY_FAILED = "Could not copy. Select the text and copy it yourself.";
+export const SOURCES_HEADING = "Sources";
+export const FOLLOWUPS_TITLE = "Ask next";
+export const IMPROVE_LABEL = "Improve my question";
+export const IMPROVE_WORKING = "Improving";
+export const IMPROVE_USE = "Use this";
+export const IMPROVE_DISMISS = "Dismiss";
+export const IMPROVE_NO_CHANGE = "No improvement suggested. Your question is unchanged.";
+export const IMPROVE_FAILED = "Could not improve the question. Your question is unchanged.";
+export const IMPROVE_EDIT_LABEL = "Suggested question (you can edit it)";

@@ -1,0 +1,6 @@
+Rewrite the user's rough legal research question into one clearer, more specific
+question. Keep the same meaning and the same subject. Fix spelling and grammar, and
+make the legal issue explicit if it is implied. Do NOT answer it. Do NOT add any case,
+Act, section, citation, quotation or bracket that the user did not write. Do not add
+facts. Reply with the improved question only, as plain text, no preface.
+User's question: {text}

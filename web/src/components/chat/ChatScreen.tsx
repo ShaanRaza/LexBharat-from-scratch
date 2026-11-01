@@ -1,28 +1,99 @@
 "use client";
+import { useState } from "react";
 import { SearchBar, StandingNotices } from "@/components/ui";
 import { DemoBanner } from "@/components/ui/DemoBanner";
+import { PRODUCT_NAME } from "@/lib/config";
+import { answerToText } from "@/lib/chat/answerText";
+import { copyText, downloadText } from "@/lib/chat/download";
+import type { AnswerState } from "@/lib/chat/state";
 import { useChat } from "@/lib/chat/useChat";
+import { useFollowups } from "@/lib/chat/useFollowups";
+import { useImprove } from "@/lib/chat/useImprove";
 import { useSource } from "@/lib/chat/useSource";
 import { useUsage } from "@/lib/chat/useUsage";
-import { SourcePane } from "./SourcePane";
-import { UsageMeter } from "./UsageMeter";
+import { AnswerActions } from "./AnswerActions";
 import { AnswerView } from "./AnswerView";
 import { FailureCard } from "./FailureCard";
+import { FollowUps } from "./FollowUps";
+import { ImproveButton, ImprovePanel } from "./ImproveHelper";
 import { ProgressPanel } from "./ProgressPanel";
+import { SourcePane } from "./SourcePane";
+import { UsageMeter } from "./UsageMeter";
+
+const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "answer";
+
+// Under a finished, verified answer: Copy / Export / Rewrite, then next questions.
+function AfterAnswer({
+  answer,
+  conversationId,
+  ask,
+  onRewrite,
+  busy,
+}: {
+  answer: AnswerState;
+  conversationId: string | null;
+  ask: (q: string) => void;
+  onRewrite: (q: string) => void;
+  busy: boolean;
+}) {
+  const ready = answer.status === "done" && !answer.failure && answer.citations !== null;
+  const suggestions = useFollowups(conversationId, answer.messageId, ready);
+  if (!ready) return null;
+  const text = answerToText(answer);
+  return (
+    <div className="flex flex-col gap-3">
+      <AnswerActions
+        text={text}
+        copy={copyText}
+        onExport={(t) => downloadText(`${slug(PRODUCT_NAME)}-answer.txt`, t)}
+        onRewrite={() => onRewrite(answer.question)}
+      />
+      <FollowUps suggestions={suggestions} onAsk={ask} disabled={busy} />
+    </div>
+  );
+}
 
 // Chat on the left; the cited record opens on the right. Below the large breakpoint the
 // two stack (answer first, source under it) instead of sitting side by side.
 export function ChatScreen() {
-  const { answers, ask, busy } = useChat();
+  const { answers, ask, busy, conversationId } = useChat();
   const left = useUsage();
   const source = useSource();
+  const improve = useImprove();
+  const [question, setQuestion] = useState("");
   const dataAsOf = answers.findLast((a) => a.citations)?.citations?.data_as_of;
   const split = source.open !== null;
+  // Whatever way a question is sent (typed, a follow-up, a rewrite), it is an ordinary
+  // new question through the whole pipeline.
+  const send = (q: string) => {
+    improve.dismiss();
+    setQuestion("");
+    ask(q);
+  };
   return (
     <div className={`flex flex-col gap-section ${split ? "w-full" : "mx-auto w-full max-w-reading"}`}>
       <div className="flex w-full max-w-reading flex-col gap-section">
         <DemoBanner />
-        <SearchBar onSubmit={ask} disabled={busy || left === 0} />
+        <SearchBar
+          value={question}
+          onChange={setQuestion}
+          onSubmit={send}
+          disabled={busy || left === 0}
+          actions={
+            <ImproveButton state={improve.state} canImprove={question.trim() !== ""} onImprove={() => improve.improve(question)} />
+          }
+          below={
+            <ImprovePanel
+              state={improve.state}
+              onEdit={improve.edit}
+              onUse={(t) => {
+                setQuestion(t);
+                improve.dismiss();
+              }}
+              onDismiss={improve.dismiss}
+            />
+          }
+        />
         <UsageMeter left={left} />
         {left === 0 && <FailureCard kind="usageLimit" />}
       </div>
@@ -35,6 +106,7 @@ export function ChatScreen() {
               {(a.text || a.failure) && (
                 <AnswerView answer={a} onRetry={() => ask(a.question)} onOpenSource={source.openCitation} />
               )}
+              <AfterAnswer answer={a} conversationId={conversationId} ask={send} onRewrite={setQuestion} busy={busy || left === 0} />
             </section>
           ))}
         </div>

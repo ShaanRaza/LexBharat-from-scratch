@@ -3,7 +3,7 @@
 import { API_BASE_URL, FAKE_STEP_DELAY_MS, USE_FAKE_API } from "@/lib/config";
 import { FAKE_ANSWER_TEXT, FAKE_CASE, FAKE_CITATIONS, FAKE_ME, FAKE_PROVENANCE, FAKE_SECTIONS, FAKE_STATS } from "@/lib/fake/data";
 import { createSseParser } from "./sse";
-import type { ApiErrorBody, CaseOut, ConsentIn, MeOut, SectionOut, StatsOut, StepEventData, StreamEvent } from "./types";
+import type { ApiErrorBody, CaseOut, ConsentIn, FollowupsOut, ImproveOut, MeOut, SectionOut, StatsOut, StepEventData, StreamEvent } from "./types";
 
 const BASE = `${API_BASE_URL}/api/v1`;
 
@@ -71,6 +71,29 @@ export function sampleSections(): { act_slug: string; act_name: string; section:
   return USE_FAKE_API ? FAKE_SECTIONS.map(({ act_slug, act_name, section }) => ({ act_slug, act_name, section })) : [];
 }
 
+async function postJson<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, { method: "POST", headers: await headers(), body: JSON.stringify(body) });
+  if (!res.ok) throw await failure(res);
+  return res.json() as Promise<T>;
+}
+
+// Next questions for a saved answer. Questions only: the page runs one like any other.
+export async function getFollowups(conversationId: string, messageId: string | null): Promise<string[]> {
+  if (USE_FAKE_API) return FAKE_FOLLOWUPS;
+  if (!messageId) return [];
+  const out = await postJson<FollowupsOut>(`/conversations/${encodeURIComponent(conversationId)}/messages/${encodeURIComponent(messageId)}/followups`, {});
+  return out.suggestions;
+}
+
+// "Improve my question": editable text for the input box. Not an answer, never cited.
+export async function improveQuestion(text: string): Promise<ImproveOut> {
+  if (USE_FAKE_API) {
+    const t = text.trim().replace(/[?.!\s]+$/, "");
+    return { text: `Sample improved wording: what is the law on ${t.toLowerCase()}?`, changed: true };
+  }
+  return postJson<ImproveOut>("/prompts/improve", { text });
+}
+
 export async function postConsent(c: ConsentIn): Promise<void> {
   if (USE_FAKE_API) return;
   const res = await fetch(`${BASE}/me/consents`, { method: "POST", headers: await headers(), body: JSON.stringify(c) });
@@ -112,6 +135,10 @@ export async function* askQuestion(conversationId: string, content: string): Asy
 
 // Fake mode: typing "limit", "nothing", "highcourt" or "fail" in the question
 // triggers the failure screens so they can be seen without a backend.
+const FAKE_FOLLOWUPS = [
+  "What is the difference between bail and anticipatory bail?",
+  "Which factors does a court weigh when deciding bail?",
+];
 const pause = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 const FAKE_STEPS: StepEventData[] = [
   { step: "understanding", found: null, kept: null },

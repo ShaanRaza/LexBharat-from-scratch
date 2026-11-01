@@ -9,3 +9,4 @@ export { StandingNotices } from "./Notices";
 export { TopBar } from "./TopBar";
 export { Sidebar } from "./Sidebar";
 export { TextField } from "./TextField";
+export { TextArea } from "./TextArea";

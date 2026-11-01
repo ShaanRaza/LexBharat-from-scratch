@@ -108,3 +108,50 @@ async def ask(
 async def feedback(body: s.FeedbackIn, request: Request, user: CurrentUser = User):
     await request.app.state.repo.add_feedback(user.id, body.model_dump(mode="json"))
     return s.Ok()
+
+
+@router.post(
+    "/conversations/{conv_id}/messages/{msg_id}/followups",
+    response_model=s.FollowupsOut,
+)
+async def followups(
+    conv_id: str, msg_id: str, request: Request, user: CurrentUser = User
+):
+    """Next-question suggestions for a SAVED answer (so it was already verified).
+    Questions only; the user running one is an ordinary new question."""
+    pipe = request.app.state.pipeline
+    if pipe is None:
+        raise ApiError(503, "service_unavailable", "Suggestions are unavailable.")
+    conv = await request.app.state.repo.get_conversation(
+        user.id, conv_id
+    )  # user-filtered
+    if conv is None:
+        raise ApiError(404, "not_found", "Conversation not found.")
+    msgs = conv["messages"]
+    idx = next((i for i, m in enumerate(msgs) if str(m["id"]) == msg_id), None)
+    if idx is None or msgs[idx]["role"] != "assistant":
+        raise ApiError(404, "not_found", "Answer not found.")
+    question = next(
+        (m["content"] for m in reversed(msgs[:idx]) if m["role"] == "user"), ""
+    )
+    try:
+        suggestions = await pipe.followups(question, msgs[idx]["content"])
+    except Exception:  # noqa: BLE001 (optional feature: never fail, never echo)
+        suggestions = []
+    return s.FollowupsOut(suggestions=suggestions[:3])
+
+
+@router.post("/prompts/improve", response_model=s.ImproveOut)
+async def improve_question(
+    body: s.ImproveIn, request: Request, user: CurrentUser = User
+):
+    """ "Improve my question": editable text for the input box. Not a pipeline step and
+    never a citation (core/improve.py)."""
+    pipe = request.app.state.pipeline
+    if pipe is None:
+        raise ApiError(503, "service_unavailable", "The helper is unavailable.")
+    try:
+        out = await pipe.improve(body.text)
+    except Exception:  # noqa: BLE001 (the helper is optional: keep the user's text)
+        return s.ImproveOut(text=body.text, changed=False)
+    return s.ImproveOut(text=out.text, changed=out.changed)

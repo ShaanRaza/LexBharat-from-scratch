@@ -7,6 +7,7 @@ import { applyEvent, endOfStream, newAnswer, type AnswerState } from "./state";
 export function useChat() {
   const [answers, setAnswers] = useState<AnswerState[]>([]);
   const conv = useRef<string | null>(null);
+  const [conversationId, setConversationId] = useState<string | null>(null);
 
   const ask = useCallback(async (question: string) => {
     let state = newAnswer(question);
@@ -23,7 +24,10 @@ export function useChat() {
       });
     write(state);
     try {
-      conv.current ??= await createConversation();
+      if (conv.current === null) {
+        conv.current = await createConversation();
+        setConversationId(conv.current);
+      }
       for await (const ev of askQuestion(conv.current, question)) {
         state = applyEvent(state, ev);
         write(state);
@@ -34,5 +38,5 @@ export function useChat() {
     }
   }, []);
 
-  return { answers, ask, busy: answers.some((a) => a.status === "streaming") };
+  return { answers, ask, conversationId, busy: answers.some((a) => a.status === "streaming") };
 }

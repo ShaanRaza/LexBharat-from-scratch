@@ -13,10 +13,12 @@ export type AnswerState = {
   status: "streaming" | "done" | "failed";
   failure: FailureKind | null;
   refused: boolean;
+  // The saved answer's id, from the done event (null in fake mode or if refused).
+  messageId: string | null;
 };
 
 export function newAnswer(question: string): AnswerState {
-  return { question, text: "", steps: [], citations: null, status: "streaming", failure: null, refused: false };
+  return { question, text: "", steps: [], citations: null, status: "streaming", failure: null, refused: false, messageId: null };
 }
 
 export function failureFor(e: ApiErrorBody): FailureKind {
@@ -42,6 +44,7 @@ export function applyEvent(s: AnswerState, ev: StreamEvent): AnswerState {
         ...s,
         status: "done",
         refused: ev.data.refused,
+        messageId: ev.data.message_id,
         // A refusal with no explicit reason is treated as "nothing found": nothing is written.
         failure: ev.data.refused && !s.failure ? (ev.data.reason === "out_of_scope" ? "outsideCoverage" : "notFound") : s.failure,
       };
