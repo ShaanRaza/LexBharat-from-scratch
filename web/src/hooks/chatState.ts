@@ -2,7 +2,7 @@
 // Key trust rule: citations are stored only from the single `citations` event,
 // so the screen can never show a citation before verification finished.
 import { failureFromError, failureFromOutcome, type Failure } from "@/lib/failure";
-import type { Citation, HistoryMessage, StreamEvent } from "@/lib/types";
+import type { Citation, HistoryMessage, Outcome, StreamEvent } from "@/lib/types";
 
 export interface ChatMessage {
   id: string;
@@ -13,6 +13,10 @@ export interface ChatMessage {
   citations: Citation[] | null;
   dataAsOf: string | null;
   removedCount: number;
+  /** The API's own "one authority was removed" sentence, when it sent one. */
+  note: string | null;
+  /** How the turn ended, as reported with the citations. null until then. */
+  outcome: Outcome | null;
   failure: Failure | null;
 }
 
@@ -38,18 +42,22 @@ const blank = (id: string): ChatMessage => ({
   citations: null,
   dataAsOf: null,
   removedCount: 0,
+  note: null,
+  outcome: null,
   failure: null,
 });
 
-export function fromHistory(m: HistoryMessage): ChatMessage {
+export function fromHistory(m: HistoryMessage, dataAsOf: string | null): ChatMessage {
   return {
     id: m.id,
     role: m.role,
     text: m.content,
     status: "done",
     citations: m.citations,
-    dataAsOf: m.data_as_of,
+    dataAsOf,
     removedCount: 0,
+    note: null,
+    outcome: m.role === "assistant" ? "answered" : null,
     failure: null,
   };
 }
@@ -83,10 +91,16 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
               citations: ev.citations,
               dataAsOf: ev.dataAsOf,
               removedCount: ev.removedCount,
+              note: ev.note,
+              outcome: ev.outcome,
             };
           case "done": {
-            const failure = failureFromOutcome(ev.outcome);
-            // Nothing written was verified, so a failed turn shows no text.
+            // `done` without a citations event means the answer was never
+            // verified, so it must not be shown as if it were.
+            const failure =
+              m.outcome === null ? failureFromError("missing_citations", null) : failureFromOutcome(m.outcome);
+            if (m.outcome === null) return { ...m, status: "failed", text: "", citations: null, failure };
+            // A non-answer (not found, out of scope...) shows its own screen, not the text.
             return { ...m, status: "done", failure, text: failure ? "" : m.text };
           }
           case "error":

@@ -31,8 +31,8 @@ export function MessageView({
       {message.text && (
         <Card tone="panel">
           <AnswerText text={message.text} citations={message.citations} />
-          {message.removedCount > 0 && (
-            <p className="mt-3 text-small text-notfound">{copy.removedNote}</p>
+          {(message.note || message.removedCount > 0) && (
+            <p className="mt-3 text-small text-notfound">{message.note ?? copy.removedNote}</p>
           )}
         </Card>
       )}

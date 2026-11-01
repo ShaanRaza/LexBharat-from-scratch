@@ -44,12 +44,12 @@ export function CaseView({
       <ol className="flex flex-col gap-3">
         {record.paragraphs.map((p) => (
           <li
-            key={p.n}
-            id={`p${p.n}`}
-            className={`flex gap-3 rounded-control p-2 ${highlight === `p${p.n}` ? "bg-tint" : ""}`}
+            key={p.anchor}
+            id={p.anchor}
+            className={`flex gap-3 rounded-control p-2 ${highlight === p.anchor ? "bg-tint" : ""}`}
           >
-            <a href={`#p${p.n}`} className="w-8 shrink-0 text-small font-label text-accent" aria-label={`Link to paragraph ${p.n}`}>
-              {p.n}
+            <a href={`#${p.anchor}`} className="w-8 shrink-0 text-small font-label text-accent" aria-label={`Link to paragraph ${p.anchor}`}>
+              {p.anchor.replace(/^p/, "")}
             </a>
             <p className="text-body">{p.text}</p>
           </li>

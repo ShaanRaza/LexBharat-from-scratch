@@ -7,6 +7,13 @@ import { getAuthToken } from "./auth-token";
 import { config } from "./config";
 import { createFakeApi } from "./fake/fakeApi";
 import { readSse, toStreamEvent } from "./sse";
+import {
+  caseFromWire,
+  conversationFromWire,
+  historyFromWire,
+  meFromWire,
+  sectionFromWire,
+} from "./mappers";
 import type {
   ActSection,
   ApiErrorBody,
@@ -24,7 +31,12 @@ export interface ApiClient {
   getMe(): Promise<Me>;
   listConversations(cursor?: string): Promise<Page<ConversationSummary>>;
   createConversation(): Promise<{ id: string }>;
-  getConversation(id: string): Promise<{ id: string; title: string; messages: HistoryMessage[] }>;
+  getConversation(id: string): Promise<{
+    id: string;
+    title: string;
+    messages: HistoryMessage[];
+    data_as_of: string | null;
+  }>;
   /** Streams one answer: text..., one citations, then done. Never throws. */
   streamMessage(
     conversationId: string,
@@ -71,25 +83,35 @@ async function toApiError(res: Response): Promise<ApiError> {
 
 function createRealApi(): ApiClient {
   return {
-    getMe: () => request<Me>("/me"),
-    listConversations: (cursor) =>
-      request<Page<ConversationSummary>>(
+    getMe: async () => meFromWire(await request<unknown>("/me")),
+    listConversations: async (cursor) => {
+      const r = await request<{ items?: unknown[]; next_cursor?: string | null }>(
         `/conversations${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ""}`,
-      ),
-    createConversation: () =>
-      request<{ id: string }>("/conversations", {
+      );
+      return {
+        items: (r.items ?? []).map(conversationFromWire).filter((c): c is ConversationSummary => c !== null),
+        next_cursor: r.next_cursor ?? null,
+      };
+    },
+    createConversation: async () => {
+      const r = await request<{ id: string }>("/conversations", {
         method: "POST",
         body: JSON.stringify({ module: "research" }),
-      }),
-    getConversation: (id) =>
-      request(`/conversations/${encodeURIComponent(id)}`),
-    getCase: (id) => request<CaseRecord>(`/cases/${encodeURIComponent(id)}`),
-    getSection: (act, n) =>
-      request<ActSection>(`/acts/${encodeURIComponent(act)}/sections/${encodeURIComponent(n)}`),
+      });
+      return { id: r.id };
+    },
+    getConversation: async (id) =>
+      historyFromWire(await request<unknown>(`/conversations/${encodeURIComponent(id)}`)),
+    getCase: async (id) => caseFromWire(await request<unknown>(`/cases/${encodeURIComponent(id)}`)),
+    getSection: async (act, n) =>
+      sectionFromWire(
+        await request<unknown>(`/acts/${encodeURIComponent(act)}/sections/${encodeURIComponent(n)}`),
+        act,
+      ),
     recordConsent: async (notice_version, purpose) => {
       await request("/me/consents", {
         method: "POST",
-        body: JSON.stringify({ notice_version, purpose }),
+        body: JSON.stringify({ notice_version, purpose, action: "give" }),
       });
     },
     async *streamMessage(conversationId, content, signal) {

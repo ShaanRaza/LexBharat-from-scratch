@@ -24,7 +24,7 @@ export function AnswerText({
         if (!c) return null;
         return (
           <span key={i} className="mx-0.5">
-            <CitationChip sourceId={c.source_id} state={citationState(c)} href={citationHref(c)} />
+            <CitationChip sourceId={c.source_id} state={citationState(c)} href={citationHref(c)} label={c.status_label} />
           </span>
         );
       })}

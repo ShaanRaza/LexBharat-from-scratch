@@ -1,6 +1,7 @@
 // Reads a server-sent-events stream (docs/API.md "Streaming contract").
 // An SSE message looks like:   event: text\n data: {"text":"Hello "}\n\n
-import type { Citation, Outcome, StreamEvent, Support } from "./types";
+import { citationFromEvent, dataAsOf } from "./mappers";
+import type { Citation, Outcome, StreamEvent } from "./types";
 
 export interface RawSseMessage {
   event: string;
@@ -49,33 +50,8 @@ function parseBlock(block: string): RawSseMessage | null {
 }
 
 const OUTCOMES: Outcome[] = ["answered", "not_found", "out_of_scope", "provider_failed"];
-const SUPPORTS: Support[] = ["supports", "partly", "does_not_support"];
 
 const str = (v: unknown): string | null => (typeof v === "string" ? v : null);
-
-/** Cleans one citation from the wire. `verified` is true ONLY for real `true`. */
-export function normalizeCitation(raw: unknown): Citation | null {
-  if (typeof raw !== "object" || raw === null) return null;
-  const r = raw as Record<string, unknown>;
-  const sourceId = str(r.source_id);
-  const recordId = str(r.record_id);
-  if (!sourceId || !recordId) return null;
-  return {
-    source_id: sourceId,
-    record_id: recordId,
-    kind: r.kind === "act" ? "act" : "judgment",
-    title: str(r.title) ?? recordId,
-    citation_string: str(r.citation_string),
-    link: str(r.link),
-    paragraph: typeof r.paragraph === "number" ? r.paragraph : null,
-    act_slug: str(r.act_slug),
-    section: str(r.section),
-    act_status: str(r.act_status),
-    excerpt: str(r.excerpt),
-    verified: r.verified === true,
-    support: SUPPORTS.includes(r.support as Support) ? (r.support as Support) : null,
-  };
-}
 
 /** Turns one raw SSE message into a typed event (null = ignore it). */
 export function toStreamEvent(msg: RawSseMessage): StreamEvent | null {
@@ -87,22 +63,26 @@ export function toStreamEvent(msg: RawSseMessage): StreamEvent | null {
     return null;
   }
   switch (msg.event) {
+    case "token": // the API's name for a piece of answer text
     case "text":
       return typeof d.text === "string" ? { type: "text", text: d.text } : null;
     case "citations": {
       const list = Array.isArray(d.citations) ? d.citations : [];
       return {
         type: "citations",
-        citations: list.map(normalizeCitation).filter((c): c is Citation => c !== null),
-        dataAsOf: str(d.data_as_of),
+        citations: list.map(citationFromEvent).filter((c): c is Citation => c !== null),
+        // Unknown outcome = treat as answered; the citations still carry their own status.
+        outcome: OUTCOMES.includes(d.outcome as Outcome) ? (d.outcome as Outcome) : "answered",
+        dataAsOf: dataAsOf(d.provenance),
         removedCount: typeof d.removed_count === "number" ? d.removed_count : 0,
+        note: str(d.unverified_note),
       };
     }
     case "done":
       return {
         type: "done",
         messageId: str(d.message_id),
-        outcome: OUTCOMES.includes(d.outcome as Outcome) ? (d.outcome as Outcome) : "answered",
+        requestId: str(d.request_id),
         answersLeft: typeof d.answers_left === "number" ? d.answers_left : null,
       };
     case "error": {

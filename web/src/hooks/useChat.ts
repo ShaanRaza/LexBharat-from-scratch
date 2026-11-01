@@ -49,7 +49,9 @@ export function useChat(options: UseChatOptions = {}): UseChat {
     api
       .getConversation(id)
       .then((c) => {
-        if (!cancelled) dispatch({ type: "load", messages: c.messages.map(fromHistory) });
+        if (!cancelled) {
+          dispatch({ type: "load", messages: c.messages.map((m) => fromHistory(m, c.data_as_of)) });
+        }
       })
       .catch(() => undefined)
       .finally(() => {

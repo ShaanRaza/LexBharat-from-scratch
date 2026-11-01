@@ -7,33 +7,38 @@ export interface ApiErrorBody {
   error: { code: string; message: string; request_id?: string };
 }
 
-/** How the citation verifier rated the passage against its sentence. */
-export type Support = "supports" | "partly" | "does_not_support";
+/**
+ * What the verifier decided about one citation (docs/API.md, api/schemas.py).
+ * Only "verified" earns a tick. "partly" earns a warning mark.
+ * "unverified" never gets a tick (the API normally removes failed citations,
+ * so this is the safe default for anything unrecognised).
+ */
+export type CitationStatus = "verified" | "partly" | "unverified";
 
 /** One checked citation (S1-S8) from the single `citations` event. */
 export interface Citation {
   source_id: string; // "S1" .. "S8"
   record_id: string;
-  kind: "judgment" | "act";
   title: string;
   /** Citation string exactly as stored. null when the dataset has none. */
   citation_string: string | null;
   /** The record's pdf_url (judgments) or source_url (acts). */
-  link: string | null;
-  /** Paragraph number inside the judgment, for the #p<n> anchor. */
-  paragraph: number | null;
-  /** Act routing, so the site can link to /acts/{act}/{section}. */
+  url: string | null;
+  status: CitationStatus;
+  /** Label from the API ("Record found in dataset"); null = use our copy. */
+  status_label: string | null;
+  // The fields below are NOT in the API yet (see the web report). Without
+  // `kind` the site cannot tell a judgment from an Act, so it shows no in-site
+  // link rather than a wrong one.
+  kind: "judgment" | "act" | null;
+  /** Paragraph anchor in the judgment, e.g. "p12". */
+  anchor: string | null;
   act_slug: string | null;
   section: string | null;
-  /** Only shown when filled; otherwise "in-force status not checked". */
   act_status: string | null;
-  excerpt: string | null;
-  /** True only when verifier checks 1-3 passed. */
-  verified: boolean;
-  support: Support | null;
 }
 
-/** What `done` says about how the turn ended. */
+/** How the turn ended. "provider_failed" is not in the API yet (UX-COPY needs it). */
 export type Outcome = "answered" | "not_found" | "out_of_scope" | "provider_failed";
 
 /** Events the answer stream can produce (SSE, per docs/API.md). */
@@ -42,13 +47,15 @@ export type StreamEvent =
   | {
       type: "citations";
       citations: Citation[];
+      outcome: Outcome;
       dataAsOf: string | null;
       removedCount: number;
+      note: string | null;
     }
   | {
       type: "done";
       messageId: string | null;
-      outcome: Outcome;
+      requestId: string | null;
       answersLeft: number | null;
     }
   | { type: "error"; code: string; message: string; requestId: string | null };
@@ -75,11 +82,11 @@ export interface HistoryMessage {
   role: "user" | "assistant";
   content: string;
   citations: Citation[] | null;
-  data_as_of: string | null;
 }
 
 export interface CaseParagraph {
-  n: number;
+  /** Element id and URL fragment, e.g. "p12" (from the API). */
+  anchor: string;
   text: string;
 }
 
@@ -93,7 +100,7 @@ export interface CaseRecord {
   citation_string: string | null;
   pdf_url: string | null;
   paragraphs: CaseParagraph[];
-  data_as_of: string;
+  data_as_of: string | null;
 }
 
 export interface ActSection {
@@ -106,5 +113,5 @@ export interface ActSection {
   /** null = "in-force status not checked" (only 1,568 of 22,264 acts have it). */
   act_status: string | null;
   source_url: string | null;
-  data_as_of: string;
+  data_as_of: string | null;
 }

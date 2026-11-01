@@ -24,8 +24,8 @@ export function SourceCard({ citation }: { citation: Citation }) {
   return (
     <Card tone="plain" as="article">
       <div className="flex flex-wrap items-center gap-2">
-        <CitationChip sourceId={citation.source_id} state={state} />
-        <Label tone={TONE[state]}>{TEXT[state]}</Label>
+        <CitationChip sourceId={citation.source_id} state={state} label={citation.status_label} />
+        <Label tone={TONE[state]}>{citation.status_label || TEXT[state]}</Label>
         {citation.kind === "act" && citation.act_status == null && (
           <Label>{copy.inForceUnchecked}</Label>
         )}
@@ -40,19 +40,14 @@ export function SourceCard({ citation }: { citation: Citation }) {
           <span>{citation.citation_string}</span> ({copy.citationAsRecorded})
         </p>
       )}
-      {citation.excerpt && (
-        <blockquote className="mt-2 border-l-2 border-line pl-3 text-small text-muted">
-          {citation.excerpt}
-        </blockquote>
-      )}
       <div className="mt-3 flex flex-wrap gap-2">
         {inSite && (
           <Button href={inSite} variant="secondary">
             {citation.kind === "judgment" ? "Open judgment" : "Open section"}
           </Button>
         )}
-        {citation.link && (
-          <Button href={citation.link} external variant="ghost">
+        {citation.url && (
+          <Button href={citation.url} external variant="ghost">
             Official source
           </Button>
         )}

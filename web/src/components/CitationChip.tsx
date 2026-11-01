@@ -9,7 +9,7 @@ const STYLE: Record<CitationState, string> = {
   unverified: "border-notfound bg-page text-notfound",
 };
 
-const STATE_LABEL: Record<CitationState, string> = {
+const DEFAULT_LABEL: Record<CitationState, string> = {
   verified: copy.verified,
   partial: copy.partly,
   unverified: copy.notVerified,
@@ -24,12 +24,15 @@ export function CitationChip({
   sourceId,
   state,
   href,
+  label: apiLabel,
 }: {
   sourceId: string;
   state: CitationState;
   href?: string | null;
+  /** Wording from the API (e.g. "Record found in dataset"); else our copy. */
+  label?: string | null;
 }) {
-  const label = STATE_LABEL[state];
+  const label = apiLabel || DEFAULT_LABEL[state];
   const Icon = state === "verified" ? TickIcon : state === "partial" ? WarnIcon : DashIcon;
   const inner = (
     <>

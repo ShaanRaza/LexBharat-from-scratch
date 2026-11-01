@@ -8,7 +8,7 @@
 //   anything else    -> a sample answer with 3 citations (tick, warning, none)
 import { ApiError } from "../api-error";
 import type { ApiClient } from "../api";
-import type { HistoryMessage, StreamEvent } from "../types";
+import type { HistoryMessage, Outcome, StreamEvent } from "../types";
 import {
   SAMPLE_DATA_AS_OF,
   sampleAnswer,
@@ -42,7 +42,7 @@ export function createFakeApi(delayMs = 40): ApiClient {
     async getConversation(id) {
       const found = conversations.find((c) => c.id === id);
       if (!found) throw new ApiError("not_found", "Conversation not found.", 404);
-      return found;
+      return { ...found, data_as_of: SAMPLE_DATA_AS_OF };
     },
     async getCase(id) {
       if (id !== sampleCase.record_id) throw new ApiError("not_found", "Judgment not found.", 404);
@@ -69,18 +69,30 @@ export function createFakeApi(delayMs = 40): ApiClient {
         yield { type: "error", code: "internal_error", message: "", requestId: "fake-req-2" };
         return;
       }
+      const cites = (outcome: Outcome, list = sampleCitations, removed = 0): StreamEvent => ({
+        type: "citations",
+        citations: list,
+        outcome,
+        dataAsOf: SAMPLE_DATA_AS_OF,
+        removedCount: removed,
+        note: removed ? "One authority could not be verified and was removed." : null,
+      });
+      const done = (): StreamEvent => ({ type: "done", messageId: "fake-msg", requestId: "fake-req", answersLeft });
+
       if (q.includes("unknown")) {
-        yield { type: "citations", citations: [], dataAsOf: SAMPLE_DATA_AS_OF, removedCount: 0 };
-        yield { type: "done", messageId: "fake-msg", outcome: "not_found", answersLeft };
+        yield cites("not_found", []);
+        yield done();
         return;
       }
       if (q.includes("high court")) {
-        yield { type: "done", messageId: "fake-msg", outcome: "out_of_scope", answersLeft };
+        yield cites("out_of_scope", []);
+        yield done();
         return;
       }
       if (q.includes("writer")) {
-        yield { type: "citations", citations: sampleCitations.map((c) => ({ ...c, verified: false, support: null })), dataAsOf: SAMPLE_DATA_AS_OF, removedCount: 0 };
-        yield { type: "done", messageId: "fake-msg", outcome: "provider_failed", answersLeft };
+        // Sources found, no written answer. Nothing was checked: no ticks.
+        yield cites("provider_failed", sampleCitations.map((c) => ({ ...c, status: "unverified" as const, status_label: null })));
+        yield done();
         return;
       }
 
@@ -92,9 +104,9 @@ export function createFakeApi(delayMs = 40): ApiClient {
         await wait(delayMs / 4);
       }
       await wait(delayMs);
-      yield { type: "citations", citations: sampleCitations, dataAsOf: SAMPLE_DATA_AS_OF, removedCount: 1 };
+      yield cites("answered", sampleCitations, 1);
       answersLeft = Math.max(0, answersLeft - 1);
-      yield { type: "done", messageId: "fake-msg", outcome: "answered", answersLeft };
+      yield done();
     },
   };
 }
