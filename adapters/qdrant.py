@@ -12,6 +12,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
+from adapters.guard import refuse_in_production
 from core.settings import Settings
 
 
@@ -66,8 +67,8 @@ class VectorStore(Protocol):
 
 
 class QdrantStore:
-    """Real client (qdrant_client imported lazily). Dense search + payload filter only;
-    the BM25 sparse half and RRF merge are NOT wired yet. Not verified against Qdrant."""
+    """Real client (qdrant_client imported lazily). Dense search + payload filter
+    only; the BM25 sparse half and RRF merge are NOT wired. Not verified."""
 
     def __init__(self, settings: Settings):
         self._s = settings
@@ -174,6 +175,7 @@ class FakeVectorStore:
     simulates an outage. Records are dicts with payload fields."""
 
     def __init__(self, settings: Settings, down: bool = False):
+        refuse_in_production()
         self._s, self.down = settings, down
         self.law: list[Hit] = []
         self.uploads: list[Hit] = []  # payload must contain user_id, document_id

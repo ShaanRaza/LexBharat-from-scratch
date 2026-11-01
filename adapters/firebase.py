@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
+from adapters.guard import refuse_in_production
 from core.settings import Settings
 
 
@@ -44,6 +45,9 @@ class FirebaseAuth:
 
 class FakeAuth:
     """Tokens look like 'tok:<uid>'. Anything else is rejected."""
+
+    def __init__(self) -> None:
+        refuse_in_production()
 
     async def verify_token(self, id_token: str) -> AuthUser:
         if not id_token.startswith("tok:") or len(id_token) <= 4:

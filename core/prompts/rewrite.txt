@@ -1,0 +1,8 @@
+Turn the user's latest message into one standalone legal search query, using the
+conversation context. Do not answer it. Reply with JSON only:
+{{"query": string, "act": string or null, "section": string or null,
+"case_number": string or null, "year": integer or null}}
+Context summary: {summary}
+Recent turns:
+{turns}
+Latest message: {message}

@@ -11,6 +11,7 @@ import hashlib
 import logging
 from typing import Protocol
 
+from adapters.guard import refuse_in_production
 from core.settings import Settings
 
 log = logging.getLogger(__name__)
@@ -50,6 +51,7 @@ class RedisCache:
 
 class FakeCache:
     def __init__(self) -> None:
+        refuse_in_production()
         self.data: dict[str, str] = {}
         self.ttls: dict[str, int] = {}
 

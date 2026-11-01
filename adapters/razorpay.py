@@ -12,6 +12,7 @@ import json
 from dataclasses import dataclass
 from typing import Protocol
 
+from adapters.guard import refuse_in_production
 from core.settings import Settings
 
 
@@ -50,7 +51,8 @@ class RazorpayPayments:
 class FakePayments:
     """Same check with a test secret, so signing logic is exercised in tests."""
 
-    def __init__(self, secret: str = "test-secret"):
+    def __init__(self, secret: str = "test-secret"):  # noqa: S107
+        refuse_in_production()
         self.secret = secret
 
     def sign(self, raw_body: bytes) -> str:

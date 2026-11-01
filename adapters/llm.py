@@ -10,6 +10,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Protocol
 
+from adapters.guard import refuse_in_production
 from core.settings import Settings
 
 
@@ -64,13 +65,14 @@ class LiteLLMClient:
 
 
 class FakeLLM:
-    """Scripted model. `respond(prompt, system) -> str`; `down=True` simulates outage."""
+    """Scripted model: `respond(prompt, system) -> str`; `down=True` = outage."""
 
     def __init__(
         self,
         respond: Callable[[str, str], str] | str = "",
         down: bool = False,
     ):
+        refuse_in_production()
         self.respond, self.down = respond, down
         self.prompts: list[str] = []
 

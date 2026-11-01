@@ -230,7 +230,7 @@ def is_sealed(answer: object) -> bool:
 # --- Output ---------------------------------------------------------------------------
 @dataclass(frozen=True)
 class Footer:
-    """What every result carries (CLAUDE.md section 6). Wording lives in config/UX copy."""
+    """What every result carries (CLAUDE.md section 6); wording is UX copy."""
 
     data_as_of: str
     snapshot_version: str
@@ -282,7 +282,7 @@ class FinalEvent:
 StreamEvent = TextDelta | FinalEvent
 
 
-# --- Interfaces for steps owned by another lane ------------------------------------------
+# --- Interfaces for steps owned by another lane ---------------------------------
 class GateFn(Protocol):
     """Step 7, implemented in core/gate.py (trust)."""
 

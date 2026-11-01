@@ -7,6 +7,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
+from adapters.guard import refuse_in_production
+
 
 @dataclass(frozen=True)
 class PageText:
@@ -39,7 +41,10 @@ class PdfExtractor:
 
 
 class FakeExtractor:
-    """Treats bytes as UTF-8 text, one page per form feed. b'' or <20 chars = unreadable."""
+    """UTF-8 bytes as text, one page per form feed; under 20 chars = unreadable."""
+
+    def __init__(self) -> None:
+        refuse_in_production()
 
     async def extract(self, data: bytes, filename: str) -> OcrResult:
         text = data.decode("utf-8", errors="ignore")

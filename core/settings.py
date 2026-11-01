@@ -6,7 +6,7 @@ never in code. Secrets use SecretStr so they never print.
 
 from functools import lru_cache
 
-from pydantic import SecretStr
+from pydantic import SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", extra="ignore"
     )
+
+    # --- Environment ("production" turns on the safety checks below) ---
+    ENVIRONMENT: str = "development"
 
     # --- Product ---
     PRODUCT_NAME: str = "KanoonBuddy"
@@ -96,6 +99,12 @@ class Settings(BaseSettings):
     FEATURE_STATS_LIVE: bool = False
     FEATURE_MODEL_ROUTING: bool = False
     FEATURE_HINDI: bool = False
+
+    @model_validator(mode="after")
+    def _production_needs_seal_key(self) -> "Settings":
+        if self.ENVIRONMENT == "production" and not self.SEAL_KEY.get_secret_value():
+            raise ValueError("SEAL_KEY must be set when ENVIRONMENT=production")
+        return self
 
 
 @lru_cache

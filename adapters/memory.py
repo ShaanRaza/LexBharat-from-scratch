@@ -5,11 +5,13 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
+from adapters.guard import refuse_in_production
 from core.contracts import PipelineRequest, PipelineResult, RemovedCitation
 
 
 class FakeUsageMeter:
     def __init__(self, limit: int | None = None):
+        refuse_in_production()
         self.limit, self.counts = limit, {}
 
     async def allowed(self, user_id: str, plan: str) -> bool:
@@ -21,6 +23,7 @@ class FakeUsageMeter:
 
 class FakeStore:
     def __init__(self) -> None:
+        refuse_in_production()
         self.saved: list[tuple[PipelineRequest, PipelineResult]] = []
 
     async def save(self, request: PipelineRequest, result: PipelineResult) -> None:
@@ -29,6 +32,7 @@ class FakeStore:
 
 class FakeCitationLog:
     def __init__(self) -> None:
+        refuse_in_production()
         self.rows: list[tuple[str, str, RemovedCitation]] = []
 
     async def write(

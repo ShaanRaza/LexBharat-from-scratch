@@ -17,6 +17,7 @@ import logging
 from pathlib import Path
 from typing import Protocol, cast, get_args
 
+from adapters.guard import refuse_in_production
 from adapters.llm import LLM, LLMUnavailable
 from core.contracts import (
     Decision,
@@ -38,7 +39,7 @@ class DecisionUnavailable(Exception):
 
 
 class DecisionService(Protocol):
-    async def decide(self, query: str) -> Decision: ...
+    async def decide(self, query: str, *, uploads: bool = False) -> Decision: ...
     async def rate_passage(
         self, query: str, passage: Passage
     ) -> tuple[Rating, float]: ...
@@ -48,7 +49,7 @@ class DecisionService(Protocol):
 class Backend(Protocol):
     """One decider (Jev or Gemini). Raises DecisionUnavailable on any failure."""
 
-    async def decide(self, query: str) -> Decision: ...
+    async def decide(self, query: str, *, uploads: bool = False) -> Decision: ...
     async def rate_passage(
         self, query: str, passage: Passage
     ) -> tuple[Rating, float]: ...
@@ -66,7 +67,7 @@ class JevClient:
     def __init__(self, settings: Settings):
         self._s = settings
 
-    async def decide(self, query: str) -> Decision:
+    async def decide(self, query: str, *, uploads: bool = False) -> Decision:
         raise DecisionUnavailable("Jev client not wired yet")
 
     async def rate_passage(self, query: str, passage: Passage) -> tuple[Rating, float]:
@@ -95,12 +96,13 @@ class GeminiDecider:
     def _json(self, text: str) -> dict:
         try:
             d = json.loads(text)
-            assert isinstance(d, dict)
+            if not isinstance(d, dict):
+                raise ValueError("not an object")
             return d
-        except (ValueError, AssertionError) as e:
+        except ValueError as e:
             raise DecisionUnavailable("unparseable decision") from e
 
-    async def decide(self, query: str) -> Decision:
+    async def decide(self, query: str, *, uploads: bool = False) -> Decision:
         d = self._json(await self._ask(_prompt("decide", query=query)))
         scope, safety = d.get("scope"), d.get("safety")
         if scope not in get_args(ScopeClass) or safety not in get_args(SafetyClass):
@@ -151,10 +153,10 @@ class FallbackDecisions:
                 log.warning("Jev failed or timed out; using Gemini fallback")
         return await call(self._fb)
 
-    async def decide(self, query: str) -> Decision:
+    async def decide(self, query: str, *, uploads: bool = False) -> Decision:
         s = self._s
         on = s.JEV_ENABLED_SCOPE and s.JEV_ENABLED_FILTERS and s.JEV_ENABLED_SAFETY
-        return await self._run(on, False, lambda b: b.decide(query))
+        return await self._run(on, uploads, lambda b: b.decide(query, uploads=uploads))
 
     async def rate_passage(self, query: str, passage: Passage) -> tuple[Rating, float]:
         return await self._run(
@@ -183,6 +185,7 @@ class FakeDecisions:
         safety: SafetyClass = "normal",
         delay_s: float = 0.0,
     ):
+        refuse_in_production()
         self.down, self.scope, self.safety, self.delay_s = down, scope, safety, delay_s
         self.seen_kinds: list[str] = []
 
@@ -192,7 +195,7 @@ class FakeDecisions:
         if self.down:
             raise DecisionUnavailable("fake down")
 
-    async def decide(self, query: str) -> Decision:
+    async def decide(self, query: str, *, uploads: bool = False) -> Decision:
         await self._gate()
         return Decision(self.scope, Filters(), self.safety, (), True)
 

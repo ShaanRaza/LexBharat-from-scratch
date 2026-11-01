@@ -15,6 +15,7 @@ from typing import Protocol
 
 import httpx
 
+from adapters.guard import refuse_in_production
 from core.settings import Settings
 
 _BASE = "https://api.voyageai.com/v1"
@@ -95,6 +96,7 @@ class FakeEmbedder:
     """Deterministic hashed bag-of-words vector. `down=True` simulates an outage."""
 
     def __init__(self, dim: int = 64, down: bool = False):
+        refuse_in_production()
         self.dim, self.down = dim, down
         self.calls = 0
 
@@ -104,7 +106,7 @@ class FakeEmbedder:
             raise VoyageUnavailable("fake down")
         v = [0.0] * self.dim
         for w in words(text):
-            h = int(hashlib.md5(w.encode()).hexdigest(), 16)
+            h = int(hashlib.md5(w.encode(), usedforsecurity=False).hexdigest(), 16)
             v[h % self.dim] += 1.0
         n = math.sqrt(sum(x * x for x in v)) or 1.0
         return [x / n for x in v]
@@ -114,6 +116,7 @@ class FakeReranker:
     """Scores by word overlap with the query. `down=True` simulates an outage."""
 
     def __init__(self, down: bool = False):
+        refuse_in_production()
         self.down = down
 
     async def rerank(

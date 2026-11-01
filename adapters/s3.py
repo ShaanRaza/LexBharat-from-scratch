@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from typing import Protocol
 
+from adapters.guard import refuse_in_production
 from core.settings import Settings
 
 EXPIRY_SECONDS = 900
@@ -89,6 +90,7 @@ class S3Store:
 
 class FakeFileStore:
     def __init__(self) -> None:
+        refuse_in_production()
         self.files: dict[str, bytes] = {}
 
     def put(self, user_id: str, document_id: str, data: bytes) -> None:
