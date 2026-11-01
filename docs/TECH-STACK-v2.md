@@ -118,6 +118,13 @@ features reuse the same trust parts. Detailed per-feature designs are in
 | Counter-arguments, moot court, study buddy | **Branching**, so orchestration is allowed (O4) | Final output **always** goes through gate then verifier; verifier code stays outside the agents |
 | Saved answers, export | Not generative | The stored citation string is copied exactly as recorded; never re-typed by a model |
 | Statistics pages | Database counts | Only rows with `is_final_outcome` true; live only after the 50-judgment check |
+| Live progress panel | Not generative: the pipeline already knows which step it is on, so each step emits a named event on the existing answer stream | Emits **step names and counts only** — never a case name, citation or quote. Step 10 is unchanged: verified citations are still one final event |
+| "Improve my question" helper | One cheap model call **before** the pipeline runs, triggered by the user, returning editable text into the input box | Not a pipeline step and not an answer. The 11 steps and the 50-10-8 counts are untouched. It never cites anything, so nothing bypasses the verifier |
+| Follow-up suggestions | One cheap call after step 9, given the question and the verified answer | Must return **questions only**. A returned sentence containing a citation marker is dropped. Running one is an ordinary new question through all 11 steps |
+| Task cards (summarise, timeline, explain a section) | Fixed steps per card, same shape as "talk with a single judgment" | Every row or point carries a quoted span; the verifier checks it against that record's own text. Read-only cards only at launch |
+| Memory: answer preferences | A short config-like string added to the prompt at step 8 | No client material, so Jev may see it. Never changes which passages are retrieved, only how the answer reads |
+| Memory: matter facts | Retrieved by `matter_id` at step 1 and added as context | **Treated exactly as upload text.** Gemini only, never Jev; masked in Langfuse; scrubbed in Sentry; read only through the shared user-filtered data-access function; hard-deleted with the matter. An answer that used one is flagged so sharing can be refused |
+| Share links | Not generative: serves a stored, already-verified answer | Refused when the stored answer is flagged as upload- or memory-shaped. Served page carries date, credit and notice; `noindex`; revocable |
 
 Upload chats keep their own rule: the claim-support check and any decision that touches
 upload text use Gemini (paid tier), never Jev.
@@ -153,6 +160,13 @@ upload text use Gemini (paid tier), never Jev.
   has not yet done.
 - Upload pipeline: type and size check, page limit, virus scan, sandboxed reader (own
   container, no network), per-user storage path, hard delete as in the original.
+- Share links: the token is random and long enough not to be guessed, is stored hashed, can
+  be revoked, expires, and the page is served `noindex`. A link is refused at creation time
+  if the saved answer is flagged as shaped by an upload or a matter fact (O14). Revoking must
+  take effect immediately, so the check is on the database row, not on a cached page.
+- Memory: matter facts inherit every upload rule (never Jev, masked, scrubbed, user-filtered,
+  hard delete). The isolation test set gains a case where user A's matter fact must not appear
+  in user B's answer, and an injection case where a saved fact contains an instruction.
 - Independent security test before launch (PRD-v2 gate item 5).
 
 ### 5.4 Customer-facing plumbing
@@ -187,6 +201,19 @@ feature. At stack level, new tables are expected for:
 `admin_actions` (or extend `audit_log`); `job_runs` (background jobs). Each arrives in a
 numbered, reversible migration with its feature, not all at once.
 
+Added 2 Nov 2026: `matters`; `memory_preferences` (per user) and `matter_facts` (per matter,
+client material); `saved_prompts`; `share_links` (hashed token, expiry, revoked flag).
+
+Two schema rules that are cheap now and expensive later, so they apply from each table's
+**first** migration:
+
+- Every table holding user work — `saved_items`, `notes`, `documents`, `drafts`, `exports`,
+  `matter_facts` — carries a nullable `matter_id`, even where the screen ships later (O11).
+  Retrofitting it across a live schema is the kind of migration that goes wrong.
+- Every stored answer carries a flag recording whether an upload or a matter fact shaped it.
+  Sharing reads that flag (O14). It cannot be worked out reliably after the fact, so it is
+  written at the moment the answer is saved.
+
 ## 7. API additions
 
 All under `/api/v1`, one error format, a request id on every response, cursor pagination
@@ -195,6 +222,12 @@ export, delete), `/folders` and `/saved`, `/exports`, `/templates` and `/drafts`
 `/cases/{id}/chat`, `/admin/*` (second factor required), `/health` and `/ready` (for the
 uptime check), `/events` (privacy-safe). Exact shapes go in `docs/API.md` and
 `api/schemas.py` first; the web client is generated from OpenAPI (rule 3).
+
+Added 2 Nov 2026: `/matters` and `/matters/{id}/*`; `/memory` (list, save, edit, delete —
+one page must be able to show and delete everything); `/prompts`; `/share` (create, revoke)
+and a public `/s/{token}`; `/judgments/{id}/timeline`; `/search` (the user's own work only).
+Progress events ride the **existing** answer stream rather than a second channel, so there
+is no way for a step event to arrive after the final citation event.
 
 ## 8. Revised build order
 
@@ -207,7 +240,9 @@ The original ten steps stand. This is the order for the widened v1.
 | 2 | Jev switches on one at a time with live comparisons; real Firebase verifier; the 200-question set drafted with the advocate | Step 1 |
 | 3 | Production foundation: AWS accounts, staging, CI deploy, backups and a restore drill, monitoring, firewall, secrets | Owner buys (PRD-v2 section 6) |
 | 4 | Plans, billing, accounts, consents, delete and export, feedback, admin page | Step 3; GST decision |
-| 5 | Judgment reader, talk with a judgment, saved answers, export | Step 1 |
+| 1b | **Answer experience** (new): split answer view with the source beside the chat, live progress panel, follow-ups, Copy / Export / Rewrite, improve helper. Cheap, because it reuses the judgment reader and the existing stream, and it is what makes the verified citations visible | Step 1 |
+| 5 | Judgment reader, talk with a judgment, **matters**, saved answers, export, history and search, read-only task cards, share links | Step 1; matters carry `matter_id` into every table built from here on |
+| 5b | **Memory** (both halves), built behind its switch with the isolation and injection tests written first | Step 5; retention wording (O13) |
 | 6 | Public pages, share cards, statistics (statistics live only after the hand check) | Step 1; advocate |
 | 7 | Upload and chat with the full upload hardening | Steps 3, 5; advocate opinion; Voyage terms |
 | 8 | Drafting, review and compare | Step 5; advocate-written templates |
@@ -241,9 +276,19 @@ monthly total to anyone until a quote-based table replaces this section.**
 | Virus scanner | ClamAV, or a managed scan | ClamAV | ARM and memory test |
 | Second factor for admin | app code, or Firebase multi-factor | Firebase | Firebase docs check |
 | Load-test numbers | set from beta | undecided | Beta data |
+| Memory retention clock (O13) | die with the matter; or a fixed period | die with the matter, yearly "still active?" prompt, 12 months after archiving | Owner plus counsel. A short auto-delete would hurt users: Indian matters run for years |
+| Share-link expiry | 7, 30, 90 days, or never | 30 days, renewable | Owner, with O13 |
+| Progress panel transport | existing answer stream, or a second channel | the existing stream | Already settled here: a second channel could deliver a step event after the final citation event |
+| Review-table cost | unknown | not promised | Measure verifier runs per table once step 5 is real |
 | Everything else in the original "Open decisions" table | unchanged | unchanged | as before |
 
 ## 11. Change log
+
+- **2 Nov 2026 (third):** added the trust paths for the new screens (section 4), share-link
+  and memory hardening (5.3), the `matter_id` and answer-provenance schema rules (section 6),
+  new routes (section 7), build steps 1b and 5b, and four open decisions. The screen shapes
+  were reviewed against Harvey's public videos and website; its claims about itself are
+  **Competitor claim** and are not repeated as fact.
 
 - **2 Nov 2026:** first revision for the widened v1. Split topology, managed database,
   CDN and firewall, staging, email, monitoring, upload hardening, injection defences,

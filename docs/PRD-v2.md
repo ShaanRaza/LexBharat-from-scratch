@@ -39,6 +39,11 @@ file. Nothing here promotes an Estimate to a fact.
 | O8 | Product name: **LexBharat** (replaces the working name KanoonBuddy; Praman is dropped). A trademark search with IP India must still be done **before** any domain, logo or brand spend | 2 Nov 2026 | **Decided** (trademark search pending) |
 | O9 | GST: prices shown with or without GST | | Open (accountant) |
 | O10 | Pricing: decided later. ₹199, ₹499 and ₹299 stay hypotheses. Prices and limits live in config, never in code, so billing can be built and tested with placeholder plans | 2 Nov 2026 | **Deferred by the owner** |
+| O11 | **Matters are in v1.** A matter is one case or project. Saved answers, uploads, drafts and remembered facts hang off it. One table; the word shown is "Matter" for advocates and "Project" for students (a label, not a second feature). Every table that holds user work carries a nullable `matter_id` **from its first migration**, even where the screen ships later, so the column never has to be retrofitted | 2 Nov 2026 | **Decided** |
+| O12 | **Memory is split in two, because the two halves carry different risk.** (a) *Answer preferences* — how the user wants answers (short, numbered, lead with the conclusion). About the user, no client material, may go to Jev, kept until deleted. (b) *Matter facts* — "I act for the petitioner", "the damages period is 2019-2021". This **is** client material and is treated exactly like upload text: Gemini only (never Jev), masked in Langfuse, scrubbed in Sentry, read only through the shared user-filtered data-access function, hard-deleted with its matter. Nothing is ever remembered automatically: the user presses save, and one page lists every stored item with a delete button | 2 Nov 2026 | **Decided in shape** (the retention clock is O13) |
+| O13 | Memory retention: **proposed, owner and counsel confirm.** Matter facts live as long as their matter and die with it or with the account. There is deliberately **no short auto-delete clock**, because Indian litigation runs for years and silently deleting a lawyer's case notes at 12 months would damage the work the product exists to support. Instead: a yearly "is this matter still active?" prompt, and a matter the user archives is hard-deleted 12 months after archiving. Preferences live until deleted | proposed | **Open** (retention periods are the owner's call, CLAUDE.md section 8; counsel reviews the wording) |
+| O14 | **Share links are allowed, with one hard limit:** only an answer built purely from the public dataset may be shared. If an upload or a matter fact shaped the answer, sharing is blocked and the user is offered a clean re-run without their own material. Links are unguessable, revocable, expire by default and are never indexed by search engines; the shared page carries the data-as-of date, the CC BY credit and the not-legal-advice notice, and names no advocate (BCI Rule 36) | 2 Nov 2026 | **Decided** (expiry period: owner, with O13) |
+| O15 | Practice questions and exam drills for law students: **not in v1.** The owner declined. Revisit only with the study-buddy feature after the gate | 2 Nov 2026 | **Decided (declined)** |
 
 ## 3. Facts in the original PRD that are wrong, changed or newly known
 
@@ -83,7 +88,15 @@ built before launch; switched on only when its own gate (right-hand column) pass
 | Chambers team accounts (shared bill, each member's chats private) | Launch | Minimum 3 seats; counsel on processor role |
 | Judgment reader with paragraph anchors | Launch | Backs every citation link |
 | **Talk with a single judgment** (summary, issues, ratio) | Launch | Answers pass the verifier against that judgment's own paragraphs |
-| **Saved answers, folders and notes** (new) | Launch | Lawyers keep research for weeks |
+| **Matters** (new, O11): a page per case or project holding its saved answers, uploads, drafts, notes and remembered facts. Replaces plain "saved answers and folders" | Launch | One table; label differs for advocates and students. `matter_id` exists on every user-work table from its first migration |
+| **Answer view with the source open beside the chat** (new): the judgment or Act section sits next to the answer; clicking a citation jumps to that paragraph | Launch | Reuses the judgment reader with paragraph anchors, already in this table, so most of the cost is wiring, not new work |
+| **Live progress panel** (new): named steps as the answer is produced — understanding the question, searching, checking sources, writing, verifying — with counts | Launch | **Step names and counts only.** Never a case name, citation or quote before verification. Pipeline step 10 is unchanged: checked citations still arrive as one final event |
+| **Follow-up suggestions, and a Copy / Export / Rewrite row under each answer** (new) | Launch | Follow-ups are questions, never claims, and are produced after verification. Any follow-up the user runs goes through the full pipeline like any other question |
+| **"Improve my question" helper** (new): rewrites a rough question into a sharper one | Launch | Lives **in the input box, before the user sends**, and shows editable text. It is not a pipeline step; the 11 steps stay untouched (CLAUDE.md section 4) |
+| **History and search across your own saved work** (new) | Launch | PostgreSQL full-text; no new vendor. Always filtered by `user_id` through the shared data-access function |
+| **Task cards** (new): one-click read-only jobs — summarise this judgment, timeline of key events, explain this section | Launch | Read-only jobs only at launch. Every timeline row and summary point carries a quoted span that the verifier confirms exists in the record. Drafting-style cards stay in the gated rows below |
+| **Share a saved answer by link** (new, O14) | Launch | Blocked for any answer shaped by an upload or a matter fact; revocable; expires; not indexed; carries date, credit and notice; names no advocate |
+| **Memory** (new, O12): saved answer preferences, and matter facts saved explicitly to one matter | **Launch-switch** | Switched on only when: one page lists every stored item and deletes it for real; matter facts provably never reach Jev, Langfuse or Sentry; the retention wording (O13) is settled with counsel; the injection and isolation tests cover it |
 | **Export an answer to Word or PDF with citations intact** (new) | Launch | The citation string is copied exactly as recorded |
 | **Onboarding, empty states, help centre, support inbox** (new) | Launch | |
 | **Coverage page** (new): every Act and regulator in the dataset with its section count, which courts are covered, the data-as-of date | Launch | Built from measured counts only; no category listed that the data does not hold (O7) |
@@ -103,6 +116,8 @@ built before launch; switched on only when its own gate (right-hand column) pass
 | Data refresh pipeline | Backlog (decision D2) | The owner may reopen this. Until then every page shows the data-as-of date |
 | Tribunals | Later | OCR cost, not licensing. Not advertised at launch |
 | Shared team workspace | Month 6 onward | |
+| **Review tables**: one row per judgment or document, one column per question, exportable | After launch | Every cell is its own small answer and needs its own verified citation, so 20 rows by 5 columns is 100 verifier runs. Cost and speed must be measured before this is promised |
+| **Playbooks**: the user's own checklist of rules run against a document, giving accept-or-dismiss suggestions | After launch | Depends on review and compare passing its gate first |
 
 ### 4.4 Not building
 
@@ -110,6 +125,11 @@ built before launch; switched on only when its own gate (right-hand column) pass
 - Any listing, ranking, matching or recommending of advocates, or "find a lawyer" (BCI Rule 36).
 - Court tracking, e-filing, a practice-management suite (original non-goals stand).
 - A native mobile app (the installable web app is the plan).
+- Practice questions and exam drills for students (O15, owner declined).
+- Word and Outlook add-ins, and connectors to document-management systems. Large to build, larger to maintain, and they serve firms with that software, not the solo advocates and students this product is for.
+- Our own trained model. The rule is no training on user data, and a fixed pipeline over a verified dataset does not need one.
+- An analytics or benchmarking console for firm leaders, a legal-intake queue, and regulatory horizon scanning. Horizon scanning is impossible anyway on a frozen snapshot with no refresh pipeline (decision D2).
+- Editing many documents at once in parallel.
 
 ## 5. New requirements the original PRD did not have
 
@@ -132,7 +152,8 @@ These are product requirements. The how is in [`TECH-STACK-v2.md`](TECH-STACK-v2
 | Area | Requirement |
 |---|---|
 | Abuse protection | Rate limits per user and per address, bot protection on sign-up and public pages, a firewall in front of the site |
-| Prompt injection | Uploaded files and retrieved judgment text are treated as data, never as instructions. A fixed attack test set runs on every release: no answer may skip the verifier, reveal another user's data, or follow an instruction found inside a document |
+| Prompt injection | Uploaded files, retrieved judgment text **and remembered matter facts** are treated as data, never as instructions. A fixed attack test set runs on every release: no answer may skip the verifier, reveal another user's data, or follow an instruction found inside a document or a saved memory |
+| Memory and sharing | Tests must show that a matter fact never reaches Jev, Langfuse or Sentry; that one user's memory can never surface in another user's answer; and that a share link cannot be created for an answer shaped by an upload or a matter fact (O12, O14) |
 | Uploads | File type and size checks, page limit, virus scan, a sandboxed reader, no network access from the reader |
 | Admin | Sign-in with a second factor; every admin view of user data is logged with a reason |
 | Third parties | A list of every vendor, what it receives and where, kept current on the privacy page (the Tech Stack's "Where data goes" table is the start) |
@@ -214,6 +235,8 @@ the launch date moves; the owner decides.
 14. A load test at the agreed number passes the speed targets.
 15. Core flows pass the keyboard and screen-reader check.
 16. Every Launch-switch feature that is being switched on has passed its own gate (section 4.2). Features that have not stay off.
+17. A user can see every item memory has stored about them on one page, edit it and delete it, and the delete is a real delete, checked in the database and in Qdrant (O12).
+18. A share link cannot be made for an answer shaped by an upload or a matter fact; an existing link can be revoked and stops working at once (O14).
 
 ## 8. Success metrics added
 
@@ -230,7 +253,14 @@ stands: time build steps 1 and 2, then re-plan.
 
 ## 10. Open questions after this revision
 
-Owner decisions O6 to O9 above, and:
+Owner decisions O6, O9 and O13 above, and:
+
+- **Where these additions came from.** The screens and patterns added on 2 Nov 2026 were taken
+  from Harvey's own marketing videos and website (platform page, product playlist, academy
+  library), watched and read in a working session. Everything Harvey says about itself —
+  hours saved, lawyer counts, certifications, how its own system works — is a
+  **Competitor claim**, recorded as such and never repeated as fact in our own copy. What we
+  took is the *shape* of screens, not their wording, logo, typeface or layout.
 
 - The exact coverage sentence shown to users (the owner's wording). It may name only what the measured coverage table shows (O7). Suggested shape, for approval: "LexBharat covers Supreme Court judgments and the Acts and regulations listed on our coverage page. It does not include High Courts, district courts, tribunals, or anything after the data-as-of date."
 - Wording shown to users, including the two not-legal-advice sentences, the removal note,
@@ -243,6 +273,10 @@ Owner decisions O6 to O9 above, and:
 
 ## 11. Change log
 
+- **2 Nov 2026 (third):** added the screen patterns reviewed against Harvey (section 4.2:
+  matters, split answer view, progress panel, follow-ups, improve helper, history, task
+  cards, share links, memory); decisions O11 to O15; gate items 17 and 18; review tables
+  and playbooks moved to after-launch; a longer not-building list.
 - **2 Nov 2026 (later):** O7 decided (serve what the data holds, with a public coverage
   page); O8 decided (name is LexBharat); O10 added (pricing deferred). "KanoonBuddy" in
   this file and the original PDFs means the product now called LexBharat.
