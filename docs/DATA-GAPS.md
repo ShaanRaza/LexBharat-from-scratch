@@ -158,3 +158,85 @@ chunks mixed into Set A would show up as false "missing" alarms.
 Known target: the parquet holds **371,247** English Supreme Court chunks against **371,159**
 under the exact filter (**Reported**, from earlier notes). That 88-chunk difference is either
 unnamed-court points, or something else; the cross-check names them either way.
+
+## 7. The source dataset card, and three conflicts with what we believed
+
+Source: the HuggingFace card for `vaquill/open-india-law`, read 2 Nov 2026. **Dataset card**
+evidence label throughout. The dataset is gated (free, but you accept conditions first);
+snapshot `v2026.08`, 54 GB, CC BY 4.0, Apache-2.0 for the scrapers.
+
+### What it says it holds
+
+| Content | Volume | Period |
+|---|---:|---|
+| Court judgments | 12,848,644 documents | 1950–2025 |
+| Tribunal and regulator matters | 813,168 | 1985–2026 |
+| Enactments | 22,265 | 1806–2026 |
+| Sections of legislation | 1,098,577 | |
+
+Courts: **the Supreme Court plus all 25 High Courts.** District and trial courts are
+excluded. Legislation covers Central plus all states and union territories, from India Code.
+Judgments are one row per chunk; group by `case_id`, order by `chunk_index`.
+
+### Conflict 1 — the collection table does not match what is on the drive
+
+The card's table:
+
+| Collection | Points | Card says it holds |
+|---|---:|---|
+| `legal_corpus_v1` | 19,595,718 | High Court and Supreme Court judgment chunks |
+| `legal_corpus_v2` | 11,823,753 | **Tribunal and regulator chunks** |
+| `acts_india` | 1,098,577 | Legislation and regulatory provisions |
+
+**Observed on the drive (Measured, Part 3 tally over 2.76M points of v2):** v2 is about 96%
+High Court and 3.1% Supreme Court, across 38 court names. No tribunals.
+
+The card is very likely wrong here, and its own text says why: tribunal material **has no text
+layer** and is indexed by case only — roughly 2.1M PDFs awaiting OCR. Material with no text
+cannot be 11.8 million text chunks. So `v1` and `v2` are both judgment collections
+(19.6M + 11.8M ≈ the 32.5M total), split some other way.
+
+**What follows:** nobody has looked at `legal_corpus_v1` yet. If it holds Supreme Court chunks
+too, the copy — which reads only v2 — is incomplete. The parquet cross-check would catch
+that, because the parquet is an independent oracle, but v1 should be checked directly.
+
+### Conflict 2 — the card says English only; our working figure says ~742,000 vernacular chunks
+
+The card: *"the only language tag is English. The page does not mention translations."*
+
+Our notes carry ~742,000 vernacular Supreme Court chunks, and the Set A plan expects
+A-minus-B to be roughly that size. Both cannot be right. Possibilities: the parquet carries
+untagged vernacular rows the card does not describe; the audit's language classification was
+wrong; or the two are counting different things.
+
+**Do not treat ~742,000 as the expected difference.** Let the script classification report
+what is actually there — that is exactly what it is for.
+
+### Conflict 3 — "metadata only" is about tribunals, not High Courts
+
+The owner's gap audit reported the High Court export as metadata only (section 2 above). The
+card says the opposite for judgments — extracting clean text from court PDFs is described as
+the project's main contribution — and says *tribunal* material is the part without text.
+
+**This is the likelier reading, and it is good news: High Courts have text, so phase 2 is
+real.** It also means the "no text" risk moves to tribunals, which are already "Later" in
+PRD-v2 section 4.3 and now carry a known OCR cost. Still **not verified** against the drive:
+settle it by opening one High Court point, which the Part 6 inventory does.
+
+### Other facts worth carrying
+
+- **Not current law.** One-off snapshots, no refresh schedule; refreshes depend on community
+  adoption of the scrapers. Corrections arrive as superseding snapshots, never in-place edits.
+  This supports decision D2 and the data-as-of date on every page.
+- **Embeddings:** voyage-4, 1024 dimensions, cosine, with a named sparse vector for BM25
+  hybrid search. Queries must use the same model. Matches what the copy carries (**Measured**:
+  1,024-d dense, ~190–230 non-zero sparse terms).
+- **Redactions already applied at source:** names of victims' relatives and protected children,
+  phone numbers, emails, and PAN, IFSC and Aadhaar numbers in identifying context. Judgments a
+  court ordered unpublished, including in-camera matters, are excluded. Useful for the privacy
+  page, but it is the source's claim, not our verification.
+- **Attribution is a licence condition**, not a courtesy — imposed by the eCourts and
+  NCLT/NCLAT policies. `Data: Open India Law by Vaquill AI, CC BY 4.0` stays on every page.
+- **The card contradicts itself on totals** (32,572,660 judgment chunks against 32,518,048
+  vectors; 1,098,577 sections against 1,098,269 provisions) and says so. The 308-row gap we
+  already owed an explanation for is visible in the card itself.
