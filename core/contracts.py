@@ -212,6 +212,8 @@ _seal_checker: Callable[[VerifiedAnswer], bool] | None = None
 def register_seal_checker(fn: Callable[[VerifiedAnswer], bool]) -> None:
     """core/verify.py calls this once at import. A second call is refused."""
     global _seal_checker
+    if getattr(fn, "__module__", "") != "core.verify":
+        raise RuntimeError("only core/verify.py may register the seal checker")
     if _seal_checker is not None:
         raise RuntimeError("seal checker already registered")
     _seal_checker = fn
