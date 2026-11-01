@@ -278,6 +278,8 @@ async def verify(
         for m in _MARKER.finditer(sentence):
             for label in re.split(r"\s*[,;]\s*", m.group(1)):
                 labels.append(label.upper())
+        if labels and not re.sub(r"[\W_]", "", _MARKER.sub("", sentence)):
+            continue  # a bare "[S1]" left over from a removed sentence: drop it
         quotes = _quotes(sentence)
         unbalanced = _unbalanced_quotes(sentence)
 
@@ -352,6 +354,13 @@ async def verify(
         text = f"{text}\n\n{note}".strip()
         await deps.citation_log.write(draft.question, draft.model, tuple(removed))
 
+    # Only citations whose marker is carried by a sentence that survived.
+    shown = {
+        lab.upper()
+        for m in _MARKER.finditer(text)
+        for lab in re.split(r"\s*[,;]\s*", m.group(1))
+    }
+    citations = {k: v for k, v in citations.items() if k in shown}
     ordered = tuple(citations[k] for k in sorted(citations, key=lambda s: int(s[1:])))
     return seal_answer(text, ordered, removed)
 

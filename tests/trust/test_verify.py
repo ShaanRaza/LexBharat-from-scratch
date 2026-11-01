@@ -333,3 +333,18 @@ async def test_full_width_brackets_parse_as_markers(world):
         world.draft("Bail is the rule ［S1］."), world.passages, world.deps
     )
     assert [c.source_id for c in ans.citations] == ["S1"]
+
+
+async def test_marker_only_fragment_is_dropped_and_not_counted(world_jev_down):
+    w = world_jev_down
+    text = "The Court said “murder is lawful.” It follows. [S1]"
+    ans = await verify(w.draft(text), w.passages, w.deps)
+    assert ans.citations == ()
+    assert "[S1]" not in ans.text and "murder" not in ans.text
+
+
+async def test_citations_only_for_markers_in_surviving_text(world):
+    text = "Bail is the rule and jail the exception [S1]. Nonsense tax words [S2]."
+    ans = await verify(world.draft(text), world.passages, world.deps)
+    assert [c.source_id for c in ans.citations] == ["S1"]
+    assert "[S2]" not in ans.text
