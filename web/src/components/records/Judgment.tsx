@@ -13,7 +13,7 @@ export function judgmentHeading(c: CaseOut): string {
   return `Supreme Court judgment${year ? `, ${year}` : ""}`;
 }
 
-export function Judgment({ c }: { c: CaseOut }) {
+export function Judgment({ c, highlight }: { c: CaseOut; highlight?: string }) {
   return (
     <article>
       <h1 className="text-title font-extrabold">{judgmentHeading(c)}</h1>
@@ -29,7 +29,13 @@ export function Judgment({ c }: { c: CaseOut }) {
       )}
       <Card className="mt-4 flex flex-col gap-3">
         {c.paragraphs.map((p) => (
-          <p key={p.anchor} id={p.anchor} className="scroll-mt-20 rounded-chip p-2 leading-relaxed target:bg-tint">
+          <p
+            key={p.anchor}
+            id={p.anchor}
+            data-cited={p.anchor === highlight ? "true" : undefined}
+            aria-current={p.anchor === highlight ? "true" : undefined}
+            className={`scroll-mt-20 rounded-chip p-2 leading-relaxed target:bg-tint ${p.anchor === highlight ? "bg-tint" : ""}`}
+          >
             <span className="mr-2 text-label font-bold text-ink-soft">{p.anchor}</span>
             {p.text}
           </p>

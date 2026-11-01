@@ -1,10 +1,19 @@
 import { Card, CitationChip } from "@/components/ui";
 import { markFor, meaningFor } from "@/lib/citation";
 import { CITATION_AS_RECORDED, UNVERIFIED_NOTE } from "@/lib/copy";
+import type { Citation } from "@/lib/api/types";
 import { citationHref, citationName, isShown, toSegments, type AnswerState } from "@/lib/chat/state";
 import { FailureCard } from "./FailureCard";
 
-export function AnswerView({ answer, onRetry }: { answer: AnswerState; onRetry?: () => void }) {
+export function AnswerView({
+  answer,
+  onRetry,
+  onOpenSource,
+}: {
+  answer: AnswerState;
+  onRetry?: () => void;
+  onOpenSource?: (c: Citation) => void;
+}) {
   if (answer.failure) return <FailureCard kind={answer.failure} onRetry={onRetry} />;
   const ce = answer.citations;
   return (
@@ -20,6 +29,7 @@ export function AnswerView({ answer, onRetry }: { answer: AnswerState; onRetry?:
               status={seg.citation.status}
               dataAsOf={ce!.data_as_of}
               href={citationHref(seg.citation)}
+              onOpen={onOpenSource && (() => onOpenSource(seg.citation))}
             />
           ),
         )}
@@ -29,7 +39,13 @@ export function AnswerView({ answer, onRetry }: { answer: AnswerState; onRetry?:
         <ul className="mt-4 flex flex-col gap-2 text-small">
           {ce.citations.filter(isShown).map((c) => (
             <li key={c.source_id} className="flex flex-wrap items-center gap-2">
-              <CitationChip label={c.source_id} status={c.status} dataAsOf={ce.data_as_of} href={citationHref(c)} />
+              <CitationChip
+                label={c.source_id}
+                status={c.status}
+                dataAsOf={ce.data_as_of}
+                href={citationHref(c)}
+                onOpen={onOpenSource && (() => onOpenSource(c))}
+              />
               <span>{citationName(c)}</span>
               <span className="text-ink-soft">{meaningFor(markFor(c.status), ce.data_as_of)}</span>
               {c.citation_string && (

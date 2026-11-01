@@ -7,11 +7,15 @@ export function CitationChip({
   status,
   dataAsOf,
   href,
+  onOpen,
 }: {
   label: string;
   status: CitationStatus;
   dataAsOf: string;
   href: string;
+  // If given, a plain click opens the source beside the answer instead of navigating.
+  // The href stays, so open-in-new-tab and no-JavaScript still work.
+  onOpen?: () => void;
 }) {
   const mark = markFor(status);
   const tone =
@@ -26,6 +30,11 @@ export function CitationChip({
   return (
     <a
       href={href}
+      onClick={(e) => {
+        if (!onOpen || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+        e.preventDefault();
+        onOpen();
+      }}
       title={meaning}
       data-mark={mark}
       className={`inline-flex items-center gap-1 rounded-chip px-2 py-1 text-label font-semibold ${tone}`}
