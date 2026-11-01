@@ -263,3 +263,34 @@ def test_gate_batching_is_off_by_default():
     from core.settings import Settings
 
     assert Settings.model_fields["JEV_BATCH_GATE"].default is False
+
+
+async def test_fallback_aclose_closes_jev_never_raises_and_is_idempotent():
+    c = FakeJevSDKClient()
+    d = with_fallback(c, GEMINI, **ALL_ON)
+    await d.aclose()
+    await d.aclose()  # twice is fine
+    assert c.closed
+
+    class Boom:
+        async def aclose(self):
+            raise RuntimeError("SECRET")
+
+    s = S()
+    await FallbackDecisions(Boom(), GeminiDecider(FakeLLM(""), s), s).aclose()
+    from adapters.decisions import FakeDecisions
+
+    await FakeDecisions().aclose()
+
+
+async def test_pipeline_calls_deps_begin_run(settings, store):
+    from core_helpers import make_deps
+
+    from core.contracts import PipelineRequest, run_pipeline
+    from core.gate import gate
+    from core.verify import verify
+
+    calls = []
+    deps = make_deps(settings, store, gate, verify, begin_run=lambda: calls.append(1))
+    await run_pipeline(PipelineRequest("u1", "official communications"), deps)
+    assert calls == [1]

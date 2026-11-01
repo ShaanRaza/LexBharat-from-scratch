@@ -190,3 +190,9 @@ def test_vendor_libraries_imported_only_in_their_adapter():
                     if not ok and base != "workers" and base != "data":
                         bad.append((str(f.relative_to(ROOT)), m.group(1)))
     assert bad == [], bad
+
+
+def test_pipeline_module_imports_no_adapter():
+    src = (ROOT / "core" / "pipeline.py").read_text().splitlines()
+    bad = [line for line in src if re.match(r"\s*(from|import)\s+adapters\b", line)]
+    assert bad == []
