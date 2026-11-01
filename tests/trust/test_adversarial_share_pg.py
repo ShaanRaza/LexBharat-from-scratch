@@ -232,28 +232,34 @@ async def test_the_public_read_dies_when_the_answer_is_later_made_unshareable(
     assert await repo.get_shared_answer(hash_token(link.token)) is None
 
 
-async def test_retargeting_a_link_to_a_shaped_answer_leaves_the_public_page_dark(repo):
+async def test_retargeting_a_link_to_a_shaped_answer_is_refused_and_changes_nothing(
+    repo,
+):
     a = await user(repo, "ua")
-    link, _ = await _live_link(repo, a)
+    link, mid = await _live_link(repo, a)
     _, _, up = await saved(repo, a, upload=True)
-    sql(repo, "UPDATE share_links SET message_id = :m WHERE id = :i", m=up, i=link.id)
-    assert await repo.get_shared_answer(hash_token(link.token)) is None
+    with pytest.raises(DBAPIError):
+        sql(
+            repo,
+            "UPDATE share_links SET message_id = :m WHERE id = :i",
+            m=up,
+            i=link.id,
+        )
+    still = sql(repo, "SELECT message_id FROM share_links WHERE id = :i", i=link.id)
+    assert str(still[0]["message_id"]) == str(mid)  # not moved
+    assert await repo.get_shared_answer(hash_token(link.token)) is not None
 
 
-async def test_handing_a_link_to_another_user_leaves_the_public_page_dark(repo):
+async def test_handing_a_link_to_another_user_is_refused_and_changes_nothing(repo):
     a, b = await user(repo, "ua"), await user(repo, "ub")
     link, _ = await _live_link(repo, a)
-    sql(repo, "UPDATE share_links SET user_id = :b WHERE id = :i", b=b, i=link.id)
-    assert await repo.get_shared_answer(hash_token(link.token)) is None
+    with pytest.raises(DBAPIError):
+        sql(repo, "UPDATE share_links SET user_id = :b WHERE id = :i", b=b, i=link.id)
+    owner = sql(repo, "SELECT user_id FROM share_links WHERE id = :i", i=link.id)
+    assert str(owner[0]["user_id"]) == a
+    assert await repo.get_shared_answer(hash_token(link.token)) is not None
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="BREAK (medium): the guard is BEFORE INSERT only (migrations/versions/"
-    "0009_share_links.py), so UPDATE share_links SET message_id = <upload-shaped "
-    "answer> succeeds: a link row can be pointed at a shaped answer after creation. "
-    "The public read re-checks and stays dark, but the row exists",
-)
 async def test_the_database_refuses_to_retarget_a_link_to_a_shaped_answer(repo):
     a = await user(repo, "ua")
     link, _ = await _live_link(repo, a)
@@ -267,13 +273,6 @@ async def test_the_database_refuses_to_retarget_a_link_to_a_shaped_answer(repo):
         )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="BREAK (medium): provenance flags are not write-once. Nothing in the "
-    "database stops UPDATE messages SET shaped_by_upload = false on an upload-shaped "
-    "answer, after which the trigger and core both allow a share link (A47 says the "
-    "flags are written once at save; no trigger enforces it)",
-)
 async def test_a_shaped_flag_cannot_be_flipped_back_to_false_to_unlock_sharing(repo):
     a = await user(repo, "ua")
     _, _, up = await saved(repo, a, upload=True)
@@ -281,15 +280,14 @@ async def test_a_shaped_flag_cannot_be_flipped_back_to_false_to_unlock_sharing(r
         sql(repo, "UPDATE messages SET shaped_by_upload = false WHERE id = :m", m=up)
 
 
-async def test_the_flag_flip_really_does_unlock_sharing_documenting_the_break(repo):
-    """Characterisation of the break above, so the risk is visible in plain code."""
+async def test_setting_a_flag_later_is_allowed_and_kills_a_live_link(repo):
+    """Only CLEARING a flag is forbidden. Marking an answer as shaped afterwards is
+    allowed (it only makes it less shareable) and a live link then goes dark."""
     a = await user(repo, "ua")
-    _, _, up = await saved(repo, a, upload=True)
-    sql(repo, "UPDATE messages SET shaped_by_upload = false WHERE id = :m", m=up)
-    link = await create_share_link(
-        repo, a, up, 30
-    )  # accepted: provenance was rewritten
+    link, mid = await _live_link(repo, a)
     assert await repo.get_shared_answer(hash_token(link.token)) is not None
+    sql(repo, "UPDATE messages SET shaped_by_upload = true WHERE id = :m", m=mid)
+    assert await repo.get_shared_answer(hash_token(link.token)) is None
 
 
 # ---- the public lookup itself ------------------------------------------------------------

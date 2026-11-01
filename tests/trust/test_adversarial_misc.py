@@ -86,14 +86,6 @@ async def test_a_failed_save_then_a_retry_must_not_deliver_a_free_answer():
     assert sum(deps.usage.counts.values()) == 1  # delivered once => counted once
 
 
-test_a_failed_save_then_a_retry_must_not_deliver_a_free_answer = pytest.mark.xfail(
-    strict=True,
-    reason="BREAK (low): core/save.py saves THEN counts, and core/pipeline.py caches "
-    "BEFORE save; if store.save raises, the answer is already cached, the retry is an "
-    "uncounted cache hit, so an answer is delivered with 0 counted (under-count)",
-)(test_a_failed_save_then_a_retry_must_not_deliver_a_free_answer)
-
-
 async def test_two_identical_requests_in_flight_never_count_more_than_two():
     deps = make_deps()
     a, b = await asyncio.gather(

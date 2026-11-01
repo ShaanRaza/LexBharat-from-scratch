@@ -45,6 +45,15 @@ table that stores an answer (saved copies, exports, share links) copies these tw
 Not created yet, on purpose: memory tables (`memory_preferences`, `matter_facts`). Memory
 retention (O13) is not settled.
 
+## Provenance is write-once (migration 0010)
+
+A trigger on `messages` refuses clearing `shaped_by_upload` or `shaped_by_matter_fact` once
+true (`UPDATE ... SET shaped_by_upload = false` raises). Setting a flag to true later is
+allowed (it only makes an answer less shareable). The `share_links_guard` trigger now fires
+on UPDATE of `message_id` or `user_id` as well as on INSERT, so a link cannot be repointed
+at a shaped answer or handed to another user. Revoking (which updates only `revoked_at`) is
+never blocked.
+
 ## Share links
 
 `share_links` (migration 0009): `user_id`, `message_id`, `token_hash` (unique), `expires_at`,

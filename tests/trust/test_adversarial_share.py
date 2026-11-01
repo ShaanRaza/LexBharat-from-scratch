@@ -138,23 +138,13 @@ def _put(repo, user_id, **msg):
 
 FUTURE = datetime.now(UTC) + timedelta(days=1)
 
-NO_FLAGS = pytest.mark.xfail(
-    strict=True,
-    reason="BREAK: MemoryRepo.get_message_for_share coerces a MISSING/None provenance "
-    "flag to False with bool() (api/repo.py:179-180), so the fail-closed rule in "
-    "core/share.py never sees it; the in-memory repo (every API test, fake mode) "
-    "shares an answer whose provenance is unknown",
-)
-
 
 @pytest.mark.parametrize(
     "flags",
     [
-        pytest.param({}, marks=NO_FLAGS),
-        pytest.param(
-            {"shaped_by_upload": None, "shaped_by_matter_fact": None}, marks=NO_FLAGS
-        ),
-        pytest.param({"shaped_by_upload": False}, marks=NO_FLAGS),
+        {},
+        {"shaped_by_upload": None, "shaped_by_matter_fact": None},
+        {"shaped_by_upload": False},
     ],
 )
 async def test_memory_repo_refuses_a_link_for_an_answer_with_missing_provenance(flags):
@@ -166,11 +156,6 @@ async def test_memory_repo_refuses_a_link_for_an_answer_with_missing_provenance(
 
 
 @pytest.mark.parametrize("flags", [{}, {"shaped_by_upload": None}])
-@pytest.mark.xfail(
-    strict=True,
-    reason="BREAK: MemoryRepo.create_share_link 'mirrors the trigger' but reads the "
-    "same bool()-coerced view, so it also accepts missing provenance (api/repo.py:183)",
-)
 async def test_memory_repo_write_path_refuses_missing_provenance_too(flags):
     repo = MemoryRepo()
     _put(repo, "alice", id="m1", role="assistant", **flags)

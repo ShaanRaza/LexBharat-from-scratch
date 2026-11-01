@@ -174,10 +174,13 @@ class MemoryRepo:
         if hit is None:
             return None
         _, _, m = hit
+        # The RAW flags, never coerced: a missing or None flag must reach core/share.py
+        # as "unknown" so it fails closed, as PostgreSQL's NOT NULL columns refuse to
+        # store it at all.
         return {
             "id": m["id"], "role": m["role"],
-            "shaped_by_upload": bool(m.get("shaped_by_upload")),
-            "shaped_by_matter_fact": bool(m.get("shaped_by_matter_fact")),
+            "shaped_by_upload": m.get("shaped_by_upload"),
+            "shaped_by_matter_fact": m.get("shaped_by_matter_fact"),
         }  # fmt: skip
 
     async def create_share_link(self, user_id, message_id, token_hash, expires_at):
@@ -186,8 +189,8 @@ class MemoryRepo:
         if (
             m is None
             or m["role"] != "assistant"
-            or m["shaped_by_upload"]
-            or m["shaped_by_matter_fact"]
+            or m["shaped_by_upload"] is not False  # must be exactly False: fail closed
+            or m["shaped_by_matter_fact"] is not False
         ):
             raise ValueError("this answer cannot be shared")
         row = {
@@ -231,8 +234,8 @@ class MemoryRepo:
         cid, i, m = hit
         if (
             m["role"] != "assistant"
-            or m.get("shaped_by_upload")
-            or m.get("shaped_by_matter_fact")
+            or m.get("shaped_by_upload") is not False
+            or m.get("shaped_by_matter_fact") is not False
         ):
             return None
         question = next(
