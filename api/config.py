@@ -20,6 +20,9 @@ class ApiSettings(BaseSettings):
     WEB_ORIGIN: str = "http://localhost:3000"  # comma-separated list allowed
     # FAKE MODE: canned answers, no vendor calls. Refused outside development/test.
     FAKE_PIPELINE: bool = False
+    ENVIRONMENT: str = (
+        "development"  # core's own switch; fake also refused if production
+    )
 
     @property
     def cors_origins(self) -> list[str]:
@@ -27,7 +30,10 @@ class ApiSettings(BaseSettings):
 
     @model_validator(mode="after")
     def _fake_never_in_production(self) -> "ApiSettings":
-        if self.FAKE_PIPELINE and self.APP_ENV not in ("development", "test"):
+        if self.FAKE_PIPELINE and (
+            self.APP_ENV not in ("development", "test")
+            or self.ENVIRONMENT == "production"
+        ):
             raise ValueError(
                 "FAKE_PIPELINE=true is only allowed when APP_ENV is development "
                 "or test. Refusing to start."

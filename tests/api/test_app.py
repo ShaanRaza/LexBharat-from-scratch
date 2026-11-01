@@ -30,6 +30,11 @@ def test_fake_pipeline_refused_outside_dev(env):
         ApiSettings(APP_ENV=env, FAKE_PIPELINE=True)
 
 
+def test_fake_pipeline_refused_when_core_environment_is_production():
+    with pytest.raises(ValueError):
+        ApiSettings(APP_ENV="development", ENVIRONMENT="production", FAKE_PIPELINE=True)
+
+
 def test_fake_pipeline_refused_by_default_env():
     # APP_ENV defaults to production, so forgetting it can never enable fake mode.
     with pytest.raises(ValueError):
@@ -164,3 +169,23 @@ def test_judgment_titles_never_leave_the_server(client):
     assert "Fake v. Fake" not in r.text
     cit = [d for n, d in parse_sse(r.text) if n == "citations"][0]
     assert cit["citations"][0]["title"] is None
+
+
+def test_real_pipeline_wires_core_gate_and_verifier(monkeypatch, repo):
+    """build_pipeline fills Deps with core's own gate and verify (never a stand-in),
+    and refuses to build without SEAL_KEY."""
+    import core.gate
+    import core.verify
+    from api.deps import build_pipeline
+    from core.settings import Settings, get_settings
+
+    monkeypatch.setenv("SEAL_KEY", "")
+    get_settings.cache_clear()
+    with pytest.raises(RuntimeError):
+        build_pipeline(Settings(ENVIRONMENT="development"), repo)
+    monkeypatch.setenv("SEAL_KEY", "test-seal-key")
+    get_settings.cache_clear()
+    pipe = build_pipeline(Settings(ENVIRONMENT="development"), repo)
+    assert pipe.deps.gate is core.gate.gate and pipe.deps.verify is core.verify.verify
+    assert pipe.deps.usage is repo and pipe.deps.store is repo
+    get_settings.cache_clear()

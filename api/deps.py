@@ -1,38 +1,55 @@
-"""Builds the real pipeline (core's run_pipeline + Deps) for production.
+"""Builds the real pipeline for production: core's Deps filled with real adapters.
 
-Plain words: this is the one place the API learns how to assemble core's dependencies.
-It returns None (route answers 503) until core publishes a `build_deps` factory, and
-it checks SEAL_KEY at startup so answers can never go out unsealed.
+Plain words: the one place the API assembles core's dependencies. Vendor clients come
+from adapters/ (rule 1); the gate and the verifier are core's own functions, so every
+answer passes through the verifier (core.gate.gate, core.verify.verify). The usage
+meter, step-11 store and invented_citation_log writer are our PostgreSQL repo.
+
+At startup we call core.verify.assert_seal_key_configured(): no SEAL_KEY, no boot.
 """
 
 from __future__ import annotations
 
-import importlib
+from core.contracts import Deps, run_pipeline, stream_events
 
 
 class RealPipeline:
-    def __init__(self, deps):
+    def __init__(self, deps: Deps):
         self.deps = deps
 
     async def run(self, request):
-        from core.contracts import run_pipeline
-
         return await run_pipeline(request, self.deps)
 
     def stream(self, result):
-        from core.contracts import stream_events
-
         return stream_events(result)
 
 
-def build_pipeline(core_settings, repo):
-    from core.verify import assert_seal_key_configured
+def build_pipeline(core_settings, repo) -> RealPipeline:
+    from adapters.cache import RedisCache
+    from adapters.decisions import FallbackDecisions, GeminiDecider, JevClient
+    from adapters.llm import LiteLLMClient
+    from adapters.qdrant import QdrantStore
+    from adapters.voyage import VoyageClient
+    from core.gate import gate
+    from core.verify import assert_seal_key_configured, verify
 
     assert_seal_key_configured()  # refuse to boot without a seal key
-    try:
-        factory = importlib.import_module("core.factory").build_deps
-    except (ImportError, AttributeError):
-        return None  # not wired yet: /messages answers 503, nothing is faked
-    return RealPipeline(
-        factory(core_settings, usage=repo, store=repo, citation_log=repo)
+    llm = LiteLLMClient(core_settings)
+    voyage = VoyageClient(core_settings)
+    deps = Deps(
+        settings=core_settings,
+        embedder=voyage,
+        reranker=voyage,
+        vectors=QdrantStore(core_settings),
+        llm=llm,
+        decisions=FallbackDecisions(
+            JevClient(core_settings), GeminiDecider(llm, core_settings), core_settings
+        ),
+        cache=RedisCache(core_settings),
+        usage=repo,
+        store=repo,
+        citation_log=repo,
+        gate=gate,
+        verify=verify,
     )
+    return RealPipeline(deps)

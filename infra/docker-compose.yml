@@ -1,0 +1,113 @@
+# Whole system on one box. Run from the repo root:
+#   docker compose -f infra/docker-compose.yml up
+#
+# Only `web` and `api` publish ports. postgres, redis and qdrant sit on the private
+# network and are NEVER exposed (infra/README.md). Secrets come from the environment
+# (.env locally, AWS Secrets Manager on the server); none are written here.
+#
+# ARM check (docker manifest inspect, 2026-11-01): postgres:16, redis:7,
+# qdrant/qdrant:v1.16.3, python:3.12-slim and node:22-slim all list linux/arm64.
+
+name: research
+
+x-app-env: &app-env
+  ENVIRONMENT: ${ENVIRONMENT:-development}
+  APP_ENV: ${APP_ENV:-production}
+  WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
+  DATABASE_URL: postgresql+psycopg://kanoon:${POSTGRES_PASSWORD:-kanoon}@postgres:5432/kanoon
+  REDIS_URL: redis://redis:6379/0
+  QDRANT_URL: http://qdrant:6333
+
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.web
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api/v1}
+    ports: ["3000:3000"]
+    depends_on: [api]
+    networks: [private]
+
+  api:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.api
+    env_file:
+      - path: ../.env
+        required: false
+    environment: *app-env
+    ports: ["8000:8000"]
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      qdrant: {condition: service_started}
+    networks: [private]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://localhost:8000/api/v1/healthz')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  migrate:
+    # Runs `alembic upgrade head` once, then exits. Start with:
+    #   docker compose -f infra/docker-compose.yml run --rm migrate
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.api
+    command: ["alembic", "upgrade", "head"]
+    environment: *app-env
+    depends_on:
+      postgres: {condition: service_healthy}
+    networks: [private]
+    profiles: ["tools"]
+
+  worker:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.api
+    command: ["arq", "workers.main.WorkerSettings"]
+    env_file:
+      - path: ../.env
+        required: false
+    environment: *app-env
+    depends_on:
+      redis: {condition: service_healthy}
+    cpus: 1.0          # OCR must never slow chat
+    mem_limit: 2g
+    networks: [private]
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: kanoon
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kanoon}
+      POSTGRES_DB: kanoon
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kanoon"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks: [private]
+
+  redis:
+    image: redis:7
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks: [private]
+
+  qdrant:
+    image: qdrant/qdrant:v1.16.3
+    volumes: [qdrantdata:/qdrant/storage]
+    networks: [private]
+
+networks:
+  private: {}
+
+volumes:
+  pgdata: {}
+  qdrantdata: {}
