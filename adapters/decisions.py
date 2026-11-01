@@ -56,6 +56,16 @@ class Backend(Protocol):
     async def claim_support(self, sentence: str, passage: Passage) -> Support: ...
 
 
+_warned: set[str] = set()
+
+
+def _warn_once(msg: str) -> None:
+    """Make a silent fall back to Gemini visible, once per cause; never log content."""
+    if msg not in _warned:
+        _warned.add(msg)
+        log.warning(msg)
+
+
 def _prompt(name: str, **kw: str) -> str:
     return (_PROMPTS / f"{name}.txt").read_text().format(**kw)
 
@@ -132,8 +142,10 @@ class FallbackDecisions:
                 return await asyncio.wait_for(
                     call(self._jev), self._s.JEV_TIMEOUT_MS / 1000
                 )
-            except Exception:  # noqa: BLE001
-                log.warning("Jev failed or timed out; using Gemini fallback")
+            except Exception as e:  # noqa: BLE001
+                _warn_once(
+                    f"Jev unavailable ({type(e).__name__}); using Gemini fallback"
+                )
         return await call(self._fb)
 
     async def decide(self, query: str, *, uploads: bool = False) -> Decision:

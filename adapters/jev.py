@@ -20,9 +20,9 @@ What is confirmed from the TypeSafe docs (read 2026-11-01) and what is not:
   passage per request, so batching here is our reading of "ask all questions in one
   request"; nothing has run against the real service (no key yet).
 
-Known limits: the client is never closed (shutdown hook not written); gate calls from
-different users in the same event-loop tick share one request (no upload text is ever
-in it); JEV_TIMEOUT_MS (800) covers a whole batch incl. cold connection - unmeasured.
+Known limits: call aclose() at shutdown; gate calls are batched only within one
+pipeline run (begin_run) and only if JEV_BATCH_GATE; JEV_TIMEOUT_MS (800) covers a
+whole batch including cold connection setup - unmeasured.
 
 Rules enforced here:
 - Upload text NEVER reaches Jev: any call flagged `uploads`, or any passage of kind
@@ -35,6 +35,7 @@ Rules enforced here:
 from __future__ import annotations
 
 import asyncio
+import contextvars
 import logging
 from collections.abc import Awaitable, Callable
 from typing import Any
@@ -85,40 +86,52 @@ SUPPORT_CRITERIA: dict[str, str] = {
 }
 
 
-class _Coalescer:
-    """Gathers calls made in the same event-loop tick into ONE request.
+_RUN: contextvars.ContextVar[object | None] = contextvars.ContextVar(
+    "jev_run", default=None
+)
 
-    core/gate.py rates its passages with asyncio.gather, so all ten rate_passage calls
-    arrive together; this turns them into one Jev request without changing the gate.
-    """
+
+def begin_run() -> None:
+    """Called once at the start of each pipeline run (core/pipeline.py). asyncio tasks
+    copy the context, so every call made inside this run shares one id, and calls from
+    other runs/users never do. Outside a run there is no id and nothing is batched."""
+    _RUN.set(object())
+
+
+class _Coalescer:
+    """Gathers calls made in the same event-loop tick AND the same pipeline run into
+    ONE request (core/gate.py rates its passages with asyncio.gather). Calls without a
+    run id, or from another run, are never merged."""
 
     def __init__(self, run: Callable[[list[Any]], Awaitable[list[Any]]]):
         self._run = run
-        self._items: list[Any] = []
-        self._futs: list[asyncio.Future] = []
+        self._open: dict[object, tuple[list[Any], list[asyncio.Future]]] = {}
 
     async def submit(self, item: Any) -> Any:
         loop = asyncio.get_running_loop()
-        if not self._items:
-            loop.call_soon(self._flush)
+        key = _RUN.get() or object()  # no run id -> a private batch of one
         fut: asyncio.Future = loop.create_future()
-        self._items.append(item)
-        self._futs.append(fut)
+        if key not in self._open:
+            self._open[key] = ([], [])
+            loop.call_soon(self._flush, key)
+        self._open[key][0].append(item)
+        self._open[key][1].append(fut)
         return await fut
 
-    def _flush(self) -> None:
-        items, futs = self._items, self._futs
-        self._items, self._futs = [], []
+    def _flush(self, key: object) -> None:
+        items, futs = self._open.pop(key)
         asyncio.ensure_future(self._go(items, futs))
 
     async def _go(self, items: list[Any], futs: list[asyncio.Future]) -> None:
         try:
             results = await self._run(items)
             if len(results) != len(items):
-                raise DecisionUnavailable("Jev returned a different number of answers")
+                raise DecisionUnavailable("unexpected Jev answer count")
         except Exception as e:  # noqa: BLE001 - every failure goes to the fallback
             err = (
-                e if isinstance(e, DecisionUnavailable) else DecisionUnavailable(str(e))
+                e
+                if isinstance(e, DecisionUnavailable)
+                else DecisionUnavailable(type(e).__name__)
             )
             for f in futs:
                 if not f.done():
@@ -147,6 +160,12 @@ class JevClient:
         self.input_tokens = 0
         self.output_tokens = 0
         self.requests = 0
+
+    async def aclose(self) -> None:
+        """Close the SDK client. Call at API/worker shutdown."""
+        client, self._client = self._client, None
+        if client is not None and hasattr(client, "aclose"):
+            await client.aclose()
 
     # --- plumbing -----------------------------------------------------------------
     def _key(self) -> str:
@@ -233,6 +252,8 @@ class JevClient:
     # --- job (b): gate ---------------------------------------------------------------
     async def rate_passage(self, query: str, passage: Passage) -> tuple[Rating, float]:
         self._refuse_upload(passage)
+        if not self._s.JEV_BATCH_GATE:
+            return (await self._rate_batch([(query, passage.text)]))[0]
         return await self._rate.submit((query, passage.text))
 
     async def _rate_batch(
@@ -306,7 +327,11 @@ class FakeJevSDKClient:
 
         refuse_in_production()
         self.pick, self.fail, self.delay_s = pick, fail, delay_s
+        self.closed = False
         self.calls: list[tuple[Any, dict[str, Any]]] = []
+
+    async def aclose(self) -> None:
+        self.closed = True
 
     async def system_one(
         self, *, state: Any, questions: dict[str, Any], model: str

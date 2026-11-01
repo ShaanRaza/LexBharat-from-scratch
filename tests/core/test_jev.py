@@ -27,6 +27,16 @@ def P(i=0, kind="judgment"):
     return Passage(record_id=f"r{i}", text=f"passage text {i}", kind=kind)
 
 
+async def in_run(j, n):
+    from adapters.jev import begin_run
+
+    async def run():
+        begin_run()
+        return await asyncio.gather(*(j.rate_passage("q", P(i)) for i in range(n)))
+
+    return await asyncio.create_task(run())
+
+
 async def test_decide_maps_scope_and_safety_in_one_request():
     def pick(name, q):
         return {"scope": ("needs_high_court", 0.9), "safety": ("trick", 0.8)}[name]
@@ -48,7 +58,7 @@ async def test_gate_returns_choice_and_confidence_for_the_threshold():
 async def test_ten_passages_are_one_request():
     c = FakeJevSDKClient(lambda n, q: ("answers", 0.9))
     j = jev(c)
-    out = await asyncio.gather(*(j.rate_passage("q", P(i)) for i in range(10)))
+    out = await in_run(j, 10)
     assert len(c.calls) == 1 and len(c.calls[0][1]) == 10
     assert out == [("answers", 0.9)] * 10
 
@@ -58,7 +68,7 @@ async def test_each_passage_gets_its_own_answer_in_the_batch():
         lambda n, q: ("answers", 0.9) if n == "i0" else ("not_relevant", 0.7)
     )
     j = jev(c)
-    out = await asyncio.gather(*(j.rate_passage("q", P(i)) for i in range(3)))
+    out = await in_run(j, 3)
     assert [r for r, _ in out] == ["answers", "not_relevant", "not_relevant"]
 
 
@@ -168,3 +178,80 @@ def test_all_jev_switches_default_to_false():
     s = Settings()
     assert not any(getattr(s, n) for n in dir(s) if n.startswith("JEV_ENABLED_"))
     assert len([n for n in dir(s) if n.startswith("JEV_ENABLED_")]) == 5
+
+
+async def test_batches_never_mix_pipeline_runs():
+    from adapters.jev import begin_run
+
+    c = FakeJevSDKClient(lambda n, q: ("answers", 0.9))
+    j = jev(c)
+
+    async def one_run(tag):
+        begin_run()
+        return await asyncio.gather(
+            *(j.rate_passage(f"q-{tag}", P(i)) for i in range(3))
+        )
+
+    await asyncio.gather(one_run("alice"), one_run("bob"))
+    assert len(c.calls) == 2  # one request per run, never one shared request
+    for state, qs in c.calls:
+        assert len({v["question"] for v in state.values()}) == 1
+        assert len(qs) == 3
+
+
+async def test_calls_outside_a_run_are_never_batched():
+    c = FakeJevSDKClient(lambda n, q: ("answers", 0.9))
+    j = jev(c)
+    await asyncio.gather(*(j.rate_passage("q", P(i)) for i in range(3)))
+    assert len(c.calls) == 3
+
+
+async def test_aclose_closes_the_client():
+    c = FakeJevSDKClient()
+    j = jev(c)
+    await j.aclose()
+    assert c.closed
+
+
+async def test_error_text_never_contains_query_or_passage():
+    c = FakeJevSDKClient(fail=ValueError("SECRET-PASSAGE-TEXT in the error"))
+    with pytest.raises(DecisionUnavailable) as e:
+        await jev(c).rate_passage("SECRET-QUERY", P())
+    assert "SECRET" not in str(e.value)
+
+
+async def test_claim_support_never_merges_even_inside_a_run():
+    from adapters.jev import begin_run
+
+    c = FakeJevSDKClient(lambda n, q: ("supports", 0.99))
+    j = jev(c)
+
+    async def run():
+        begin_run()
+        return await asyncio.gather(*(j.claim_support(f"s{i}", P(i)) for i in range(4)))
+
+    await asyncio.create_task(run())
+    assert len(c.calls) == 4 and all(len(qs) == 1 for _, qs in c.calls)
+
+
+async def test_gate_batching_can_be_switched_off():
+    c = FakeJevSDKClient(lambda n, q: ("answers", 0.9))
+    j = jev(c, JEV_BATCH_GATE=False)
+    await in_run(j, 3)
+    assert len(c.calls) == 3
+
+
+async def test_silent_fallback_is_logged_once_without_content(caplog):
+    import logging
+
+    from adapters import decisions as dec
+
+    dec._warned.clear()
+    caplog.set_level(logging.WARNING)
+    d = with_fallback(
+        FakeJevSDKClient(fail=RuntimeError("SECRET-TEXT")), GEMINI, **ALL_ON
+    )
+    for _ in range(3):
+        await d.rate_passage("SECRET-QUERY", P())
+    msgs = [r.message for r in caplog.records if "Jev unavailable" in r.message]
+    assert len(msgs) == 1 and "SECRET" not in msgs[0]
