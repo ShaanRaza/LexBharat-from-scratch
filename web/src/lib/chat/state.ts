@@ -39,7 +39,7 @@ export function applyEvent(s: AnswerState, ev: StreamEvent): AnswerState {
         status: "done",
         refused: ev.data.refused,
         // A refusal with no explicit reason is treated as "nothing found": nothing is written.
-        failure: ev.data.refused && !s.failure ? "notFound" : s.failure,
+        failure: ev.data.refused && !s.failure ? (ev.data.reason === "out_of_scope" ? "outsideCoverage" : "notFound") : s.failure,
       };
     case "error":
       return { ...s, status: "failed", failure: failureFor(ev.data), text: "" };

@@ -35,9 +35,11 @@ export function AnswerView({ answer, onRetry }: { answer: AnswerState; onRetry?:
                   {c.citation_string} ({CITATION_AS_RECORDED})
                 </span>
               )}
-              <a href={c.url} className="text-accent underline" rel="noreferrer">
-                Source
-              </a>
+              {c.url && (
+                <a href={c.url} className="text-accent underline" rel="noreferrer">
+                  Source
+                </a>
+              )}
             </li>
           ))}
         </ul>

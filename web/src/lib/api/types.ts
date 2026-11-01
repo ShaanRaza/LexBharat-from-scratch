@@ -21,7 +21,7 @@ export type Citation = {
   record_id: string;
   title: string | null;
   citation_string: string | null; // exactly as recorded
-  url: string;
+  url: string | null;
   status: CitationStatus;
 };
 
@@ -36,7 +36,7 @@ export type CitationsEvent = {
 export type StreamEvent =
   | { event: "token"; data: { text: string } }
   | { event: "citations"; data: CitationsEvent }
-  | { event: "done"; data: { message_id: string | null; from_cache: boolean; refused: boolean } }
+  | { event: "done"; data: { message_id: string | null; from_cache: boolean; refused: boolean; reason?: "out_of_scope" | "not_found" | null; message_key?: string | null } }
   | { event: "error"; data: ApiErrorBody };
 
 export type Provenance = {

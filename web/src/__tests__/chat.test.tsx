@@ -85,3 +85,10 @@ describe("stream safety", () => {
     expect(screen.getByText(/DEMO DATA/)).toBeInTheDocument();
   });
 });
+
+describe("refusal reason", () => {
+  it("out_of_scope reason shows the coverage screen", () => {
+    const s = applyEvent(newAnswer("q"), { event: "done", data: { message_id: null, from_cache: false, refused: true, reason: "out_of_scope" } });
+    expect(s.failure).toBe("outsideCoverage");
+  });
+});
