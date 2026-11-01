@@ -1,0 +1,76 @@
+// Hand-written from api/schemas.py (commit 7cc0e14). No shared imports with api/
+// (CLAUDE.md section 2 rule 3). When OpenAPI is live, regenerate and compare.
+// Deliberately NO judge or party-name fields anywhere.
+
+export type ErrorCode =
+  | "unauthenticated" | "forbidden" | "not_found" | "validation_error"
+  | "quota_exceeded" | "rate_limited" | "out_of_scope" | "not_found_in_dataset"
+  | "feature_disabled" | "service_unavailable" | "internal_error";
+
+export type ApiErrorBody = { code: ErrorCode; message: string; request_id: string };
+
+export type CitationKind = "judgment" | "act";
+export type CitationStatus = "verified" | "partly";
+
+export type Citation = {
+  source_id: string; // S1..S8
+  kind: CitationKind;
+  anchor: string | null;
+  act_slug: string | null;
+  section: string | null;
+  record_id: string;
+  title: string | null;
+  citation_string: string | null; // exactly as recorded
+  url: string;
+  status: CitationStatus;
+};
+
+export type CitationsEvent = {
+  citations: Citation[];
+  removed_count: number;
+  data_as_of: string;
+  credit: string;
+  notice: string;
+};
+
+export type StreamEvent =
+  | { event: "token"; data: { text: string } }
+  | { event: "citations"; data: CitationsEvent }
+  | { event: "done"; data: { message_id: string | null; from_cache: boolean; refused: boolean } }
+  | { event: "error"; data: ApiErrorBody };
+
+export type Provenance = {
+  data_as_of: string;
+  snapshot_version: string;
+  credit: string;
+  notice: string;
+};
+
+export type CaseParagraph = { anchor: string; text: string };
+
+export type CaseOut = {
+  record_id: string;
+  title: string | null;
+  court: string | null;
+  decision_date: string | null;
+  case_number: string | null;
+  citation_string: string | null;
+  url: string | null;
+  paragraphs: CaseParagraph[];
+  provenance: Provenance;
+};
+
+export type SectionOut = {
+  act_slug: string;
+  act_name: string;
+  act_year: number | null;
+  section: string;
+  section_title: string | null;
+  text: string;
+  source_url: string | null;
+  in_force: boolean | null;
+  act_status_checked: boolean;
+  provenance: Provenance;
+};
+
+export type ConsentIn = { notice_version: string; purpose: string };

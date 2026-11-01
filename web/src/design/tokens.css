@@ -1,0 +1,49 @@
+/*
+  THE design tokens file. Every colour, font, size, spacing step and corner radius
+  used anywhere in web/ is defined here and nowhere else. To reskin the product,
+  edit this file only. Components use the names (bg-accent, text-ink, rounded-card)
+  and never a raw value.
+
+  Source of the current look: docs/KanoonBuddy-Website-Design-Doc-v2.md section 6.
+*/
+@theme {
+  /* Colours */
+  --color-page: #ffffff;
+  --color-ink: #0f1b33;
+  --color-ink-soft: #4a5670;
+  --color-on-accent: #ffffff;
+  --color-accent: #d9480f;
+  --color-accent-hover: #b43a0a;
+  --color-panel: #fff5ee;
+  --color-tint: #ffe3d0;
+  --color-line: #f3e1d4;
+  --color-verified: #1f7a4d;
+  --color-verified-bg: #e6f4ec;
+  --color-partly: #b45309;
+  --color-partly-bg: #fdf0dc;
+  --color-notfound: #b45309;
+  --color-danger: #b42318;
+
+  /* Fonts */
+  --font-sans: var(--font-jakarta), system-ui, sans-serif;
+
+  /* Font sizes */
+  --text-label: 0.75rem;
+  --text-small: 0.875rem;
+  --text-body: 1rem;
+  --text-lead: 1.125rem;
+  --text-title: 1.5rem;
+  --text-display: 2.25rem;
+
+  /* Spacing steps */
+  --spacing-gutter: 1rem;
+  --spacing-card: 1.25rem;
+  --spacing-section: 2.5rem;
+
+  /* Radii and widths */
+  --radius-chip: 0.5rem;
+  --radius-card: 1rem;
+  --radius-pill: 9999px;
+  --container-content: 1040px;
+  --container-reading: 720px;
+}
