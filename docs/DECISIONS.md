@@ -95,6 +95,53 @@ each needs a person, a hand check or a lawyer.**
 
 ---
 
+## Agent build decisions (branch `shan/agent-team`, 1 Nov 2026)
+
+Made by the agent team under CLAUDE.md §8 "Who decides". Each row: the choice, the one
+alternative ruled out, and why. **Rows marked OWNER need your confirmation** because they
+touch the trust promise or what users see.
+
+| # | Lane | Decision | Ruled out | Why |
+|---|---|---|---|---|
+| A1 | core | **OWNER.** Answer seal is an HMAC over the answer content, keyed by `SEAL_KEY` (stable across processes, never hard-coded); `seal_answer` exists only in `core/verify.py`, `show()` rejects unsealed answers, a tree-scan test enforces it | A bare sentinel object | A sentinel is forgeable and survives `dataclasses.replace` (reviewer MAJOR) |
+| A2 | core | Production start fails if `SEAL_KEY` is empty; every Fake raises if `ENVIRONMENT=production` | Fakes allowed anywhere | Fake answers must never reach users |
+| A3 | core | Jev off, slow or down falls back to Gemini with the same fixed choices; `DecisionUnavailable` only if both fail; upload text never goes to Jev (`decide(..., uploads=True)`) | Sending upload text to Jev | Privilege and DPDP risk |
+| A4 | core | Usage check runs **first**, before any AI call; over-limit users get no cache hits either | Checking after the cache | A cache lookup needs the rewrite, which is an AI call |
+| A5 | core | If every decider is down, step 3 continues as in scope with `safety=personal_advice` | Blocking the question | Only strengthens the disclaimer |
+| A6 | core | Voyage down: keyword-only search flagged `keyword_only`; re-rank keeps search order | Failing the request | Matches the Architecture failure state |
+| A7 | core | Older conversation turns fold into the summary by truncation, not an LLM call | An LLM summary per turn | Cost; revisit with real use |
+| A8 | core | Contracts are stdlib dataclasses; platform maps them to its own schemas | Pydantic in `core/` | Keeps `core/` independent of the API |
+| A9 | core | Year-range filters applied in Python after search; exact section and case-number lookups use payload filters | Qdrant range filters | Simplest first version; measure later |
+| A10 | trust | **OWNER.** Jev and Gemini both down on check 4 gives `partly`, never `verified`, citation kept | Removing every citation during an outage | An outage must not wipe all citations; checks 1-3 still run and still remove |
+| A11 | trust | A sentence whose only citations all fail is dropped, not left uncited | Leaving an uncited claim | Every claim carries a verified citation |
+| A12 | trust | Unbalanced or unpairable quote marks fail closed (citation removed as `quote_not_found`); every quote anywhere in the answer must appear in a retrieved passage | Guessing what was quoted | A quote that cannot be matched cannot be trusted |
+| A13 | trust | Gate with the decision adapter unavailable uses the re-rank score against the same 0.6 threshold | Pass-through or refuse-all | Pass-through weakens the gate |
+| A14 | core | **OWNER.** An answer with **zero surviving citations is refused** (`not_found`), whether all failed or none were written | Showing uncited prose with a disclaimer | CLAUDE.md §4 step 8: every point needs a source ID |
+| A15 | core | Prompt `core/prompts/answer.txt` forbids naming any case, Act or section outside S1-S8, guarded by a test | Relying on regex alone | Regex cannot catch a recalled case with no "v" or "In re" |
+| A16 | platform | `APP_ENV` defaults to `production`; fake pipeline needs `APP_ENV` in development/test **and** `ENVIRONMENT != production` | Default development | A forgotten variable must not enable fakes |
+| A17 | platform | Invalid token gives 401; adapter error or no verifier wired gives 503; both deny | Allowing on error | Fail closed |
+| A18 | platform | Wire contract: one `citations` event (with `removed_count`, `data_as_of`, `credit`, `notice`); `done` carries `refused`, `reason` (`out_of_scope` or `not_found`), `message_key`; usage limit is an `error` event with `quota_exceeded` | Reason inferred by the client | Web cannot tell out-of-scope from not-found otherwise |
+| A19 | platform | Sync SQLAlchemy in a thread pool | Async engine | Async needs the extra greenlet dependency |
+| A20 | platform | Usage meter allows when `PLAN_LIMIT_*` is unset | Blocking everyone | Limits are undecided (your call) |
+| A21 | platform | `alembic.ini` lives in `migrations/` (`alembic -c migrations/alembic.ini`) | Repo root | Keeps the lane's files together |
+| A22 | platform | API-only config (`APP_ENV`, `WEB_ORIGIN`, `FAKE_PIPELINE`) lives in `api/config.py` | Adding to `core/settings.py` | That file is core's; fold in later if wanted |
+| A23 | web | Fake mode must be exactly `"true"`, throws in production, shows a DEMO banner | Default on | Canned ticks in production would be a trust breach |
+| A24 | web | A stream that ends without `done` is a service error and the partial text is cleared | Leaving partial text | No answer without citations |
+| A25 | web | **OWNER.** Case titles are shown nowhere (they are party names, CLAUDE.md §6); a judgment is named by its stored citation string, else case number, else "Supreme Court judgment, year". API also drops judgment titles | Showing the title | Reversible in `citationName()` and `judgmentHeading()` |
+| A26 | web | Client is hand-written from `api/schemas.py` until `/openapi.json` generation exists | Generated client | No generator wired yet; CLAUDE.md §2 rule 3 says generate later |
+| A27 | lead | Added `pydantic>=2`, `litellm`, ruff `S`/`BLE` security rules and `pythonpath` to `pyproject.toml`; `SEAL_KEY`, `DATA_CREDIT`, `ENVIRONMENT` names to `.env.example` | n/a | Boilerplate |
+
+### Needs the owner (collected from the team)
+
+- A1, A10, A14, A25 above.
+- Wording shown to users: usage-limit, service-error and personal-advice-opener sentences, the removal note, the consent text and notice version are **placeholders** (marked `NEEDS-OWNER` in `web/src/lib/copy.ts`). `docs/UX-COPY.md` describes but does not quote them.
+- What `cases.title` holds, and whether it may ever be shown.
+- Upgrade Next.js 16.4.0? `npm run build` prints a known-vulnerability notice and alternates between passing and failing; nobody ran the upgrade.
+- Real Jev client is a stub (API undocumented) and real Qdrant store is dense-only (no BM25 / RRF): both need your keys and docs.
+- Production needs a real Firebase verifier injected into `create_app`; until then every protected route returns 503.
+
+---
+
 ## Known documentation conflict
 
 | Doc | Launch courts |

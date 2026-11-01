@@ -18,6 +18,13 @@ Chat answers stream over **server-sent events (SSE)**:
 A user must **never** see a citation appear and then vanish. Nothing citation-shaped goes
 out before step 2.
 
+**As built (`api/schemas.py`):** `citations` carries `removed_count`, `data_as_of`, `credit`
+and `notice`. A refusal is a single `done` with `refused: true`, a `reason`
+(`out_of_scope` or `not_found`) and a `message_key`. A usage limit is a single `error` event
+with code `quota_exceeded`. A citation's `status` is only `verified` or `partly`; the web
+shows a tick for `verified` alone. Routes not yet built answer `501 feature_disabled` after
+the login check. Judgment titles are never sent (they are party names).
+
 ## Routes
 
 | Method and path | Purpose |

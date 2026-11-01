@@ -338,8 +338,16 @@ with Docker Compose): [`.claude/README.md`](.claude/README.md).
 
 ### Commands
 
-Nothing is scaffolded yet — fill these in as you build, and keep them true.
+These are the commands as built on `shan/agent-team`. Use the shared virtualenv
+(`python3 -m venv .venv && .venv/bin/pip install -e ".[dev]"`).
 
+```bash
+.venv/bin/pytest                      # all Python tests (api tests need TEST_DATABASE_URL for Postgres)
+.venv/bin/pytest tests/trust          # the verifier and gate: must pass before any deploy
+.venv/bin/ruff check . && .venv/bin/ruff format --check .
+cd web && npm run lint && npx tsc --noEmit && npm test
+SEAL_KEY=demo-key .venv/bin/python -m evals.runner --sample   # offline eval demo
+docker compose -f infra/docker-compose.yml up                  # whole system (not yet validated)
 ```bash
 docker compose -f infra/docker-compose.yml up    # whole system
 # api:    (to be added)
