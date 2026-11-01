@@ -169,6 +169,7 @@ def test_production_without_seal_key_refuses_to_start():
 VENDORS = {
     "litellm": "llm.py",
     "qdrant_client": "qdrant.py",
+    "fastembed": "qdrant.py",
     "boto3": "s3.py",
     "fitz": "ocr.py",
     "firebase_admin": "firebase.py",

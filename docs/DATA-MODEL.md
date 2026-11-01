@@ -86,7 +86,7 @@ The local Qdrant holds all 32.5M vectors. v1 needs only the Supreme Court and
 1. Read Supreme Court points out of **`legal_corpus_v2`** with the filter
    `court_type = "supreme_court"`, with their vectors: **371,159 points** (Measured,
    13 Oct 2026). `legal_corpus_v1` holds no Supreme Court points.
-2. Read matching chunk text from the parquet files with DuckDB and compute BM25 sparse
+2. Read matching chunk text from the parquet files with DuckDB and compute BM25 sparse (judgment sparse vectors already exist and reproduce, and some `acts_india` ones are wrong: see docs/DATASET.md, 2 Nov 2026 findings)
    vectors (fastembed, free, local).
 3. Write both into `kanoon_v1` with two named vectors: dense (the existing voyage-4
    vectors, **no re-embedding**) and sparse. Copy `acts_india` the same way.

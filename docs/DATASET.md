@@ -33,6 +33,24 @@ across all 75 parquet files on 6 October 2026.
 Embeddings are **Voyage voyage-4, 1024 dimensions, cosine distance**. Any semantic query
 must use the same model, or the vectors are meaningless.
 
+### Findings from inspecting the local Qdrant copy (2 Nov 2026)
+
+Reported by the session that runs the Qdrant copy. **Not re-run from this repo** (this
+session did not touch Qdrant): treat as Measured by that session, to re-check when the
+copy finishes.
+
+| Finding | Evidence | What to do |
+|---|---|---|
+| **Judgment sparse vectors reproduce exactly** with FastEmbed `Qdrant/bm25` (16 of 16 sampled) | Measured (small sample) | Queries must use `query_embed()`, **not** `embed()` (that is the document side). `adapters/qdrant.py` does |
+| **`acts_india`: 19,835 of 74,509 Central Act points (26.6%, full scan) do not match the encoder.** Their sparse vectors are plain integer counts, so keyword search silently misses them | Measured (full scan of Central points) | Repair script `data/sparse_fix.py` (`plan`, `apply --confirm`, `restore`). **Not yet run on live data** |
+| The earlier "52% of `acts_india`" figure | Came from a flawed sample | **Unknown.** Do not quote it |
+| **Dense vectors are mixed**: a judgment chunk matches voyage-4 exactly (cosine 1.0000); a Central Act chunk matches **voyage-4-large** (0.9994) | Measured, **one chunk each only** | More testing pending on the copy. Until then a voyage-4 query vector may be slightly off against Act chunks |
+| **`language_code` is mostly missing** and uses uppercase `"EN"` | Measured | Select English Supreme Court chunks with `court = "Supreme Court of India"`. The store refuses a `language_code` filter |
+| `legal_corpus_v2` holds 11.8M points, mostly outside v1 | Measured | v1 scope is about **371,159** Supreme Court points plus **74,509** Central Act points |
+| The PRD's claim that keyword search must be **built from scratch** is wrong for judgments | Measured: the sparse vectors already exist and reproduce | Build step in `docs/DATA-MODEL.md` (compute BM25) is only needed for Acts that fail the check |
+| **Filtered scans on unindexed payload fields over the big collections time out** | Measured | Create payload indexes on `court`, `jurisdiction`, `section_number`, `act_status` before real use |
+| The Supreme Court **translations (about 742,000 chunks)** are real non-English text and were **not embedded** | Measured | Consistent with v1 scope (English only). Do not serve them |
+
 ## At launch
 
 Only the **Supreme Court and `acts_india`** are served, from one new collection. Everything

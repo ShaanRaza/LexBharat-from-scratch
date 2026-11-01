@@ -29,6 +29,9 @@ dev = [
     "pytest",
     "pytest-asyncio",
 ]
+search = [
+    "fastembed",  # keyword (BM25) half of hybrid search; needed by the API image
+]
 data = [
     "duckdb",
     "pyarrow",
