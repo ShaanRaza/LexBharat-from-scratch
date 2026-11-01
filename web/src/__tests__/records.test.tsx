@@ -28,3 +28,10 @@ describe("Judgment", () => {
     expect(screen.getByText(/CC BY 4.0/)).toBeInTheDocument();
   });
 });
+
+describe("no party names", () => {
+  it("judgment page does not show the case title", () => {
+    render(<Judgment c={FAKE_CASE} />);
+    expect(screen.queryByText(/Sample v\. Sample/)).toBeNull();
+  });
+});

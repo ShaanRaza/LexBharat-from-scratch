@@ -30,7 +30,7 @@ export function useChat() {
       }
       write((state = endOfStream(state)));
     } catch {
-      write((state = { ...state, status: "failed", failure: "serviceError" }));
+      write((state = { ...state, status: "failed", failure: "serviceError", text: "" }));
     }
   }, []);
 
