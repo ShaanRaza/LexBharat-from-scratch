@@ -28,7 +28,7 @@ wins. Summary:
 
 | In v1 (built before public launch) | Later |
 |---|---|
-| Supreme Court judgments; `acts_india` (whatever the data holds, **decision O7**: measured and shown on a coverage page, never over-claimed) | High Courts: Bombay, Telangana, Kerala (after the launch gate; data prep may start now) |
+| Whatever `core/coverage.json` records as held (**decision O7**: measured, published on the coverage page, never over-claimed). That file is the single source — do not restate a coverage category here or anywhere else | High Courts: Bombay, Telangana, Kerala (after the launch gate; data prep may start now) |
 | Research chat with verified citations; Act + section lookup (free, public) | Counter-arguments, moot court, study buddy (branching features, after the gate) |
 | Plans, billing, accounts, consents, delete and export, feedback, admin page | Hindi (after its tests pass) |
 | Judgment reader, talk with a single judgment, saved answers, export to Word/PDF | "Still good law?" signal (research item, not promised) |
@@ -196,6 +196,12 @@ as stored, labelled "as recorded in the dataset".
   acts. Label every other Act result "in-force status not checked".
 - **High Courts have no citation strings** (0.0% filled). The verifier falls back to record
   existence and quoted text, and High Court answers show no citation string.
+- **Never write a coverage category outside `core/coverage.json`.** What the product
+  covers (which courts, which instruments) is written in that one file and read from
+  `core/coverage.py` by the scope check, the decide prompt, the Qdrant filter, every
+  user-facing sentence, the coverage page and the generated doc blocks. A hard-coded
+  court or instrument name elsewhere fails `tests/test_coverage_source.py`. Six places
+  once said three different things; that is why this rule exists (A51).
 - **Never compete on document counts.** `case_id` is not one per case — Rajasthan has
   1,056,767 `case_id` against 308,342 distinct `case_number`.
 - Full field-quality table: [`docs/DATASET.md`](docs/DATASET.md).
