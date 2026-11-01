@@ -20,6 +20,8 @@ def S(**kw) -> Settings:
 
 
 def jev(client, **kw) -> JevClient:
+    # Batching is off by default in production; these tests exercise it, so turn it on.
+    kw.setdefault("JEV_BATCH_GATE", True)
     return JevClient(S(**kw), client=client, choice=FakeChoice)
 
 
@@ -255,3 +257,9 @@ async def test_silent_fallback_is_logged_once_without_content(caplog):
         await d.rate_passage("SECRET-QUERY", P())
     msgs = [r.message for r in caplog.records if "Jev unavailable" in r.message]
     assert len(msgs) == 1 and "SECRET" not in msgs[0]
+
+
+def test_gate_batching_is_off_by_default():
+    from core.settings import Settings
+
+    assert Settings.model_fields["JEV_BATCH_GATE"].default is False

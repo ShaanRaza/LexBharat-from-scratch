@@ -135,6 +135,7 @@ touch the trust promise or what users see.
 | A31 | core | Filters stay on the rewrite step (regex), not Jev | A Jev filters question | The docs give no natural fit for court, year and Act lists |
 | A32 | core | A Jev "supports" below 0.6 confidence becomes "partly" | Trusting the top choice at any confidence | Weak support must never earn a full tick |
 | A33 | core | Calls made in the same event-loop tick are merged into one Jev request (one Choice question per item, up to 255) | Changing trust's gate to call a batch method | Keeps `core/gate.py` and `core/verify.py` untouched. **Not verified:** whether items in one request are rated independently; the docs' cookbooks send one passage per request. Test against the live service before turning `JEV_ENABLED_GATE` or `JEV_ENABLED_CLAIM` on |
+| A35 | lead | `JEV_BATCH_GATE` defaults to **false**; claim support is never batched. Turn gate batching on only after a live test shows batched and single ratings agree | Default on | Independence of batched Choice questions is unverified; also `JEV_CLAIM_THRESHOLD` (0.6) is separate from the gate threshold |
 | A34 | core | Upload text is refused at two layers: `FallbackDecisions` skips Jev, and `JevClient` raises before building any request | One layer only | CLAUDE.md §6: upload text never reaches Jev |
 | A27 | lead | Added `pydantic>=2`, `litellm`, ruff `S`/`BLE` security rules and `pythonpath` to `pyproject.toml`; `SEAL_KEY`, `DATA_CREDIT`, `ENVIRONMENT` names to `.env.example` | n/a | Boilerplate |
 

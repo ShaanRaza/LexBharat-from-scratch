@@ -52,7 +52,7 @@ class Settings(BaseSettings):
     JEV_MODEL: str = "jev-latest"  # name from the API docs; not verified live
     JEV_TIMEOUT_MS: int = 800
     JEV_GATE_THRESHOLD: float = 0.6
-    JEV_BATCH_GATE: bool = True  # one Jev request per run for all passages; claim
+    JEV_BATCH_GATE: bool = False  # one Jev request per run for all passages; claim
     # support is never batched (a wrong claim check changes a citation tick)
     JEV_CLAIM_THRESHOLD: float = 0.6  # below this, Jev 'supports' becomes 'partly'
     JEV_ENABLED_SCOPE: bool = False
