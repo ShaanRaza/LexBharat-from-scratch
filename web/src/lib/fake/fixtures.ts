@@ -63,7 +63,7 @@ export function longSections(provenance: Provenance): SectionOut[] {
       act_slug: LONG_ACT.slug, act_name: ACT_TITLE_200, act_year: 1999, section: "7",
       section_title: "Registration of institutions, renewal of registration, and the conditions on which registration may be refused, suspended or cancelled",
       text: sentences(14, 3),
-      source_url: LONG_URL, in_force: null, act_status_checked: false, provenance,
+      source_url: LONG_URL, force_status: "not_checked", in_force: null, act_status_checked: false, provenance,
     },
     {
       act_slug: SUBCLAUSE_ACT.slug, act_name: SUBCLAUSE_ACT.title, act_year: 1999, section: "12",
@@ -80,7 +80,7 @@ export function longSections(provenance: Provenance): SectionOut[] {
         "(2) No order under sub-section (1) shall be made unless the person concerned has been given a reasonable opportunity of being heard.",
         "(3) Nothing in sub-section (1) affects any other power conferred by this Act.",
       ].join("\n"),
-      source_url: LONG_URL, in_force: true, act_status_checked: true, provenance,
+      source_url: LONG_URL, force_status: "in_force", in_force: true, act_status_checked: true, provenance,
     },
   ];
 }

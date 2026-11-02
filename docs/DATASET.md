@@ -80,8 +80,19 @@ wrong names.
 `act_status` is filled for only **74,484 rows across 1,568 acts** (in force 59,596,
 repealed 14,604, spent 284), against 1,098,269 rows and 22,264 acts in total.
 
-**Working decision:** show the in-force flag **only** on acts whose `act_status` is filled,
-and label every other Act result **"in-force status not checked"**.
+**Working decision, widened 2 Nov 2026 (A180):** an Act reads **repealed** if `act_status`
+says so, **or** its id starts `IND_REP_`, **or** its title ends with the clean marker
+`(Rep., Act NN of YYYY)`. It reads **in force** only if `act_status` says so. Every other Act
+result, and any with an unclear repeal note, is labelled **"In-force status not checked for
+this Act."** (`core/act_status.py`). The `in_force` column is not used.
+
+**Unresolved conflict between our own notes (needs the full count).** The paragraph above
+says `act_status` is filled for 1,568 of 22,264 acts. But the Qdrant field-fill sample
+(`docs/QDRANT-INVENTORY.md` section 7) finds `act_status` and `is_repealed` 100% non-empty
+across `acts_india`, and `tests/fixtures/practice/README.md` says every state Act in the
+dataset reads `in_force`, which "looks like a default, not a check" (Measured). If so, the
+"in force" label on state Acts and regulators rests on a default. Count with
+`python -m core.act_status <acts file>` before relying on it. **Not run.**
 
 ## Coverage is shallower than the court list suggests
 

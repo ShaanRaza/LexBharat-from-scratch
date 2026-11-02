@@ -103,21 +103,53 @@ def test_validation_error_uses_standard_format(client):
     assert r.status_code == 422 and r.json()["error"]["code"] == "validation_error"
 
 
-def test_section_shows_inforce_only_when_status_filled(client, repo):
+def _section(repo, **over):
     base = {
-        "record_id": "r", "act_name": "Test Act", "act_year": 2000, "section": "1",
-        "section_title": "t", "text": "body", "source_url": "https://x.invalid/a",
-        "act_slug": "test-act-2000",
+        "record_id": "IND_central_1_s001", "act_name": "Test Act, 2000",
+        "act_year": 2000, "section": "1", "section_title": "t", "text": "body",
+        "source_url": "https://x.invalid/a", "act_slug": "test-act-2000",
+        "in_force": True, "act_status": None,
     }  # fmt: skip
-    repo.sections.append(
-        {**base, "in_force": True, "act_status": None, "act_status_checked": False}
-    )
+    repo.sections[:] = [{**base, **over}]
+    return None
+
+
+def test_section_in_force_only_where_act_status_says_so(client, repo):
+    _section(repo)  # the in_force column is True, but act_status is empty: not trusted
     r = client.get("/api/v1/acts/test-act-2000/sections/1").json()
+    assert r["force_status"] == "not_checked"
     assert r["act_status_checked"] is False and r["in_force"] is None
     assert r["provenance"]["credit"].startswith("Data: Open India Law")
-    repo.sections[0].update(act_status="in force", act_status_checked=True)
+    _section(repo, act_status="in force")
     r = client.get("/api/v1/acts/test-act-2000/sections/1").json()
-    assert r["act_status_checked"] is True and r["in_force"] is True
+    assert r["force_status"] == "in_force" and r["in_force"] is True
+
+
+def test_section_repealed_from_any_one_of_three_signals(client, repo):
+    for over in (
+        {"act_status": "repealed"},
+        {"record_id": "IND_REP_659_1860_s002", "act_status": None},
+        {"act_name": "Test Act, 1860 (Rep., Act 45 of 2023)", "act_status": None},
+        {
+            "record_id": "IND_REP_659_1860_s002",
+            "act_status": "in_force",
+        },  # disagree: repealed
+    ):
+        _section(repo, **over)
+        r = client.get("/api/v1/acts/test-act-2000/sections/1")
+        # the act_name may change the slug, so look the section up by its own slug
+        if r.status_code == 404:
+            r = client.get(f"/api/v1/acts/{repo.sections[0]['act_slug']}/sections/1")
+        body = r.json()
+        assert body["force_status"] == "repealed" and body["in_force"] is False, over
+
+
+def test_section_unclear_repeal_note_is_never_called_in_force(client, repo):
+    _section(
+        repo, act_name="Test Act, 2000 (Rep. by Act 5 of 2001)", act_status="in_force"
+    )
+    r = client.get("/api/v1/acts/test-act-2000/sections/1").json()
+    assert r["force_status"] == "not_checked" and r["in_force"] is None
 
 
 def test_case_has_no_judge_or_party_fields(client, repo):

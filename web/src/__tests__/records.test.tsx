@@ -12,6 +12,18 @@ describe("ActSection", () => {
   it("shows In force only when checked", () => {
     render(<ActSection s={FAKE_SECTIONS[1]} />);
     expect(screen.getByText("In force")).toBeInTheDocument();
+    expect(screen.queryByText("Repealed")).toBeNull();
+  });
+  it("shows Repealed, and never In force beside it", () => {
+    render(<ActSection s={FAKE_SECTIONS.find((x) => x.act_slug === "old-code-1860")!} />);
+    expect(screen.getByText("Repealed")).toBeInTheDocument();
+    expect(screen.queryByText("In force")).toBeNull();
+    expect(screen.queryByText("In-force status not checked for this Act.")).toBeNull();
+  });
+  it("goes by force_status, not by the older boolean fields", () => {
+    render(<ActSection s={{ ...FAKE_SECTIONS[1], force_status: "not_checked", in_force: true, act_status_checked: true }} />);
+    expect(screen.queryByText("In force")).toBeNull();
+    expect(screen.getByText("In-force status not checked for this Act.")).toBeInTheDocument();
   });
   it("carries date, credit and notice", () => {
     render(<ActSection s={FAKE_SECTIONS[0]} />);

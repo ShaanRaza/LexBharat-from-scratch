@@ -210,10 +210,10 @@ class PgRepo:
         )
         for r in rows:
             if slugify_act(r["act_name"], r["act_year"]) == act_slug:
-                # in-force shown ONLY where act_status is filled (CLAUDE.md section 6)
+                # The in-force reading is made in api/routes/content.py by
+                # core.act_status from record_id, act_name and the raw act_status. The
+                # `in_force` column is deliberately not used (decision A180).
                 r["act_slug"] = act_slug
-                r["act_status_checked"] = bool(r["act_status"])
-                r["in_force"] = r["in_force"] if r["act_status_checked"] else None
                 return r
         return None
 

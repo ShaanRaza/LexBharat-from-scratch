@@ -36,7 +36,7 @@ the login check. Judgment titles are never sent (they are party names).
 | `GET /me` | Profile, plan, answers left this month |
 | `GET /search` | Direct search with filters, no AI answer (cheap) |
 | `GET /cases/{id}` | **Public (no login).** Full judgment with paragraph anchors; backs every citation link, including those on a shared answer. No judges or party names |
-| `GET /acts/{act}/sections/{n}` | One section. In-force status shown **only** when `act_status` is filled, otherwise labelled "in-force status not checked". **Public, no login** |
+| `GET /acts/{act}/sections/{n}` | One section, with `force_status`: `repealed` (act_status, `IND_REP_` id or a clean `(Rep., Act NN of YYYY)` title marker), `in_force` (only where act_status says so) or `not_checked`. `in_force` and `act_status_checked` are derived from it. **Public, no login** |
 | `POST /conversations` | Start a research or document conversation |
 | `GET /conversations` | List, with cursor pagination |
 | `GET /conversations/{id}` | Full history with sources |

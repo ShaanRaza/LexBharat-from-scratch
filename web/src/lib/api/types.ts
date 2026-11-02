@@ -51,6 +51,7 @@ export type Provenance = {
   notice: string;
 };
 
+export type ForceStatus = "in_force" | "repealed" | "not_checked";
 export type CaseParagraph = { anchor: string; text: string };
 
 export type CaseOut = {
@@ -73,7 +74,8 @@ export type SectionOut = {
   section_title: string | null;
   text: string;
   source_url: string | null;
-  in_force: boolean | null;
+  force_status: ForceStatus;
+  in_force: boolean | null; // derived from force_status, kept for older clients
   act_status_checked: boolean;
   provenance: Provenance;
 };

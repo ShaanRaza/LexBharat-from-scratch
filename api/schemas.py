@@ -474,8 +474,15 @@ class SectionOut(BaseModel):
     section_title: str | None = None
     text: str
     source_url: str | None = None
+    force_status: Literal["in_force", "repealed", "not_checked"] = Field(
+        description="From core.act_status: repealed if act_status, the IND_REP_ id or "
+        "a clean '(Rep., Act NN of YYYY)' title marker says so; in force only if "
+        "act_status says so; otherwise not_checked"
+    )
+    # Derived from force_status, kept so older clients keep working.
     in_force: bool | None = Field(
-        default=None, description="Only meaningful when act_status_checked is true"
+        default=None,
+        description="True / False for in_force / repealed; null if not_checked",
     )
     act_status_checked: bool = Field(
         description="False -> UI says 'in-force status not checked'"

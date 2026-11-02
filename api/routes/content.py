@@ -8,6 +8,7 @@ from fastapi import APIRouter, Query, Request
 from api import schemas as s
 from api.auth import CurrentUser, User
 from api.errors import ApiError
+from core.act_status import read_act_status
 
 router = APIRouter()
 
@@ -44,12 +45,19 @@ async def get_section(act: str, n: str, request: Request):
     sec = await request.app.state.repo.get_section(act, n)
     if sec is None:
         raise ApiError(404, "not_found", "Section not found.")
+    reading = read_act_status(
+        sec.get("record_id"), sec["act_name"], sec.get("act_status")
+    )
     return s.SectionOut(
         act_slug=act, act_name=sec["act_name"], act_year=sec.get("act_year"),
         section=sec["section"], section_title=sec.get("section_title"),
         text=sec["text"] or "", source_url=sec.get("source_url"),
-        in_force=sec["in_force"] if sec["act_status_checked"] else None,
-        act_status_checked=sec["act_status_checked"], provenance=await _prov(request),
+        force_status=reading.status,
+        in_force=(
+            None if reading.status == "not_checked" else reading.status == "in_force"
+        ),
+        act_status_checked=reading.status != "not_checked",
+        provenance=await _prov(request),
     )  # fmt: skip
 
 

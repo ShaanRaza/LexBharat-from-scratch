@@ -88,14 +88,21 @@ export const FAKE_SECTIONS: SectionOut[] = [
     section: "420", section_title: "Cheating and dishonestly inducing delivery of property",
     text: "Sample text of the section. Whoever cheats and thereby dishonestly induces the person deceived to deliver any property...",
     source_url: "https://example.invalid/sample/ipc-420",
-    in_force: null, act_status_checked: false, provenance: FAKE_PROVENANCE,
+    force_status: "not_checked", in_force: null, act_status_checked: false, provenance: FAKE_PROVENANCE,
   },
   {
     act_slug: "sample-act-2000", act_name: "Sample Act, 2000", act_year: 2000,
     section: "1", section_title: "Short title",
     text: "Sample text. This Act may be called the Sample Act, 2000.",
     source_url: "https://example.invalid/sample/act-1",
-    in_force: true, act_status_checked: true, provenance: FAKE_PROVENANCE,
+    force_status: "in_force", in_force: true, act_status_checked: true, provenance: FAKE_PROVENANCE,
+  },
+  {
+    act_slug: "old-code-1860", act_name: "The Old Code, 45 of 1860 (Rep., Act 45 of 2023)", act_year: 1860,
+    section: "1", section_title: "Short title",
+    text: "Sample text. This Code may be called the Old Code.",
+    source_url: "https://example.invalid/sample/old-1",
+    force_status: "repealed", in_force: false, act_status_checked: true, provenance: FAKE_PROVENANCE,
   },
 ];
 

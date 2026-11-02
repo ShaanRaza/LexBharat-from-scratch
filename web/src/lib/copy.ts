@@ -23,6 +23,8 @@ export const CITATION_AS_RECORDED = "as recorded in the dataset";
 // UX-COPY name the label "in-force status not checked"; this draft is the same words as a
 // sentence. The owner settles which.
 export const IN_FORCE_NOT_CHECKED = "In-force status not checked for this Act.";
+export const IN_FORCE_LABEL = "In force";
+export const REPEALED_LABEL = "Repealed";
 
 export const FAILURES = {
   notFound: {
