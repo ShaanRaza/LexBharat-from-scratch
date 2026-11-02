@@ -40,6 +40,11 @@ search, score. Query construction is swappable: pass any `QueryBuilder`.
     .venv/bin/python -m evals.known_item --collection NAME --n 200 \\
         --strategy middle_sentence --where court=VALUE --out evals/results/run1.json
 
+Options for a model comparison: --ids-file (exactly these chunks), --query-model (embed
+the queries with another model, for this measurement only), --strategy paraphrased with
+--paraphraser module:function (the model call is handed in), --max-voyage-tokens (stop
+if the estimated spend passes a cap).
+
 A real run reads Qdrant and calls Voyage (costs a little, needs keys). Not verified
 live: only the fakes have run.
 """
@@ -48,6 +53,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import importlib
 import inspect
 import json
 import math
@@ -61,7 +67,7 @@ from typing import Any
 from adapters.qdrant import EXACT_KEYS, Hit, SearchMode, VectorStore
 from core.contracts import SEARCH_TOP_K
 from core.search import hit_to_passage
-from core.settings import UnknownEmbeddingModel
+from core.settings import Settings, UnknownEmbeddingModel
 
 MODES: tuple[SearchMode, ...] = ("dense", "sparse", "hybrid")
 KS = (10, SEARCH_TOP_K)
@@ -126,6 +132,30 @@ async def chunks_by_id(
     return out
 
 
+def read_ids(path: Path) -> list[str]:
+    """Chunk ids from a file: a JSON list, a JSON object with an "ids" list, or a text
+    file with one id per line (blank lines and #-comments skipped). Order kept, repeats
+    dropped. This is what the embedding-model check hands over: a set of ids."""
+    raw = path.read_text(encoding="utf-8")
+    if path.suffix == ".json":
+        doc = json.loads(raw)
+        found = doc.get("ids") if isinstance(doc, dict) else doc
+        if not isinstance(found, list) or not all(isinstance(i, str) for i in found):
+            raise ValueError(
+                f"{path}: want a JSON list of id strings or {{'ids': [...]}}"
+            )
+    else:
+        found = [
+            ln.strip()
+            for ln in raw.splitlines()
+            if ln.strip() and not ln.strip().startswith("#")
+        ]
+    ids = list(dict.fromkeys(found))
+    if not ids:
+        raise ValueError(f"{path}: no ids")
+    return ids
+
+
 # --- 2. Query construction (swappable) ------------------------------------------------
 
 QueryBuilder = Callable[[Chunk], "str | Awaitable[str]"]
@@ -175,6 +205,32 @@ STRATEGIES: dict[str, Callable[[], QueryBuilder]] = {
     "first_words": first_words,
     "middle_sentence": middle_sentence,
 }
+# "paraphrased" is chosen by name too, but needs the model call handed in.
+STRATEGY_NAMES = (*sorted(STRATEGIES), "paraphrased")
+
+Paraphraser = Callable[[str], Awaitable[str]]
+
+
+def load_paraphraser(spec: str) -> Paraphraser:
+    """`package.module:function` -> the async function that rewrites one sentence. The
+    CALLER supplies it (it is the model call); this file imports no model or vendor."""
+    module, sep, name = spec.partition(":")
+    if not sep or not module or not name:
+        raise SystemExit(f"--paraphraser wants package.module:function, got {spec!r}")
+    fn = getattr(importlib.import_module(module), name)
+    if not inspect.iscoroutinefunction(fn):
+        raise SystemExit(f"{spec} must be an async function (sentence -> sentence)")
+    return fn
+
+
+def builder_for(strategy: str, paraphrase: Paraphraser | None = None) -> QueryBuilder:
+    if strategy == "paraphrased":
+        if paraphrase is None:
+            raise SystemExit(
+                "--strategy paraphrased needs --paraphraser module:function"
+            )
+        return paraphrased(paraphrase)
+    return STRATEGIES[strategy]()
 
 
 async def build_queries(chunks: Sequence[Chunk], build: QueryBuilder) -> list[str]:
@@ -183,6 +239,47 @@ async def build_queries(chunks: Sequence[Chunk], build: QueryBuilder) -> list[st
         q = build(c)
         out.append(await q if inspect.isawaitable(q) else q)
     return out
+
+
+# --- 2b. Measurement-only controls ----------------------------------------------------
+
+
+def with_query_model(settings: Settings, collection: str, model: str) -> Settings:
+    """A COPY of the settings that names `model` for `collection`. The copy is for the
+    measurement's embedder only. This is the only override of the per-collection model
+    (A120) and it lives here, not in core/: the live pipeline keeps refusing any
+    collection that is not recorded, which is what stops a wrong model reaching live
+    search. The settings passed in are not changed."""
+    if not model.strip():
+        raise ValueError("--query-model is empty")
+    return settings.model_copy(
+        update={
+            "VOYAGE_EMBED_MODELS": {**settings.VOYAGE_EMBED_MODELS, collection: model}
+        }
+    )
+
+
+class BudgetExceeded(Exception):
+    """The measurement's estimated Voyage tokens passed the cap. Stops the whole run."""
+
+
+class BudgetedEmbedder:
+    """Wraps an embedder and stops the run when the ESTIMATED tokens pass a cap. The
+    estimate is characters / 4 (the real count is Voyage's; this is deliberately rough
+    and is reported as an estimate). Counts every embed call, including repeats."""
+
+    def __init__(self, inner: Any, max_tokens: int | None):
+        self._inner, self._max = inner, max_tokens
+        self.tokens = 0
+
+    async def embed(self, text: str, collection: str) -> list[float]:
+        self.tokens += max(1, len(text) // 4)
+        if self._max is not None and self.tokens > self._max:
+            raise BudgetExceeded(
+                f"estimated {self.tokens:,} Voyage tokens passed the cap "
+                f"of {self._max:,}"
+            )
+        return await self._inner.embed(text, collection)
 
 
 # --- 3. Search ------------------------------------------------------------------------
@@ -402,10 +499,16 @@ async def _sample_deps():
     return settings, store, FakeEmbedder()
 
 
-async def _main(a: argparse.Namespace) -> int:
+async def _stub_paraphrase(sentence: str) -> str:
+    """Offline demo only: reverses the word order. Not a paraphrase of any quality."""
+    return " ".join(reversed(sentence.split()))
+
+
+async def _main(a: argparse.Namespace, paraphrase: Paraphraser | None = None) -> int:
     if a.sample:
         settings, store, embedder = await _sample_deps()
         collection = settings.CORPUS_COLLECTION
+        paraphrase = paraphrase or _stub_paraphrase
     else:
         from adapters.qdrant import QdrantStore
         from adapters.voyage import VoyageClient
@@ -413,20 +516,44 @@ async def _main(a: argparse.Namespace) -> int:
 
         settings = get_settings()
         collection = a.collection or settings.CORPUS_COLLECTION
-        store, embedder = QdrantStore(settings), VoyageClient(settings)
+        store = QdrantStore(settings)
+        # the override reaches only this embedder, never `settings` or core/
+        embedder = VoyageClient(
+            with_query_model(settings, collection, a.query_model)
+            if a.query_model
+            else settings
+        )
+    if a.paraphraser:
+        paraphrase = load_paraphraser(a.paraphraser)
+    budget = BudgetedEmbedder(embedder, a.max_voyage_tokens)
 
     sl = Slice(collection, _parse_where(a.where), a.id_from, a.id_to)
-    if a.replay:
+    ids_given: int | None = None
+    if a.ids_file:
+        wanted = read_ids(a.ids_file)
+        ids_given = len(wanted)
+        chunks = await chunks_by_id(store, collection, wanted)
+        if len(chunks) < len(wanted):
+            print(
+                f"warning: {len(wanted) - len(chunks)} of {len(wanted)} ids not found"
+            )
+    elif a.replay:
         ids = list(json.loads(a.replay.read_text())["modes"].values())[0]["ranks"]
         chunks = await chunks_by_id(store, collection, list(ids))
     else:
         chunks = await sample_chunks(store, sl, a.n)
 
-    build = STRATEGIES[a.strategy]()
     modes = tuple(m for m in MODES if m in a.modes)
-    results = await run_known_item(
-        chunks, build, store_retriever(store, embedder, collection, sl.must()), modes
-    )
+    try:
+        results = await run_known_item(
+            chunks,
+            builder_for(a.strategy, paraphrase),
+            store_retriever(store, budget, collection, sl.must()),
+            modes,
+        )
+    except BudgetExceeded as e:
+        print(f"STOPPED: {e}. Nothing was written.")
+        return 2
     try:
         embed_model = settings.embed_model_for(collection)
     except UnknownEmbeddingModel:
@@ -434,9 +561,13 @@ async def _main(a: argparse.Namespace) -> int:
     meta = {
         "collection": collection,
         "embed_model": embed_model,
+        "query_model_override": a.query_model,
+        "voyage_tokens_estimated": budget.tokens,
         "where": sl.where,
         "id_from": sl.id_from,
         "id_to": sl.id_to,
+        "ids_file": a.ids_file.name if a.ids_file else None,
+        "ids_given": ids_given,
         "strategy": a.strategy,
         "n_requested": a.n,
         "n_measured": len(chunks),
@@ -448,9 +579,10 @@ async def _main(a: argparse.Namespace) -> int:
     }
     print(
         f"known-item retrieval | {collection} | strategy={a.strategy} | "
-        f"{len(chunks)} chunks"
+        f"query model={a.query_model or embed_model} | {len(chunks)} chunks"
     )
     print(render_table(results))
+    print(f"estimated Voyage tokens this run: {budget.tokens:,}")
     if a.sample:
         print("(offline demo: the fake ranks all three modes alike)")
     if a.out:
@@ -460,12 +592,25 @@ async def _main(a: argparse.Namespace) -> int:
     return 0
 
 
-if __name__ == "__main__":
+def make_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--sample", action="store_true", help="offline demo with fakes")
     ap.add_argument("--collection", help="default: CORPUS_COLLECTION from config")
     ap.add_argument("--n", type=int, default=200, help="chunks to sample")
-    ap.add_argument("--strategy", choices=sorted(STRATEGIES), default="middle_sentence")
+    ap.add_argument("--strategy", choices=STRATEGY_NAMES, default="middle_sentence")
+    ap.add_argument(
+        "--paraphraser", metavar="MODULE:FUNC",
+        help="async sentence -> sentence function for --strategy paraphrased",
+    )  # fmt: skip
+    ap.add_argument(
+        "--query-model", metavar="MODEL",
+        help="embed queries with this model for THIS measurement only (the live "
+        "pipeline keeps its per-collection rule, A120)",
+    )  # fmt: skip
+    ap.add_argument(
+        "--max-voyage-tokens", type=int, metavar="N",
+        help="stop the run if the estimated Voyage tokens pass N",
+    )  # fmt: skip
     ap.add_argument("--modes", nargs="+", choices=MODES, default=list(MODES))
     ap.add_argument(
         "--where", action="append", default=[], metavar="KEY=VALUE",
@@ -473,8 +618,17 @@ if __name__ == "__main__":
     )  # fmt: skip
     ap.add_argument("--id-from", help="inclusive lower bound on the record id")
     ap.add_argument("--id-to", help="inclusive upper bound on the record id")
-    ap.add_argument(
+    src = ap.add_mutually_exclusive_group()
+    src.add_argument(
+        "--ids-file", type=Path,
+        help="exactly these chunk ids: JSON list, {'ids': [...]}, or one per line",
+    )  # fmt: skip
+    src.add_argument(
         "--replay", type=Path, help="re-measure the chunks of an earlier run"
     )
     ap.add_argument("--out", type=Path, help="write the JSON result here")
-    raise SystemExit(asyncio.run(_main(ap.parse_args())))
+    return ap
+
+
+if __name__ == "__main__":
+    raise SystemExit(asyncio.run(_main(make_parser().parse_args())))
