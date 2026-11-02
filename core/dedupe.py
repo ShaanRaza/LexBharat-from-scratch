@@ -1,8 +1,8 @@
 """Step 5 helper: drop repeated passages before anything is re-ranked or labelled.
 
 Plain words: the same passage can come back from the search twice. In the corpus,
-4,871 chunk ids sit on two points each (measured on the Supreme Court set, 2 Nov
-2026). Left alone, both copies could take two of the eight gate slots and get two
+4,871 chunk ids sit on two points each (measured 2 Nov 2026 on one court's
+judgments). Left alone, both copies could take two of the eight gate slots and get two
 different source labels (S1 and S4), so one answer could cite identical text twice
 with every verifier check passing. So we keep the first copy of each passage and drop
 the rest.
