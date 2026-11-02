@@ -630,3 +630,66 @@ the chunk's own sentences, handing BM25 an exact lexical match that a real parap
 Stripping names and numbers took strict recall 91% to 81%. **What would settle it is the thing the
 200-question set is waiting for:** real questions with labelled answer chunks, not sentences lifted
 from the chunks themselves.
+
+
+## 15. The dead-vector detector is validated, and `court` can be flatly WRONG
+
+**Measured**, 3 Nov 2026, across the four pre-spend checks.
+
+### The detector works, and better than proposed
+
+Each stored vector is scored by its cosine with the mean legal-text direction, built from 2,694
+good chunks of **other** courts so the Kerala test has no leakage.
+
+| | Score range |
+|---|---|
+| 31 dead Kerala chunks | −0.063 to +0.046 (mean −0.006) |
+| 419 good Kerala chunks | +0.159 to +0.689 |
+
+**AUC 1.000.** At a threshold of **0.10** — the middle of the gap — it caught 31 of 31 and flagged
+0 of 3,113 good chunks. Precision and recall both 100%.
+
+Two limits worth keeping: good chunks score lower the longer they are (mean 0.45 at 3,000–5,000
+characters), so the threshold must not drift much above 0.15; and recall is evidenced only on
+Kerala's 31, because no other court had any dead vectors to test against.
+
+Applying it costs no API calls but needs the stored vectors of all 3.1M Kerala chunks — about
+3–4 hours of read-only reads at ~240 points a second. **That read can start before the payment
+method is live**, because it spends nothing.
+
+### Re-embedding genuinely repairs them
+
+100,038 Kerala points in a scratch instance, 20 known-dead chunks and 20 healthy controls, dense
+vector replaced only.
+
+| | Dense recall@10 / @50 | Hybrid recall@10 / @50 |
+|---|---|---|
+| Dead, before | **0% / 0%** | 61% / 89% |
+| Dead, after | 41% / 50% | 73% / 91% |
+| Healthy controls | 37% / 47% | 73% / 86% |
+
+Rank improved on 22 queries and worsened on none; detector score went −0.01 to +0.47. **After the
+fix the dead chunks perform at the level of healthy ones**, which is the right success criterion.
+Hybrid barely moves, confirming section 14: the intact sparse vectors were already carrying them.
+Cost of the proof: ~33,000 tokens.
+
+### Scope: the job does not double — but the data told a lie on the way
+
+Kerala is **not** in `legal_corpus_v1`. About 760 Kerala chunks hide in v2's 75,786 no-court
+points (3 of 300 sampled), which the detector would also reach. Kerala v2's majority model is
+`voyage-4` (368 of 450), so dead chunks are re-embedded with that.
+
+**The finding that outlives this task:** the 17 points v1 labels `High Court of Kerala` are all
+**Uttarakhand** chunks (`UKHC` prefix). Section 5 recorded that court names are not *canonical* —
+spelling variants that make a filter miss records. This is a different and worse failure: a court
+label that is simply **wrong**, so a filter on one court silently returns another court's
+judgments. Consequences nobody has accounted for:
+
+- A user filtering to a court can be shown a different court's law.
+- The per-court embedding-model config (section 13) keys on `court`, so a mislabelled record gets
+  queried with the wrong model.
+- Section 14 showed the court filter is also a **recall** mechanism at scale, so a wrong label
+  costs recall as well as correctness.
+
+Seen in 17 points, which is tiny — but nobody has measured how often `court` is wrong rather than
+merely spelled differently, and the three consequences above all assume it is right.
