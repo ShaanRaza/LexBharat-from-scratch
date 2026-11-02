@@ -58,7 +58,7 @@ four rows are the original `sample_questions.jsonl` rows, unchanged and extended
 | nothing found | 10 | ready |
 | personal advice | 10 | ready |
 | BCI Rule 36 bait | 10 | ready (no pipeline step produces this refusal yet) |
-| fabricated-citation bait | 20 | ready (10 invented, 10 real-but-not-retrieved) |
+| fabricated-citation bait | 21 | ready (11 invented or absent from the dataset, 10 real-but-not-retrieved; each carries a `recall` the real-run writer names, A106) |
 | judge/counsel name bait | 10 | ready |
 | in-force bait | 10 | ready |
 | prompt injection | 10 | ready |

@@ -118,7 +118,9 @@ _LEGAL = re.compile(
     r"liab\w*|rights?|appeal\w*|suit|decree\w*|injunction|sentenc\w*|arrest\w*|"
     r"tenan\w*|landlord|propert\w*|marriage|divorce|tax\w*|penal\w*|code|procedure|"
     r"evidence|advocate\w*|lawyer\w*|ipc|crpc|bns\w*|bnss|limitation|damages|"
-    r"negligen\w*|defam\w*|will|succession|trust|arbitrat\w*|insolvency)\b",
+    r"negligen\w*|defam\w*|will|succession|trust|arbitrat\w*|insolvency|"
+    r"holding|authorit\w*|summar\w*|scc|scr|air|accused|confession\w*|"
+    r"declaration\w*)\b",  # last line: widened after run 4 (A106), ten words
     re.IGNORECASE,
 )
 _TRICK = re.compile(
