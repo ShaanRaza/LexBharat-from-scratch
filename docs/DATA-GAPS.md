@@ -240,3 +240,68 @@ settle it by opening one High Court point, which the Part 6 inventory does.
 - **The card contradicts itself on totals** (32,572,660 judgment chunks against 32,518,048
   vectors; 1,098,577 sections against 1,098,269 provisions) and says so. The 308-row gap we
   already owed an explanation for is visible in the card itself.
+
+## 8. The parquet cross-check: the copy is clean, the source is not
+
+**Measured**, 2 Nov 2026, by the parquet cross-check (section 6's design). Set A was taken
+structurally from `_INSC_` in `case_id` with no language filter; Set B three ways (`court`,
+`_INSC_`, both) which all gave the same number. Scripts were read from the chunk text, never
+from a label.
+
+### The copy is complete relative to the original
+
+The original `legal_corpus_v2` and `kanoon_v1` both hold **371,159** Supreme Court points, by
+`court` and by `court_type` alike, and `legal_corpus_v1` holds **0**. Nothing was lost in the
+copy, and v1 adds nothing. The copy is also **100% Latin-script** across all 371,159 — no
+vernacular chunk was pulled in by the court-only filter, which had been an assumption until now.
+
+### What the parquet holds that the vectors do not
+
+The parquet carries **1,113,313** Supreme Court chunks over 37,014 cases, with
+`language_code` 100% filled across 16 languages (English 371,247, Hindi 307,509, Punjabi
+306,477). Against the copy:
+
+| Difference | Chunks | Cases |
+|---|---:|---:|
+| In the parquet, **not in any Qdrant collection** — all English | **10,112** | 749 (734 wholly absent) |
+| In Qdrant, not in the parquet | 5,153 | 92 |
+| **Duplicate `chunk_id`s**, each on two points, in the original as well as the copy | **4,871** | 392 |
+
+371,247 − 10,112 + 5,153 + 4,871 = 371,159. The earlier 88-point near-match was a coincidence
+of three larger differences, not an explanation. Named lists are in `~/qdrant-kanoon/reports/`.
+
+**The 749 absent cases cluster in recent years** — 300 from 2021, 235 from 2019. They cannot be
+retrieved at all, so the product cannot answer on them however the question is asked. That is a
+coverage hole in the dataset's own vectors, not in our copy, and it belongs on the coverage page
+rather than in a footnote.
+
+### The duplicates reach the answer, so they are the more urgent of the two
+
+4,871 chunk ids sit on two points each. Nobody asked about these, and they matter more than the
+missing chunks:
+
+- The same passage can occupy two of the eight slots the gate allows (step 7), spending
+  retrieval capacity on text already present.
+- Worse, the two copies get **different source ids**, so an answer can carry `[S1]` and `[S4]`
+  pointing at identical text. Every verifier check passes — the records exist, the quotes match,
+  the passages were retrieved — and the reader sees two authorities where there is one.
+
+Nothing in §5's four checks is designed to catch that, because nothing is wrong with either
+citation taken alone.
+
+**Fix in the pipeline, not in the data:** drop duplicates after search and before the gate,
+on `chunk_id` first and a text hash second. It costs nothing, needs no re-embedding, and does
+not touch the originals.
+
+### Drive speed, measured at last
+
+LAWSSD reads at **35.5 MB/s** (2 GiB via `dd`, twice, 60.55 s and 60.47 s, no cache effect).
+All 26 judgment files in full would be about 25 minutes. Column-only reads take seconds.
+
+### What this evidence does not cover
+
+The absence of the 749 cases rests on `case_id` and `court`. A chunk filed under a different
+`case_id` would not show. And 148,810 chunks in the difference could not be classified: 53,332
+mixed-script, and 95,478 Latin-script but labelled Hindi or Punjabi, where `text` equals
+`text_original`. Four were inspected by hand and were an English header followed by OCR noise
+from scanned pages; the rest are **not verified**. None of them are in the copy.
