@@ -1,4 +1,5 @@
-"""Cases, Acts, search, stats. Acts and stats are PUBLIC (no login)."""
+"""Cases, Acts, search, stats. Cases, Acts and stats are PUBLIC (no login): dataset
+records under CC BY 4.0, which a shared answer's citations must open for anyone."""
 
 from __future__ import annotations
 
@@ -23,7 +24,8 @@ async def _prov(request: Request) -> s.Provenance:
 
 
 @router.get("/cases/{record_id}", response_model=s.CaseOut)
-async def get_case(record_id: str, request: Request, user: CurrentUser = User):
+async def get_case(record_id: str, request: Request):
+    """Public. Only listed fields are returned: never judges or party names."""
     case = await request.app.state.repo.get_case(record_id)
     if case is None:
         raise ApiError(404, "not_found", "Judgment not found.")

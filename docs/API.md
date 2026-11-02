@@ -1,7 +1,7 @@
 # API
 
 All routes live under **`/api/v1`**, send and receive JSON, and need a **Firebase token** —
-except the public Act, stats and sitemap routes, and the Razorpay webhook.
+except the public Act, judgment, stats and sitemap routes, and the Razorpay webhook.
 
 There are no `/auth/signup` or `/auth/login` routes: Firebase handles those in the browser.
 
@@ -35,7 +35,7 @@ the login check. Judgment titles are never sent (they are party names).
 |---|---|
 | `GET /me` | Profile, plan, answers left this month |
 | `GET /search` | Direct search with filters, no AI answer (cheap) |
-| `GET /cases/{id}` | Full judgment with paragraph anchors; backs every citation link |
+| `GET /cases/{id}` | **Public (no login).** Full judgment with paragraph anchors; backs every citation link, including those on a shared answer. No judges or party names |
 | `GET /acts/{act}/sections/{n}` | One section. In-force status shown **only** when `act_status` is filled, otherwise labelled "in-force status not checked". **Public, no login** |
 | `POST /conversations` | Start a research or document conversation |
 | `GET /conversations` | List, with cursor pagination |

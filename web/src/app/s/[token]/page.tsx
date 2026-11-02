@@ -24,7 +24,7 @@ async function Shared({ params }: { params: Promise<{ token: string }> }) {
 
 export default function Page({ params }: { params: Promise<{ token: string }> }) {
   return (
-    <PageShell shell="public">
+    <PageShell shell="auto">
       <Suspense fallback={<Loading />}>
         <Shared params={params} />
       </Suspense>

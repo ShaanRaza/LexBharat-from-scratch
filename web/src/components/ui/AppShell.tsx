@@ -28,7 +28,7 @@ export function AppShell({ children, width = "reading" }: { children: ReactNode;
         </Button>
         {open && (
           <Dialog title={NAV.menu} placement="sheet" onClose={() => setOpen(false)}>
-            <div className="max-h-(--size-sheet-scroll) overflow-y-auto">
+            <div className="flex max-h-(--size-sheet-scroll) flex-col">
               <AppSidebar inSheet onNavigate={() => setOpen(false)} />
             </div>
           </Dialog>

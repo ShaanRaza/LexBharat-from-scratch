@@ -12,7 +12,7 @@ async function Stats({ searchParams }: { searchParams: Promise<{ fake?: string }
 
 export default function Page({ searchParams }: { searchParams: Promise<{ fake?: string }> }) {
   return (
-    <PageShell shell="public">
+    <PageShell shell="auto">
       <h1 className="mb-4 text-title font-bold">{STATS_TITLE}</h1>
       <Suspense fallback={<Loading />}>
         <Stats searchParams={searchParams} />

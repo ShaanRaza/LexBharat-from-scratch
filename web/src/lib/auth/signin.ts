@@ -1,4 +1,5 @@
 import { USE_FAKE_API } from "@/lib/config";
+import { markSignedIn } from "./viewer";
 
 export class AuthNotConfigured extends Error {}
 
@@ -8,4 +9,5 @@ export class AuthNotConfigured extends Error {}
 export async function signIn(email: string, password: string): Promise<void> {
   if (!USE_FAKE_API) throw new AuthNotConfigured("Sign-in is not set up yet");
   if (!email || !password) throw new Error("missing");
+  markSignedIn();
 }

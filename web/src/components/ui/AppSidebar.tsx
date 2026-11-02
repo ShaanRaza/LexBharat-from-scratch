@@ -16,7 +16,7 @@ const SHOWN_MATTERS = 8; // the rest are one click away on the Matters page
 // the Menu sheet on a phone (AppShell decides where it sits). Order, top to bottom:
 // wordmark, New question, Matters with its list, History, a divider, the reference pages,
 // then Help, Account and Sign out pinned to the bottom (in the phone sheet the wordmark
-// is dropped, the bar above already shows it, and the sheet itself scrolls). It never shows "Get early access":
+// is dropped, the bar above already shows it, and the middle list scrolls while the bottom group stays put). It never shows "Get early access":
 // that belongs to the public shell. Styled only from tokens.
 export function AppSidebar({ onNavigate, inSheet = false }: { onNavigate?: () => void; inSheet?: boolean }) {
   const path = usePathname();
@@ -54,7 +54,7 @@ export function AppSidebar({ onNavigate, inSheet = false }: { onNavigate?: () =>
 
   const list = matters.value ?? [];
   return (
-    <nav aria-label={NAV.appNav} className="flex h-full min-h-0 flex-col gap-4">
+    <nav aria-label={NAV.appNav} className="flex min-h-0 flex-1 flex-col gap-4">
       {!inSheet && (
         <Link href="/" onClick={onNavigate} className="font-serif text-lead font-bold text-ink">
           {PRODUCT_NAME}
@@ -68,7 +68,7 @@ export function AppSidebar({ onNavigate, inSheet = false }: { onNavigate?: () =>
         {NAV.newQuestion}
       </Link>
 
-      <div className={`flex min-h-0 flex-1 flex-col gap-1 ${inSheet ? "" : "overflow-y-auto"}`}>
+      <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
         {item("/matters", words.many)}
         <ul aria-label={words.many} className="ml-2 flex flex-col gap-0.5 border-l border-line pl-2">
           {matters.status === "loading" && <li className="px-2 py-1 text-label text-ink-soft">…</li>}

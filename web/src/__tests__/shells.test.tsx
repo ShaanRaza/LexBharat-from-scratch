@@ -83,3 +83,47 @@ describe("PageShell must be told which shell", () => {
     expect(screen.queryByRole("navigation", { name: "App" })).toBeNull();
   });
 });
+
+describe("the frame follows the viewer on public-data pages (decision A71)", () => {
+  beforeEach(() => window.localStorage.removeItem("viewer-signed-in"));
+
+  it("a visitor gets the public top bar, with early access", () => {
+    render(<PageShell shell="auto">content</PageShell>);
+    expect(screen.queryByRole("navigation", { name: "App" })).toBeNull();
+    expect(screen.getAllByRole("link", { name: "Get early access" }).length).toBeGreaterThan(0);
+    expect(screen.getByText("content")).toBeInTheDocument();
+  });
+
+  it("a signed-in user gets their own sidebar, with the same content and no early access", async () => {
+    const { markSignedIn } = await import("@/lib/auth/viewer");
+    markSignedIn();
+    render(<PageShell shell="auto">content</PageShell>);
+    expect(screen.getAllByRole("navigation", { name: "App" }).length).toBeGreaterThan(0);
+    expect(screen.queryByText("Get early access")).toBeNull();
+    expect(screen.getByText("content")).toBeInTheDocument();
+  });
+
+  it("signing out puts the visitor's frame back at once", async () => {
+    const { markSignedIn } = await import("@/lib/auth/viewer");
+    markSignedIn();
+    render(<PageShell shell="auto">content</PageShell>);
+    fireEvent.click(within(screen.getAllByRole("navigation", { name: "App" })[0]).getByRole("button", { name: "Sign out" }));
+    await waitFor(() => expect(screen.queryByRole("navigation", { name: "App" })).toBeNull());
+  });
+
+  it("the sign-in and sign-up pages never take the sidebar, even for a signed-in viewer", async () => {
+    const { markSignedIn } = await import("@/lib/auth/viewer");
+    markSignedIn();
+    render(<PageShell shell="public">form</PageShell>);
+    expect(screen.queryByRole("navigation", { name: "App" })).toBeNull();
+  });
+
+  it("the server render is the visitor's frame whatever is stored", async () => {
+    const { markSignedIn } = await import("@/lib/auth/viewer");
+    markSignedIn();
+    const { renderToString } = await import("react-dom/server");
+    const html = renderToString(<PageShell shell="auto">content</PageShell>);
+    expect(html).toContain("Get early access");
+    expect(html).not.toContain('aria-label="App"');
+  });
+});

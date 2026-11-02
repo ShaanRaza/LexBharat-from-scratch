@@ -13,7 +13,7 @@ async function Case({ params }: { params: Promise<{ id: string }> }) {
 
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
   return (
-    <PageShell shell="app">
+    <PageShell shell="auto">
       <Suspense fallback={<Loading />}>
         <Case params={params} />
       </Suspense>

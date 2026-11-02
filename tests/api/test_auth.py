@@ -57,13 +57,26 @@ def test_every_protected_route_needs_login(client):
         ("post", "/api/v1/conversations"),
         ("get", "/api/v1/conversations/x"),
         ("post", "/api/v1/conversations/x/messages"),
-        ("get", "/api/v1/cases/x"),
         ("get", "/api/v1/search?q=a"),
         ("post", "/api/v1/feedback"),
         ("get", "/api/v1/documents/x"),
         ("delete", "/api/v1/me"),
     ]:
         assert getattr(client, method)(path).status_code == 401, path
+
+
+def test_a_judgment_opens_without_login_and_without_party_names(client, repo):
+    """A shared answer's citation must open for an anonymous reader (decision A71)."""
+    repo.cases["c1"] = {
+        "record_id": "c1", "title": "A v B", "court": "Supreme Court",
+        "decision_date": None, "case_number": "1/2000", "citation_string": "1 SCC 1",
+        "url": None, "paragraphs": [{"anchor": "p1", "text": "t"}],
+        "judges": "SHOULD NOT LEAK", "petitioner": "SHOULD NOT LEAK",
+    }  # fmt: skip
+    r = client.get("/api/v1/cases/c1")
+    assert r.status_code == 200 and "SHOULD NOT LEAK" not in r.text
+    assert r.json()["title"] is None
+    assert client.get("/api/v1/cases/missing").status_code == 404
 
 
 def test_public_routes_need_no_login(client):

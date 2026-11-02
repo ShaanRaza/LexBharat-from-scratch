@@ -4,7 +4,7 @@ import { PRICING_TITLE } from "@/lib/copy";
 
 export default function Page() {
   return (
-    <PageShell shell="public">
+    <PageShell shell="auto">
       <h1 className="mb-4 text-title font-bold">{PRICING_TITLE}</h1>
       <PricingScreen />
     </PageShell>

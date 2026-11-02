@@ -17,3 +17,4 @@ export { Dialog } from "./Dialog";
 export { EmptyState } from "./EmptyState";
 export { Select } from "./Select";
 export { AreaLayout } from "./AreaLayout";
+export { ViewerShell } from "./ViewerShell";

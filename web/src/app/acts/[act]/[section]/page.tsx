@@ -13,7 +13,7 @@ async function Section({ params }: { params: Promise<{ act: string; section: str
 
 export default function Page({ params }: { params: Promise<{ act: string; section: string }> }) {
   return (
-    <PageShell shell="public">
+    <PageShell shell="auto">
       <Suspense fallback={<Loading />}>
         <Section params={params} />
       </Suspense>

@@ -96,11 +96,16 @@ describe("the public page", () => {
     expect(container.textContent).not.toMatch(/@/);
   });
 
-  it("never links to the sign-in-only reader", () => {
+  it("every chip opens a public page that lands on the cited passage (decision A71)", () => {
     const { container } = render(<SharedAnswerView shared={shared} />);
-    const hrefs = [...container.querySelectorAll("a")].map((a) => a.getAttribute("href") ?? "");
+    const hrefs = [...container.querySelectorAll("a[data-mark]")].map((a) => a.getAttribute("href") ?? "");
     expect(hrefs.length).toBeGreaterThan(0);
-    expect(hrefs.some((h) => h.startsWith("/cases/"))).toBe(false);
+    for (const c of shared.citations) {
+      const want = c.kind === "act" ? `/acts/${c.act_slug}/${c.section}` : `/cases/${encodeURIComponent(c.record_id)}${c.anchor ? `#${c.anchor}` : ""}`;
+      expect(hrefs).toContain(want);
+    }
+    expect(hrefs).toContain("/cases/sc-sample-001#p12"); // a judgment chip lands on its paragraph
+    expect(hrefs.some((h) => h === "#" || h.startsWith("http"))).toBe(false); // no dead or off-site chip
   });
 
   it("an unavailable link says so and shows nothing else", () => {

@@ -11,7 +11,7 @@ async function Coverage() {
 
 export default function Page() {
   return (
-    <PageShell shell="public">
+    <PageShell shell="auto">
       <h1 className="mb-4 text-title font-bold">{COVERAGE_TITLE}</h1>
       <Suspense fallback={<Loading />}>
         <Coverage />
