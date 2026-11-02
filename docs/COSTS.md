@@ -36,14 +36,17 @@ server and several, every month, forever.
 
 | Item | Figure | Label | Source |
 |---|---|---|---|
-| Re-embedding the full corpus at one model | about **$1,900** at voyage-4 $0.06/M, ~31M chunks × ~1,000 tokens | **Estimate** | `DATA-GAPS.md` section 12 |
+| Re-embedding, if needed at all | **$0** for a per-court config (~92% matched); else ~$560 at `voyage-4-lite`, ~$1,700 at `voyage-4`, **~$3,400 at `voyage-4-large`** (what `kanoon_v1` serves) | **Measured** (28B tokens) | `DATA-GAPS.md` section 13 |
 | Measuring whether that is needed | under **$1** (~420,000 Voyage tokens) | **Estimate** | the known-item run, this file section 6 |
 | BM25 repair of broken sparse vectors already in the served copy | about **12 seconds** of compute, no vendor cost | **Measured** | `DATA-GAPS.md` section 9 |
 | Jev credits bought so far | **$5** | **Checked** | `PRD-v2.md` section 8 |
 | Tribunal data, if purchased | unknown — enquiry sent | **Needs verification** | owner, 2 Nov 2026 |
 
-The $1,900 is the one to watch, and it is **not yet a cost** — it is the price of one option.
-The measurement that decides whether it is needed costs cents. Do not treat it as committed.
+**Measured 2 Nov 2026: the working answer is $0.** A per-court-majority query config matches
+about 92% of High Court points, Qdrant serves it in one call for about 1.8 ms more, and hybrid
+search loses nothing measurable to a mismatched query. Re-embedding is now a quality choice
+rather than a necessity — and matching the model `kanoon_v1` already serves would cost about
+**$3,400**, not the $1,900 once assumed. Details: `DATA-GAPS.md` section 13.
 
 ---
 
@@ -136,7 +139,8 @@ uploads set the risk.** Watch Qdrant memory and OCR time in Langfuse from week o
 | Unknown | What settles it | Owner | Status |
 |---|---|---|---|
 | Server size and whether managed Qdrant is worth it | Bombay sizing experiment — RAM, p50/p95, recall@10/@50 for three quantization settings, extrapolated | data session | running, 2 Nov 2026 |
-| Whether the $1,900 re-embedding is needed | known-item recall@50, two query models, dense/sparse/hybrid | data session | queued, needs the Qdrant copy free |
+| ~~Whether the $1,900 re-embedding is needed~~ | **Measured 2 Nov 2026 — per-court config, $0** | data session | done (`DATA-GAPS.md` §13) |
+| Whether any dense vectors are unrelated to their text | prevalence check across courts — 2 of 50 Kerala chunks scored ~0 under every model | data session | **not started, highest value** |
 | LLM cost per answer | token counts per pipeline step against published rates | **not assigned** | **not started** |
 | Managed database, CDN, firewall, email, monitoring | quotes | owner | not started |
 | Tribunal data | vendor reply | owner | enquiry sent 2 Nov 2026 |
@@ -148,8 +152,9 @@ uploads set the risk.** Watch Qdrant memory and OCR time in Langfuse from week o
 
 - Do not treat section 8's worked total as a cost. It is a planning sketch with six of its
   lines estimated by us rather than quoted, and it is for internal decisions only.
-- Do not quote the $1,900 as a committed cost. It is the price of one option, and the
-  measurement that decides it costs under a dollar.
+- Do not quote $1,900 at all any more. It was superseded on 2 Nov 2026: the working answer is
+  $0 for a per-court query config, and full re-embedding costs $560 to $3,400 depending on the
+  model chosen (`DATA-GAPS.md` section 13).
 - Do not promote an **Estimate** to a figure without measuring it (`CLAUDE.md` section 9.5).
 - Prices charged to users are the owner's decision (O10, `CLAUDE.md` section 8). This file
   records what things cost us, never what anyone is charged.
