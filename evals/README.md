@@ -18,3 +18,22 @@ expect_records: [ ]             # record_ids that a good answer should cite
 must_not_cite: [ ]              # known traps, e.g. repealed sections
 notes: ""
 ```
+
+
+## Known-item retrieval (built, decision A100)
+
+`evals/known_item.py` measures the search (pipeline steps 5 and 6), not answers. Take
+a chunk, build a query from its own text, search, see whether the chunk comes back.
+Reports recall@10, recall@50 and MRR for dense, sparse and hybrid side by side.
+
+```bash
+.venv/bin/python -m evals.known_item --sample                      # offline demo, fakes
+.venv/bin/python -m evals.known_item --collection NAME --n 200 \
+    --strategy middle_sentence --where court=VALUE --out evals/results/run1.json
+.venv/bin/python -m evals.known_item --collection NAME --replay evals/results/run1.json
+```
+
+A real run reads Qdrant and calls Voyage (needs keys; not verified live). It does **not**
+tell you whether an answer is correct, and its queries share the chunk's words, so compare
+numbers only under the same `--strategy`. The labelled-question set above is the separate
+instrument for answer quality.

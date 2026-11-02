@@ -130,3 +130,34 @@ async def test_missing_fastembed_is_reported_not_swallowed(monkeypatch):
     store = QdrantStore(Settings(SEAL_KEY="k"), client=FakeClient())
     with pytest.raises(VectorStoreUnavailable, match="fastembed"):
         await store.search("kanoon_v1", [0.1], "x", {}, 5)
+
+
+async def test_dense_only_and_sparse_only_run_one_half_with_no_merge():
+    """Measurement modes (evals/known_item.py, A100): one named vector, no RRF."""
+    c, calls = FakeClient(), []
+    store = _store(c, calls)
+    await store.search("kanoon_v1", [0.1, 0.2], "bail", {}, 50, mode="dense")
+    await store.search("kanoon_v1", [0.1, 0.2], "bail", {}, 50, mode="sparse")
+    (_, dense), (_, sparse) = c.queries
+    assert dense["using"] == DENSE_VECTOR and dense["query"] == [0.1, 0.2]
+    assert sparse["using"] == SPARSE_VECTOR and sparse["query"].indices == [7, 9]
+    assert "prefetch" not in dense and "prefetch" not in sparse
+    assert calls == ["bail"]  # the keyword encoder ran only for the sparse call
+
+
+async def test_dense_only_without_a_vector_is_an_error_not_a_quiet_fallback():
+    with pytest.raises(VectorStoreUnavailable, match="needs a query vector"):
+        await _store(FakeClient()).search(
+            "kanoon_v1", None, "bail", {}, 5, mode="dense"
+        )
+
+
+async def test_sample_chunks_is_a_random_read_and_never_the_uploads_collection():
+    c = FakeClient()
+    store = _store(c)
+    hits = await store.sample_chunks("kanoon_v1", court_payload("supreme_court"), 7)
+    ((_, kw),) = c.queries
+    assert kw["query"].sample.value == "random" and kw["limit"] == 7
+    assert [h.record_id for h in hits] == ["c1", "c2"]
+    with pytest.raises(PermissionError):
+        await store.sample_chunks(store._s.QDRANT_UPLOADS_COLLECTION, {}, 5)

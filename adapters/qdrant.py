@@ -9,9 +9,10 @@ an upload query (CLAUDE.md section 6; the shared wrapper is core/uploads.py).
 from __future__ import annotations
 
 import asyncio
+import random
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any, Protocol
+from typing import Any, Literal, Protocol
 
 from adapters.guard import refuse_in_production
 from core import coverage
@@ -32,6 +33,10 @@ SPARSE_VECTOR = "sparse"
 # filtering on it silently drops real chunks.
 # Payload keys that mean "the user named this exactly": they skip the merge.
 EXACT_KEYS = ("section_number", "case_number")
+
+# Which half of the search runs. The pipeline only ever uses "hybrid"; the other two
+# exist so the retrieval-quality measurement can tell the halves apart.
+SearchMode = Literal["hybrid", "dense", "sparse"]
 
 # text -> (sparse indices, sparse values), QUERY side.
 SparseEncoder = Callable[[str], tuple[list[int], list[float]]]
@@ -88,10 +93,19 @@ class VectorStore(Protocol):
         text: str,
         must: Mapping[str, Any],
         limit: int,
+        mode: SearchMode = "hybrid",
     ) -> list[Hit]:
         """Law collection only. vector=None means keyword-only (Voyage down).
         `must` is an exact payload filter; a non-empty must on section/case number is
-        the exact-lookup path."""
+        the exact-lookup path. `mode` is for the retrieval-quality measurement
+        (evals/known_item.py): the pipeline always uses "hybrid"."""
+        ...
+
+    async def sample_chunks(
+        self, collection: str, must: Mapping[str, Any], n: int
+    ) -> list[Hit]:
+        """Read-only random sample of up to n chunks of a LAW collection (never the
+        uploads collection), for the retrieval-quality measurement."""
         ...
 
     async def search_uploads(
@@ -186,7 +200,7 @@ class QdrantStore:
         indices, values = await asyncio.to_thread(self._encode, text)
         return models.SparseVector(indices=indices, values=values)
 
-    async def search(self, collection, vector, text, must, limit):
+    async def search(self, collection, vector, text, must, limit, mode="hybrid"):
         if collection == self._s.QDRANT_UPLOADS_COLLECTION:
             raise PermissionError("uploads are reachable only via search_uploads")
         if "language_code" in must:
@@ -200,6 +214,8 @@ class QdrantStore:
         try:
             if any(k in must for k in EXACT_KEYS):
                 r = await self._exact(collection, vector, flt, limit)
+            elif mode != "hybrid":
+                r = await self._one_half(collection, vector, text, flt, limit, mode)
             else:
                 prefetch = []
                 if vector is not None:
@@ -228,6 +244,42 @@ class QdrantStore:
                 )
         except VectorStoreUnavailable:
             raise
+        except Exception as e:
+            raise VectorStoreUnavailable(str(e)) from e
+        return [self._hit(p) for p in r.points]
+
+    async def _one_half(self, collection, vector, text, flt, limit, mode):
+        """Only the dense half or only the keyword half, no merge (measurement only)."""
+        if mode == "dense":
+            if vector is None:
+                raise ValueError("dense-only search needs a query vector")
+            query, using = list(vector), DENSE_VECTOR
+        elif mode == "sparse":
+            query, using = await self._sparse_query(text), SPARSE_VECTOR
+        else:
+            raise ValueError(f"unknown search mode {mode!r}")
+        return await self._c().query_points(
+            collection,
+            query=query,
+            using=using,
+            query_filter=flt,
+            limit=limit,
+            with_payload=True,
+        )
+
+    async def sample_chunks(self, collection, must, n):
+        if collection == self._s.QDRANT_UPLOADS_COLLECTION:
+            raise PermissionError("uploads are not sampled")
+        from qdrant_client import models
+
+        try:
+            r = await self._c().query_points(
+                collection,
+                query=models.SampleQuery(sample=models.Sample.RANDOM),
+                query_filter=self._filter(must),
+                limit=n,
+                with_payload=True,
+            )
         except Exception as e:
             raise VectorStoreUnavailable(str(e)) from e
         return [self._hit(p) for p in r.points]
@@ -391,14 +443,27 @@ class FakeVectorStore:
         out.sort(key=lambda h: (-h.score, h.record_id))
         return out[:limit]
 
-    async def search(self, collection, vector, text, must, limit):
+    async def search(self, collection, vector, text, must, limit, mode="hybrid"):
+        """The fake has one ranking (word overlap) for all three modes; it checks only
+        that a dense search is given a vector."""
         self._check()
         if collection == self._s.QDRANT_UPLOADS_COLLECTION:
             raise PermissionError("uploads are reachable only via search_uploads")
+        if mode == "dense" and vector is None:
+            raise ValueError("dense-only search needs a query vector")
         pool = [
             h for h in self.law if all(h.payload.get(k) == v for k, v in must.items())
         ]
         return self._rank(pool, text, limit)
+
+    async def sample_chunks(self, collection, must, n):
+        self._check()
+        if collection == self._s.QDRANT_UPLOADS_COLLECTION:
+            raise PermissionError("uploads are not sampled")
+        pool = [
+            h for h in self.law if all(h.payload.get(k) == v for k, v in must.items())
+        ]
+        return random.Random(0).sample(pool, min(n, len(pool)))  # noqa: S311 - a test sample
 
     async def search_uploads(self, user_id, vector, text, document_ids, limit):
         self._check()
