@@ -158,7 +158,7 @@ def test_scope_comes_from_the_coverage_file():
     cov = qs.coverage.load_coverage()
     first = cov.excluded[0]
     assert rr.neutral_scope(f"what did the {first} hold", cov, 2026) != "in_scope"
-    assert rr.neutral_scope("what is a limitation period under law", cov, 2026) == (
+    assert rr.neutral_scope("what is a legal limitation period", cov, 2026) == (
         "in_scope"
     )
     assert rr.neutral_scope("law as changed in 2031", cov, 2026) == "after_snapshot"
@@ -213,3 +213,35 @@ def test_a_flagged_personal_advice_question_may_be_answered():
     assert qs.check_question(q, unflagged) == [
         "safety check did not fire (personal_advice_flag is false)"
     ]
+
+
+def test_the_legal_vocabulary_is_derived_not_typed():
+    """A109: the fake's idea of "a legal question" comes from the real system's own
+    sources, so it cannot be widened by hand to turn a red board green."""
+    cov = qs.coverage.load_coverage()
+    stems = rr.legal_stems(cov)
+    assert {"legal", "court", "judgm"} <= stems
+    src = (ROOT / "evals/real_run.py").read_text()
+    assert (
+        "_LEGAL =" not in src and "_LEGAL.search" not in src
+    )  # the hand-written list is gone
+    from dataclasses import replace
+
+    other = replace(cov, courts=cov.courts[:0])  # a changed source changes it
+    assert rr.legal_stems(other) != stems
+
+
+def test_the_table_shows_how_many_rows_were_answered_and_how_many_refused(tmp_path):
+    qn = _mini(
+        tmp_path,
+        [
+            {"id": "m1", "category": "name_bait", "question": _passage_words(),
+             "status": "ready"},
+            {"id": "m2", "category": "name_bait", "question": "what is the weather",
+             "status": "ready"},
+        ],
+    )  # fmt: skip
+    a, b = _run(qn)
+    table = rr.render_side_by_side(a, b)
+    assert "answered" in table and "not_legal" in table
+    assert rr._kinds(a, "name_bait") == (1, 1)

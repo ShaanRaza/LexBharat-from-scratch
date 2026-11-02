@@ -148,7 +148,7 @@ class Settings(BaseSettings):
     # Owner-only.
     SHOW_IN_FORCE: bool = False
     # The one status line appended to an Act's passage text, AFTER the dataset's own
-    # status header is stripped (core/search.py, A105/A108). Which line is picked by
+    # status header is stripped (core/search.py, A105/A110). Which line is picked by
     # core/act_status.py from the payload, never by the model: repealed is always
     # stated (the safe direction); in force is stated ONLY while SHOW_IN_FORCE is on;
     # anything else gets the not-checked line. NEEDS-OWNER: the repealed and in-force

@@ -80,3 +80,13 @@ through `core.pipeline.run_pipeline` with fake vendors, twice: (a) every Jev swi
 on, (b) every switch at its shipped default. The rules the fakes follow are in the
 docstring of `evals/real_run.py`. Every decision is a fake's, so the numbers show the code
 paths work, not that real Jev or Gemini decide well. Stubs stay NOT RUN.
+
+### What the score is, and is not
+
+The real-run score is **a plumbing check against fakes one session wrote**. It shows that
+the pipeline's code paths route, that the verifier removes a case nobody retrieved, and
+that the status line follows the `SHOW_IN_FORCE` gate. It is **not a product quality
+number**: every decision (scope, gate, claim, the writer) is a fake's, and a passing row
+may be a refusal made for an unrelated reason (the `answered` and `not_legal` columns show
+how many). The real number needs the **100 answerable stubs labelled** by an advocate and a
+run against real Jev, Gemini and Voyage. Nothing here is a claim about accuracy.
