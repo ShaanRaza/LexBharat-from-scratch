@@ -84,19 +84,29 @@ answer only at the large breakpoint and stacks below it under that. No shadows e
 things that genuinely float. Motion only where it carries meaning — the progress panel's step
 changes — at 150ms or less, and nothing at all under `prefers-reduced-motion`.
 
-## 6. Draft wording — NOT APPROVED, for the owner to react to on screen
+## 6. User-facing wording — five approved, two still the owner's call
 
 Everything about the law, advice, coverage or BCI Rule 36 is the owner's (CLAUDE.md §8).
-These are drafts so the screens are not built around placeholder text.
+
+**Owner decisions, 2 Nov 2026.** The owner approved the five rows marked **(APPROVED)** below.
+Those may go into the product as written. Two rows are still open and stay NOT APPROVED:
+
+- **The coverage sentence** waits on the Acts measurement. `core/coverage.json` keeps
+  `sentence_approved: false` until the coverage page holds measured counts (O7). The sentence
+  names what that page shows, so approving it before the page is real approves nothing.
+- **In-force unknown** is overtaken by the `act_status` conflict (CLAUDE.md §6): until the full
+  count settles whether `in_force` is a check or a default, nothing may read "in force", so only
+  the "not checked" and "repealed" wordings are live. The draft row below is the safe one and is
+  in use; it is listed here as still owner-pending because the rule it belongs to is unsettled.
 
 | Where | Draft |
 |---|---|
 | Coverage sentence | "LexBharat covers Supreme Court judgments and the Acts listed on our coverage page. It does not include High Courts, district courts, tribunals, or anything after the data-as-of date." |
-| Nothing found | "Not in our dataset. That does not mean it does not exist — it means our snapshot does not hold it." |
-| Share refused | "This answer used your own uploaded file or saved case notes, so it cannot be shared by link." |
-| Share note | "Anyone with this link can read this answer. It does not show your name." |
-| Link not available | "This link is not available. It may have been switched off or expired." |
-| Matter delete failed | "The matter was kept. One or more files could not be deleted, so nothing was removed." |
+| Nothing found **(APPROVED)** | "Not in our dataset. That does not mean it does not exist — it means our snapshot does not hold it." |
+| Share refused **(APPROVED)** | "This answer used your own uploaded file or saved case notes, so it cannot be shared by link." |
+| Share note **(APPROVED)** | "Anyone with this link can read this answer. It does not show your name." |
+| Link not available **(APPROVED)** | "This link is not available. It may have been switched off or expired." |
+| Matter delete failed **(APPROVED)** | "The matter was kept. One or more files could not be deleted, so nothing was removed." |
 | In-force unknown | "In-force status not checked for this Act." |
 
 Interface labels (buttons, headings, menu items) are not legal wording and the web lane may
