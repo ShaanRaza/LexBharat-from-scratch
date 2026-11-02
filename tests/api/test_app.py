@@ -250,16 +250,16 @@ def test_unchecked_status_goes_over_the_wire_exactly():
 
 
 def test_a_citation_with_no_link_goes_over_the_wire_with_no_url():
-    """The dataset has no source link for some records (Supreme Court rows in the parquet,
-    regulator records). The citation still goes out with its string and status; the url is
-    None, never an empty string."""
+    """The dataset has no source link for some records (court rows in the parquet,
+    regulator records). The citation still goes out with its string and status; the url
+    is None, never an empty string."""
     from api.bridge import to_wire_citation
     from core.contracts import Citation as CoreCitation
 
     for pdf, src in ((None, None), ("", ""), (None, ""), ("", None)):
         c = CoreCitation(
-            source_id="S1", record_id="r", status="verified", citation_string="[1999] 1 S.C.R. 377",
-            pdf_url=pdf, source_url=src,
+            source_id="S1", record_id="r", status="verified",
+            citation_string="[1999] 1 S.C.R. 377", pdf_url=pdf, source_url=src,
         )  # fmt: skip
         wire = to_wire_citation(c).model_dump()
         assert wire["url"] is None and wire["citation_string"] == "[1999] 1 S.C.R. 377"

@@ -1,7 +1,9 @@
 import re
 from pathlib import Path
 
-from core.settings import Settings
+import pytest
+
+from core.settings import Settings, UnknownEmbeddingModel
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -59,3 +61,30 @@ def test_no_brand_word_hard_coded_in_code():
             if old in text or (new in text and f != ROOT / "core" / "settings.py"):
                 bad.append(str(f.relative_to(ROOT)))
     assert bad == [], bad
+
+
+def test_embedding_model_is_per_collection_and_unmeasured_collections_are_refused():
+    """The model that embeds a query must be the one that built the collection's
+    vectors (measured 2 Nov 2026). A collection nobody measured is refused."""
+    s = _fresh()
+    assert s.embed_model_for("kanoon_v1") == "voyage-4-large"
+    for name in (
+        "legal_corpus_v1",
+        "legal_corpus_v2",
+        "acts_india",
+        "user_documents",
+        "",
+    ):
+        with pytest.raises(UnknownEmbeddingModel):
+            s.embed_model_for(name)
+
+
+def test_embedding_models_can_be_set_from_a_json_environment_value(monkeypatch):
+    monkeypatch.setenv(
+        "VOYAGE_EMBED_MODELS", '{"kanoon_v1": "voyage-4", "other": "voyage-4-lite"}'
+    )
+    s = Settings(_env_file=None)
+    assert (
+        s.embed_model_for("kanoon_v1") == "voyage-4"
+        and s.embed_model_for("other") == "voyage-4-lite"
+    )

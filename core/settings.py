@@ -10,6 +10,10 @@ from pydantic import SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+class UnknownEmbeddingModel(ValueError):
+    """A collection was searched whose embedding model has not been measured."""
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -44,7 +48,16 @@ class Settings(BaseSettings):
 
     # --- Voyage AI ---
     VOYAGE_API_KEY: SecretStr = SecretStr("")
-    VOYAGE_EMBED_MODEL: str = "voyage-4"
+    # A query embedding must use the model that built the stored vectors of the
+    # collection being searched, or ranking is silently damaged (the same text embedded
+    # by two models agrees only to about 0.91-0.96 cosine). Keys are collection names; a
+    # collection that is not listed is REFUSED, never given a default. Measured 2 Nov
+    # 2026 by re-embedding stored text: kanoon_v1 is voyage-4-large in 30 of 30 sampled
+    # points. The original corpora are NOT single-model (voyage-4, voyage-4-large and
+    # voyage-4-lite all occur inside legal_corpus_v1, legal_corpus_v2 and acts_india,
+    # by document), so they are deliberately absent. Override with a JSON object in
+    # VOYAGE_EMBED_MODELS.
+    VOYAGE_EMBED_MODELS: dict[str, str] = {"kanoon_v1": "voyage-4-large"}
     VOYAGE_RERANK_MODEL: str = "rerank-2.5-lite"
 
     # --- Jev (TypeSafe AI) ---
@@ -134,6 +147,17 @@ class Settings(BaseSettings):
     FEATURE_STATS_LIVE: bool = False
     FEATURE_MODEL_ROUTING: bool = False
     FEATURE_HINDI: bool = False
+
+    def embed_model_for(self, collection: str) -> str:
+        """The model that built `collection`'s vectors. Refuses an unlisted name."""
+        try:
+            return self.VOYAGE_EMBED_MODELS[collection]
+        except KeyError:
+            raise UnknownEmbeddingModel(
+                f"no embedding model is recorded for collection {collection!r}; "
+                "add it to VOYAGE_EMBED_MODELS only after re-embedding stored "
+                "text reproduces the vectors"
+            ) from None
 
     @model_validator(mode="after")
     def _production_needs_seal_key(self) -> "Settings":

@@ -197,3 +197,48 @@ def test_pipeline_module_imports_no_adapter():
     src = (ROOT / "core" / "pipeline.py").read_text().splitlines()
     bad = [line for line in src if re.match(r"\s*(from|import)\s+adapters\b", line)]
     assert bad == []
+
+
+async def test_voyage_client_sends_the_model_of_the_collection_searched():
+    from adapters.voyage import VoyageClient
+    from core.settings import UnknownEmbeddingModel
+
+    sent = []
+
+    class Spy(VoyageClient):
+        async def _post(self, path, body):
+            sent.append(body)
+            return {"data": [{"embedding": [0.1]}]}
+
+    client = Spy(
+        Settings(
+            _env_file=None, VOYAGE_EMBED_MODELS={"a": "voyage-4", "b": "voyage-4-large"}
+        )
+    )
+    await client.embed("q", "a")
+    await client.embed("q", "b")
+    assert [b["model"] for b in sent] == ["voyage-4", "voyage-4-large"]
+    assert all(b["input_type"] == "query" for b in sent)
+    with pytest.raises(UnknownEmbeddingModel):
+        await client.embed("q", "never-measured")
+    assert len(sent) == 2  # nothing was sent for the unmeasured collection
+
+
+async def test_the_pipeline_embeds_the_query_for_the_corpus_collection():
+    from types import SimpleNamespace
+
+    from core.search import embed_query
+
+    seen = []
+
+    class Recorder:
+        async def embed(self, text, collection):
+            seen.append(collection)
+            return [0.0]
+
+    deps = SimpleNamespace(
+        embedder=Recorder(),
+        settings=Settings(_env_file=None, CORPUS_COLLECTION="kanoon_v1"),
+    )
+    await embed_query("bail", deps)
+    assert seen == ["kanoon_v1"]

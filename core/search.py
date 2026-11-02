@@ -32,7 +32,7 @@ class SearchResult:
 async def embed_query(text: str, deps: Deps) -> list[float] | None:
     """Embed the query. None = Voyage down (search degrades to keyword only)."""
     try:
-        return await deps.embedder.embed(text)
+        return await deps.embedder.embed(text, deps.settings.CORPUS_COLLECTION)
     except VoyageUnavailable:
         log.warning("voyage down; keyword-only search")
         return None

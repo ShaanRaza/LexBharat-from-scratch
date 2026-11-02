@@ -267,7 +267,7 @@ monthly total to anyone until a quote-based table replaces this section.**
 | Decision | Options | Working choice | What settles it |
 |---|---|---|---|
 | Acts scope (O7) | all of `acts_india`, or acts with status only | **Decided: serve what the data holds** | Count acts by jurisdiction and instrument type; second copy job for the rest of `acts_india` |
-| Embedding model per collection | voyage-4, voyage-4-large, mixed | per-collection setting, value pending | Check 1 and check 2 |
+| Embedding model per collection | voyage-4, voyage-4-large, mixed | **Mixed inside every original collection** (voyage-4, voyage-4-large and voyage-4-lite all occur, by document, not by collection). Per-collection setting `VOYAGE_EMBED_MODELS`; only `kanoon_v1` (voyage-4-large, 30 of 30 sampled) is listed, and an unlisted collection is refused | Measured 2 Nov 2026 by re-embedding stored text (DATA-GAPS section 11). A retrieval test on mixed collections is still needed before High Court or state Acts are served (decision A120) |
 | Sparse repair for `acts_india` | repair, or rebuild from text | repair on a copy first | Rehearsal results; owner's go |
 | Managed database size and Multi-AZ | single zone with backups, or two zones | single zone | Quote; downtime tolerance |
 | CDN and firewall vendor | AWS CloudFront + WAF, or another | AWS | Quote |

@@ -22,7 +22,7 @@ hard-code either string.**
 | Product | `PRODUCT_NAME`, `CORPUS_COLLECTION`, `DATA_AS_OF`, `SNAPSHOT_VERSION` | Snapshot is `v2026.08` unless the step-1 evaluation upgrades it |
 | AI gateway | `LITELLM_*`, `MODEL_FREE`, `MODEL_STUDENT`, `MODEL_PRO`, `MODEL_REWRITE`, `MODEL_FALLBACK` | The model list **only accepts providers marked no-training** |
 | Google / Gemini | `GEMINI_API_KEY` | **Paid tier only** |
-| Voyage | `VOYAGE_API_KEY`, `VOYAGE_EMBED_MODEL`, `VOYAGE_RERANK_MODEL` | voyage-4 must match the stored vectors |
+| Voyage | `VOYAGE_API_KEY`, `VOYAGE_EMBED_MODELS` (JSON, per collection), `VOYAGE_RERANK_MODEL` | the embedding model must match the vectors of the collection searched; an unlisted collection is refused |
 | Jev | `JEV_API_KEY`, `JEV_ENABLED_SCOPE`, `JEV_ENABLED_FILTERS`, `JEV_ENABLED_GATE`, `JEV_ENABLED_CLAIM`, `JEV_ENABLED_SAFETY`, `JEV_TIMEOUT_MS`, `JEV_GATE_THRESHOLD` | **One on/off switch per use**, so one can be turned off without touching the others. Timeout 800 ms; threshold starts at 0.6 |
 | Qdrant | `QDRANT_URL`, `QDRANT_API_KEY`, `QDRANT_UPLOADS_COLLECTION` | Never exposed to the internet |
 | PostgreSQL | `DATABASE_URL`, `MIGRATION_DATABASE_URL`, `APP_DB_ROLE`, `APP_DB_PASSWORD` | **Two database roles, see "Database roles" below.** The application, in development and production, connects as `DATABASE_URL` (the non-owning role); migrations run as `MIGRATION_DATABASE_URL` (the table owner) |

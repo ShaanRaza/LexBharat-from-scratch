@@ -1,8 +1,9 @@
 """Voyage AI: query embeddings and re-ranking. The ONLY file that talks to Voyage.
 
 Plain words: the rest of the code calls embed(text) and rerank(query, docs). If Voyage
-is swapped, only this file changes. Query embeddings must use voyage-4 (it has to match
-the stored vectors) - the model name comes from settings.VOYAGE_EMBED_MODEL.
+is swapped, only this file changes. A query embedding must use the model that built the
+vectors of the collection being searched; the model name comes from
+settings.embed_model_for(collection), which refuses a collection nobody has measured.
 """
 
 from __future__ import annotations
@@ -27,7 +28,7 @@ class VoyageUnavailable(Exception):
 
 
 class Embedder(Protocol):
-    async def embed(self, text: str) -> list[float]: ...
+    async def embed(self, text: str, collection: str) -> list[float]: ...
 
 
 class Reranker(Protocol):
@@ -59,12 +60,13 @@ class VoyageClient:
         except httpx.HTTPError as e:
             raise VoyageUnavailable(str(e)) from e
 
-    async def embed(self, text: str) -> list[float]:
+    async def embed(self, text: str, collection: str) -> list[float]:
+        model = self._s.embed_model_for(collection)  # raises before any request is sent
         data = await self._post(
             "embeddings",
             {
                 "input": [text],
-                "model": self._s.VOYAGE_EMBED_MODEL,
+                "model": model,
                 "input_type": "query",
             },
         )
@@ -100,7 +102,7 @@ class FakeEmbedder:
         self.dim, self.down = dim, down
         self.calls = 0
 
-    async def embed(self, text: str) -> list[float]:
+    async def embed(self, text: str, collection: str | None = None) -> list[float]:
         self.calls += 1
         if self.down:
             raise VoyageUnavailable("fake down")

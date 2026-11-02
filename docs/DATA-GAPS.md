@@ -421,3 +421,37 @@ ten text variants (strip, trailing newline, NFC, NFKC, carriage returns, control
 line and paragraph breaks — a trailing newline moves cosine by only 0.0001–0.0009), and
 `voyage-context-4` (0.69–0.88). What remains: an earlier snapshot of `voyage-4-large`, or a
 text difference at build time that has not been found.
+
+### Update (2 Nov 2026, later): it is not one model per collection
+
+The same reproduction test, run on 111 stored chunks across every group (stored dense vector
+against a fresh `input_type=document` embedding of the stored text; a chunk "reproduces" under
+the one model that gives cosine 0.999 or better):
+
+| Group | Chunks | `voyage-4` | `voyage-4-large` | `voyage-4-lite` |
+|---|---|---|---|---|
+| `legal_corpus_v2` Supreme Court (in `kanoon_v1`) | 23 | 0 | 23 | 0 |
+| `acts_india` Central | 7 | 0 | 7 | 0 |
+| `acts_india` state | 37 | 24 | 13 | 0 |
+| `acts_india` regulatory | 26 | 24 | 2 | 0 |
+| `legal_corpus_v1` High Court | 8 | 5 | 2 (Delhi, Patna) | 1 (Allahabad) |
+| `legal_corpus_v2` High Court | 10 | 6 | 0 | 4 (Karnataka, Rajasthan x2, Punjab and Haryana) |
+
+- **Every original collection mixes models**, and the mix follows the document or the ingestion
+  batch (a court, an Act), not the collection. In `legal_corpus_v2` High Court, Kerala, Madhya
+  Pradesh, Orissa and Manipur are `voyage-4` while Karnataka, Rajasthan and Punjab and Haryana
+  are `voyage-4-lite`. State Acts mix `voyage-4` and `voyage-4-large` inside one state.
+- **How exact:** `voyage-4` reproduces at 0.99998, `voyage-4-lite` at 0.99995 to 0.99997,
+  `voyage-4-large` at 0.9991 to 0.9996, except two SEBI regulations that reproduce **exactly**
+  (1.000000) under `voyage-4-large`. So the 0.999 offset is not a property of that model: it
+  appears on some `voyage-4-large` chunks and not others. Still unexplained.
+- **Why it matters:** the same text embedded by two models agrees only to about 0.91 to 0.96
+  cosine, so a query embedded with one model scores chunks built with another lower, and the
+  ranking is quietly biased toward the chunks that happen to share the query's model. Whether
+  that bias matters in practice is not measured (no retrieval-quality metric exists yet).
+- **What the code now does:** `VOYAGE_EMBED_MODELS` (per collection). Only `kanoon_v1`, which
+  holds the Supreme Court set and the Central Act points, is listed (`voyage-4-large`, 30 of 30
+  sampled). Any other collection is refused rather than defaulted. The original collections are
+  deliberately absent. Open: choose how mixed collections are searched (several query
+  embeddings, one chosen model, or re-embedding) before serving High Court chunks or state Acts.
+- **Sampling limit:** 111 chunks, in clusters: the shares above are indications, not rates.
