@@ -119,3 +119,10 @@ many titles share the one-word-either-side-of-"v" key that verifier check 1 uses
 cross-checks its key against the real verifier. Default input: the practice fixtures (a
 sample, not the corpus); pass `--titles dump.parquet` for the full run. It measures; it
 does not change `core/verify.py`.
+
+### What would a stricter case-name rule cost? (A116)
+
+`.venv/bin/python -m evals.title_rules` scores the current check-1 name rule (the real
+verifier) and five candidate rules against real titles written shorter (false positives:
+a real citation stripped) and against four kinds of fabricated name (false negatives: an
+invented case accepted). It measures; it does not change `core/verify.py`. Fixtures only.
