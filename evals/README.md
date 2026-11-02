@@ -72,3 +72,11 @@ Every check is a string or a record-id comparison; nothing is graded by Jev, the
 the re-ranker or any model. A stub is reported NOT RUN, never a pass, and `gate_ready` is
 false while any stub or failure remains. The `--demo` pipeline reads the answer key, so
 its 100% proves only that the scorer is wired.
+
+## Running the set against the real pipeline (A103)
+
+`.venv/bin/python -m evals.real_run --out /tmp/real_run.json` runs the 200 questions
+through `core.pipeline.run_pipeline` with fake vendors, twice: (a) every Jev switch forced
+on, (b) every switch at its shipped default. The rules the fakes follow are in the
+docstring of `evals/real_run.py`. Every decision is a fake's, so the numbers show the code
+paths work, not that real Jev or Gemini decide well. Stubs stay NOT RUN.

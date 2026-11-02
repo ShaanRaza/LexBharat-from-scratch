@@ -22,7 +22,9 @@ class Settings(BaseSettings):
         env_ignore_empty=True,  # blank .env lines mean "not set"
     )
 
-    # --- Environment ("production" turns on the safety checks below) ---
+    # --- Environment ---
+    # The ONLY thing "production" does here is the SEAL_KEY check at the bottom of this
+    # file. It does not turn on any Jev switch, and nothing else flips them (A102).
     ENVIRONMENT: str = "development"
 
     # --- Product ---
@@ -68,7 +70,20 @@ class Settings(BaseSettings):
     JEV_BATCH_GATE: bool = False  # one Jev request per run for all passages; claim
     # support is never batched (a wrong claim check changes a citation tick)
     JEV_CLAIM_THRESHOLD: float = 0.6  # below this, Jev 'supports' becomes 'partly'
+    # What the five Jev switches do (A102): each picks WHO answers one fixed-choice
+    # decision. On = Jev. Off = the Gemini fallback answers the same choices
+    # (adapters/decisions.py, FallbackDecisions). Off is therefore NOT "no check": the
+    # scope check, the gate and the claim check still run, decided by Gemini. All five
+    # default to False and no code or environment flips them; each is set in .env.
+    #
+    # SCOPE and SAFETY are one pair: Jev answers both in a single request, so the
+    # decision goes to Jev only when BOTH are True (adapters/decisions.py:178). Setting
+    # one alone changes nothing. They are off because the Jev client has never run
+    # against the real service (no key; adapters/jev.py says so) and JEV_MODEL is not
+    # verified. They come on by setting both to true in .env, with JEV_API_KEY set.
     JEV_ENABLED_SCOPE: bool = False
+    # FILTERS is read by no code: Jev does not extract filters (adapters/jev.py), the
+    # rewrite step does. Setting it has no effect.
     JEV_ENABLED_FILTERS: bool = False
     # GATE and CLAIM stay off until a live test shows batched and single Jev answers
     # agree (reviewer finding); claim support is already sent unbatched.
