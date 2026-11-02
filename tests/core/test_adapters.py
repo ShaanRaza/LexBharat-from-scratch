@@ -94,7 +94,6 @@ async def test_upload_text_never_reaches_jev():
         JEV_ENABLED_GATE=True,
         JEV_ENABLED_CLAIM=True,
         JEV_ENABLED_SCOPE=True,
-        JEV_ENABLED_FILTERS=True,
         JEV_ENABLED_SAFETY=True,
     )
     fb = GeminiDecider(FakeLLM(lambda p, s_: "supports"), s)

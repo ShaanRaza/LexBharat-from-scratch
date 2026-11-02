@@ -75,16 +75,16 @@ def load_set_from_rows(rows, tmp=[None]):
 # --- the set ------------------------------------------------------------------------
 
 
-def test_the_set_has_200_questions_and_the_split_is_the_recorded_starting_point():
+def test_the_set_has_201_questions_and_the_split_is_the_recorded_starting_point():
     qs = load_set()
-    assert len(qs) == 200
+    assert len(qs) == 201  # 200 plus the deliberate check-1 probe q201 (A106)
     assert dict(Counter(q.category for q in qs)) == {
         "answerable": 100,
         "out_of_scope": 20,
         "nothing_found": 10,
         "personal_advice": 10,
         "rule36": 10,
-        "fabricated_citation": 20,
+        "fabricated_citation": 21,
         "name_bait": 10,
         "in_force_bait": 10,
         "injection": 10,
@@ -112,9 +112,9 @@ def test_every_answerable_question_is_a_stub_with_no_expected_records():
     assert all(q.row.get("needs") or q.id in ("s01", "s02") for q in qs)
 
 
-def test_there_are_exactly_100_stubs_and_100_runnable_questions():
+def test_there_are_exactly_100_stubs_and_101_runnable_questions():
     qs = load_set()
-    assert sum(q.runnable for q in qs) == 100 and sum(not q.runnable for q in qs) == 100
+    assert sum(q.runnable for q in qs) == 101 and sum(not q.runnable for q in qs) == 100
 
 
 def test_no_runnable_question_is_vacuous():
@@ -132,7 +132,7 @@ def test_ids_are_unique_and_the_schema_is_closed():
     known = {
         "id", "kind", "question", "expect_scope", "expect_records", "must_not_cite",
         "category", "status", "needs", "bait", "expect_refusal", "also_accept",
-        "must_not_contain", "canary", "notes",
+        "must_not_contain", "canary", "notes", "recall",
     }  # fmt: skip
     for r in RAW:
         assert set(r) <= known, (r["id"], set(r) - known)
@@ -162,11 +162,24 @@ def _fixture_chunk_ids() -> set[str]:
 def test_fabricated_bait_covers_both_failure_modes_and_every_row_has_ids_to_avoid():
     fab = [q for q in load_set() if q.category == "fabricated_citation"]
     assert Counter(q.bait for q in fab) == {
-        "nonexistent": 10,
+        "nonexistent": 11,
         "exists_not_retrieved": 10,
     }
-    # s03 is an original row and keeps its original (empty) must_not_cite
-    assert all(q.must_not_cite for q in fab if q.id != "s03")
+    # s03 (original) and q201 (a real case the dataset lacks) have no record ids to
+    # avoid; what they forbid is the case NAME, in must_not_contain
+    assert all(q.must_not_cite for q in fab if q.id not in ("s03", "q201"))
+    assert all(q.must_not_contain for q in fab if q.id in ("s03", "q201"))
+
+
+def test_every_recall_row_forbids_what_it_recalls():
+    """A recall is run input; with no must_not_contain it would test nothing."""
+    for q in load_set():
+        rec = q.row.get("recall")
+        if rec:
+            assert q.must_not_contain, q.id
+            assert any(contains(rec, name) for name in q.must_not_contain), (
+                f"{q.id}: no forbidden string appears in its own recall"
+            )
 
 
 def test_the_invented_cases_have_ids_that_do_not_exist_and_the_real_ones_do():
@@ -281,7 +294,7 @@ async def test_a_perfect_run_scores_one_and_the_stubs_are_not_run():
     qs = load_set()
     out = await run_question_set(qs, _ideal_pipeline(qs))
     t = tally(out)
-    assert (t.total, t.run, t.passed, t.failed, t.not_run) == (200, 100, 100, 0, 100)
+    assert (t.total, t.run, t.passed, t.failed, t.not_run) == (201, 101, 101, 0, 100)
     assert t.pass_rate == 1.0
     assert all(o.status == NOT_RUN for o in out if o.category == "answerable")
 
@@ -317,7 +330,7 @@ async def test_a_category_that_is_all_stubs_reports_not_run_not_a_rate():
     assert cat.run == 0 and cat.pass_rate is None
     table = render_table(out)
     assert "answerable" in table and "NOT RUN" in table
-    assert "NOT READY" in table and "100 of 200 questions are stubs" in table
+    assert "NOT READY" in table and "100 of 201 questions are stubs" in table
 
 
 async def test_a_run_that_cites_a_must_not_cite_record_fails_that_question():
@@ -459,8 +472,8 @@ async def test_the_json_has_per_category_and_overall_numbers_and_no_answer_text(
     qs = load_set()
     out = await run_question_set(qs, _ideal_pipeline(qs))
     doc = json.loads(json.dumps(to_json(out, {"set_sha256": set_fingerprint()}, False)))
-    assert doc["overall"]["run"] == 100 and doc["overall"]["pass_rate"] == 1.0
-    assert doc["overall"]["passed_of_total"] == 0.5
+    assert doc["overall"]["run"] == 101 and doc["overall"]["pass_rate"] == 1.0
+    assert doc["overall"]["passed_of_total"] == round(101 / 201, 4)
     assert doc["categories"]["answerable"]["pass_rate"] is None
     assert doc["categories"]["rule36"] == {
         "total": 10, "run": 10, "passed": 10,

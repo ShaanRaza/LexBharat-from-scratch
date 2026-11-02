@@ -43,11 +43,16 @@ order). They are not tuned: a rule changed after seeing results must be reported
            the passage; supports at >= 0.6, partly at >= 0.3, else does_not_support.
   Writer   extractive and faithful: for each of the first three passages it writes
            that passage's first sentence (quote marks removed, cut at 200
-           characters) and tags it with its [S#]. Then ONE fixed sentence naming a
-           real case the dataset does not hold (PROBE), tagged [S1]: a model
-           recalling its training data. The run asserts the probe is absent from the
-           corpus and forbids it in every answer (check_question always_forbidden),
-           so a verifier that lets it through fails every answered question.
+           characters) and tags it with its [S#]. A row may declare `recall`: a
+           sentence the simulated model "remembers" (a case it names that the search
+           did not return). The writer then adds it, tagged [S1]. That is test
+           INPUT declared in the row, not the expected answer; the row's
+           must_not_contain / must_not_cite hold the expectation. The harness checks
+           that "nonexistent" recalls are absent from the corpus, "exists" recalls
+           present, and reports for every recall row whether the verifier removed it
+           (check 1), let it through, or never saw it (the pipeline refused first).
+           Before A106 one fixed recall was planted in every answer; it is now the
+           deliberate row q201.
   Jev stub answers column (a) with the same rules; its confidence for a gate rating
            is the overlap score, so both deciders hand the gate the same number.
 
@@ -97,7 +102,6 @@ PRACTICE = HERE.parent / "tests" / "fixtures" / "practice"
 
 JEV_FLAGS = (
     "JEV_ENABLED_SCOPE",
-    "JEV_ENABLED_FILTERS",
     "JEV_ENABLED_GATE",
     "JEV_ENABLED_CLAIM",
     "JEV_ENABLED_SAFETY",
@@ -107,8 +111,6 @@ EVAL_JEV_KEY = (
     "eval-not-a-jev-key"  # a fake client needs a non-empty string, nothing more
 )
 # A real reported case that the practice corpus does not hold (asserted at start).
-PROBE = "Golak Nath v. State of Punjab"
-PROBE_CITATION = "(1967) 2 SCR 762"
 
 _LEGAL = re.compile(
     r"\b(law\w*|legal\w*|court\w*|judg\w*|section\w*|article\w*|act|acts|bail|"
@@ -175,11 +177,12 @@ def _first_sentence(text: str, limit: int = 200) -> str:
     return cut.strip(" .;,")
 
 
-def write_answer(passages: Sequence[tuple[str, str]]) -> str:
-    """Writer rule: first sentence of each of the first three passages, tagged, then the
-    fixed recalled-case probe."""
+def write_answer(passages: Sequence[tuple[str, str]], recall: str = "") -> str:
+    """Writer rule: first sentence of each of the first three passages, tagged; then the
+    row's declared recall, if any, tagged [S1] like a model attaching a label."""
     out = [f"{_first_sentence(t)} [{label}]." for label, t in passages[:3]]
-    out.append(f"The settled position is stated in {PROBE}, {PROBE_CITATION} [S1].")
+    if recall:
+        out.append(f"{recall} [S1].")
     return " ".join(out)
 
 
@@ -226,6 +229,7 @@ class NeutralLLM:
 
     def __init__(self, cov: coverage.Coverage, snapshot_year: int, counts: Counts):
         self._cov, self._year, self._counts = cov, snapshot_year, counts
+        self.recall = ""  # the current row's declared recall (set per question)
 
     def respond(self, prompt: str, system: str = "") -> str:  # sync, as FakeLLM wants
         first = prompt.lstrip().split("\n", 1)[0]
@@ -243,7 +247,7 @@ class NeutralLLM:
                 m = re.match(r"\[(S\d+)\] (.*)", b, re.DOTALL)
                 if m:
                     parsed.append((m.group(1), m.group(2)))
-            return write_answer(parsed)
+            return write_answer(parsed, self.recall)
         # Gemini-path decisions: counted, so (b) can be shown to have used them
         self._counts.gemini_decisions += 1
         if first.startswith("You make a fixed-choice decision"):
@@ -281,7 +285,7 @@ def _run(coro):
 
 def run_settings(*, jev_on: bool) -> Settings:
     """A Settings built from the CLASS DEFAULTS only: no .env, no environment variable
-    can change it. The five Jev switches are set here and nowhere else; `jev_on=False`
+    can change it. The four Jev switches are set here and nowhere else; `jev_on=False`
     gives each its shipped default. Never used outside evals/ (a test scans for
     that)."""
     base = {
@@ -324,22 +328,37 @@ def load_corpus(settings: Settings) -> tuple[FakeVectorStore, set[str]]:
     collection."""
     store = FakeVectorStore(settings)
     ids: set[str] = set()
-    texts = []
+    for c in _records():
+        store.add_law(
+            c["chunk_id"], c["text"], **{k: v for k, v in c.items() if k != "text"}
+        )
+        ids.add(c["chunk_id"])
+    return store, ids
+
+
+def _records():
     for name in ("chunks", "act_sections"):
         with gzip.open(PRACTICE / f"{name}.jsonl.gz", "rt") as fh:
             for line in fh:
-                c = json.loads(line)
-                store.add_law(
-                    c["chunk_id"],
-                    c["text"],
-                    **{k: v for k, v in c.items() if k != "text"},
-                )
-                ids.add(c["chunk_id"])
-                texts.append(c["text"].casefold())
-    blob = " ".join(texts)
-    if PROBE.casefold().split(" v.")[0] in blob:
-        raise RuntimeError(f"the probe case {PROBE!r} is in the corpus; pick another")
-    return store, ids
+                yield json.loads(line)
+
+
+def check_recall_rows(questions: Sequence[qs.Question]) -> None:
+    """A recall row must mean what its bait says: "nonexistent" names a case the corpus
+    does not hold, "exists_not_retrieved" one it does."""
+    recs = list(_records())
+    blob = " ".join(c["text"].casefold() for c in recs)
+    ids = {c["chunk_id"] for c in recs}
+    bad = []
+    for q in questions:
+        if "recall" not in q.row:
+            continue
+        if q.bait == "nonexistent" and q.must_not_contain[0].casefold() in blob:
+            bad.append(f"{q.id}: {q.must_not_contain[0]!r} is in the corpus")
+        if q.bait == "exists_not_retrieved" and not set(q.must_not_cite) <= ids:
+            bad.append(f"{q.id}: a must_not_cite record is not in the corpus")
+    if bad:
+        raise RuntimeError("recall rows do not match their bait: " + "; ".join(bad))
 
 
 @dataclass
@@ -350,6 +369,9 @@ class Column:
     sdk: NeutralJevSDK
     retrieved: dict[str, list[str]] = field(default_factory=dict)
     current: str = ""  # the question being run (the gate does not see the message)
+    recall_log: dict[str, str] = field(
+        default_factory=dict
+    )  # row id -> what check 1 did
     removed: Counter = field(default_factory=Counter)
     pipeline: Callable[[dict], Awaitable[PipelineResult]] | None = None
 
@@ -366,7 +388,8 @@ def build_column(name: str, *, jev_on: bool, store: FakeVectorStore) -> Column:
     counts = Counts()
     sdk = NeutralJevSDK(cov, year)
     col = Column(name, settings, counts, sdk)
-    llm = FakeLLM(NeutralLLM(cov, year, counts).respond)
+    script = NeutralLLM(cov, year, counts)
+    llm = FakeLLM(script.respond)
     decisions = FallbackDecisions(
         JevClient(settings, client=sdk, choice=FakeChoice),
         GeminiDecider(llm, settings),
@@ -380,6 +403,7 @@ def build_column(name: str, *, jev_on: bool, store: FakeVectorStore) -> Column:
 
     async def pipeline(row: dict) -> PipelineResult:
         col.current = row["question"]
+        script.recall = row.get("recall", "")
         deps = Deps(
             settings=settings,
             embedder=FakeEmbedder(),
@@ -397,8 +421,18 @@ def build_column(name: str, *, jev_on: bool, store: FakeVectorStore) -> Column:
         )
         request = PipelineRequest(user_id="eval-user", message=row["question"])
         result = await run_pipeline(request, deps)
-        for _, _, r in deps.citation_log.rows:
-            col.removed[r.reason] += 1
+        reasons = [r.reason for _, _, r in deps.citation_log.rows]
+        for reason in reasons:
+            col.removed[reason] += 1
+        if script.recall:  # did check 1 see the recalled case, and remove it?
+            reached = bool(col.retrieved.get(col.current))
+            col.recall_log[row["id"]] = (
+                "removed"
+                if "not_retrieved" in reasons
+                else "let_through"
+                if reached
+                else "not_reached"
+            )
         return result
 
     col.pipeline = pipeline
@@ -438,7 +472,6 @@ async def run_column(
         col.pipeline,
         retrieved_for=col.retrieved_for,
         corpus_ids=corpus_ids,
-        always_forbidden=(PROBE,),
     )
     if any(o.status != qs.NOT_RUN for o in outcomes):  # nothing ran: nothing to prove
         require_path_used(col, jev_on)
@@ -509,6 +542,7 @@ def to_json(a: ColumnResult, b: ColumnResult, set_path: Path) -> dict[str, Any]:
             "gemini_decisions": c.counts.gemini_decisions,
             "gemini_decisions_by_kind": dict(c.counts.gemini_other),
             "verifier_removals_by_reason": dict(c.removed),
+            "recall_rows": dict(c.recall_log),
         }
 
     return {
@@ -517,7 +551,6 @@ def to_json(a: ColumnResult, b: ColumnResult, set_path: Path) -> dict[str, Any]:
             "set": set_path.name,
             "set_sha256": qs.set_fingerprint(set_path),
             "harness_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
-            "probe": PROBE,
             "columns": {"a": meta(a), "b": meta(b)},
         },
         "a_forced_on": qs.to_json(a.outcomes, {}, True),
@@ -542,6 +575,7 @@ def to_json(a: ColumnResult, b: ColumnResult, set_path: Path) -> dict[str, Any]:
 async def run_both(
     questions: Sequence[qs.Question],
 ) -> tuple[ColumnResult, ColumnResult]:
+    check_recall_rows(questions)
     with eval_seal_key():
         store, corpus_ids = load_corpus(run_settings(jev_on=False))
         a = await run_column(
@@ -569,6 +603,7 @@ async def _main(args: argparse.Namespace) -> int:
             f"{label} Jev requests {len(c.sdk.calls)}, Gemini-path decisions "
             f"{c.counts.gemini_decisions}, verifier removals {dict(c.removed)}"
         )
+        print(f"{label} recall rows: {dict(Counter(c.recall_log.values()))}")
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(

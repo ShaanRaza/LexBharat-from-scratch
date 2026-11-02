@@ -119,7 +119,7 @@ async def test_uploads_never_reach_the_jev_client():
 
 
 ALL_ON = dict(
-    JEV_ENABLED_SCOPE=True, JEV_ENABLED_FILTERS=True, JEV_ENABLED_GATE=True,
+    JEV_ENABLED_SCOPE=True, JEV_ENABLED_GATE=True,
     JEV_ENABLED_CLAIM=True, JEV_ENABLED_SAFETY=True,
 )  # fmt: skip
 
@@ -180,7 +180,9 @@ async def test_decide_switches_use_jev_only_when_scope_and_safety_on():
 def test_all_jev_switches_default_to_false():
     s = Settings()
     assert not any(getattr(s, n) for n in dir(s) if n.startswith("JEV_ENABLED_"))
-    assert len([n for n in dir(s) if n.startswith("JEV_ENABLED_")]) == 5
+    assert (
+        len([n for n in dir(s) if n.startswith("JEV_ENABLED_")]) == 4
+    )  # FILTERS deleted, A107
 
 
 async def test_batches_never_mix_pipeline_runs():

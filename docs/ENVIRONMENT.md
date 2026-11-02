@@ -23,7 +23,7 @@ hard-code either string.**
 | AI gateway | `LITELLM_*`, `MODEL_FREE`, `MODEL_STUDENT`, `MODEL_PRO`, `MODEL_REWRITE`, `MODEL_FALLBACK` | The model list **only accepts providers marked no-training** |
 | Google / Gemini | `GEMINI_API_KEY` | **Paid tier only** |
 | Voyage | `VOYAGE_API_KEY`, `VOYAGE_EMBED_MODELS` (JSON, per collection), `VOYAGE_RERANK_MODEL` | the embedding model must match the vectors of the collection searched; an unlisted collection is refused |
-| Jev | `JEV_API_KEY`, `JEV_ENABLED_SCOPE`, `JEV_ENABLED_FILTERS`, `JEV_ENABLED_GATE`, `JEV_ENABLED_CLAIM`, `JEV_ENABLED_SAFETY`, `JEV_TIMEOUT_MS`, `JEV_GATE_THRESHOLD` | **One on/off switch per use**, so one can be turned off without touching the others. Timeout 800 ms; threshold starts at 0.6 |
+| Jev | `JEV_API_KEY`, `JEV_ENABLED_SCOPE`, `JEV_ENABLED_GATE`, `JEV_ENABLED_CLAIM`, `JEV_ENABLED_SAFETY`, `JEV_TIMEOUT_MS`, `JEV_GATE_THRESHOLD` | **One on/off switch per use**, so one can be turned off without touching the others. Timeout 800 ms; threshold starts at 0.6 |
 | Qdrant | `QDRANT_URL`, `QDRANT_API_KEY`, `QDRANT_UPLOADS_COLLECTION` | Never exposed to the internet |
 | PostgreSQL | `DATABASE_URL`, `MIGRATION_DATABASE_URL`, `APP_DB_ROLE`, `APP_DB_PASSWORD` | **Two database roles, see "Database roles" below.** The application, in development and production, connects as `DATABASE_URL` (the non-owning role); migrations run as `MIGRATION_DATABASE_URL` (the table owner) |
 | Redis | `REDIS_URL`, `ANSWER_CACHE_TTL_DAYS` | Cache TTL 7 days |
@@ -33,6 +33,7 @@ hard-code either string.**
 | Monitoring | `LANGFUSE_*`, `SENTRY_DSN` | Langfuse masked, Sentry scrubbed |
 | Sharing | `SHARE_LINK_EXPIRY_DAYS` | How long a share link lives (PRD-v2 O14). **Placeholder 30**; the owner sets the real number with the retention periods (O13) |
 | Acts | `SHOW_IN_FORCE` | Whether an Act may ever read "In force". **`false` (default) until the `act_status` count is in** (A181, CLAUDE.md section 6). Repealed is shown either way. Owner-only switch |
+| Acts | `ACT_HEADER_STATUS_REPLACEMENT` | Text put where the dataset's "\| India \| Central \| In Force" tail was removed from an Act point's header before the model sees it. **Empty (default) = the tail is just removed.** Wording is the owner's (A105) |
 | Helper limits | `RATE_LIMIT_IMPROVE_PER_HOUR`, `RATE_LIMIT_FOLLOWUPS_PER_HOUR`, `AI_PRICE_IN_PER_MTOK`, `AI_PRICE_OUT_PER_MTOK` | Per user per hour for the two helpers that call a model but are not answers (A52, A54). **Placeholder 60**; empty switches a limit off. Prices are per million tokens; empty = the spend view shows tokens only |
 | Limits | `PLAN_LIMIT_FREE`, `PLAN_LIMIT_STUDENT`, `PLAN_LIMIT_PRO`, `PLAN_LIMIT_CHAMBERS`, `UPLOAD_MAX_MB`, `UPLOAD_MAX_PAGES` | Upload limits **undecided** — set from OCR time on real scans |
 | Feature switches | `FEATURE_UPLOADS`, `FEATURE_STATS_LIVE`, `FEATURE_MODEL_ROUTING`, `FEATURE_HINDI` | **All off at launch** except as the gates allow |

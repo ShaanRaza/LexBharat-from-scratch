@@ -70,10 +70,10 @@ class Settings(BaseSettings):
     JEV_BATCH_GATE: bool = False  # one Jev request per run for all passages; claim
     # support is never batched (a wrong claim check changes a citation tick)
     JEV_CLAIM_THRESHOLD: float = 0.6  # below this, Jev 'supports' becomes 'partly'
-    # What the five Jev switches do (A104): each picks WHO answers one fixed-choice
+    # What the four Jev switches do (A104): each picks WHO answers one fixed-choice
     # decision. On = Jev. Off = the Gemini fallback answers the same choices
     # (adapters/decisions.py, FallbackDecisions). Off is therefore NOT "no check": the
-    # scope check, the gate and the claim check still run, decided by Gemini. All five
+    # scope check, the gate and the claim check still run, decided by Gemini. All four
     # default to False and no code or environment flips them; each is set in .env.
     #
     # SCOPE and SAFETY are one pair: Jev answers both in a single request, so the
@@ -82,9 +82,8 @@ class Settings(BaseSettings):
     # against the real service (no key; adapters/jev.py says so) and JEV_MODEL is not
     # verified. They come on by setting both to true in .env, with JEV_API_KEY set.
     JEV_ENABLED_SCOPE: bool = False
-    # FILTERS is read by no code: Jev does not extract filters (adapters/jev.py), the
-    # rewrite step does. Setting it has no effect.
-    JEV_ENABLED_FILTERS: bool = False
+    # (There is no FILTERS switch: Jev does not extract filters, the rewrite step does.
+    # A switch that nothing read was deleted, A107.)
     # GATE and CLAIM stay off until a live test shows batched and single Jev answers
     # agree (reviewer finding); claim support is already sent unbatched.
     JEV_ENABLED_GATE: bool = False
@@ -148,6 +147,11 @@ class Settings(BaseSettings):
     # default (CLAUDE.md section 6). Repealed is always shown; this never hides it.
     # Owner-only.
     SHOW_IN_FORCE: bool = False
+    # What replaces the dataset's "| India | Central | In Force" tail on an Act point's
+    # header line before the model sees it (core/search.py, A105). EMPTY = the tail is
+    # simply removed. NEEDS-OWNER: the wording, if any, is the owner's (it tells the
+    # model what is known about the Act, so it is a statement about the law).
+    ACT_HEADER_STATUS_REPLACEMENT: str = ""
     RATE_LIMIT_IMPROVE_PER_HOUR: int | None = 60
     RATE_LIMIT_FOLLOWUPS_PER_HOUR: int | None = 60
     # Model price per million tokens, in whatever currency the owner reads the spend

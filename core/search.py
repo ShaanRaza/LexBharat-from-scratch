@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
 from dataclasses import dataclass
 
 from adapters.qdrant import Hit, VectorStoreUnavailable
@@ -38,7 +39,26 @@ async def embed_query(text: str, deps: Deps) -> list[float] | None:
         return None
 
 
-def hit_to_passage(h: Hit, kind: PassageKind | None = None) -> Passage:
+# An Act point's stored text opens "Act: <title> | India | <Central|State|Repealed> |
+# <status>" (all 320 practice-fixture Act points do; the real collection is not checked,
+# A105). Act points carry no char_start/char_end, so there is nothing to slice: the
+# dataset's jurisdiction and status tail is matched and removed. Anchored to the LAST
+# three "|" fields of an "Act:" line, so a title containing "|" cannot hide the tail.
+_ACT_HEADER_TAIL = re.compile(r"^(Act:[^\n]*?)[ \t]*\|[^|\n]*\|[^|\n]*\|[^|\n]*$", re.M)
+
+
+def strip_act_header_status(text: str, replacement: str = "") -> str:
+    """Remove the dataset's "| India | Central | In Force" tail from an Act header line,
+    so the model is never shown a status nobody checked (CLAUDE.md section 6). The
+    status text is replaced by `replacement` (config ACT_HEADER_STATUS_REPLACEMENT,
+    empty until the owner chooses wording, A105)."""
+    tail = f" {replacement}" if replacement else ""
+    return _ACT_HEADER_TAIL.sub(lambda m: m.group(1) + tail, text)
+
+
+def hit_to_passage(
+    h: Hit, kind: PassageKind | None = None, act_header_replacement: str = ""
+) -> Passage:
     p = h.payload
     text = h.text
     cs, ce = p.get("char_start"), p.get("char_end")
@@ -46,6 +66,8 @@ def hit_to_passage(h: Hit, kind: PassageKind | None = None) -> Passage:
         text = text[-(ce - cs) :]  # drop the "Case: ..." header, keep the body
     if kind is None:
         kind = "act_section" if "section_number" in p else "judgment"
+    if kind == "act_section":
+        text = strip_act_header_status(text, act_header_replacement)
     return Passage(
         record_id=h.record_id,
         text=text,
@@ -117,7 +139,12 @@ async def search(
     except VectorStoreUnavailable:
         log.error("vector store unavailable")
         raise
-    passages = [hit_to_passage(h) for h in results[0] if _year_ok(h, decision)]
+    swap = deps.settings.ACT_HEADER_STATUS_REPLACEMENT
+    passages = [
+        hit_to_passage(h, act_header_replacement=swap)
+        for h in results[0]
+        if _year_ok(h, decision)
+    ]
     if len(results) > 1:
         passages += [hit_to_passage(h, "upload") for h in results[1]]
     passages.sort(key=lambda p: -p.score)

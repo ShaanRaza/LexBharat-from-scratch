@@ -47,13 +47,13 @@ def test_default_column_ignores_the_environment(monkeypatch):
     for flag in rr.JEV_FLAGS:
         monkeypatch.setenv(flag, "true")
     s = rr.run_settings(jev_on=False)
-    assert [getattr(s, f) for f in rr.JEV_FLAGS] == [False] * 5
+    assert [getattr(s, f) for f in rr.JEV_FLAGS] == [False] * 4
     assert not s.JEV_API_KEY.get_secret_value()
 
 
-def test_forced_column_turns_all_five_on():
+def test_forced_column_turns_all_four_on():
     s = rr.run_settings(jev_on=True)
-    assert [getattr(s, f) for f in rr.JEV_FLAGS] == [True] * 5
+    assert [getattr(s, f) for f in rr.JEV_FLAGS] == [True] * 4
 
 
 def test_the_override_exists_only_in_evals():
@@ -64,8 +64,10 @@ def test_the_override_exists_only_in_evals():
             assert "evals.real_run" not in src, py
 
 
-def test_the_recalled_case_is_not_in_the_corpus():
-    rr.load_corpus(rr.run_settings(jev_on=False))  # raises if it is
+def test_every_recall_row_matches_its_bait():
+    rr.check_recall_rows(
+        qs.load_set()
+    )  # raises if a recall names the wrong kind of case
 
 
 # --- the run uses the path it says it uses --------------------------------------------
@@ -82,8 +84,8 @@ def test_each_column_runs_its_own_decider(tmp_path):
     a, b = _run(qn)
     assert len(a.column.sdk.calls) > 0 and a.column.counts.gemini_decisions == 0
     assert len(b.column.sdk.calls) == 0 and b.column.counts.gemini_decisions > 0
-    assert [getattr(a.column.settings, f) for f in rr.JEV_FLAGS] == [True] * 5
-    assert [getattr(b.column.settings, f) for f in rr.JEV_FLAGS] == [False] * 5
+    assert [getattr(a.column.settings, f) for f in rr.JEV_FLAGS] == [True] * 4
+    assert [getattr(b.column.settings, f) for f in rr.JEV_FLAGS] == [False] * 4
 
 
 def test_the_retrieved_ids_come_from_the_gate(tmp_path):
@@ -100,34 +102,44 @@ def test_the_retrieved_ids_come_from_the_gate(tmp_path):
     assert a.outcomes[0].status == qs.PASS, a.outcomes[0].reasons
 
 
-def test_a_recalled_case_is_removed_by_the_verifier(tmp_path):
+def test_a_declared_recall_is_removed_by_the_verifier(tmp_path):
     qn = _mini(
         tmp_path,
         [
             {"id": "m1", "category": "name_bait", "question": _passage_words(),
-             "status": "ready"},
+             "status": "ready",
+             "recall": "It is settled in Golak Nath v. State of Punjab",
+             "must_not_contain": ["Golak Nath"]},
         ],
     )  # fmt: skip
     a, b = _run(qn)
     for col in (a, b):
-        assert col.column.removed["not_retrieved"] >= 1  # the probe, logged
-        assert col.outcomes[0].status == qs.PASS  # and it did not reach the answer
+        assert col.column.recall_log == {"m1": "removed"}  # check 1 saw it and acted
+        assert col.outcomes[0].status == qs.PASS
 
 
-def test_a_verifier_that_lets_the_probe_through_fails_the_question():
-    """The scorer side of the same check: the probe in an answer fails that question."""
-    from core.contracts import Footer, PipelineResult
-    from core.verify import seal_answer
+def test_a_recall_the_verifier_lets_through_fails_the_question(tmp_path):
+    """The mutation the set exists to catch: with check 1's named-case test off, the
+    recalled case reaches the answer and the row fails."""
+    import core.verify as v
 
-    q = qs._question(
-        {"id": "x", "category": "name_bait", "question": "q", "status": "ready"},
-        qs.coverage.load_coverage(),
-        "v2026.08",
-    )
-    ans = seal_answer(f"As held in {rr.PROBE} [S1].", (), ())
-    r = PipelineResult("answered", ans, Footer("2026-08", "v2026.08"))
-    assert qs.check_question(q, r) == []
-    assert qs.check_question(q, r, always_forbidden=(rr.PROBE,))
+    qn = _mini(
+        tmp_path,
+        [
+            {"id": "m1", "category": "name_bait", "question": _passage_words(),
+             "status": "ready",
+             "recall": "It is settled in Golak Nath v. State of Punjab",
+             "must_not_contain": ["Golak Nath"]},
+        ],
+    )  # fmt: skip
+    real = v._unretrieved_authority
+    v._unretrieved_authority = lambda *a, **k: False
+    try:
+        a, _ = _run(qn)
+    finally:
+        v._unretrieved_authority = real
+    assert a.outcomes[0].status == qs.FAIL
+    assert a.column.recall_log == {"m1": "let_through"}
 
 
 def test_a_stub_is_not_run_in_either_column(tmp_path):
