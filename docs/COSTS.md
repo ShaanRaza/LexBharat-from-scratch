@@ -41,6 +41,7 @@ server and several, every month, forever.
 | BM25 repair of broken sparse vectors already in the served copy | about **12 seconds** of compute, no vendor cost | **Measured** | `DATA-GAPS.md` section 9 |
 | Jev credits bought so far | **$5** | **Checked** | `PRD-v2.md` section 8 |
 | Tribunal data, if purchased | unknown — enquiry sent | **Needs verification** | owner, 2 Nov 2026 |
+| **Re-embedding Kerala's dead vectors** | about **$12** at `voyage-4` (~215,000 chunks, ~194M tokens); detection costs **nothing** — one dot product per point | **Measured** | `DATA-GAPS.md` section 14 |
 
 **Measured 2 Nov 2026: the working answer is $0.** A per-court-majority query config matches
 about 92% of High Court points, Qdrant serves it in one call for about 1.8 ms more, and hybrid
@@ -140,7 +141,9 @@ uploads set the risk.** Watch Qdrant memory and OCR time in Langfuse from week o
 |---|---|---|---|
 | Server size and whether managed Qdrant is worth it | Bombay sizing experiment — RAM, p50/p95, recall@10/@50 for three quantization settings, extrapolated | data session | running, 2 Nov 2026 |
 | ~~Whether the $1,900 re-embedding is needed~~ | **Measured 2 Nov 2026 — per-court config, $0** | data session | done (`DATA-GAPS.md` §13) |
-| Whether any dense vectors are unrelated to their text | prevalence check across courts — 2 of 50 Kerala chunks scored ~0 under every model | data session | **not started, highest value** |
+| ~~Whether any dense vectors are unrelated to their text~~ | **Measured 3 Nov 2026 — 6.9% of Kerala v2, nowhere else; sparse intact so hybrid still finds them** | data session | done (`DATA-GAPS.md` §14) |
+| Finding the remaining ~215,000 dead Kerala vectors | the free detector: score every vector against the mean legal-text direction, validate the threshold on the 31 known-dead and 419 known-good | data session | **not started — costs nothing to run** |
+| Re-embedding what it flags | **blocked on the payment method, not on engineering** — $12 of tokens, but 13 days at the throttled free tier | owner | **one card activation** |
 | LLM cost per answer | token counts per pipeline step against published rates | **not assigned** | **not started** |
 | Managed database, CDN, firewall, email, monitoring | quotes | owner | not started |
 | Tribunal data | vendor reply | owner | enquiry sent 2 Nov 2026 |
