@@ -465,3 +465,90 @@ favours part of the data — which, with no retrieval-quality metric in place, n
 **Open for the owner:** before High Courts or state Acts are served, choose between several
 query embeddings (needs a per-chunk model field that does not exist), one chosen model and
 accepted unfairness, or re-embedding. Recorded as A120.
+
+## 13. Measured: per-court models cover 92%, and hybrid barely notices a mismatch
+
+**Measured**, 2 Nov 2026. 2,642 chunks across 77 court groups, up to 50 per court from different
+cases and random id ranges, re-embedded and compared at cosine 0.998. Per-court tables and raw
+cosines: `~/qdrant-kanoon/reports/hc_model_report.md`, `hc_model_results.json`.
+
+This **supersedes section 12's framing** of the cost. The choice is not $1,900 or nothing.
+
+### Is a court one model? Partly
+
+- **`legal_corpus_v1` is mostly single-model per court** (80% of its points). `voyage-4`: Bombay,
+  Telangana, Madras, Gujarat, Gauhati, Himachal. `voyage-4-large`: Patna, and Chhattisgarh in
+  effect. `voyage-4-lite`: Allahabad, Calcutta, Uttarakhand, Tripura, Sikkim. Mixed: Delhi
+  (14/36) and Andhra Pradesh (49/1).
+- **`legal_corpus_v2` is internally mixed where it matters** (81% of its High Court points).
+  Kerala, Karnataka, Punjab & Haryana, Jharkhand, Himachal, Jammu & Kashmir, Madhya Pradesh,
+  Orissa, Manipur, Meghalaya are all mixed. The courts that are single-model in v2 are
+  `voyage-4-lite` — and are `voyage-4` or `voyage-4-large` in v1.
+- **What drives the mixing is unknown.** It is not the case year: v2 Kerala is mixed in both eras.
+- **Volume-weighted:** v1 is 56/14/30 (`voyage-4` / lite / large); v2 is 29/42/28.
+- **A per-court-majority config matches about 92% of all 31.0M High Court points** — 98% of v1,
+  84% of v2. The remaining 8% would be mismatched.
+
+### Does the mismatch hurt retrieval? Barely, for hybrid
+
+20 `voyage-4` chunks from Bombay v1, 55 queries from their own sentences, against a local copy of
+200,020 Bombay points.
+
+| Search | Query model | recall@10 | recall@50 |
+|---|---|---:|---:|
+| Dense only | `voyage-4` (matching) | 58% | 69% |
+| Dense only | `voyage-4-large` | 55% | 65% |
+| Dense only | `voyage-4-lite` | 56% | 65% |
+| Hybrid | `voyage-4` (matching) | 76% | 87% |
+| Hybrid | `voyage-4-large` | 76% | 87% |
+| Hybrid | `voyage-4-lite` | 75% | 87% |
+
+Paired per query, a mismatched model cost 2 queries of 55 on dense@50 and **zero on hybrid**. BM25
+rescued 10 of 17 dense misses, and 12 of 19 under mismatch. With names and numbers stripped from
+the queries, dense@50 falls 62% to 52% while hybrid holds at 81%.
+
+**Not tested:** a *mixed* corpus, where a matched and a mismatched document compete in one ranking.
+This shows only that changing the query model does not hurt a single-model corpus.
+
+### Qdrant can serve per-court models in one call
+
+On 1.16.3, several dense prefetch branches — each with its own query vector, court filter and
+quantization — plus a sparse BM25 branch, fused in one call. Three dense branches plus sparse took
+4.1 ms against 2.3 ms for one plus sparse, on the 446k copy. Fuse by **rank (`rrf`), not score**:
+the branches' scores come from different models.
+
+### So the cost decision, restated
+
+| Option | Coverage | Cost |
+|---|---|---|
+| Per-court-majority query models, RRF fusion | ~92% of points matched | **$0**, plus ~1.8 ms of latency |
+| Re-embed everything at `voyage-4-lite` | 100% | ~$560 |
+| Re-embed everything at `voyage-4` | 100% | ~$1,700 |
+| Re-embed everything at `voyage-4-large` | 100% | ~$3,400 |
+
+Measured at ~28B tokens, about 900 tokens a chunk. **The trap:** `kanoon_v1` — what is served
+today — is `voyage-4-large` (A120). Matching it means the $3,400 column, not the $1,700 one.
+Choosing a cheaper model means re-embedding the launch corpus too, and accepting a weaker model
+for the part of the corpus that is currently clean.
+
+**Working answer: the per-court config at $0.** Hybrid is what ships, and hybrid loses nothing
+measurable to a mismatched query.
+
+### Two findings in that report that deserve more weight than they got
+
+1. **Dense vectors unrelated to their own text.** 2 of 50 Kerala v2 chunks scored cosine about 0
+   under every model. At that rate, ~4% of Kerala's 3.1M chunks are **unfindable by dense search
+   at all** — not ranked badly, invisible. It rests on two chunks and is unverified. But section 9
+   measured ~48% of `acts_india` carrying raw term counts where BM25 weights belong, so broken
+   vectors are an established failure mode in this data, not a fluke. A second class of them in a
+   different collection is plausible and cheap to measure. **For the trust promise this is worse
+   than any ranking bias:** a chunk that cannot be retrieved cannot be cited, so the user is told
+   "not in our dataset" about something the dataset holds.
+
+2. **The absolute recall level, which nobody remarked on.** Hybrid recall@50 is 87% — a query
+   built from a chunk's own sentences fails to bring that chunk back in the top 50 about one time
+   in eight, on a 200k corpus the report itself calls optimistic against 2.8M. Dense-only @10 is
+   58%. Known-item is a harsh test (near-identical chunks count as misses, and judgments carry a
+   lot of boilerplate), so this understates real performance by some unknown amount. It is still
+   the first retrieval-quality number this project has ever had, and 13% of answerable questions
+   reaching the gate with nothing above threshold is a product problem, not an embedding problem.
