@@ -45,7 +45,7 @@ def test_random_vectors_are_flagged_and_real_directions_are_not():
 
 
 def _fake_scroll(points):
-    """A stand-in for the Qdrant scroll: ascending ids, `limit` per page, next_page_offset."""
+    """A stand-in for Qdrant scroll: ascending ids, `limit` per page, next offset."""
     calls = []
 
     def scroll(base, collection, body):
