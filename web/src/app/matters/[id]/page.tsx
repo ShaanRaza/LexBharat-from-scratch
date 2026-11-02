@@ -9,7 +9,7 @@ async function Matter({ params }: { params: Promise<{ id: string }> }) {
 
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
   return (
-    <PageShell>
+    <PageShell shell="app">
       <Suspense fallback={<Loading />}>
         <Matter params={params} />
       </Suspense>

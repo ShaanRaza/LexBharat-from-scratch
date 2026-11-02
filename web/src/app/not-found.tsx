@@ -3,7 +3,7 @@ import { Card, PageShell, StandingNotices } from "@/components/ui";
 
 export default function NotFound() {
   return (
-    <PageShell>
+    <PageShell shell="public">
       <Card>
         <h1 className="text-lead font-bold">This page or record was not found</h1>
         <p className="mt-2 text-ink-soft">Check the address, or go back and ask a question or look up an Act section.</p>

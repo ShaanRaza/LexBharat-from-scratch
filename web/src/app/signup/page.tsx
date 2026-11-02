@@ -3,7 +3,7 @@ import { SignupForm } from "@/components/auth/SignupForm";
 
 export default function Signup() {
   return (
-    <PageShell>
+    <PageShell shell="public">
       <h1 className="mb-4 text-title font-bold">Get early access</h1>
       <SignupForm />
       <StandingNotices />

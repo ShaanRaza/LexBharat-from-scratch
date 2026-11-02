@@ -9,7 +9,7 @@ async function Conversation({ params }: { params: Promise<{ id: string }> }) {
 
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
   return (
-    <PageShell>
+    <PageShell shell="app">
       <Suspense fallback={<Loading />}>
         <Conversation params={params} />
       </Suspense>

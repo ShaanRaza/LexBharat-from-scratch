@@ -1,19 +1,19 @@
 import Link from "next/link";
 import { TopNav } from "./TopNav";
 import { FEATURE_PRICING, PRODUCT_NAME } from "@/lib/config";
+import { NAV } from "@/lib/copy";
 
+// The public top bar: reference pages, help, sign-in and early access. Nothing here is
+// personal (no matters, history or account): those live in the app sidebar.
 const LINKS = [
-  { href: "/history", label: "History" },
-  { href: "/acts", label: "Acts" },
-  { href: "/stats", label: "Statistics" },
-  { href: "/coverage", label: "Coverage" },
-  ...(FEATURE_PRICING ? [{ href: "/pricing", label: "Plans" }] : []),
-  { href: "/help", label: "Help" },
-  { href: "/account", label: "Account" },
-  { href: "/signin", label: "Sign in" },
+  { href: "/acts", label: NAV.acts },
+  { href: "/stats", label: NAV.statistics },
+  { href: "/coverage", label: NAV.coverage },
+  ...(FEATURE_PRICING ? [{ href: "/pricing", label: NAV.plans }] : []),
+  { href: "/help", label: NAV.help },
+  { href: "/signin", label: NAV.signIn },
 ];
 
-// Links wrap under the name on a phone instead of disappearing.
 export function TopBar() {
   return (
     <header className="sticky top-0 z-10 border-b border-line bg-page">

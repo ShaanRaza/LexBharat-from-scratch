@@ -63,15 +63,22 @@ describe("sign in", () => {
 });
 
 describe("navigation", () => {
-  it("every link is on the desktop bar, and on a phone all of them sit behind one Menu button", () => {
+  const PUBLIC = ["Acts", "Statistics", "Coverage", "Help", "Sign in", "Get early access"];
+  it("the public bar has every public link, and on a phone all of them sit behind one Menu button", () => {
     render(<TopBar />);
-    for (const t of ["Acts", "Statistics", "Coverage", "History", "Help", "Account", "Sign in", "Get early access"]) {
+    for (const t of PUBLIC) {
       expect(screen.getAllByRole("link", { name: t }).length).toBeGreaterThan(0); // the desktop bar
     }
     fireEvent.click(screen.getByRole("button", { name: "Menu" }));
     const sheet = screen.getByRole("dialog", { name: "Menu" });
-    for (const t of ["Acts", "Statistics", "Coverage", "History", "Help", "Account", "Sign in", "Get early access"]) {
+    for (const t of PUBLIC) {
       expect(within(sheet).getByRole("link", { name: t })).toBeInTheDocument(); // the same list in the sheet
+    }
+  });
+  it("the public bar carries nothing personal: no matters, history or account", () => {
+    render(<TopBar />);
+    for (const t of ["Matters", "Projects", "History", "Account", "New question"]) {
+      expect(screen.queryByRole("link", { name: t })).toBeNull();
     }
   });
 });

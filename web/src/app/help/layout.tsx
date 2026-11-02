@@ -9,7 +9,7 @@ const ITEMS = [
 
 export default function HelpLayout({ children }: { children: ReactNode }) {
   return (
-    <PageShell width="content">
+    <PageShell shell="public" width="content">
       <AreaLayout title={HELP_TITLE} items={ITEMS}>
         {children}
       </AreaLayout>

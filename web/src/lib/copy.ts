@@ -237,3 +237,24 @@ export const ONBOARDING_STEPS = [
   "Click a source to open it beside the answer.",
 ] as const;
 export const ONBOARDING_DISMISS = "Got it";
+
+// ---- Navigation labels: the app sidebar and the public top bar read these ----
+export const NAV = {
+  newQuestion: "New question",
+  history: "History",
+  acts: "Acts",
+  statistics: "Statistics",
+  coverage: "Coverage",
+  plans: "Plans",
+  help: "Help",
+  account: "Account",
+  signIn: "Sign in",
+  signOut: "Sign out",
+  earlyAccess: "Get early access",
+  reference: "Reference",
+  allMatters: "All",
+  menu: "Menu",
+  appNav: "App",
+  mattersNone: "None yet",
+  mattersFailed: "Could not load",
+} as const;

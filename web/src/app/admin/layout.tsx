@@ -16,7 +16,7 @@ const ITEMS = [
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
-    <PageShell width="content">
+    <PageShell shell="app" width="content">
       <AreaLayout title={ADMIN_TITLE} items={ITEMS}>
         {children}
       </AreaLayout>

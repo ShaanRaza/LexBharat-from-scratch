@@ -11,7 +11,7 @@ const ITEMS = [
 
 export default function Page() {
   return (
-    <PageShell width="content">
+    <PageShell shell="app" width="content">
       <AreaLayout title={ACCOUNT_TITLE} items={ITEMS}>
         <h1 className="mb-4 text-title font-bold">{ACCOUNT_TITLE}</h1>
         <AccountScreen />

@@ -3,7 +3,7 @@ import { MattersScreen } from "@/components/matters/MattersScreen";
 
 export default function Page() {
   return (
-    <PageShell>
+    <PageShell shell="app">
       <MattersScreen />
     </PageShell>
   );

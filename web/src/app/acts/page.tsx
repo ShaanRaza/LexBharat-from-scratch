@@ -4,7 +4,7 @@ import { sampleSections } from "@/lib/api/client";
 
 export default function Acts() {
   return (
-    <PageShell>
+    <PageShell shell="public">
       <h1 className="mb-4 text-title font-bold">Look up an Act section</h1>
       <ActLookup samples={sampleSections()} />
       <StandingNotices />

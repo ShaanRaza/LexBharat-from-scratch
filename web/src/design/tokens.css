@@ -71,6 +71,8 @@
   --container-reading: 720px;
   --container-measure: 68ch; /* answer text: legal prose is dense, keep the line short */
   --container-sidebar: 240px;
+  --size-sheet-scroll: 70vh; /* tallest scrolling area inside a phone sheet */
+  --container-appnav: 16rem; /* the app shell's left sidebar */
 
   /* --- Motion (section 5): only where it carries meaning, 150ms or less ---------------
      The only user of --motion-step is the progress panel (globals.css), and it is switched
