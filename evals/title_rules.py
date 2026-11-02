@@ -6,7 +6,9 @@ would strip. Nothing in core/ changes; rule a below IS the real verifier
 (`_unretrieved_authority`); the others are candidates implemented here.
 
 Rules, each answering "is this written case name among the retrieved passages?":
-  a   the current rule: the real verifier function, asked about the name written two
+  a   the verifier as it stands (since A117 this IS rule f, integrated: the A116 table
+      row "a" described the verifier before A117). The real function, asked about the
+      name written two
       ways (natural: "Smith & Ors. v. State of X"; Title Case: "Smith And Ors. V.
       State Of X"), because its name-shape test reads them differently.
   b   the full normalised name must appear, as a contiguous run, in a retrieved title
@@ -66,7 +68,7 @@ from adapters.qdrant import Hit
 from core.contracts import Passage
 from core.search import hit_to_passage
 from core.verify import _norm_case_name, _unretrieved_authority
-from evals.title_keys import default_records
+from evals.title_keys import default_records, read_records
 
 SEED = 20261103
 THRESHOLDS = (0.6, 0.7, 0.8, 0.9, 1.0)
@@ -343,7 +345,36 @@ def generic_words(recs: Sequence[Rec], share: float = 0.01) -> list[str]:
     }
     for t in seen:
         df.update(set(_norm_case_name(t).split()) - {"v"})
-    return [w for w, c in df.most_common() if c / len(seen) >= share]
+    # ties broken by the word, not by hash order, so every run gives the same list
+    ranked = sorted(df, key=lambda w: (-df[w], w))
+    return [w for w in ranked if df[w] / len(seen) >= share]
+
+
+GENERIC_FILE = Path(__file__).parent.parent / "core" / "generic_title_words.json"
+
+
+def write_generic_words(
+    path: Path, records: Sequence[dict[str, Any]], source: str, share: float = 0.01
+) -> dict[str, Any]:
+    """Write the list core/verify.py reads (A117): words in at least `share` of the case
+    titles. Derived from the data, never typed; regenerate it from the full title dump
+    when there is one."""
+    recs = build(records)
+    titles = {
+        r.passage.title
+        for r in recs
+        if r.passage.title and split_title(r.passage.title)
+    }
+    doc = {
+        "share": share,
+        "derived_from": source,
+        "case_titles": len(titles),
+        "how": "python -m evals.title_rules --write-generic "
+        "core/generic_title_words.json [--titles dump]",
+        "words": sorted(generic_words(recs, share)),
+    }
+    path.write_text(json.dumps(doc, indent=2) + "\n", encoding="utf-8")
+    return doc
 
 
 def make_rule_e(generic: Sequence[str], fuzzy: bool = False) -> Rule:
@@ -554,7 +585,24 @@ def render(m: dict[str, Any]) -> str:
 def main(argv: Sequence[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--out", type=Path)
+    ap.add_argument("--write-generic", type=Path, help="write the generic-word list")
+    ap.add_argument(
+        "--titles", type=Path, help="records with a `title` (default: fixtures)"
+    )
     a = ap.parse_args(argv)
+    if a.write_generic:
+        recs = read_records(a.titles) if a.titles else default_records()
+        src = (
+            str(a.titles)
+            if a.titles
+            else "practice fixtures (tests/fixtures/practice), a sample"
+        )
+        doc = write_generic_words(a.write_generic, recs, src)
+        print(
+            f"wrote {a.write_generic}: {len(doc['words'])} words from "
+            f"{doc['case_titles']} titles"
+        )
+        return 0
     m = measure()
     print(render(m))
     if a.out:

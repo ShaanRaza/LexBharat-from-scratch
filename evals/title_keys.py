@@ -1,4 +1,9 @@
-"""How much does the verifier's named-case key protect? (A113, result A115)
+"""How much did the verifier's named-case key protect? (A113, result A115)
+
+HISTORICAL since A117: core/verify.py no longer uses this key; it checks the whole
+written name (rule f of A116). This file measures the OLD rule and is kept so the A115
+numbers can be reproduced and run on a full title dump. Its "verifier cross-check" was
+retired with the rule it checked. The text below describes the rule as it was.
 
 Verifier check 1 (core/verify.py, `_unretrieved_authority`) reduces a case name written
 in an answer to ONE word either side of "v" and accepts it as retrieved if that
@@ -8,9 +13,7 @@ case law the right-hand word is dominated by "Union of India", "State of X" and
 
 It changes nothing in core/. It IMPORTS the verifier's own `_VERSUS_CORE` and
 `_norm_case_name` (a measurement that reimplements the thing under test measures
-something else), and a test checks they are the same objects. It then cross-checks
-its key against the verifier itself: for pairs of different titles it asks the real
-`_unretrieved_authority` whether naming B is accepted when only A was retrieved.
+something else), and a test checks they are the same objects.
 
 INPUT. A file of records with a `title` field (and optionally `text`): .jsonl or
 .jsonl.gz, .csv, or .parquet. The default is the practice fixtures (1,398 records),
@@ -30,18 +33,15 @@ import argparse
 import gzip
 import json
 import random
-import re
 from collections import Counter
-from collections.abc import Iterable, Sequence
+from collections.abc import Sequence
 from math import comb
 from pathlib import Path
 from typing import Any
 
-from core.contracts import Passage
 from core.verify import (
     _VERSUS_CORE,
     _norm_case_name,
-    _unretrieved_authority,
     normalise,
 )
 
@@ -206,43 +206,10 @@ def measure(records: Sequence[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def _as_sentence(title: str) -> str:
-    """A title written the way an answer would name it."""
-    t = re.sub(r"\s+(?:versus|vs\.?)\s+", " v. ", title.strip().rstrip("."), flags=re.I)
-    return f"The leading authority is {t.title()}."
-
-
-def confirm_with_the_verifier(
-    titles: Iterable[str], limit: int = 120
-) -> dict[str, Any]:
-    """Ask the REAL check whether naming B is accepted when only A was retrieved.
-    Pairs with equal keys should be accepted, pairs with different keys should not; if
-    not, `keys_of` is not the verifier's key and the numbers above are wrong."""
-    ks = {t: keys_of(t) for t in sorted(set(titles))}
-    ks = {t: k[0] for t, k in ks.items() if k}
-    names = list(ks)[:limit]
-    same = [0, 0]  # accepted, total (A != B, same key)
-    diff = [0, 0]
-    for a in names:
-        passage = [Passage("x", "", source_id="S1", title=a)]
-        for b in names:
-            if a == b:
-                continue
-            accepted = not _unretrieved_authority(_as_sentence(b), passage)
-            bucket = same if ks[a] == ks[b] else diff
-            bucket[0] += accepted
-            bucket[1] += 1
-    return {
-        "titles_checked": len(names),
-        "pairs_with_the_same_key": {"accepted": same[0], "of": same[1]},
-        "pairs_with_different_keys": {"accepted": diff[0], "of": diff[1]},
-    }
-
-
 # --- 4. Command line -----------------------------------------------------------------
 
 
-def render(m: dict[str, Any], c: dict[str, Any]) -> str:
+def render(m: dict[str, Any]) -> str:
     out = [
         f"records {m['records']}, distinct titles {m['distinct_titles']} "
         f"({m['titles_without_a_key']} with no 'v', e.g. Acts), distinct keys "
@@ -260,7 +227,6 @@ def render(m: dict[str, Any], c: dict[str, Any]) -> str:
     rt = m["share_of_titles_with_right_token_in"]
     e = m["title_reach_if_k_random_other_cases_retrieved"]
     tr = m["text_reach"]
-    same, diff = c["pairs_with_the_same_key"], c["pairs_with_different_keys"]
     best = m["top20_keys"][0]["p_accepted_if_8_random_records_retrieved"]
     out += [
         "",
@@ -282,10 +248,6 @@ def render(m: dict[str, Any], c: dict[str, Any]) -> str:
         "accepted via passage TEXT, name with its own title's key, 8 random records: "
         f"{tr['mean_p_accepted_if_8_random_records_retrieved']:.1%} "
         f"(commonest key {best:.1%})",
-        "",
-        f"verifier cross-check ({c['titles_checked']} titles): same key accepted "
-        f"{same['accepted']}/{same['of']}, different key accepted "
-        f"{diff['accepted']}/{diff['of']}",
     ]
     return "\n".join(out)
 
@@ -297,14 +259,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     a = ap.parse_args(argv)
     records = read_records(a.titles) if a.titles else default_records()
     m = measure(records)
-    c = confirm_with_the_verifier([r["title"] for r in records if r.get("title")])
     m["source"] = str(a.titles) if a.titles else "practice fixtures (a sample)"
-    print(render(m, c))
+    print(render(m))
     print(f"source: {m['source']}")
     if a.out:
         a.out.parent.mkdir(parents=True, exist_ok=True)
-        doc = {"measure": m, "verifier_check": c}
-        a.out.write_text(json.dumps(doc, indent=2) + "\n")
+        a.out.write_text(json.dumps({"measure": m}, indent=2) + "\n")
     return 0
 
 

@@ -31,6 +31,9 @@ import re
 import unicodedata
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
+from difflib import SequenceMatcher
+from functools import lru_cache
+from pathlib import Path
 
 from adapters.decisions import DecisionUnavailable
 from adapters.qdrant import VectorStoreUnavailable
@@ -134,14 +137,13 @@ _CITATION_SHAPES = (
         re.IGNORECASE,
     ),
     re.compile(r"\bMANU\s*/\s*[A-Z]{2,4}\s*/\s*\d+\s*/\s*\d{4}", re.IGNORECASE),
-    re.compile(
-        r"\b[A-Z][\w.&'\-]*(?:\s+[A-Z][\w.&'\-]*){0,5}\s+(?:v\.?|vs\.?|versus)\s+"
-        r"[A-Z][\w.&'\-]*(?:\s+[A-Z][\w.&'\-]*){0,5}"
-    ),
+    # (A case NAME "X v. Y" is not tested here: _unretrieved_authority checks it below
+    # with the whole name, A117. This tuple is reporter citations and "In re".)
     re.compile(r"\bIn re\s+[A-Z][\w.&'\-]*(?:\s+[A-Z][\w.&'\-]*){0,5}"),
 )
-# "<word> v <word>" in any case, any spelling of v/vs/V./Vs.: the core of a case name.
-_VERSUS_CORE = re.compile(r"(\S+)\s+(?:v|vs)(?:\.\s*|\s+)(\S+)", re.IGNORECASE)
+# "<word> v <word>" in any case, any spelling of v/vs/versus/V./Vs.: the anchor of a
+# case name. (`versus` was only caught by the name shape that A117 replaced.)
+_VERSUS_CORE = re.compile(r"(\S+)\s+(?:v|vs|versus)(?:\.\s*|\s+)(\S+)", re.IGNORECASE)
 # Letters that look like Latin ones (Cyrillic, Greek, small capitals), folded for
 # detection.
 _CONFUSABLES = str.maketrans(
@@ -349,6 +351,149 @@ def _squash(text: str) -> str:
     return re.sub(r"\W", "", text).casefold()
 
 
+# --- Case names (A117, rule f of A116) ----------------------------------------------
+# A written case name is accepted as retrieved only if EVERY word of it appears, in
+# order, inside ONE retrieved case name (a passage title, or a "... v ..." span in a
+# passage's text), and at least one word is not generic. "Generic" = a word in at least
+# 1% of case titles, read from core/generic_title_words.json, which is DERIVED from the
+# titles (evals/title_rules.py --write-generic), never typed. Words match if equal, or
+# alike letter by letter (5+ letters, 80%), or a known abbreviation pair. Replaces the
+# old "one word either side of v" test, which rejected 61% of legitimate shortened
+# names and accepted 3% to 7.5% of invented ones (A113, A115, A116).
+_GENERIC_FILE = Path(__file__).with_name("generic_title_words.json")
+_ABBREV_CANON = {
+    "company": "co",
+    "limited": "ltd",
+    "private": "pvt",
+    "corporation": "corpn",
+}
+# ("in" is not one: "the Court in Smith v. X" must not pull "Court in" into the name)
+_NAME_JOINERS = {"&", "and", "of", "for"}
+_REPORTERS = {"AIR", "SCC", "SCR", "SC", "ILR", "INSC", "MANU"}
+# Discourse words that can open a sentence in front of a name ("In Smith v. X, ...").
+_LEAD_WORDS = {"in", "see", "per", "also", "cf", "under", "following", "as"}
+_NAME_SIDE = 7  # words kept either side of the v
+_SPAN_SIDE = 8  # words kept either side of a v in a passage's text
+
+
+@lru_cache(maxsize=1)
+def _generic_words() -> frozenset[str]:
+    """Generic title words. Fails closed: a missing or empty list raises, because with
+    no list every word would count as distinctive and "State v. Union" would pass."""
+    try:
+        words = json.loads(_GENERIC_FILE.read_text(encoding="utf-8"))["words"]
+    except (OSError, KeyError, ValueError) as e:
+        raise RuntimeError(f"{_GENERIC_FILE.name} is missing or unreadable") from e
+    if not words:
+        raise RuntimeError(f"{_GENERIC_FILE.name} has no words")
+    return frozenset(words)
+
+
+def _name_like(raw: str, first_of_party: bool) -> bool:
+    word = raw.strip(".,;:()[]\"'")
+    if not word or word in _REPORTERS:
+        return False
+    if word[0].isupper():
+        return True
+    low = word.lower()
+    return low in _NAME_JOINERS or (first_of_party and low == "the")
+
+
+def _case_names(plain: str) -> list[list[str]]:
+    """Every written case name in `plain`, as normalised words with "v" between the
+    parties. The two words next to the v are ALWAYS kept (as before), so a name in
+    lower case or odd spacing is still checked; more are added while they still look
+    like part of a party name, and stop at punctuation that ends the clause."""
+    out = []
+    for m in _VERSUS_CORE.finditer(plain):
+        left_adj, right_adj = normalise(m.group(1)), normalise(m.group(2))
+        if not left_adj or not right_adj or left_adj.isdigit() or right_adj.isdigit():
+            continue  # "Article 14 v. 19": not a case name
+        left = plain[: m.end(1)].split()
+        right = plain[m.start(2) :].split()
+        keep_left, keep_right = [left[-1]], [right[0]]
+        for tok in reversed(left[:-1][-_NAME_SIDE:]):
+            if tok[-1] in ",;:)]" or not _name_like(tok, False):
+                break
+            keep_left.append(tok)
+        if keep_right[0][-1] not in ",;:)]":
+            for tok in right[1:][:_NAME_SIDE]:
+                if not _name_like(tok, False):
+                    break
+                keep_right.append(tok)
+                if tok[-1] in ",;:)]":
+                    break
+        keep_left.reverse()
+        while len(keep_left) > 1 and (
+            keep_left[0].lower() in _LEAD_WORDS
+            or keep_left[0].lower() in _NAME_JOINERS - {"&"}
+        ):
+            keep_left.pop(0)
+        while len(keep_right) > 1 and keep_right[-1].strip(".,;:()[]").lower() in (
+            _NAME_JOINERS | {"the"}
+        ):
+            keep_right.pop()
+        words = _norm_case_name(" ".join(keep_left + ["v"] + keep_right)).split()
+        # "M/s" says nothing about WHICH case, but never strip a left party down to
+        # nothing: that would leave no name to check (fail open).
+        v_at = words.index("v") if "v" in words else 0
+        if words[:2] == ["m", "s"] and v_at > 2:
+            words = words[2:]
+        elif words[:1] == ["messrs"] and v_at > 1:
+            words = words[1:]
+        if words and words[0] != "v" and words[-1] != "v":
+            out.append(words)
+    return out
+
+
+def _same_word(a: str, b: str) -> bool:
+    a, b = _ABBREV_CANON.get(a, a), _ABBREV_CANON.get(b, b)
+    if a == b:
+        return True
+    return min(len(a), len(b)) >= 5 and SequenceMatcher(None, a, b).ratio() >= 0.8
+
+
+def _in_order(name: Sequence[str], cand: Sequence[str]) -> bool:
+    """Every word of `name` is matched, in order, by a word of `cand`."""
+    prev = [0] * (len(cand) + 1)
+    for w in name:
+        cur = [0]
+        for j, c in enumerate(cand):
+            cur.append(prev[j] + 1 if _same_word(w, c) else max(prev[j + 1], cur[j]))
+        prev = cur
+    return prev[-1] == len(name)
+
+
+def _retrieved_names(passages: Sequence[Passage]) -> list[list[str]]:
+    out = []
+    for p in passages:
+        if p.title:
+            out.append(_norm_case_name(p.title).split())
+        toks = _norm_case_name(p.text).split()
+        for i, t in enumerate(toks):
+            if t == "v" and 0 < i < len(toks) - 1:
+                out.append(toks[max(0, i - _SPAN_SIDE) : i + _SPAN_SIDE + 1])
+    return out
+
+
+def _has_run(name: Sequence[str], cand: Sequence[str]) -> bool:
+    n = len(name)
+    return any(list(cand[i : i + n]) == list(name) for i in range(len(cand) - n + 1))
+
+
+def _name_was_retrieved(
+    name: Sequence[str], candidates: Sequence[Sequence[str]]
+) -> bool:
+    generic = _generic_words() | {"v"}
+    if all(w in generic for w in name):
+        # No distinctive word: "State v. Union" names no case, and an ordered match
+        # would accept it from any longer name. Only an EXACT run can verify it (a name
+        # typed in lower case shrinks to the two words beside the v, which may both be
+        # generic: "pradesh v sri").
+        return any(_has_run(name, c) for c in candidates)
+    return any(_in_order(name, c) for c in candidates)
+
+
 def _unretrieved_authority(sentence: str, passages: Sequence[Passage]) -> bool:
     """True if the sentence names a case/citation that is in none of the passages."""
     haystack = " ".join(
@@ -371,16 +516,15 @@ def _unretrieved_authority(sentence: str, passages: Sequence[Passage]) -> bool:
             if _norm_case_name(found) in names or _norm_case_name(found) in body:
                 continue
             return True
-    # A case name in ANY case / spelling of v: the word before and after it must appear
-    # as "<word> v <word>" in a retrieved passage or its title, or it was recalled.
-    for m in _VERSUS_CORE.finditer(plain):
-        left, right = normalise(m.group(1)), normalise(m.group(2))
-        if not left or not right or left.isdigit() or right.isdigit():
-            continue  # "Article 14 v. 19": not a case name
-        core = _norm_case_name(f"{left} v {right}")
-        if core in names or core in body:
-            continue
-        return True
+    # A case name in ANY case / spelling of v: every word of it must appear, in order,
+    # inside one retrieved case name (and one word must not be generic), or it was
+    # recalled. (A117; the old test compared only the word either side of the v.)
+    names_found = _case_names(plain)
+    if names_found:
+        candidates = _retrieved_names(passages)
+        for name in names_found:
+            if not _name_was_retrieved(name, candidates):
+                return True
     return False
 
 

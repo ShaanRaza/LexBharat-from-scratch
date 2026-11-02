@@ -126,3 +126,9 @@ does not change `core/verify.py`.
 verifier) and five candidate rules against real titles written shorter (false positives:
 a real citation stripped) and against four kinds of fabricated name (false negatives: an
 invented case accepted). It measures; it does not change `core/verify.py`. Fixtures only.
+
+> **Since A117** `core/verify.py` checks the WHOLE written case name (rule f), so
+> `evals.title_keys` above describes the OLD two-word-key rule (kept to reproduce A115)
+> and `evals.title_rules` row "a" is the new verifier, integrated. The generic-word list
+> the verifier reads is regenerated with
+> `python -m evals.title_rules --write-generic core/generic_title_words.json`.

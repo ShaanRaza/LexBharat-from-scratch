@@ -1,5 +1,5 @@
-"""The named-case key measurement (A113, result A115). It must use the verifier's own
-pieces and agree with the verifier, or its numbers describe something else."""
+"""The named-case key measurement of the OLD rule (A113, result A115; retired from the
+verifier by A117). It must still use the verifier's own pieces."""
 
 import core.verify as v
 from evals import title_keys as tk
@@ -8,7 +8,6 @@ from evals import title_keys as tk
 def test_it_uses_the_verifiers_own_functions_not_copies():
     assert tk._VERSUS_CORE is v._VERSUS_CORE
     assert tk._norm_case_name is v._norm_case_name
-    assert tk._unretrieved_authority is v._unretrieved_authority
 
 
 def test_keys_are_one_word_either_side_of_v():
@@ -38,13 +37,3 @@ def test_reach_is_a_probability():
     assert tk.reach(0, 10, 3) == 0.0
     assert abs(tk.reach(1, 10, 1) - 0.1) < 1e-9
     assert tk.reach(10, 10, 3) == 1.0
-
-
-def test_the_key_is_the_verifiers_key():
-    """Same key -> the REAL check accepts the other name; different key -> it does not.
-    If this fails, every number in the report describes the wrong thing."""
-    titles = [r["title"] for r in tk.default_records() if r.get("title")]
-    c = tk.confirm_with_the_verifier(titles, limit=40)
-    same, diff = c["pairs_with_the_same_key"], c["pairs_with_different_keys"]
-    assert same["of"] > 0 and same["accepted"] == same["of"]
-    assert diff["of"] > 0 and diff["accepted"] == 0
