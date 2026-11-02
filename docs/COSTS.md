@@ -53,16 +53,31 @@ The measurement that decides whether it is needed costs cents. Do not treat it a
 |---|---|---|
 | Server, r7g.large (ARM/Graviton) | $0.0751/hour ≈ **$55/month** at 730 hours | Their figure, **Needs verification** on the AWS calculator |
 | Server, r7g.xlarge | $0.150/hour ≈ **$110/month** | Their figure, **Needs verification** |
-| Managed database | — | **Quote needed** |
-| S3, uploads and snapshots | — | **Quote needed** (depends on retention, `RETENTION.md`) |
-| CDN | — | **Quote needed** |
-| Firewall | — | **Quote needed** |
-| Email | — | **Quote needed** |
-| Monitoring (Langfuse, Sentry) | — | **Quote needed** |
-| Secrets Manager, KMS | — | **Quote needed** |
+| Managed PostgreSQL, db.t4g.medium, Mumbai | **$61/mo** on demand; $45 on a 1-year reservation, $36 on 3-year | **List price** (aggregator), compute only |
+| S3, uploads and snapshots | ~$0.025 per GB per month, Mumbai | **Estimate** from list price |
+| CDN (CloudFront) | ~$10–20/mo at launch traffic | **Estimate** |
+| Firewall | security groups free; AWS WAF from ~$5/mo plus per-rule charges | **Estimate** |
+| Email (SES) | ~$1–5/mo at launch volume | **Estimate** |
+| Langfuse | **free** to 50,000 units/mo, then **$29/mo** (Core), $8 per 100k overage | **List price** (aggregator) |
+| Sentry | **free** to 5,000 errors/mo, then **$29/mo** (Team) | **List price** (aggregator) |
+| Secrets Manager, KMS | ~$0.40 per secret per month | **Estimate** from list price |
+| Redis | **$0** co-hosted on the app server; ~$20/mo managed | **Estimate** |
 
-Seven of nine lines are unquoted. That is why no total exists, and the honest thing to say to
-anyone who asks is "we have the server price and nothing else."
+These are **published list prices, fetched 2 Nov 2026, not quotes** — and the database and
+monitoring figures came from third-party aggregators rather than the vendors. A real quote
+means the AWS calculator against a chosen configuration in ap-south-1, which needs the server
+size the sizing experiment has not returned.
+
+Three things the fetch changed. The database figure is compute only — storage, IOPS, backups
+and transfer are billed on top, and a one-year reservation cuts it about a quarter. **Both
+monitoring tools are free at launch volumes**, so that line is $0 until traffic passes
+Langfuse's 50,000 units and Sentry's 5,000 errors a month. And Redis needs no managed instance
+at this size.
+
+Sources: [RDS db.t4g.medium](https://www.bytebase.com/dbcost/rds/instance/db.t4g.medium.md) ·
+[Langfuse](https://costbench.com/software/ai-observability/langfuse/) ·
+[Sentry](https://costbench.com/software/developer-tools/sentry). Server hourly prices are
+carried from the original PRD and Tech Stack and are still unchecked against AWS.
 
 **Qdrant Cloud versus self-hosted is not in this table yet** because the Bombay sizing
 experiment has not reported. That experiment measures resident memory and search latency for
@@ -163,14 +178,15 @@ as real quotes arrive.
 |---|---:|---|
 | Server r7g.xlarge (4 vCPU / 32 GB, ARM) | 110 | Their hourly figure, **Needs verification** |
 | EBS gp3, ~60 GB | 5 | **Estimate** (ours) |
-| Managed PostgreSQL, t4g.medium class | 60 | **Estimate** (ours) — no quote |
-| Redis / ElastiCache, small | 20 | **Estimate** (ours) — no quote |
-| S3, uploads and snapshots | 12 | **Estimate** (ours) — no quote |
-| CDN | 15 | **Estimate** (ours) — no quote |
-| Langfuse + Sentry | 85 | **Estimate** (ours) — no quote |
+| Managed PostgreSQL, db.t4g.medium, Mumbai | 61 | **List price** |
+| Redis, co-hosted on the app server | 0 | **Estimate** (ours) |
+| S3, uploads and snapshots | 12 | **Estimate** (ours) |
+| CDN | 15 | **Estimate** (ours) |
+| Langfuse Core plus overage at this volume | 61 | **List price** + our usage estimate |
+| Sentry Team | 29 | **List price** |
 | Email (SES) | 3 | **Estimate** (ours) |
 | Secrets Manager / KMS | 5 | **Estimate** (ours) |
-| **Subtotal** | **~$315** | **≈ ₹26,800** |
+| **Subtotal** | **~$301** | **≈ ₹25,600** |
 
 ### Variable, at 70,000 billable answers
 
@@ -186,12 +202,17 @@ as real quotes arrive.
 
 | | ₹/mo | $/mo |
 |---|---:|---:|
-| Fixed | 26,800 | 315 |
+| Fixed | 25,600 | 301 |
 | Variable | 16,100 | 190 |
 | Razorpay, ~2% + GST on ₹349,000 | 8,200 | 96 |
-| **Total** | **≈ ₹51,100** | **≈ $600** |
+| **Total** | **≈ ₹49,900** | **≈ $587** |
 | Revenue, 1,000 × ₹349 | 349,000 | 4,105 |
-| **Gross margin** | **~85%** | |
+| **Gross margin** | **~86%** | |
+
+The list prices fetched on 2 Nov 2026 moved this total about 2% against the first sketch, so
+the estimates were close and the shape of the answer does not depend on them. Langfuse is the
+one line that grows awkwardly: its included 100,000 units are exceeded at this volume and
+overage runs $8 per 100,000.
 
 ### Server scenarios — the line that actually moves
 
@@ -208,14 +229,14 @@ directly and its result replaces this table.
 ### What this tells us
 
 **The margin target is not at risk.** `METRICS.md` wants 60% or better; this sketch gives
-about 85%. It rests on the ₹0.15 LLM estimate, so test the sensitivity: at 5× that figure,
+about 86%. It rests on the ₹0.15 LLM estimate, so test the sensitivity: at 5× that figure,
 variable cost reaches about ₹52,000 and margin still lands near 70%. It would take roughly
 **20×** before ₹349 stops covering its costs. That is a wide enough margin of safety to say
 the pricing hypotheses are probably sound — which is a reason to leave O10 deferred, not a
 reason to settle it.
 
 **Free users are the exposure, not paid ones.** The same 1,000 users on the free tier cost
-about **₹43,000 a month and return nothing**. So the free tier's monthly limit is the most
+about **₹41,000 a month and return nothing**. So the free tier's monthly limit is the most
 consequential number in this model, and it is currently unset. It matters more, and sooner,
 than the prices that are deferred.
 
