@@ -62,6 +62,7 @@ def hit_to_passage(h: Hit, kind: PassageKind | None = None) -> Passage:
         char_start=cs,
         char_end=ce,
         user_id=p.get("user_id"),
+        case_id=(p.get("case_id") or None) if kind == "judgment" else None,
     )
 
 

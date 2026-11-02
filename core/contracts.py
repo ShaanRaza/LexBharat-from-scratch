@@ -120,6 +120,7 @@ class Passage:
     char_start: int | None = None
     char_end: int | None = None
     user_id: str | None = None  # uploads only
+    case_id: str | None = None  # judgments only: the case this chunk belongs to
 
 
 @dataclass(frozen=True)
