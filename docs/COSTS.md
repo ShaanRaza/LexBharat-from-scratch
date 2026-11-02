@@ -51,6 +51,36 @@ rather than a necessity — and matching the model `kanoon_v1` already serves wo
 
 ---
 
+## 2b. All vector work, consolidated
+
+Every embedding and vector cost measured as of 3 Nov 2026. Sources: `DATA-GAPS.md` sections 9,
+13 and 14.
+
+| Work | Vendor spend | Note |
+|---|---:|---|
+| All measurement to date | **~$0.20** | ~3M Voyage tokens, inside the free allowance |
+| BM25 repair, 19,835 Central Act points in `kanoon_v1` | **$0** | FastEmbed, local, ~12 s. **Being served broken today** |
+| BM25 repair, ~504,600 remaining Act points | **$0** | Same, local; write speed at that scale untested |
+| Kerala dead-vector **detection**, all 3.1M | **$0** | One dot product per point, no vendor calls (§14) |
+| Kerala dead-vector **re-embed**, ~215,000 chunks | **~$12** | ~194M tokens at `voyage-4`; Kerala's majority model, so it matches the court |
+| The 10,112 missing Supreme Court chunks | **~$0.61** | ~10M tokens |
+| Per-court query models for High Courts | **$0** | Config plus ~1.8 ms latency — this replaced the $1,900 |
+| Serving the three High Courts | **$0** | Already embedded in `legal_corpus_v1`/`v2`; only the local copy costs anything |
+| **Total one-off to a clean corpus** | **≈ $13** | |
+
+Not taken, for contrast: full re-embedding is $560 (`voyage-4-lite`), $1,700 (`voyage-4`) or
+**$3,400** (`voyage-4-large`) — and $3,400 is the honest figure for that path, being the model
+`kanoon_v1` already serves.
+
+Ongoing after all of it: **₹0.05 per answer** for query embedding (section 4).
+
+**The whole $13 is gated by one thing.** At the throttled free tier (10,000 tokens a minute) the
+Kerala job alone is about 13 days and the Supreme Court job about 17 hours. With the payment
+method live, both finish inside an hour. This is the clearest case in the project of a trivial
+cost blocking real work.
+
+---
+
 ## 3. Monthly fixed — the MVP, one server
 
 | Item | Figure | Label |
