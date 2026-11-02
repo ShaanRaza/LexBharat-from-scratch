@@ -376,3 +376,48 @@ the same `case_id` for a judgment, the same `act_id` for a provision. Identical 
 different documents is two different authorities and both must survive. Deduplication on
 `record_id` (the chunk id) is unaffected: that remains a true duplicate wherever it appears,
 and it is what the 4,871 measured duplicates actually are.
+
+## 11. The collections were built with DIFFERENT embedding models, and the config has the wrong one
+
+**Measured**, 2 Nov 2026, by re-embedding stored text and comparing to the stored vector
+(build step 0's check 1, finally answered):
+
+| Group | Model that reproduces the stored vector | Cosine |
+|---|---|---|
+| `legal_corpus_v2` Supreme Court chunks | **`voyage-4-large`** (document input) | 0.9987–0.9995 |
+| the same chunks under `voyage-4` | not it | 0.94–0.96 |
+| `legal_corpus_v1` High Court control | **`voyage-4`** | 0.999984 |
+
+**`core/settings.py:47` says `VOYAGE_EMBED_MODEL = "voyage-4"`, a single global value.** So as
+the code stands, a Supreme Court search would embed the query with `voyage-4` against a corpus
+built with `voyage-4-large`.
+
+**That failure is silent, which is what makes it serious.** At 0.94–0.96 the two models agree
+enough that results come back looking entirely plausible — ranked, relevant-ish, nothing
+erroring — while being systematically worse than they should be. With no retrieval-quality
+metric in place (CLAUDE.md flags that gap), nobody would have caught it. The first real search
+in build step 1 would have been quietly wrong.
+
+The HuggingFace card says the corpus uses "voyage-4 embeddings (1024 dimensions)". For the
+Supreme Court chunks that is **wrong**, which is the third card claim to fail against the data.
+
+**What follows:**
+
+1. `VOYAGE_EMBED_MODEL` must become **per collection**, not global — TECH-STACK-v2 section 10
+   listed this as "value pending"; it now has measured values, and they differ.
+2. **`acts_india` has not been checked.** An earlier note observed one Central Act chunk
+   matching `voyage-4-large`. It is a third group and needs the same test before any Act search
+   is trusted.
+3. Queries must be embedded with the model that built the collection being searched. A hybrid
+   query spanning two collections built with different models needs two query embeddings.
+4. Cost: `voyage-4-large` is dearer per token, but a query is ~20 tokens, so for search the
+   difference is negligible. It matters only for bulk embedding.
+
+### The residual 0.999 is still unexplained
+
+Ruled out by measurement: int8 quantization (stored vectors hold ~700 distinct values; int8
+allows at most 256, and none are float16-exact), non-determinism (repeat runs give 1.000000),
+ten text variants (strip, trailing newline, NFC, NFKC, carriage returns, control characters,
+line and paragraph breaks — a trailing newline moves cosine by only 0.0001–0.0009), and
+`voyage-context-4` (0.69–0.88). What remains: an earlier snapshot of `voyage-4-large`, or a
+text difference at build time that has not been found.
