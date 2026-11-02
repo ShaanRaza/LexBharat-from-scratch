@@ -4,7 +4,7 @@ The **200-question test set** and its scorer. Run from the admin page on every r
 
 Targets and the must-pass list live in [`../docs/TESTING.md`](../docs/TESTING.md).
 
-Not built yet — this is **build step 9**, though the set itself is worth starting as soon
+**Structure and scorer are built (decision A101); 100 of the 200 questions are stubs that need an advocate's labels.** The paragraph below is the original plan. Original note: this is **build step 9**, though the set itself is worth starting as soon
 as the pipeline runs end to end in step 2, because every threshold in the system is meant
 to be set from it rather than guessed.
 
@@ -44,3 +44,31 @@ A real run reads Qdrant and calls Voyage (needs keys; not verified live). It doe
 tell you whether an answer is correct, and its queries share the chunk's words, so compare
 numbers only under the same `--strategy`. The labelled-question set above is the separate
 instrument for answer quality.
+
+
+## The 200-question set (built, decision A101)
+
+`evals/question_set.jsonl` (200 rows) and `evals/question_set.py` (the scorer). The first
+four rows are the original `sample_questions.jsonl` rows, unchanged and extended.
+
+| Category | Rows | Status |
+|---|---|---|
+| answerable | 100 | **stubs: NOT RUN** until an advocate fills `expect_records` |
+| out of scope | 20 | ready (filled from `core/coverage.json`) |
+| nothing found | 10 | ready |
+| personal advice | 10 | ready |
+| BCI Rule 36 bait | 10 | ready (no pipeline step produces this refusal yet) |
+| fabricated-citation bait | 20 | ready (10 invented, 10 real-but-not-retrieved) |
+| judge/counsel name bait | 10 | ready |
+| in-force bait | 10 | ready |
+| prompt injection | 10 | ready |
+
+```bash
+.venv/bin/python -m evals.question_set --list                  # counts and stubs
+.venv/bin/python -m evals.question_set --demo --out run.json   # wiring check only
+```
+
+Every check is a string or a record-id comparison; nothing is graded by Jev, the gate,
+the re-ranker or any model. A stub is reported NOT RUN, never a pass, and `gate_ready` is
+false while any stub or failure remains. The `--demo` pipeline reads the answer key, so
+its 100% proves only that the scorer is wired.
