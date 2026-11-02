@@ -9,6 +9,7 @@ from dataclasses import dataclass
 
 from adapters.qdrant import Hit, VectorStoreUnavailable
 from adapters.voyage import VoyageUnavailable
+from core.act_status import read_act_status
 from core.contracts import (
     SEARCH_TOP_K,
     Decision,
@@ -19,6 +20,7 @@ from core.contracts import (
     RewrittenQuery,
 )
 from core.dedupe import dedupe_passages
+from core.settings import Settings
 from core.uploads import search_user_documents
 
 log = logging.getLogger(__name__)
@@ -47,17 +49,34 @@ async def embed_query(text: str, deps: Deps) -> list[float] | None:
 _ACT_HEADER_TAIL = re.compile(r"^(Act:[^\n]*?)[ \t]*\|[^|\n]*\|[^|\n]*\|[^|\n]*$", re.M)
 
 
-def strip_act_header_status(text: str, replacement: str = "") -> str:
+def strip_act_header_status(text: str) -> str:
     """Remove the dataset's "| India | Central | In Force" tail from an Act header line,
-    so the model is never shown a status nobody checked (CLAUDE.md section 6). The
-    status text is replaced by `replacement` (config ACT_HEADER_STATUS_REPLACEMENT,
-    empty until the owner chooses wording, A105)."""
-    tail = f" {replacement}" if replacement else ""
-    return _ACT_HEADER_TAIL.sub(lambda m: m.group(1) + tail, text)
+    so no unchecked status reaches the model (CLAUDE.md section 6). The status the
+    model DOES see is the checked line from act_status_line()."""
+    return _ACT_HEADER_TAIL.sub(lambda m: m.group(1), text)
+
+
+def act_status_line(payload: dict, settings: Settings) -> str:
+    """The one deterministic status line for an Act point, chosen by code from the
+    payload (core/act_status.py), gated exactly as the website gates it (A181):
+    repealed is always stated, in force only while SHOW_IN_FORCE is on, otherwise the
+    not-checked line. A wording left empty in config adds no line."""
+    reading = read_act_status(
+        payload.get("act_id"),
+        payload.get("title"),
+        payload.get("act_status"),
+        payload.get("is_repealed"),
+        show_in_force=settings.SHOW_IN_FORCE,
+    )
+    return {
+        "repealed": settings.ACT_STATUS_REPEALED,
+        "in_force": settings.ACT_STATUS_IN_FORCE,
+        "not_checked": settings.ACT_STATUS_NOT_CHECKED,
+    }[reading.status]
 
 
 def hit_to_passage(
-    h: Hit, kind: PassageKind | None = None, act_header_replacement: str = ""
+    h: Hit, kind: PassageKind | None = None, settings: Settings | None = None
 ) -> Passage:
     p = h.payload
     text = h.text
@@ -67,7 +86,10 @@ def hit_to_passage(
     if kind is None:
         kind = "act_section" if "section_number" in p else "judgment"
     if kind == "act_section":
-        text = strip_act_header_status(text, act_header_replacement)
+        text = strip_act_header_status(text)
+        line = act_status_line(p, settings) if settings is not None else ""
+        if line:
+            text = f"{text.rstrip()}\n\n{line}"
     return Passage(
         record_id=h.record_id,
         text=text,
@@ -139,9 +161,8 @@ async def search(
     except VectorStoreUnavailable:
         log.error("vector store unavailable")
         raise
-    swap = deps.settings.ACT_HEADER_STATUS_REPLACEMENT
     passages = [
-        hit_to_passage(h, act_header_replacement=swap)
+        hit_to_passage(h, settings=deps.settings)
         for h in results[0]
         if _year_ok(h, decision)
     ]

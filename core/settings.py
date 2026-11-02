@@ -147,11 +147,17 @@ class Settings(BaseSettings):
     # default (CLAUDE.md section 6). Repealed is always shown; this never hides it.
     # Owner-only.
     SHOW_IN_FORCE: bool = False
-    # What replaces the dataset's "| India | Central | In Force" tail on an Act point's
-    # header line before the model sees it (core/search.py, A105). EMPTY = the tail is
-    # simply removed. NEEDS-OWNER: the wording, if any, is the owner's (it tells the
-    # model what is known about the Act, so it is a statement about the law).
-    ACT_HEADER_STATUS_REPLACEMENT: str = ""
+    # The one status line appended to an Act's passage text, AFTER the dataset's own
+    # status header is stripped (core/search.py, A105/A108). Which line is picked by
+    # core/act_status.py from the payload, never by the model: repealed is always
+    # stated (the safe direction); in force is stated ONLY while SHOW_IN_FORCE is on;
+    # anything else gets the not-checked line. NEEDS-OWNER: the repealed and in-force
+    # wordings are statements about the law and stay EMPTY (no line is added) until the
+    # owner decides them. The not-checked line is the one the website already uses
+    # (web/src/lib/copy.ts IN_FORCE_NOT_CHECKED); a test keeps the two equal.
+    ACT_STATUS_REPEALED: str = ""
+    ACT_STATUS_IN_FORCE: str = ""
+    ACT_STATUS_NOT_CHECKED: str = "In-force status not checked for this Act."
     RATE_LIMIT_IMPROVE_PER_HOUR: int | None = 60
     RATE_LIMIT_FOLLOWUPS_PER_HOUR: int | None = 60
     # Model price per million tokens, in whatever currency the owner reads the spend
