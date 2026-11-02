@@ -239,4 +239,6 @@ settle it by opening one High Court point, which the Part 6 inventory does.
   NCLT/NCLAT policies. `Data: Open India Law by Vaquill AI, CC BY 4.0` stays on every page.
 - **The card contradicts itself on totals** (32,572,660 judgment chunks against 32,518,048
   vectors; 1,098,577 sections against 1,098,269 provisions) and says so. The 308-row gap we
-  already owed an explanation for is visible in the card itself.
+  already owed an explanation for is visible in the card itself. It includes 25 Central
+  Act points, the 25 missing from our `kanoon_v1` copy (measured, see DATASET.md). That
+  the gap sits in the source rather than our copy is **unverified**.
