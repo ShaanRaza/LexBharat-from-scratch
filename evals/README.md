@@ -112,7 +112,7 @@ from there. Changing the fake's idea of a legal question moves no category's sco
 test). The printed table keeps `answered` and `not_legal` so a board of refusals is
 visible.
 
-### How much does check 1's case-name key protect? (A113)
+### How much does check 1's case-name key protect? (A113, result A115)
 
 `.venv/bin/python -m evals.title_keys` counts, over a file of records with a `title`, how
 many titles share the one-word-either-side-of-"v" key that verifier check 1 uses, and

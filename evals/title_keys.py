@@ -1,4 +1,4 @@
-"""How much does the verifier's named-case key protect? A measurement (decision A113).
+"""How much does the verifier's named-case key protect? (A113, result A115)
 
 Verifier check 1 (core/verify.py, `_unretrieved_authority`) reduces a case name written
 in an answer to ONE word either side of "v" and accepts it as retrieved if that

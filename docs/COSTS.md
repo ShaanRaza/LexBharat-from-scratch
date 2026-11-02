@@ -41,12 +41,43 @@ server and several, every month, forever.
 | BM25 repair of broken sparse vectors already in the served copy | about **12 seconds** of compute, no vendor cost | **Measured** | `DATA-GAPS.md` section 9 |
 | Jev credits bought so far | **$5** | **Checked** | `PRD-v2.md` section 8 |
 | Tribunal data, if purchased | unknown — enquiry sent | **Needs verification** | owner, 2 Nov 2026 |
+| **Re-embedding Kerala's dead vectors** | about **$12** at `voyage-4` (~215,000 chunks, ~194M tokens); detection costs **nothing** — one dot product per point | **Measured** | `DATA-GAPS.md` section 14 |
 
 **Measured 2 Nov 2026: the working answer is $0.** A per-court-majority query config matches
 about 92% of High Court points, Qdrant serves it in one call for about 1.8 ms more, and hybrid
 search loses nothing measurable to a mismatched query. Re-embedding is now a quality choice
 rather than a necessity — and matching the model `kanoon_v1` already serves would cost about
 **$3,400**, not the $1,900 once assumed. Details: `DATA-GAPS.md` section 13.
+
+---
+
+## 2b. All vector work, consolidated
+
+Every embedding and vector cost measured as of 3 Nov 2026. Sources: `DATA-GAPS.md` sections 9,
+13 and 14.
+
+| Work | Vendor spend | Note |
+|---|---:|---|
+| All measurement to date | **~$0.20** | ~3M Voyage tokens, inside the free allowance |
+| BM25 repair, 19,835 Central Act points in `kanoon_v1` | **$0** | FastEmbed, local, ~12 s. **Being served broken today** |
+| BM25 repair, ~504,600 remaining Act points | **$0** | Same, local; write speed at that scale untested |
+| Kerala dead-vector **detection**, all 3.1M | **$0** | One dot product per point, no vendor calls (§14) |
+| Kerala dead-vector **re-embed**, ~215,000 chunks | **~$12** | ~194M tokens at `voyage-4`; Kerala's majority model, so it matches the court |
+| The 10,112 missing Supreme Court chunks | **~$0.61** | ~10M tokens |
+| Per-court query models for High Courts | **$0** | Config plus ~1.8 ms latency — this replaced the $1,900 |
+| Serving the three High Courts | **$0** | Already embedded in `legal_corpus_v1`/`v2`; only the local copy costs anything |
+| **Total one-off to a clean corpus** | **≈ $13** | |
+
+Not taken, for contrast: full re-embedding is $560 (`voyage-4-lite`), $1,700 (`voyage-4`) or
+**$3,400** (`voyage-4-large`) — and $3,400 is the honest figure for that path, being the model
+`kanoon_v1` already serves.
+
+Ongoing after all of it: **₹0.05 per answer** for query embedding (section 4).
+
+**The whole $13 is gated by one thing.** At the throttled free tier (10,000 tokens a minute) the
+Kerala job alone is about 13 days and the Supreme Court job about 17 hours. With the payment
+method live, both finish inside an hour. This is the clearest case in the project of a trivial
+cost blocking real work.
 
 ---
 
@@ -140,7 +171,9 @@ uploads set the risk.** Watch Qdrant memory and OCR time in Langfuse from week o
 |---|---|---|---|
 | Server size and whether managed Qdrant is worth it | Bombay sizing experiment — RAM, p50/p95, recall@10/@50 for three quantization settings, extrapolated | data session | running, 2 Nov 2026 |
 | ~~Whether the $1,900 re-embedding is needed~~ | **Measured 2 Nov 2026 — per-court config, $0** | data session | done (`DATA-GAPS.md` §13) |
-| Whether any dense vectors are unrelated to their text | prevalence check across courts — 2 of 50 Kerala chunks scored ~0 under every model | data session | **not started, highest value** |
+| ~~Whether any dense vectors are unrelated to their text~~ | **Measured 3 Nov 2026 — 6.9% of Kerala v2, nowhere else; sparse intact so hybrid still finds them** | data session | done (`DATA-GAPS.md` §14) |
+| Finding the remaining ~215,000 dead Kerala vectors | the free detector: score every vector against the mean legal-text direction, validate the threshold on the 31 known-dead and 419 known-good | data session | **not started — costs nothing to run** |
+| Re-embedding what it flags | **blocked on the payment method, not on engineering** — $12 of tokens, but 13 days at the throttled free tier | owner | **one card activation** |
 | LLM cost per answer | token counts per pipeline step against published rates | **not assigned** | **not started** |
 | Managed database, CDN, firewall, email, monitoring | quotes | owner | not started |
 | Tribunal data | vendor reply | owner | enquiry sent 2 Nov 2026 |

@@ -1,4 +1,4 @@
-"""The named-case key measurement (decision A113). It must use the verifier's own
+"""The named-case key measurement (A113, result A115). It must use the verifier's own
 pieces and agree with the verifier, or its numbers describe something else."""
 
 import core.verify as v

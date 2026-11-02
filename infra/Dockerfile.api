@@ -15,7 +15,7 @@ COPY data ./data
 COPY migrations ./migrations
 # The `search` extra is REQUIRED: it brings fastembed, the keyword (BM25) half of hybrid
 # search. Without it every search raises VectorStoreUnavailable and every question ends
-# as an error (adapters/qdrant.py FastEmbedBm25). A113/A114.
+# as an error (adapters/qdrant.py FastEmbedBm25). A114.
 RUN pip install --no-cache-dir ".[search]"
 
 RUN useradd --create-home --uid 10001 app && chown -R app /app

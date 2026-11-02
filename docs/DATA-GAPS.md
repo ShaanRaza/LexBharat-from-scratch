@@ -552,3 +552,81 @@ measurable to a mismatched query.
    lot of boilerplate), so this understates real performance by some unknown amount. It is still
    the first retrieval-quality number this project has ever had, and 13% of answerable questions
    reaching the gate with nothing above threshold is a product problem, not an embedding problem.
+
+## 14. Measured: the dead vectors are Kerala-only, keyword-findable, and cheap to fix
+
+**Measured**, 3 Nov 2026. 3,144 High Court chunks re-embedded under `voyage-4` and compared with
+the stored vector — the 2,642 short chunks from section 13 plus 502 new random-length chunks, with
+Kerala v2 over-sampled to 450. Full table: `~/qdrant-kanoon/reports/hc_followup_report.md`.
+
+### The result
+
+- **Kerala v2: 31 of 450 unrelated** (cosine under 0.50) = **6.9%**, 95% CI 4.7–9.6%. The earlier
+  4% (2 of 50) was a low draw inside that interval. Not length-specific: 29 of 400 random-length.
+- **About 215,000 of Kerala's 3.1M chunks** (range 147,000–300,000), against the ~124,000 the
+  earlier estimate implied.
+- **Every other court is clean:** 0 of 2,694 across v1 and v2, 95% upper bound 0.13%. Overall
+  0.69% of the 31.0M High Court points, all of it Kerala v2.
+- **The text is fine in all 31** — 430 to 4,211 characters, no replacement characters. A bad
+  vector, not bad text.
+- **The sparse vector is intact in all 31.** Hybrid finds every one of them. **Nothing is
+  unreachable by any path**, so the severity is roughly half what section 13 feared: degraded
+  ranking, not invisibility, and a citation to such a chunk still verifies.
+- **What they embed is unknown.** Well-formed unit vectors, pairwise cosine 0.33 (not one repeated
+  placeholder), cosine **0.00** against the mean legal-text direction where real chunks average
+  **0.62**. Title, parties, case number and URL do not reproduce them. Case years 2019 (9 of 31)
+  and 2022 (7 of 31) are over-represented.
+
+### Detection is free, and the fix is about $12
+
+The measurement above cost API calls because it re-embedded to compare. **Finding the rest needs
+no API calls at all.** The dead vectors score 0.00 against the mean legal-text direction while
+real chunks average 0.62 — so one dot product per point separates them, on data already held.
+
+1. Compute the mean legal-text direction once from known-good chunks.
+2. Score all 3.1M Kerala vectors against it. Seconds of arithmetic, no vendor.
+3. Validate the threshold against the 31 known-dead and 419 known-good before trusting it, and
+   report precision and recall of the detector itself.
+4. Re-embed only what it flags.
+
+Re-embedding ~215,000 chunks at ~900 tokens is ~194M tokens: about **$12** at `voyage-4` list
+price, roughly $23 at `voyage-4-large`. Detecting them by re-embedding all of Kerala instead would
+be ~2.8B tokens, about **$167** — so the free detector is worth building before anything is spent.
+
+**But the $12 job is blocked by an unactivated payment method.** At the throttled free tier
+(10,000 tokens a minute) 194M tokens is about **13 days**. This is a $12 fix gated by a card, not
+by engineering.
+
+### Mixed-corpus ranking bias: real, modest, and it confirms the per-court answer
+
+200,103 Delhi v1 points (≈28% `voyage-4` / 72% `voyage-4-large`), 240 queries over 115 labelled
+chunks, each run under a matched and a mismatched query model.
+
+| | Dense | Hybrid |
+|---|---|---|
+| Matched ranks it better / worse (of 240) | 82 / 16 | 48 / 13 |
+| Mean rank, matched vs mismatched | 11.7 vs 14.8 | 5.2 vs 5.9 |
+| recall@10, `voyage-4`-built chunks | 82% vs 74% | 94% vs 93% |
+| recall@10, `voyage-4-large`-built chunks | 70% vs 62% | 89% vs 87% |
+
+The bias is real and BM25 absorbs most of it. **The best single query model is the court's majority
+model**, which is exactly the per-court-majority config section 13 proposed. That decision is now
+measured from both directions and can be treated as settled: **$0, not $1,900.**
+
+### Recall falls with corpus size, which makes the court filter a recall mechanism
+
+Hybrid recall@50 measured at 91%, 91%, 89%, 87% on 25k, 50k, 100k and 200k points. Extrapolated
+(roughly, from 20 target chunks): **about 82% at 2.8M and about 77% at 31M** if a user searches all
+High Court data with no court filter.
+
+**Architecture consequence nobody had stated:** the filter step is not only about relevance. An
+unfiltered 31M search loses about ten points of recall against a single-court search. Filters
+should be treated as part of how the product finds things, not as a refinement.
+
+The 87% figure itself pulls both ways and the net sign is unmeasured: it **understates** because
+only the exact source chunk counts, and 3 of 7 hybrid misses had another top-50 chunk carrying the
+same sentence verbatim (counting those lifts it to 93%); it **overstates** because the queries are
+the chunk's own sentences, handing BM25 an exact lexical match that a real paraphrase would not.
+Stripping names and numbers took strict recall 91% to 81%. **What would settle it is the thing the
+200-question set is waiting for:** real questions with labelled answer chunks, not sentences lifted
+from the chunks themselves.
