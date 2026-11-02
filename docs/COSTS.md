@@ -59,7 +59,7 @@ Every embedding and vector cost measured as of 3 Nov 2026. Sources: `DATA-GAPS.m
 | Work | Vendor spend | Note |
 |---|---:|---|
 | All measurement to date | **~$0.20** | ~3M Voyage tokens, inside the free allowance |
-| BM25 repair, 19,835 Central Act points in `kanoon_v1` | **$0** | FastEmbed, local, ~12 s. **Being served broken today** |
+| ~~BM25 repair, 19,835 Central Act points in `kanoon_v1`~~ | **$0 — ALREADY DONE** | Applied earlier with a verified backup, dense vectors untouched; re-checked read-only 3 Nov 2026, 0 of 74,484 Central points would change. The copy is **not** serving broken keyword vectors. The 19,835 are still broken in the original `acts_india` and matter only when those are copied |
 | BM25 repair, ~504,600 remaining Act points | **$0** | Same, local; write speed at that scale untested |
 | Kerala dead-vector **detection**, all 3.1M | **$0** | One dot product per point, no vendor calls (§14) |
 | Kerala dead-vector **re-embed**, ~215,000 chunks | **~$12** | ~194M tokens at `voyage-4`; Kerala's majority model, so it matches the court |
