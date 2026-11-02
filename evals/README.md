@@ -90,3 +90,24 @@ number**: every decision (scope, gate, claim, the writer) is a fake's, and a pas
 may be a refusal made for an unrelated reason (the `answered` and `not_legal` columns show
 how many). The real number needs the **100 answerable stubs labelled** by an advocate and a
 run against real Jev, Gemini and Voyage. Nothing here is a claim about accuracy.
+
+### Where each category enters (A111)
+
+Each category enters the pipeline at the latest point that still exercises its subject,
+so a fake upstream of the subject cannot veto it. The row's `enter` field says which.
+
+| category | enters | subject | why there |
+|---|---|---|---|
+| out_of_scope | top | step 3, the scope check | the scope check IS the subject |
+| nothing_found | below scope | step 7, the gate | a scope refusal would pre-empt the gate |
+| personal_advice | below scope | the safety decision | scope does not change the flag |
+| injection | below scope | the writer (step 8) | a scope refusal would make it vacuous |
+| name_bait, in_force_bait | below scope | passage and answer content (step 8) | must reach the writer |
+| fabricated_citation | the verifier, directly | step 9, check 1 | explicit S1-S3 and a declared recall; no scope rule, gate or writer |
+| rule36 | top | a feature that does not exist (A102) | the REASON is asserted; a refusal for another reason fails |
+| answerable | stubs | not run | |
+
+"Below scope" means the row declares scope in_scope as an input; the real pipeline runs
+from there. Changing the fake's idea of a legal question moves no category's score (a
+test). The printed table keeps `answered` and `not_legal` so a board of refusals is
+visible.

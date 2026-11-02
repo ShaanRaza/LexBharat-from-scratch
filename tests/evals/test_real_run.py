@@ -149,6 +149,23 @@ def test_the_verifier_row_is_given_an_explicit_set_without_the_banned_record(tmp
     assert first not in {p.record_id for p in got}
 
 
+def test_the_whole_case_of_a_banned_record_is_kept_out_of_the_set():
+    """q157's four listed chunks are not the only chunks of that judgment in the corpus;
+    a sibling chunk in S1-S3 would make the recalled case genuinely "retrieved"."""
+    q = next(q for q in qs.load_set() if q.id == "q157")
+    s = rr.run_settings(jev_on=False)
+    store, _ = rr.load_corpus(s)
+    got = rr.explicit_passages(store, q.must_not_cite, s)
+    case = next(
+        h.payload["case_id"] for h in store.law if h.record_id == q.must_not_cite[0]
+    )
+    assert all(
+        h.payload.get("case_id") != case
+        for h in store.law
+        if h.record_id in {p.record_id for p in got}
+    )
+
+
 def test_below_scope_fixes_scope_and_top_does_not(tmp_path):
     """ "what is the weather" is not-legal to the fake scope rule. Entered below the
     scope check it is not refused for that reason; entered at the top it is."""
@@ -266,3 +283,36 @@ def test_the_table_shows_how_many_rows_were_answered_and_how_many_refused(tmp_pa
     table = rr.render_side_by_side(a, b)
     assert "answered" in table and "not_legal" in table
     assert rr._kinds(a, "name_bait") == (1, 1)
+
+
+def test_no_category_score_moves_with_the_fake_scope_vocabulary():
+    """A111, the point of the restructure: each category enters past the fake that could
+    veto its subject, so widening or emptying the fake's idea of "a legal question"
+    changes no category's score. (Before A111 the same total hid a shifting board.)"""
+
+    class Everything:
+        def __and__(self, other):
+            return other
+
+    qn = qs.load_set()
+    orig = rr.legal_stems
+    seen = {}
+    try:
+        for name, fn in (
+            ("nothing_is_legal", lambda cov: set()),
+            ("everything_is_legal", lambda cov: Everything()),
+        ):
+            rr.legal_stems = fn
+            a, _ = asyncio.run(rr.run_both(qn))
+            seen[name] = {c: t.passed for c, t in qs.by_category(a.outcomes).items()}
+    finally:
+        rr.legal_stems = orig
+    assert seen["nothing_is_legal"] == seen["everything_is_legal"]
+
+
+def test_rule36_fails_until_a_step_produces_the_refusal():
+    """A102 is open. The ten rows must not pass by being refused for another reason."""
+    qn = [q for q in qs.load_set() if q.category == "rule36"]
+    a, _ = asyncio.run(rr.run_both(qn))
+    assert {o.status for o in a.outcomes} == {qs.FAIL}
+    assert all("not for Rule 36" in o.reasons[0] for o in a.outcomes)

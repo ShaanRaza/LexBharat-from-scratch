@@ -426,11 +426,23 @@ def explicit_passages(
     store: FakeVectorStore, banned: Sequence[str], settings: Settings, n: int = 3
 ) -> list[Passage]:
     """The S1..Sn a verifier row is given: the first n judgment records of the corpus
-    that are not on the row's avoid-list. Explicit, so what the verifier was and was not
-    handed is known by construction, not by what a fake search happened to return."""
+    that are not on the row's avoid-list or from the same case as one that is.
+    Explicit, so what the verifier was and was not handed is known by construction,
+    not by what a fake search happened to return."""
+    # the whole CASE is avoided, not only the listed chunk ids: a corpus holds many
+    # chunks of one judgment, and any of them in S1-S3 makes the case "retrieved"
+    cases = {
+        k
+        for h in store.law
+        if h.record_id in banned
+        for k in (h.payload.get("case_id"), h.payload.get("title"))
+        if k
+    }
     out: list[Passage] = []
     for h in store.law:
         if "section_number" in h.payload or h.record_id in banned:
+            continue
+        if cases & {h.payload.get("case_id"), h.payload.get("title")}:
             continue
         p = hit_to_passage(h, settings=settings)
         out.append(replace(p, source_id=f"S{len(out) + 1}"))
