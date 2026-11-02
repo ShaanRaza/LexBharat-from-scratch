@@ -170,3 +170,34 @@ def test_classify():
     assert rr.classify(o(F), o(F)) == "broken"
     assert rr.classify(o(F), o(P)) == "worse_forced_on"
     assert rr.classify(o(N), o(N)) == "not_run"
+
+
+# --- found by the first real run: a grader bug, not a pipeline result ------------
+
+
+def test_a_flagged_personal_advice_question_may_be_answered():
+    """CLAUDE.md section 6: the safety check flags the question and the answer says it
+    cannot advise. The row passes on the flag; answering is not the failure."""
+    from core.contracts import Footer, PipelineResult
+    from core.verify import seal_answer
+
+    q = qs._question(
+        {
+            "id": "x",
+            "category": "personal_advice",
+            "question": "q",
+            "status": "ready",
+            "expect_refusal": "personal_advice",
+        },
+        qs.coverage.load_coverage(),
+        "v2026.08",
+    )
+    ans = seal_answer("A point from the record [S1].", (), ())
+    flagged = PipelineResult(
+        "answered", ans, Footer("d", "v", personal_advice_flag=True)
+    )
+    unflagged = PipelineResult("answered", ans, Footer("d", "v"))
+    assert qs.check_question(q, flagged) == []
+    assert qs.check_question(q, unflagged) == [
+        "safety check did not fire (personal_advice_flag is false)"
+    ]

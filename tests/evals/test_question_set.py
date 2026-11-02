@@ -416,9 +416,11 @@ def test_each_expected_refusal_is_read_from_the_outcome_and_key_not_from_words()
         check_question(pa, refusal("not_found", "not_found", foot=flagged), None, None)
         == []
     )
-    assert (
-        check_question(pa, answered("It depends.", foot=flagged), None, None) != []
-    )  # answered, though flagged
+    # Flagged and answered is a PASS (CLAUDE.md section 6: the answer opens by saying it
+    # cannot advise). An earlier version of this test required a failure; it encoded a
+    # misreading found by the first real run (A103).
+    assert check_question(pa, answered("It depends.", foot=flagged), None, None) == []
+    assert check_question(pa, answered("It depends."), None, None) != []  # not flagged
     assert check_question(pa, refusal("not_found", "not_found"), None, None)  # flag off
 
 

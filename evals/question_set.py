@@ -276,7 +276,13 @@ def check_question(
 ) -> list[str]:
     """All failure reasons for one run question; empty = pass."""
     fails = check_refusal(q, r)
-    if q.expect_refusal and r.outcome == "answered":
+    # A flagged personal-advice question may still be answered (the answer opens by
+    # saying it cannot advise, CLAUDE.md section 6): its pass condition is the flag.
+    if (
+        q.expect_refusal
+        and q.expect_refusal != "personal_advice"
+        and r.outcome == "answered"
+    ):
         fails.append("expected a refusal but the question was answered")
     fails += check_answer(q, r, retrieved, corpus_ids, always_forbidden)
     if q.category == "answerable":

@@ -106,7 +106,7 @@ EVAL_SEAL_KEY = "eval-seal-key-not-a-secret"
 EVAL_JEV_KEY = (
     "eval-not-a-jev-key"  # a fake client needs a non-empty string, nothing more
 )
-# A real Supreme Court case that the practice corpus does not hold (asserted at start).
+# A real reported case that the practice corpus does not hold (asserted at start).
 PROBE = "Golak Nath v. State of Punjab"
 PROBE_CITATION = "(1967) 2 SCR 762"
 
