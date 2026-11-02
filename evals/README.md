@@ -111,3 +111,11 @@ so a fake upstream of the subject cannot veto it. The row's `enter` field says w
 from there. Changing the fake's idea of a legal question moves no category's score (a
 test). The printed table keeps `answered` and `not_legal` so a board of refusals is
 visible.
+
+### How much does check 1's case-name key protect? (A113)
+
+`.venv/bin/python -m evals.title_keys` counts, over a file of records with a `title`, how
+many titles share the one-word-either-side-of-"v" key that verifier check 1 uses, and
+cross-checks its key against the real verifier. Default input: the practice fixtures (a
+sample, not the corpus); pass `--titles dump.parquet` for the full run. It measures; it
+does not change `core/verify.py`.

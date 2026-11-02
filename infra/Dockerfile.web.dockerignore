@@ -1,0 +1,11 @@
+# Allow-list: the web image copies only web/ (infra/Dockerfile.web). The host's
+# node_modules (macOS binaries) must never overwrite the container's `npm ci`, and no
+# .env file may enter the image.
+*
+!web
+web/node_modules
+web/.next
+web/.env
+web/.env.*
+web/coverage
+web/tsconfig.tsbuildinfo
