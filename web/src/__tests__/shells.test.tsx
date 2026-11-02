@@ -84,7 +84,7 @@ describe("PageShell must be told which shell", () => {
   });
 });
 
-describe("the frame follows the viewer on public-data pages (decision A71)", () => {
+describe("the frame follows the viewer on public-data pages (decision A72)", () => {
   beforeEach(() => window.localStorage.removeItem("viewer-signed-in"));
 
   it("a visitor gets the public top bar, with early access", () => {

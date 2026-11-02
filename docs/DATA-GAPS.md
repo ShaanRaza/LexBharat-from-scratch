@@ -239,6 +239,140 @@ settle it by opening one High Court point, which the Part 6 inventory does.
   NCLT/NCLAT policies. `Data: Open India Law by Vaquill AI, CC BY 4.0` stays on every page.
 - **The card contradicts itself on totals** (32,572,660 judgment chunks against 32,518,048
   vectors; 1,098,577 sections against 1,098,269 provisions) and says so. The 308-row gap we
-  already owed an explanation for is visible in the card itself. It includes 25 Central
-  Act points, the 25 missing from our `kanoon_v1` copy (measured, see DATASET.md). That
-  the gap sits in the source rather than our copy is **unverified**.
+  already owed an explanation for is visible in the card itself.
+
+## 8. The parquet cross-check: the copy is clean, the source is not
+
+**Measured**, 2 Nov 2026, by the parquet cross-check (section 6's design). Set A was taken
+structurally from `_INSC_` in `case_id` with no language filter; Set B three ways (`court`,
+`_INSC_`, both) which all gave the same number. Scripts were read from the chunk text, never
+from a label.
+
+### The copy is complete relative to the original
+
+The original `legal_corpus_v2` and `kanoon_v1` both hold **371,159** Supreme Court points, by
+`court` and by `court_type` alike, and `legal_corpus_v1` holds **0**. Nothing was lost in the
+copy, and v1 adds nothing. The copy is also **100% Latin-script** across all 371,159 — no
+vernacular chunk was pulled in by the court-only filter, which had been an assumption until now.
+
+### What the parquet holds that the vectors do not
+
+The parquet carries **1,113,313** Supreme Court chunks over 37,014 cases, with
+`language_code` 100% filled across 16 languages (English 371,247, Hindi 307,509, Punjabi
+306,477). Against the copy:
+
+| Difference | Chunks | Cases |
+|---|---:|---:|
+| In the parquet, **not in any Qdrant collection** — all English | **10,112** | 749 (734 wholly absent) |
+| In Qdrant, not in the parquet | 5,153 | 92 |
+| **Duplicate `chunk_id`s**, each on two points, in the original as well as the copy | **4,871** | 392 |
+
+371,247 − 10,112 + 5,153 + 4,871 = 371,159. The earlier 88-point near-match was a coincidence
+of three larger differences, not an explanation. Named lists are in `~/qdrant-kanoon/reports/`.
+
+**The 749 absent cases cluster in recent years** — 300 from 2021, 235 from 2019. They cannot be
+retrieved at all, so the product cannot answer on them however the question is asked. That is a
+coverage hole in the dataset's own vectors, not in our copy, and it belongs on the coverage page
+rather than in a footnote.
+
+### The duplicates reach the answer, so they are the more urgent of the two
+
+4,871 chunk ids sit on two points each. Nobody asked about these, and they matter more than the
+missing chunks:
+
+- The same passage can occupy two of the eight slots the gate allows (step 7), spending
+  retrieval capacity on text already present.
+- Worse, the two copies get **different source ids**, so an answer can carry `[S1]` and `[S4]`
+  pointing at identical text. Every verifier check passes — the records exist, the quotes match,
+  the passages were retrieved — and the reader sees two authorities where there is one.
+
+Nothing in §5's four checks is designed to catch that, because nothing is wrong with either
+citation taken alone.
+
+**Fix in the pipeline, not in the data:** drop duplicates after search and before the gate,
+on `chunk_id` first and a text hash second. It costs nothing, needs no re-embedding, and does
+not touch the originals.
+
+### Drive speed, measured at last
+
+LAWSSD reads at **35.5 MB/s** (2 GiB via `dd`, twice, 60.55 s and 60.47 s, no cache effect).
+All 26 judgment files in full would be about 25 minutes. Column-only reads take seconds.
+
+### What this evidence does not cover
+
+The absence of the 749 cases rests on `case_id` and `court`. A chunk filed under a different
+`case_id` would not show. And 148,810 chunks in the difference could not be classified: 53,332
+mixed-script, and 95,478 Latin-script but labelled Hindi or Punjabi, where `text` equals
+`text_original`. Four were inspected by hand and were an English header followed by OCR noise
+from scanned pages; the rest are **not verified**. None of them are in the copy.
+
+## 9. About half of `acts_india` has wrong keyword vectors
+
+**Measured**, 2 Nov 2026, from `acts_sample_v1`: 10,000 points sampled with a fixed seed
+across 90 strata from the 1,024,093 `acts_india` points outside the copy. 200 of 200 checked
+field by field match the originals, so the sample itself is sound.
+
+Recomputing the BM25 sparse vectors with FastEmbed gives **49.4% mismatches** (4,944 of
+10,000) — regulatory 52.6%, state 45.8%. Every mismatch holds integer-only values, which are
+raw term counts rather than BM25 weights: the same signature as the 19,835 Central Act
+failures already known.
+
+Extrapolated: about **504,600** mismatching points outside the copy (95% CI 494,800–514,300),
+plus the 19,835 measured exactly, so roughly **524,400 of 1,098,577 — about 48% of all Acts
+provisions**. The estimate covers the 50 strata with 30 or more sampled points (99.9% of the
+population); 40 small strata (1,276 points) are too thin to estimate.
+
+**What it means for a user.** Keyword search is the half of hybrid search that finds exact
+things — a section number, an Act by name. That is the main way anyone uses Act lookup. For
+roughly half of all provisions, that half of the search is working from the wrong vector.
+
+Everything else in the sample is sound: no empty text, every dense vector 1024-d and unit
+norm with no zeros or NaNs, section numbers present on 95%+ of points. Garbled text
+(replacement characters) appears in 5.4% of the regulatory sample and 1.6% of the state
+sample; how much of that text is unreadable was not measured.
+
+### The repair works — measured on the sample, 2 Nov 2026
+
+`data/sparse_fix.py`, hard-limited to `acts_sample_v1`, re-encoded all 4,944 broken vectors in
+about 3 seconds, backing them up first and leaving dense vectors untouched. Ground truth: the
+78 sample points whose text contains every query word, 39 of them with broken vectors.
+
+| | Broken points found in top 100 | Unbroken points found |
+|---|---:|---:|
+| Before repair | **0 of 39** | 39 of 39 |
+| After repair | **39 of 39** | 39 of 39 |
+
+Nothing previously found was lost. Top-10 hits rose from 36 to 45. A concrete case: "land
+acquisition compensation" now returns The Land Acquisition Act 1894 first; before the repair
+it returned a municipal corporations Act and a flood-relief Act.
+
+So this is not a marginal gain — for a broken point, keyword search was finding **nothing**.
+
+**How far to trust it:** 10,000 points, 5 lookups, a lexical stand-in for relevance, recall
+measured rather than precision, and encode-and-write speed untested at 524,400 points. It
+justifies running the repair; it does not price it.
+
+**Priority:** the 19,835 broken Central Act points inside `kanoon_v1` are the ones actually
+being served, and they are a twelve-second job. The other ~504,600 are not in the copy yet and
+can be repaired as part of whatever copies them.
+
+(Superseded note: this section previously said to test on `acts_sample_v1` first — that test is the table above.)
+
+The original guidance stood: test on `acts_sample_v1` — that collection is disposable, already measured, and gives a
+before-and-after on real keyword lookups.
+
+## 10. Identical text across different provisions is legitimate, so text-hash dedup is unsafe
+
+The Part 5 sample found **26 groups of points sharing identical text** (52 points). In Acts
+this is expected rather than anomalous: short title clauses, repealed-section placeholders and
+definitions repeat verbatim across state adaptations of the same central Act.
+
+That breaks the text-hash half of the step 5 deduplication (A71). Dropping the lower-scoring
+copy of two genuinely different provisions means citing the wrong Act — the text is the same,
+but `act_id`, the citation and the source URL are not.
+
+**Rule:** deduplicate on text **only when both passages come from the same source document** —
+the same `case_id` for a judgment, the same `act_id` for a provision. Identical text from two
+different documents is two different authorities and both must survive. Deduplication on
+`record_id` (the chunk id) is unaffected: that remains a true duplicate wherever it appears,
+and it is what the 4,871 measured duplicates actually are.

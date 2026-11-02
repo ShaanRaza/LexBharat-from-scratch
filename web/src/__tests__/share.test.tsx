@@ -96,7 +96,7 @@ describe("the public page", () => {
     expect(container.textContent).not.toMatch(/@/);
   });
 
-  it("every chip opens a public page that lands on the cited passage (decision A71)", () => {
+  it("every chip opens a public page that lands on the cited passage (decision A72)", () => {
     const { container } = render(<SharedAnswerView shared={shared} />);
     const hrefs = [...container.querySelectorAll("a[data-mark]")].map((a) => a.getAttribute("href") ?? "");
     expect(hrefs.length).toBeGreaterThan(0);

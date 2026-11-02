@@ -66,7 +66,7 @@ def test_every_protected_route_needs_login(client):
 
 
 def test_a_judgment_opens_without_login_and_without_party_names(client, repo):
-    """A shared answer's citation must open for an anonymous reader (decision A71)."""
+    """A shared answer's citation must open for an anonymous reader (decision A72)."""
     repo.cases["c1"] = {
         "record_id": "c1", "title": "A v B", "court": "Supreme Court",
         "decision_date": None, "case_number": "1/2000", "citation_string": "1 SCC 1",
