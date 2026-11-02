@@ -131,9 +131,99 @@ uploads set the risk.** Watch Qdrant memory and OCR time in Langfuse from week o
 
 ## 7. What not to do with this file
 
-- Do not add the known figures together and call it a monthly cost. Seven lines are missing.
+- Do not treat section 8's worked total as a cost. It is a planning sketch with six of its
+  lines estimated by us rather than quoted, and it is for internal decisions only.
 - Do not quote the $1,900 as a committed cost. It is the price of one option, and the
   measurement that decides it costs under a dollar.
 - Do not promote an **Estimate** to a figure without measuring it (`CLAUDE.md` section 9.5).
 - Prices charged to users are the owner's decision (O10, `CLAUDE.md` section 8). This file
   records what things cost us, never what anyone is charged.
+
+---
+
+## 8. A worked total — complete product, 1,000 paying users
+
+**This is a planning sketch, not a quote.** Section 7's rule stands: do not give this number
+to anyone outside. Six of its lines are my own estimates from standard cloud pricing, not
+quotes we hold. It exists so the server and corpus decisions can be made against *something*
+rather than nothing, and every line is labelled so the sketch can be replaced piece by piece
+as real quotes arrive.
+
+**Assumptions** — change any of these and the total moves:
+
+- ₹85 to the dollar (approximate)
+- "Complete product" = the v1 scope including the three High Courts named in `CLAUDE.md` §1
+- 1,000 paying users at the blended **₹349** from `PRODUCT.md` (half Student, half Pro)
+- 100 answers per user per month
+- 30% cache hit rate, so 70,000 billable answers
+
+### Fixed monthly
+
+| Line | $/mo | Basis |
+|---|---:|---|
+| Server r7g.xlarge (4 vCPU / 32 GB, ARM) | 110 | Their hourly figure, **Needs verification** |
+| EBS gp3, ~60 GB | 5 | **Estimate** (ours) |
+| Managed PostgreSQL, t4g.medium class | 60 | **Estimate** (ours) — no quote |
+| Redis / ElastiCache, small | 20 | **Estimate** (ours) — no quote |
+| S3, uploads and snapshots | 12 | **Estimate** (ours) — no quote |
+| CDN | 15 | **Estimate** (ours) — no quote |
+| Langfuse + Sentry | 85 | **Estimate** (ours) — no quote |
+| Email (SES) | 3 | **Estimate** (ours) |
+| Secrets Manager / KMS | 5 | **Estimate** (ours) |
+| **Subtotal** | **~$315** | **≈ ₹26,800** |
+
+### Variable, at 70,000 billable answers
+
+| Component | Per answer | Monthly |
+|---|---:|---:|
+| Voyage, query embedding | ₹0.05 (**Estimate**) | ₹3,500 |
+| Jev — decide, gate, claim support | ₹0.03 (**Estimate**) | ₹2,100 |
+| LLM calls — rewrite and answer | **~₹0.15 (Estimate, ours — the weakest number here)** | ₹10,500 |
+| Verifier checks 1–3, Act lookup, cache hits | free (**Checked**) | — |
+| **Subtotal** | **~₹0.23** | **≈ ₹16,100** |
+
+### Total
+
+| | ₹/mo | $/mo |
+|---|---:|---:|
+| Fixed | 26,800 | 315 |
+| Variable | 16,100 | 190 |
+| Razorpay, ~2% + GST on ₹349,000 | 8,200 | 96 |
+| **Total** | **≈ ₹51,100** | **≈ $600** |
+| Revenue, 1,000 × ₹349 | 349,000 | 4,105 |
+| **Gross margin** | **~85%** | |
+
+### Server scenarios — the line that actually moves
+
+| Corpus | Est. RAM at int8 | Instance | $/mo |
+|---|---:|---|---:|
+| Launch corpus only (~446k points) | under 1 GB | r7g.large | 55 |
+| Complete product, three High Courts | ~5–12 GB | r7g.xlarge | 110 |
+| Full corpus (32.5M points) | **~45–55 GB** | r7g.2xlarge | 219 + ~$28 disk |
+
+Those RAM figures are arithmetic, **not measured**: 1024-dimension vectors at int8 are roughly
+1 KB per point in memory, plus the HNSW graph. The Bombay sizing experiment measures this
+directly and its result replaces this table.
+
+### What this tells us
+
+**The margin target is not at risk.** `METRICS.md` wants 60% or better; this sketch gives
+about 85%. It rests on the ₹0.15 LLM estimate, so test the sensitivity: at 5× that figure,
+variable cost reaches about ₹52,000 and margin still lands near 70%. It would take roughly
+**20×** before ₹349 stops covering its costs. That is a wide enough margin of safety to say
+the pricing hypotheses are probably sound — which is a reason to leave O10 deferred, not a
+reason to settle it.
+
+**Free users are the exposure, not paid ones.** The same 1,000 users on the free tier cost
+about **₹43,000 a month and return nothing**. So the free tier's monthly limit is the most
+consequential number in this model, and it is currently unset. It matters more, and sooner,
+than the prices that are deferred.
+
+### What must replace the estimates
+
+| Line | Replaced by | Owner |
+|---|---|---|
+| LLM per answer | token counts per step against published rates | **unassigned** |
+| Server size | Bombay sizing experiment | data session |
+| Database, Redis, S3, CDN, monitoring | quotes | owner |
+| Free tier limit | owner decision, informed by the above | owner |
