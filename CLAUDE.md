@@ -374,13 +374,22 @@ These are the commands as built on `shan/agent-team`. Use the shared virtualenv
 .venv/bin/ruff check . && .venv/bin/ruff format --check .
 cd web && npm run lint && npx tsc --noEmit && npm test
 SEAL_KEY=demo-key .venv/bin/python -m evals.runner --sample   # offline eval demo
-docker compose -f infra/docker-compose.yml up                  # whole system (not yet validated)
+.venv/bin/python -m evals.real_run                             # 200-question set, real pipeline + fakes
+.venv/bin/python -m evals.title_keys                           # sizes the case-name key (A115)
+```
+
+**Docker is NOT yet validated and has never been started.** `docker compose` is not installed on
+the owner's laptop (`brew install docker-compose`), and the Docker engine there is a Colima VM
+shared with the data work — so starting it mid-measurement would corrupt someone's numbers. The
+URLs below come from the compose file and the code, **not from a running service**:
+
 ```bash
-docker compose -f infra/docker-compose.yml up    # whole system
-# api:    (to be added)
-# web:    (to be added)
-# tests:  (to be added)
-# evals:  (to be added — 200-question test set)
+docker compose -f infra/docker-compose.yml up    # whole system — NEVER RUN, see A114
+# api:    http://localhost:8000   (health: /api/v1/healthz)
+# web:    http://localhost:3000
+# known blockers before it can start: no SEAL_KEY or vendor keys are passed in;
+#   nothing runs the migrate service before api, so the first start has no tables;
+#   POSTGRES_PASSWORD and APP_DB_PASSWORD are unset
 ```
 
 ---
