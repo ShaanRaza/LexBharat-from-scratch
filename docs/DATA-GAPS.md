@@ -422,36 +422,46 @@ line and paragraph breaks — a trailing newline moves cosine by only 0.0001–0
 `voyage-context-4` (0.69–0.88). What remains: an earlier snapshot of `voyage-4-large`, or a
 text difference at build time that has not been found.
 
-### Update (2 Nov 2026, later): it is not one model per collection
+## 12. Three embedding models are mixed WITHIN collections, by document batch
 
-The same reproduction test, run on 111 stored chunks across every group (stored dense vector
-against a fresh `input_type=document` embedding of the stored text; a chunk "reproduces" under
-the one model that gives cosine 0.999 or better):
+Section 11 said the model differs per collection. **That was wrong, and the truth is worse.**
+111 stored chunks re-embedded across every group (**Measured**, 2 Nov 2026):
 
 | Group | Chunks | `voyage-4` | `voyage-4-large` | `voyage-4-lite` |
-|---|---|---|---|---|
-| `legal_corpus_v2` Supreme Court (in `kanoon_v1`) | 23 | 0 | 23 | 0 |
-| `acts_india` Central | 7 | 0 | 7 | 0 |
+|---|---:|---:|---:|---:|
+| `legal_corpus_v2` Supreme Court | 23 | 0 | **23** | 0 |
+| `acts_india` Central | 7 | 0 | **7** | 0 |
 | `acts_india` state | 37 | 24 | 13 | 0 |
 | `acts_india` regulatory | 26 | 24 | 2 | 0 |
 | `legal_corpus_v1` High Court | 8 | 5 | 2 (Delhi, Patna) | 1 (Allahabad) |
-| `legal_corpus_v2` High Court | 10 | 6 | 0 | 4 (Karnataka, Rajasthan x2, Punjab and Haryana) |
+| `legal_corpus_v2` High Court | 10 | 6 | 0 | 4 (Karnataka, Rajasthan, Punjab & Haryana) |
 
-- **Every original collection mixes models**, and the mix follows the document or the ingestion
-  batch (a court, an Act), not the collection. In `legal_corpus_v2` High Court, Kerala, Madhya
-  Pradesh, Orissa and Manipur are `voyage-4` while Karnataka, Rajasthan and Punjab and Haryana
-  are `voyage-4-lite`. State Acts mix `voyage-4` and `voyage-4-large` inside one state.
-- **How exact:** `voyage-4` reproduces at 0.99998, `voyage-4-lite` at 0.99995 to 0.99997,
-  `voyage-4-large` at 0.9991 to 0.9996, except two SEBI regulations that reproduce **exactly**
-  (1.000000) under `voyage-4-large`. So the 0.999 offset is not a property of that model: it
-  appears on some `voyage-4-large` chunks and not others. Still unexplained.
-- **Why it matters:** the same text embedded by two models agrees only to about 0.91 to 0.96
-  cosine, so a query embedded with one model scores chunks built with another lower, and the
-  ranking is quietly biased toward the chunks that happen to share the query's model. Whether
-  that bias matters in practice is not measured (no retrieval-quality metric exists yet).
-- **What the code now does:** `VOYAGE_EMBED_MODELS` (per collection). Only `kanoon_v1`, which
-  holds the Supreme Court set and the Central Act points, is listed (`voyage-4-large`, 30 of 30
-  sampled). Any other collection is refused rather than defaulted. The original collections are
-  deliberately absent. Open: choose how mixed collections are searched (several query
-  embeddings, one chosen model, or re-embedding) before serving High Court chunks or state Acts.
-- **Sampling limit:** 111 chunks, in clusters: the shares above are indications, not rates.
+The model follows the **document or ingestion batch**, not the collection — and not even the
+court or the state: state Acts split between two models inside a single state, and v2 High
+Court Kerala is `voyage-4` while Karnataka is `voyage-4-lite`.
+
+**Two models embedding the same text agree only to about 0.91–0.96 cosine.** So one query
+embedding against a mixed collection systematically favours whichever chunks were built with
+that model, and penalises the rest. Nothing errors; the ranking is just quietly unfair.
+
+### What is clean, and what this costs
+
+**Clean, and it is exactly what v1 serves:** Supreme Court (23 of 23) and Central Acts
+(7 of 7) are homogeneous `voyage-4-large`. All 30 sampled `kanoon_v1` points reproduce under
+it. A single query model is correct for the launch corpus.
+
+**Not clean: High Courts, state Acts and regulators.** Serving those with one query model means
+a fraction of the corpus ranks fairly and the rest does not.
+
+**So "add all the High Courts" carries a cost nobody had counted.** There is no payload field
+recording which model built a chunk, and finding out means re-embedding to compare — which is
+the same work as just re-embedding. For 31M High Court chunks at roughly 1,000 tokens each,
+voyage-4 at $0.06/M is about **$1,900 one-off** (Estimate; `voyage-4-large` is dearer). That is
+on top of the monthly hosting, and it buys a corpus where search is even.
+
+The alternative is serving mixed-model collections and accepting that retrieval quietly
+favours part of the data — which, with no retrieval-quality metric in place, nobody would see.
+
+**Open for the owner:** before High Courts or state Acts are served, choose between several
+query embeddings (needs a per-chunk model field that does not exist), one chosen model and
+accepted unfairness, or re-embedding. Recorded as A120.
