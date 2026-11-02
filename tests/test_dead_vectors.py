@@ -1,4 +1,4 @@
-"""The dead-vector detector's saved direction and scoring function (data/dead_vectors/)."""
+"""The dead-vector detector: saved direction and scoring (data/dead_vectors/)."""
 
 import importlib.util
 import json

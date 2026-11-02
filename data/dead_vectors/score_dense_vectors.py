@@ -99,7 +99,8 @@ def main() -> None:
         else {"must": [{"is_empty": {"key": "court"}}]}
     )
     direction = load_direction()
-    state_path, rnd = Path(a.out + ".state"), random.Random(a.seed)
+    state_path = Path(a.out + ".state")
+    rnd = random.Random(a.seed)  # noqa: S311 (sampling, not security)
     state = {"offset": None, "n": 0, "pages": 0, "done": False}
     if a.sample is None and state_path.exists():
         state.update(json.loads(state_path.read_text()))
