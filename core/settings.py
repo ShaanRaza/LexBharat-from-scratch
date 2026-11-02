@@ -115,6 +115,11 @@ class Settings(BaseSettings):
     # How long a share link lives (PRD-v2 O14, TECH-STACK-v2: default 30 days, owner
     # sets the final number with the retention periods, O13).
     SHARE_LINK_EXPIRY_DAYS: int = 30
+    # Whether an Act may ever read "In force" (decision A181). OFF until the
+    # act_status count settles whether in_force is a measurement or a
+    # default (CLAUDE.md section 6). Repealed is always shown; this never hides it.
+    # Owner-only.
+    SHOW_IN_FORCE: bool = False
     RATE_LIMIT_IMPROVE_PER_HOUR: int | None = 60
     RATE_LIMIT_FOLLOWUPS_PER_HOUR: int | None = 60
     # Model price per million tokens, in whatever currency the owner reads the spend

@@ -46,7 +46,11 @@ async def get_section(act: str, n: str, request: Request):
     if sec is None:
         raise ApiError(404, "not_found", "Section not found.")
     reading = read_act_status(
-        sec.get("record_id"), sec["act_name"], sec.get("act_status")
+        sec.get("record_id"),
+        sec["act_name"],
+        sec.get("act_status"),
+        sec.get("is_repealed"),
+        show_in_force=request.app.state.core_settings.SHOW_IN_FORCE,
     )
     return s.SectionOut(
         act_slug=act, act_name=sec["act_name"], act_year=sec.get("act_year"),

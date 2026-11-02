@@ -2,6 +2,7 @@ import pytest
 
 from api.config import ApiSettings
 from api.main import create_app
+from core.settings import Settings
 from tests.api.conftest import auth
 
 
@@ -114,21 +115,35 @@ def _section(repo, **over):
     return None
 
 
-def test_section_in_force_only_where_act_status_says_so(client, repo):
-    _section(repo)  # the in_force column is True, but act_status is empty: not trusted
+def test_section_is_never_in_force_while_the_switch_is_off(client, repo):
+    """A181: act_status says in force, nothing says repealed, switch off (default)."""
+    _section(repo, act_status="in force")
     r = client.get("/api/v1/acts/test-act-2000/sections/1").json()
     assert r["force_status"] == "not_checked"
     assert r["act_status_checked"] is False and r["in_force"] is None
     assert r["provenance"]["credit"].startswith("Data: Open India Law")
-    _section(repo, act_status="in force")
+    _section(repo, act_status=None)  # and the in_force column alone never counts
     r = client.get("/api/v1/acts/test-act-2000/sections/1").json()
+    assert r["force_status"] == "not_checked"
+
+
+def test_section_in_force_only_where_act_status_says_so_and_the_owner_switched_it_on(
+    make_client, repo
+):
+    on = make_client(core_settings=Settings(SHOW_IN_FORCE=True))
+    _section(repo)  # act_status empty: not trusted even with the switch on
+    r = on.get("/api/v1/acts/test-act-2000/sections/1").json()
+    assert r["force_status"] == "not_checked" and r["in_force"] is None
+    _section(repo, act_status="in force")
+    r = on.get("/api/v1/acts/test-act-2000/sections/1").json()
     assert r["force_status"] == "in_force" and r["in_force"] is True
 
 
-def test_section_repealed_from_any_one_of_three_signals(client, repo):
+def test_section_repealed_from_any_one_of_four_signals(client, repo):
     for over in (
         {"act_status": "repealed"},
         {"record_id": "IND_REP_659_1860_s002", "act_status": None},
+        {"is_repealed": True, "act_status": None},
         {"act_name": "Test Act, 1860 (Rep., Act 45 of 2023)", "act_status": None},
         {
             "record_id": "IND_REP_659_1860_s002",
@@ -232,6 +247,23 @@ def test_unchecked_status_goes_over_the_wire_exactly():
         pdf_url="https://x.invalid/a.pdf", source_url=None,
     )  # fmt: skip
     assert to_wire_citation(c).model_dump()["status"] == "unchecked"
+
+
+def test_a_citation_with_no_link_goes_over_the_wire_with_no_url():
+    """The dataset has no source link for some records (Supreme Court rows in the parquet,
+    regulator records). The citation still goes out with its string and status; the url is
+    None, never an empty string."""
+    from api.bridge import to_wire_citation
+    from core.contracts import Citation as CoreCitation
+
+    for pdf, src in ((None, None), ("", ""), (None, ""), ("", None)):
+        c = CoreCitation(
+            source_id="S1", record_id="r", status="verified", citation_string="[1999] 1 S.C.R. 377",
+            pdf_url=pdf, source_url=src,
+        )  # fmt: skip
+        wire = to_wire_citation(c).model_dump()
+        assert wire["url"] is None and wire["citation_string"] == "[1999] 1 S.C.R. 377"
+        assert wire["status"] == "verified"
 
 
 def test_unknown_status_is_rejected_by_the_wire_schema():

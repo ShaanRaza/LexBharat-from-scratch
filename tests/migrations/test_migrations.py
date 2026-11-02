@@ -78,7 +78,7 @@ def test_upgrade_downgrade_upgrade_on_real_postgres(scratch_db_url):
     with engine.connect() as c:
         assert (
             c.execute(text("select version_num from alembic_version")).scalar()
-            == "0011"
+            == "0012"
         )
     engine.dispose()
 
@@ -428,3 +428,21 @@ def test_the_process_migration_url_wins_and_dotenv_is_used_when_nothing_else_is_
         "MIGRATION_DATABASE_URL", "postgresql+psycopg://kanoon:x@h/other"
     )
     assert dburl.migration_url().endswith("/other")
+
+
+@pytest.mark.skipif(
+    not os.environ.get("TEST_DATABASE_URL"), reason="TEST_DATABASE_URL not set"
+)
+def test_act_sections_is_repealed_is_nullable_and_goes_away_on_downgrade(
+    scratch_db_url,
+):
+    """0012: unloaded rows are 'unknown' (NULL), never 'not repealed'."""
+    _alembic("upgrade", "head", url=scratch_db_url)
+    engine = create_engine(scratch_db_url)
+    col = {c["name"]: c for c in inspect(engine).get_columns("act_sections")}
+    assert col["is_repealed"]["nullable"] is True
+    assert col["is_repealed"]["default"] is None
+    _alembic("downgrade", "0011", url=scratch_db_url)
+    cols = {c["name"] for c in inspect(engine).get_columns("act_sections")}
+    assert "is_repealed" not in cols
+    engine.dispose()

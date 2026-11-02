@@ -41,8 +41,8 @@ Full "means / does not mean" table: [CITATION-VERIFIER.md](CITATION-VERIFIER.md)
 | When Jev's safety check flags a personal-advice question | The answer **opens** by saying it cannot advise on the user's own situation, and suggests consulting an advocate |
 | Every result, stats page, Act page and share card | The **data-as-of date** |
 | Every result, stats page, Act page and share card | `Data: Open India Law by Vaquill AI, CC BY 4.0` |
-| An Act whose `act_status`, `IND_REP_` id or title marker says repealed | **"Repealed"** (decision A180) |
-| An Act whose `act_status` says in force and nothing says repealed | **"In force"** |
+| An Act whose `act_status`, `is_repealed`, `IND_REP_` id or title marker says repealed | **"Repealed"** (A180, A181) |
+| An Act whose `act_status` says in force and nothing says repealed | **"In force"** only if the owner sets `SHOW_IN_FORCE`; **off** until the act_status count is in (A181) |
 | Every other Act result, including one with an unclear repeal note in its title | **"In-force status not checked for this Act."** |
 | Before upload | A warning about privileged material |
 | Answers from courts whose records carry no citation string (none in v1; later phases) | No citation string is shown — `citation` is 0.0% filled for those courts |

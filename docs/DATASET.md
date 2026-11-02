@@ -80,9 +80,11 @@ wrong names.
 `act_status` is filled for only **74,484 rows across 1,568 acts** (in force 59,596,
 repealed 14,604, spent 284), against 1,098,269 rows and 22,264 acts in total.
 
-**Working decision, widened 2 Nov 2026 (A180):** an Act reads **repealed** if `act_status`
-says so, **or** its id starts `IND_REP_`, **or** its title ends with the clean marker
-`(Rep., Act NN of YYYY)`. It reads **in force** only if `act_status` says so. Every other Act
+**Working decision, widened 2 Nov 2026 (A180, A181):** an Act reads **repealed** if
+`act_status` says so, **or** `is_repealed` is true, **or** its id starts `IND_REP_`, **or**
+its title ends with the clean marker `(Rep., Act NN of YYYY)`. It reads **in force** only
+if `act_status` says so **and** `SHOW_IN_FORCE` is on, which it is **not** until the count
+below is run. Every other Act
 result, and any with an unclear repeal note, is labelled **"In-force status not checked for
 this Act."** (`core/act_status.py`). The `in_force` column is not used.
 

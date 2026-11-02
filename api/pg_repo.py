@@ -204,7 +204,8 @@ class PgRepo:
     async def get_section(self, act_slug, number):
         rows = await self._rows(
             """SELECT record_id, act_name, act_year, section_number AS section,
-                      section_title, text, in_force, act_status, source_url
+                      section_title, text, in_force, act_status, is_repealed,
+                      source_url
                FROM act_sections WHERE section_number = :n""",
             n=number,
         )

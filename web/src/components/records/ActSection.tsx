@@ -4,8 +4,8 @@ import { headingSize } from "@/lib/heading";
 import type { SectionOut } from "@/lib/api/types";
 
 // The API decides (core/act_status.py, decision A180): "Repealed" where act_status, the
-// IND_REP_ id or a clean repeal marker in the title says so; "In force" only where act_status
-// says so; otherwise the standing "not checked" label. This component only shows the answer.
+// IND_REP_ id, is_repealed or a clean repeal marker in the title says so; "In force" only
+// where act_status says so AND the owner has switched it on (off by default, A181); otherwise the standing "not checked" label. This component only shows the answer.
 export function ActSection({ s }: { s: SectionOut }) {
   return (
     <article>
