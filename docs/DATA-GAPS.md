@@ -305,3 +305,48 @@ The absence of the 749 cases rests on `case_id` and `court`. A chunk filed under
 mixed-script, and 95,478 Latin-script but labelled Hindi or Punjabi, where `text` equals
 `text_original`. Four were inspected by hand and were an English header followed by OCR noise
 from scanned pages; the rest are **not verified**. None of them are in the copy.
+
+## 9. About half of `acts_india` has wrong keyword vectors
+
+**Measured**, 2 Nov 2026, from `acts_sample_v1`: 10,000 points sampled with a fixed seed
+across 90 strata from the 1,024,093 `acts_india` points outside the copy. 200 of 200 checked
+field by field match the originals, so the sample itself is sound.
+
+Recomputing the BM25 sparse vectors with FastEmbed gives **49.4% mismatches** (4,944 of
+10,000) — regulatory 52.6%, state 45.8%. Every mismatch holds integer-only values, which are
+raw term counts rather than BM25 weights: the same signature as the 19,835 Central Act
+failures already known.
+
+Extrapolated: about **504,600** mismatching points outside the copy (95% CI 494,800–514,300),
+plus the 19,835 measured exactly, so roughly **524,400 of 1,098,577 — about 48% of all Acts
+provisions**. The estimate covers the 50 strata with 30 or more sampled points (99.9% of the
+population); 40 small strata (1,276 points) are too thin to estimate.
+
+**What it means for a user.** Keyword search is the half of hybrid search that finds exact
+things — a section number, an Act by name. That is the main way anyone uses Act lookup. For
+roughly half of all provisions, that half of the search is working from the wrong vector.
+
+Everything else in the sample is sound: no empty text, every dense vector 1024-d and unit
+norm with no zeros or NaNs, section numbers present on 95%+ of points. Garbled text
+(replacement characters) appears in 5.4% of the regulatory sample and 1.6% of the state
+sample; how much of that text is unreadable was not measured.
+
+`data/sparse_fix.py` can re-encode them. It has not been run on live data. **Test it on
+`acts_sample_v1` first** — that collection is disposable, already measured, and gives a
+before-and-after on real keyword lookups.
+
+## 10. Identical text across different provisions is legitimate, so text-hash dedup is unsafe
+
+The Part 5 sample found **26 groups of points sharing identical text** (52 points). In Acts
+this is expected rather than anomalous: short title clauses, repealed-section placeholders and
+definitions repeat verbatim across state adaptations of the same central Act.
+
+That breaks the text-hash half of the step 5 deduplication (A71). Dropping the lower-scoring
+copy of two genuinely different provisions means citing the wrong Act — the text is the same,
+but `act_id`, the citation and the source URL are not.
+
+**Rule:** deduplicate on text **only when both passages come from the same source document** —
+the same `case_id` for a judgment, the same `act_id` for a provision. Identical text from two
+different documents is two different authorities and both must survive. Deduplication on
+`record_id` (the chunk id) is unaffected: that remains a true duplicate wherever it appears,
+and it is what the 4,871 measured duplicates actually are.
