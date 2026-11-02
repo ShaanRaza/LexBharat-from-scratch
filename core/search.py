@@ -17,6 +17,7 @@ from core.contracts import (
     PipelineRequest,
     RewrittenQuery,
 )
+from core.dedupe import dedupe_passages
 from core.uploads import search_user_documents
 
 log = logging.getLogger(__name__)
@@ -92,7 +93,8 @@ async def search(
     vector: list[float] | None,
     deps: Deps,
 ) -> SearchResult:
-    """Input: query, decision, query vector. Output: at most 50 passages."""
+    """Input: query, decision, query vector. Output: at most 50 passages, best first,
+    with no two sharing a chunk id or a text (core/dedupe.py)."""
     must = _must(decision)
     law = deps.vectors.search(
         deps.settings.CORPUS_COLLECTION, vector, rq.query, must, SEARCH_TOP_K
@@ -118,4 +120,8 @@ async def search(
     if len(results) > 1:
         passages += [hit_to_passage(h, "upload") for h in results[1]]
     passages.sort(key=lambda p: -p.score)
-    return SearchResult(tuple(passages[:SEARCH_TOP_K]), vector is None)
+    unique = dedupe_passages(passages)  # repeats out; corpus beats upload
+    if len(unique) < len(passages):
+        dropped = len(passages) - len(unique)
+        log.info("search: dropped %d duplicate passage(s)", dropped)
+    return SearchResult(tuple(unique[:SEARCH_TOP_K]), vector is None)
