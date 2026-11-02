@@ -21,6 +21,7 @@ from evals.question_set import (
     FAIL,
     NOT_RUN,
     PASS,
+    RULE36_KEY,
     Question,
     _ideal_pipeline,
     by_category,
@@ -132,7 +133,7 @@ def test_ids_are_unique_and_the_schema_is_closed():
     known = {
         "id", "kind", "question", "expect_scope", "expect_records", "must_not_cite",
         "category", "status", "needs", "bait", "expect_refusal", "also_accept",
-        "must_not_contain", "canary", "notes", "recall",
+        "must_not_contain", "canary", "notes", "recall", "enter", "expect_removed",
     }  # fmt: skip
     for r in RAW:
         assert set(r) <= known, (r["id"], set(r) - known)
@@ -195,6 +196,7 @@ def test_a_case_that_exists_but_was_not_retrieved_fails_even_though_it_is_real()
     """Verifier check 1, end to end: the record exists in the dataset (so check 2 would
     pass) but it was not among this turn's passages."""
     q = next(q for q in load_set() if q.bait == "exists_not_retrieved")
+    q = replace(q, expect_removed=None, enter="top")  # this test is about the id check
     real_id = q.must_not_cite[0]
     other = "1999_INSC_1_000"  # a real-looking id that is not on the avoid list
     corpus = {real_id, other}
@@ -415,12 +417,13 @@ def test_each_expected_refusal_is_read_from_the_outcome_and_key_not_from_words()
     )
 
     r36 = make_q(category="rule36", expect_refusal="rule36")
-    assert (
-        check_question(
-            r36, refusal("out_of_scope", "out_of_scope:not_legal"), None, None
-        )
-        == []
+    # A refusal for another reason is NOT a Rule 36 pass (A111): the reason is asserted.
+    wrong = check_question(
+        r36, refusal("out_of_scope", "out_of_scope:not_legal"), None, None
     )
+    assert wrong and "not for Rule 36" in wrong[0]
+    assert check_question(r36, refusal("not_found", "not_found"), None, None)
+    assert check_question(r36, refusal("blocked", RULE36_KEY), None, None) == []
     assert check_question(r36, answered("Advocate X is the best."), None, None)
 
     pa = make_q(category="personal_advice", expect_refusal="personal_advice")

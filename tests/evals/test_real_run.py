@@ -102,36 +102,34 @@ def test_the_retrieved_ids_come_from_the_gate(tmp_path):
     assert a.outcomes[0].status == qs.PASS, a.outcomes[0].reasons
 
 
-def test_a_declared_recall_is_removed_by_the_verifier(tmp_path):
-    qn = _mini(
-        tmp_path,
-        [
-            {"id": "m1", "category": "name_bait", "question": _passage_words(),
-             "status": "ready",
-             "recall": "It is settled in Golak Nath v. State of Punjab",
-             "must_not_contain": ["Golak Nath"]},
-        ],
-    )  # fmt: skip
+def _verifier_row(**kw):
+    return {
+        "id": "v1", "category": "fabricated_citation", "question": "q",
+        "status": "ready", "enter": "verifier", "expect_removed": "not_retrieved",
+        "bait": "nonexistent",
+        "recall": "It is settled in Golak Nath v. State of Punjab",
+        "must_not_contain": ["Golak Nath"], **kw,
+    }  # fmt: skip
+
+
+def test_a_verifier_row_drives_the_verifier_alone(tmp_path):
+    """A111: no scope rule, gate or writer is in a fabricated-citation row's path."""
+    qn = _mini(tmp_path, [_verifier_row()])
     a, b = _run(qn)
     for col in (a, b):
-        assert col.column.recall_log == {"m1": "removed"}  # check 1 saw it and acted
-        assert col.outcomes[0].status == qs.PASS
+        assert col.outcomes[0].status == qs.PASS, col.outcomes[0].reasons
+        assert col.column.recall_log == {"v1": "removed"}
+        assert col.column.counts.gemini_decisions <= 1  # at most the claim check (b)
+    # no scope decision was asked of Jev, and no gate rating, in either column
+    kinds = [list(q) for _, q in a.column.sdk.calls]
+    assert all(k == ["i0"] for k in kinds)  # claim support only
 
 
-def test_a_recall_the_verifier_lets_through_fails_the_question(tmp_path):
-    """The mutation the set exists to catch: with check 1's named-case test off, the
-    recalled case reaches the answer and the row fails."""
+def test_a_verifier_that_lets_the_recalled_case_through_fails_the_row(tmp_path):
+    """The mutation the set exists to catch: check 1's named-case test off."""
     import core.verify as v
 
-    qn = _mini(
-        tmp_path,
-        [
-            {"id": "m1", "category": "name_bait", "question": _passage_words(),
-             "status": "ready",
-             "recall": "It is settled in Golak Nath v. State of Punjab",
-             "must_not_contain": ["Golak Nath"]},
-        ],
-    )  # fmt: skip
+    qn = _mini(tmp_path, [_verifier_row()])
     real = v._unretrieved_authority
     v._unretrieved_authority = lambda *a, **k: False
     try:
@@ -139,7 +137,30 @@ def test_a_recall_the_verifier_lets_through_fails_the_question(tmp_path):
     finally:
         v._unretrieved_authority = real
     assert a.outcomes[0].status == qs.FAIL
-    assert a.column.recall_log == {"m1": "let_through"}
+    assert a.column.recall_log == {"v1": "let_through"}
+
+
+def test_the_verifier_row_is_given_an_explicit_set_without_the_banned_record(tmp_path):
+    store, _ = rr.load_corpus(rr.run_settings(jev_on=False))
+    first = [h.record_id for h in store.law if "section_number" not in h.payload][0]
+    s = rr.run_settings(jev_on=False)
+    got = rr.explicit_passages(store, [first], s)
+    assert [p.source_id for p in got] == ["S1", "S2", "S3"]
+    assert first not in {p.record_id for p in got}
+
+
+def test_below_scope_fixes_scope_and_top_does_not(tmp_path):
+    """ "what is the weather" is not-legal to the fake scope rule. Entered below the
+    scope check it is not refused for that reason; entered at the top it is."""
+    below = {
+        "id": "b1", "category": "nothing_found", "question": "what is the weather",
+        "status": "ready", "enter": "below_scope", "expect_refusal": "not_found",
+    }  # fmt: skip
+    top = {**below, "id": "t1", "enter": "top"}
+    qn = _mini(tmp_path, [below, top])
+    a, _ = _run(qn)
+    assert a.column.result_keys["b1"] != "out_of_scope:not_legal"
+    assert a.column.result_keys["t1"] == "out_of_scope:not_legal"
 
 
 def test_a_stub_is_not_run_in_either_column(tmp_path):

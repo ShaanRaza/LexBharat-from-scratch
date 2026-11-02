@@ -44,18 +44,23 @@ order). They are not tuned: a rule changed after seeing results must be reported
            the passage; supports at >= 0.6, partly at >= 0.3, else does_not_support.
   Writer   extractive and faithful: for each of the first three passages it writes
            that passage's first sentence (quote marks removed, cut at 200
-           characters) and tags it with its [S#]. A row may declare `recall`: a
-           sentence the simulated model "remembers" (a case it names that the search
-           did not return). The writer then adds it, tagged [S1]. That is test
-           INPUT declared in the row, not the expected answer; the row's
-           must_not_contain / must_not_cite hold the expectation. The harness checks
-           that "nonexistent" recalls are absent from the corpus, "exists" recalls
-           present, and reports for every recall row whether the verifier removed it
-           (check 1), let it through, or never saw it (the pipeline refused first).
-           Before A106 one fixed recall was planted in every answer; it is now the
-           deliberate row q201.
+           characters) and tags it with its [S#].
   Jev stub answers column (a) with the same rules; its confidence for a gate rating
            is the overlap score, so both deciders hand the gate the same number.
+
+WHERE EACH CATEGORY ENTERS (A111: the latest point that still exercises its subject,
+so a fake upstream of the subject cannot veto it). The row's `enter` field says which:
+  top          out_of_scope (subject: step 3), rule36 (a feature that does not exist,
+               A102; the REASON is asserted, so a refusal for another reason fails).
+  below_scope  nothing_found (the gate, step 7), name_bait and in_force_bait (passage
+               and answer content, step 8), personal_advice (the safety decision) and
+               injection (the writer). The row declares scope in_scope as an input; the
+               real pipeline runs from there.
+  verifier     fabricated_citation (step 9): the harness builds the answer from the
+               row's declared `recall`, hands the verifier an explicit S1-S3 that does
+               not contain the recalled record, and asserts on what it removes and
+               logs. No scope rule, gate or writer is in the path.
+  (answerable stubs are not run.)
 
 WHAT THIS CANNOT SHOW (stated so a green board is not over-read):
   * Every decision is the fake's. These numbers say the code paths route and the
@@ -79,7 +84,7 @@ import re
 from collections import Counter
 from collections.abc import Awaitable, Callable, Sequence
 from contextlib import contextmanager
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
@@ -97,9 +102,17 @@ from adapters.memory import FakeCitationLog, FakeStore, FakeUsageMeter
 from adapters.qdrant import FakeVectorStore
 from adapters.voyage import FakeEmbedder, FakeReranker
 from core import coverage
-from core.contracts import Deps, Passage, PipelineRequest, PipelineResult
+from core.contracts import (
+    Deps,
+    DraftAnswer,
+    Footer,
+    Passage,
+    PipelineRequest,
+    PipelineResult,
+)
 from core.gate import gate as real_gate
 from core.pipeline import run_pipeline
+from core.search import hit_to_passage
 from core.settings import Settings, get_settings
 from core.verify import verify as real_verify
 from evals import question_set as qs
@@ -190,16 +203,21 @@ def _first_sentence(text: str, limit: int = 200) -> str:
     return cut.strip(" .;,")
 
 
-def write_answer(passages: Sequence[tuple[str, str]], recall: str = "") -> str:
-    """Writer rule: first sentence of each of the first three passages, tagged; then the
-    row's declared recall, if any, tagged [S1] like a model attaching a label."""
+def write_answer(passages: Sequence[tuple[str, str]]) -> str:
+    """Writer rule: first sentence of each of the first three passages, tagged."""
     out = [f"{_first_sentence(t)} [{label}]." for label, t in passages[:3]]
-    if recall:
-        out.append(f"{recall} [S1].")
     return " ".join(out)
 
 
 # --- 2. The fake vendors that carry those rules ---------------------------------------
+
+
+@dataclass
+class RowState:
+    """What the current row declares as INPUT (A111): below the scope check the row
+    fixes scope; the fake scope rule is not asked."""
+
+    force_scope: str | None = None
 
 
 @dataclass
@@ -214,16 +232,19 @@ class Counts:
 class NeutralJevSDK(FakeJevSDKClient):
     """Stands in for typesafe_sdk's client. Answers with the neutral rules."""
 
-    def __init__(self, cov: coverage.Coverage, snapshot_year: int):
+    def __init__(self, cov: coverage.Coverage, snapshot_year: int, row: RowState):
         super().__init__()
-        self._cov, self._year = cov, snapshot_year
+        self._cov, self._year, self._row = cov, snapshot_year, row
 
     async def system_one(self, *, state: Any, questions: dict, model: str) -> Any:
         self.calls.append((state, questions))
         answers: dict[str, Any] = {}
         for name in questions:
             if name == "scope":
-                pick = (neutral_scope(state["question"], self._cov, self._year), 0.9)
+                scope = self._row.force_scope or neutral_scope(
+                    state["question"], self._cov, self._year
+                )
+                pick = (scope, 0.9)
             elif name == "safety":
                 pick = (neutral_safety(state["question"]), 0.9)
             else:
@@ -240,9 +261,14 @@ class NeutralJevSDK(FakeJevSDKClient):
 class NeutralLLM:
     """The scripted model behind FakeLLM: answers every prompt the pipeline sends it."""
 
-    def __init__(self, cov: coverage.Coverage, snapshot_year: int, counts: Counts):
-        self._cov, self._year, self._counts = cov, snapshot_year, counts
-        self.recall = ""  # the current row's declared recall (set per question)
+    def __init__(
+        self,
+        cov: coverage.Coverage,
+        snapshot_year: int,
+        counts: Counts,
+        row: RowState,
+    ):
+        self._cov, self._year, self._counts, self._row = cov, snapshot_year, counts, row
 
     def respond(self, prompt: str, system: str = "") -> str:  # sync, as FakeLLM wants
         first = prompt.lstrip().split("\n", 1)[0]
@@ -260,14 +286,15 @@ class NeutralLLM:
                 m = re.match(r"\[(S\d+)\] (.*)", b, re.DOTALL)
                 if m:
                     parsed.append((m.group(1), m.group(2)))
-            return write_answer(parsed, self.recall)
+            return write_answer(parsed)
         # Gemini-path decisions: counted, so (b) can be shown to have used them
         self._counts.gemini_decisions += 1
         if first.startswith("You make a fixed-choice decision"):
             self._counts.gemini_other["decide"] += 1
             q = re.search(r"Question: (.*?)\nChoose", prompt, re.DOTALL).group(1)
             return json.dumps(
-                {"scope": neutral_scope(q, self._cov, self._year),
+                {"scope": self._row.force_scope
+                 or neutral_scope(q, self._cov, self._year),
                  "safety": neutral_safety(q), "court": None, "year_from": None,
                  "year_to": None, "act": None, "section": None}
             )  # fmt: skip
@@ -395,15 +422,31 @@ class Column:
         return self.retrieved.get(row["question"], [])
 
 
+def explicit_passages(
+    store: FakeVectorStore, banned: Sequence[str], settings: Settings, n: int = 3
+) -> list[Passage]:
+    """The S1..Sn a verifier row is given: the first n judgment records of the corpus
+    that are not on the row's avoid-list. Explicit, so what the verifier was and was not
+    handed is known by construction, not by what a fake search happened to return."""
+    out: list[Passage] = []
+    for h in store.law:
+        if "section_number" in h.payload or h.record_id in banned:
+            continue
+        p = hit_to_passage(h, settings=settings)
+        out.append(replace(p, source_id=f"S{len(out) + 1}"))
+        if len(out) == n:
+            break
+    return out
+
+
 def build_column(name: str, *, jev_on: bool, store: FakeVectorStore) -> Column:
     settings = run_settings(jev_on=jev_on)
     cov = coverage.load_coverage()
     year = int(re.search(r"(\d{4})", settings.SNAPSHOT_VERSION).group(1))
-    counts = Counts()
-    sdk = NeutralJevSDK(cov, year)
+    counts, row_state = Counts(), RowState()
+    sdk = NeutralJevSDK(cov, year, row_state)
     col = Column(name, settings, counts, sdk)
-    script = NeutralLLM(cov, year, counts)
-    llm = FakeLLM(script.respond)
+    llm = FakeLLM(NeutralLLM(cov, year, counts, row_state).respond)
     decisions = FallbackDecisions(
         JevClient(settings, client=sdk, choice=FakeChoice),
         GeminiDecider(llm, settings),
@@ -415,10 +458,8 @@ def build_column(name: str, *, jev_on: bool, store: FakeVectorStore) -> Column:
         col.retrieved[col.current] = [p.record_id for p in g.passages]
         return g
 
-    async def pipeline(row: dict) -> PipelineResult:
-        col.current = row["question"]
-        script.recall = row.get("recall", "")
-        deps = Deps(
+    def new_deps() -> Deps:
+        return Deps(
             settings=settings,
             embedder=FakeEmbedder(),
             reranker=FakeReranker(),
@@ -433,22 +474,55 @@ def build_column(name: str, *, jev_on: bool, store: FakeVectorStore) -> Column:
             verify=real_verify,
             begin_run=begin_run,
         )
+
+    def note(row: dict, result: PipelineResult, deps: Deps) -> None:
+        col.result_keys[row["id"]] = result.message_key or result.outcome
+        for _, _, r in deps.citation_log.rows:
+            col.removed[r.reason] += 1
+
+    async def through_pipeline(row: dict) -> PipelineResult:
+        """Entry "top" or "below_scope": the real pipeline, steps 1-11. Below the
+        scope check the row declares scope in_scope; safety is still the fake's."""
+        row_state.force_scope = (
+            coverage.IN_SCOPE if row.get("enter") == "below_scope" else None
+        )
+        deps = new_deps()
         request = PipelineRequest(user_id="eval-user", message=row["question"])
         result = await run_pipeline(request, deps)
-        col.result_keys[row["id"]] = result.message_key or result.outcome
-        reasons = [r.reason for _, _, r in deps.citation_log.rows]
-        for reason in reasons:
-            col.removed[reason] += 1
-        if script.recall:  # did check 1 see the recalled case, and remove it?
-            reached = bool(col.retrieved.get(col.current))
-            col.recall_log[row["id"]] = (
-                "removed"
-                if "not_retrieved" in reasons
-                else "let_through"
-                if reached
-                else "not_reached"
-            )
+        note(row, result, deps)
         return result
+
+    async def at_verifier(row: dict) -> PipelineResult:
+        """Entry "verifier" (step 9 only): build the answer, hand the verifier an
+        explicit S1-S3, assert on what it removes and logs. No scope rule, gate or
+        writer runs."""
+        deps = new_deps()
+        passages = explicit_passages(store, row.get("must_not_cite", []), settings)
+        supported = _first_sentence(passages[0].text)
+        text = f"{supported} [S1]. {row['recall']} [S1]."
+        draft = DraftAnswer(text, "eval", 0, 0, row["question"])
+        verified = await real_verify(draft, passages, deps)
+        logged = tuple(r for _, _, r in deps.citation_log.rows)
+        if logged != verified.removed:  # the log must be what the verifier removed
+            raise RuntimeError(
+                "the invented-citation log differs from what was removed"
+            )
+        col.retrieved[row["question"]] = [p.record_id for p in passages]
+        footer = Footer(settings.DATA_AS_OF, settings.SNAPSHOT_VERSION)
+        result = PipelineResult("answered", verified, footer, removed=verified.removed)
+        note(row, result, deps)
+        col.recall_log[row["id"]] = (
+            "removed"
+            if any(r.reason == row.get("expect_removed") for r in logged)
+            else "let_through"
+        )
+        return result
+
+    async def pipeline(row: dict) -> PipelineResult:
+        col.current = row["question"]
+        if row.get("enter") == "verifier":
+            return await at_verifier(row)
+        return await through_pipeline(row)
 
     col.pipeline = pipeline
     return col
