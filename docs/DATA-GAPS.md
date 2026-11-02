@@ -331,8 +331,34 @@ norm with no zeros or NaNs, section numbers present on 95%+ of points. Garbled t
 (replacement characters) appears in 5.4% of the regulatory sample and 1.6% of the state
 sample; how much of that text is unreadable was not measured.
 
-`data/sparse_fix.py` can re-encode them. It has not been run on live data. **Test it on
-`acts_sample_v1` first** — that collection is disposable, already measured, and gives a
+### The repair works — measured on the sample, 2 Nov 2026
+
+`data/sparse_fix.py`, hard-limited to `acts_sample_v1`, re-encoded all 4,944 broken vectors in
+about 3 seconds, backing them up first and leaving dense vectors untouched. Ground truth: the
+78 sample points whose text contains every query word, 39 of them with broken vectors.
+
+| | Broken points found in top 100 | Unbroken points found |
+|---|---:|---:|
+| Before repair | **0 of 39** | 39 of 39 |
+| After repair | **39 of 39** | 39 of 39 |
+
+Nothing previously found was lost. Top-10 hits rose from 36 to 45. A concrete case: "land
+acquisition compensation" now returns The Land Acquisition Act 1894 first; before the repair
+it returned a municipal corporations Act and a flood-relief Act.
+
+So this is not a marginal gain — for a broken point, keyword search was finding **nothing**.
+
+**How far to trust it:** 10,000 points, 5 lookups, a lexical stand-in for relevance, recall
+measured rather than precision, and encode-and-write speed untested at 524,400 points. It
+justifies running the repair; it does not price it.
+
+**Priority:** the 19,835 broken Central Act points inside `kanoon_v1` are the ones actually
+being served, and they are a twelve-second job. The other ~504,600 are not in the copy yet and
+can be repaired as part of whatever copies them.
+
+(Superseded note: this section previously said to test on `acts_sample_v1` first — that test is the table above.)
+
+The original guidance stood: test on `acts_sample_v1` — that collection is disposable, already measured, and gives a
 before-and-after on real keyword lookups.
 
 ## 10. Identical text across different provisions is legitimate, so text-hash dedup is unsafe
