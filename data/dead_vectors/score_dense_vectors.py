@@ -118,7 +118,10 @@ def main() -> None:
                 "with_payload": FIELDS,
                 "with_vector": ["dense"],
             }
-            off = rnd.randrange(1 << 63)  # noqa: S311 (sampling, not security) if a.sample else state["offset"]
+            if a.sample:
+                off = rnd.randrange(1 << 63)  # noqa: S311 (sampling, not security)
+            else:
+                off = state["offset"]
             if off is not None:
                 body["offset"] = off
             res = scroll(a.url, a.collection, body)
