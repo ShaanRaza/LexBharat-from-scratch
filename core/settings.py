@@ -24,7 +24,7 @@ class Settings(BaseSettings):
 
     # --- Environment ---
     # The ONLY thing "production" does here is the SEAL_KEY check at the bottom of this
-    # file. It does not turn on any Jev switch, and nothing else flips them (A102).
+    # file. It does not turn on any Jev switch, and nothing else flips them (A104).
     ENVIRONMENT: str = "development"
 
     # --- Product ---
@@ -70,7 +70,7 @@ class Settings(BaseSettings):
     JEV_BATCH_GATE: bool = False  # one Jev request per run for all passages; claim
     # support is never batched (a wrong claim check changes a citation tick)
     JEV_CLAIM_THRESHOLD: float = 0.6  # below this, Jev 'supports' becomes 'partly'
-    # What the five Jev switches do (A102): each picks WHO answers one fixed-choice
+    # What the five Jev switches do (A104): each picks WHO answers one fixed-choice
     # decision. On = Jev. Off = the Gemini fallback answers the same choices
     # (adapters/decisions.py, FallbackDecisions). Off is therefore NOT "no check": the
     # scope check, the gate and the claim check still run, decided by Gemini. All five

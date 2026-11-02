@@ -420,6 +420,7 @@ things expected to break first on a 16 GB server.
 | What features are planned after the P0 core? | [`docs/FEATURES-PLAN.md`](docs/FEATURES-PLAN.md) |
 | When does this ship? | [`docs/ROADMAP.md`](docs/ROADMAP.md) |
 | What are we measuring, and what gates launch? | [`docs/METRICS.md`](docs/METRICS.md) |
+| **What does this cost to run?** | [`docs/COSTS.md`](docs/COSTS.md) |
 | What could go wrong? | [`docs/RISKS.md`](docs/RISKS.md) |
 | What are the legal constraints? | [`docs/SECURITY-AND-COMPLIANCE.md`](docs/SECURITY-AND-COMPLIANCE.md) |
 | How long do we keep data? | [`docs/RETENTION.md`](docs/RETENTION.md) |

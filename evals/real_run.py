@@ -11,7 +11,7 @@ It is TWO runs of the same set, side by side:
   (b) every switch at its shipped default (all off), read from the Settings class,
       never from the environment. Asks: what does the product do today?
 
-WHAT A SWITCH DOES (found while building this, A102): it picks WHO answers a
+WHAT A SWITCH DOES (found while building this, A104): it picks WHO answers a
 fixed-choice decision, Jev or the Gemini fallback (adapters/decisions.py,
 FallbackDecisions). Off is NOT "no check": the scope check, the gate and the claim
 check still run, decided by Gemini. So "fails in (b), passes in (a)" does not mean a
