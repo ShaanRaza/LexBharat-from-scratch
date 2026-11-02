@@ -97,6 +97,12 @@ each needs a person, a hand check or a lawyer.**
 
 ## Agent build decisions (branch `shan/agent-team`, 1 Nov 2026)
 
+> **Numbering.** Three sessions have now collided on a row number (A44 twice, A71 twice).
+> Each lane takes a reserved block and never reaches outside it: **lead A100+**, **core
+> A120+**, **trust A140+**, **platform A160+**, **web A180+**, **data A200+**. Existing rows
+> keep their numbers. A lane that has run out says so rather than borrowing.
+
+
 Made by the agent team under CLAUDE.md §8 "Who decides". Each row: the choice, the one
 alternative ruled out, and why. **Rows marked OWNER need your confirmation** because they
 touch the trust promise or what users see.
