@@ -1118,3 +1118,86 @@ that slice (6.89%) matches the court's (6.97%), but one matching dimension does 
 representative: the slice could differ in year mix, case type, case length or court bench in ways
 that were not checked, and none of the results here should be read as estimates for the whole court.
 
+## 18. Court labels, `act_status` and duplicate chunk ids: measured (interim, the Qdrant scan stopped twice at the 20-second limit)
+
+**3 Nov 2026.** Parquet results are exhaustive (75 files, 33.7M rows). Qdrant results come from
+`acts_india` (complete, 1,098,577 points) and the first 200,000 `legal_corpus_v2` points of an
+exhaustive read-only scroll (`kfix_idscan.py`, checkpointed). The scan hit the standing 20-second
+hard stop on the first `legal_corpus_v2` request and again at page 46; v2 beyond 200,000 and all of v1
+are **not yet read**. Nothing was written to any Qdrant.
+
+### How often is `court` wrong? Almost never; it is more often missing
+
+| Parquet, 32,572,660 judgment rows | Rows | Share |
+|---|---|---|
+| Label is the court's usual spelling | 32,315,460 | 99.21% |
+| Same court, other spelling (`Patna High Court` / `High Court of Patna`) | 67,598 | 0.21% |
+| **No label at all** | **189,320** | **0.58%** |
+| **A different court's name** | **282** | **0.00087%** |
+
+**The id is reliable.** 30 prefixes; each maps to exactly one `court_code` and one source file in all
+rows; `chunk_id` starts with its `case_id` in all rows. The Supreme Court has no letter prefix.
+
+**A wrong label is a non-problem by rate:** 282 rows in 82 cases (9 Uttarakhand rows labelled Kerala,
+71 Delhi rows labelled Patna and the rest). Reading the first chunk's own text for those cases: it names
+the id's court in 42, the label's court in 12, both in 9, neither in 19. In Qdrant `legal_corpus_v2`,
+first 200,000 points: 7 different-court labels (0.0035%) and 1,303 with no label (0.65%).
+
+**A missing label is the real cost, because a court filter silently drops those rows.** Highest shares
+of unlabelled rows: Himachal Pradesh 4.1%, Andhra Pradesh 3.0%, Delhi 2.9%, Orissa 2.1%. Deriving
+`court` from the id would fill all of them for free, since the id agrees with `court_code` in every
+row. The spelling variants (0.21%) also defeat an exact-string filter unless labels are normalised.
+
+### `act_status`: a default, not a determination. "In force" stays off.
+
+All 22,264 Acts (parquet) and 22,265 (Qdrant `acts_india`: one extra Bihar Act) have `act_status`;
+it is constant within every Act. Split by id kind, which is the test:
+
+| Id kind | Acts | `act_status` |
+|---|---|---|
+| State (`IND_state_`) | 8,544 (Qdrant 8,545) | **in_force 100%** |
+| Central (`IND_central_`) | 848 | **in_force 100%** |
+| Repealed (`IND_REP_`) | 710 | repealed 100% |
+| Regulators and other | 12,162 | in_force 11,774; superseded 378 (all SEBI); spent 10 |
+
+State Acts are uniformly in force and so are central Acts by id. The only variation is where the **id
+already says so**: all 710 repealed Acts are exactly the `IND_REP_` ids, so `act_status` adds no repeal
+information the id does not carry. That is the signature of a default. **"In force" stays off
+permanently** (`SHOW_IN_FORCE`); it currently withholds 21,162 of 22,264 Acts. DATASET.md's "1,568
+Acts" is the central legislation file alone (848 in force + 710 repealed + 10 spent), not the whole set.
+
+### Duplicate chunk ids: the dead Kerala vectors look like second copies of live chunks
+
+**Established.** The parquet has **zero** duplicated `chunk_id`s in 33.7M rows, and `acts_india` has
+zero in 1,098,577 points, so the duplicates in the vector collections were introduced by loading.
+Section 8 already found 4,871 on the Supreme Court set. In the first 200,000 `legal_corpus_v2` points,
+697 chunk ids sit on two or more points, across at least 11 courts (Jharkhand 378, Kerala 292,
+Punjab and Haryana 168, Rajasthan 168, Himachal Pradesh 138, Karnataka 124, J&K 76). This is not a
+Kerala-only or Supreme-Court-only pattern.
+
+**Established, in the 100,000-point Kerala slice.** 511 chunk ids sit on two or more points (1,024
+points). **No group has two dead members**: 211 are live+live, 298 are dead+live, 2 are dead+live+live.
+Dead points are 5.5 times as likely as live ones to have a twin inside the slice (4.3% against 0.8%).
+In a sample of 3,000 dead points, the text is identical to the parquet text of the same chunk id in
+99.4% of the 2,970 found.
+
+**Established, the Kerala count.** About 99% of Qdrant's Kerala chunk ids (dead and healthy alike) are in
+the Kerala parquet, which holds 2,777,738 distinct ids. So of Qdrant's 3,125,018 Kerala points, about
+3.09M carry ids from that set, which forces **at least about 312,000 duplicate points**. The rest of
+Qdrant's excess over the parquet (347,280) is the roughly 1% of points whose ids the parquet does not
+have. The Kerala excess is therefore mostly duplicates, and the two datasets are the same dataset (for
+Kerala): section 8's cross-check is sound.
+
+**Overall, the premise needs one correction.** Qdrant has **fewer** points than the parquet (31.42M
+against 32.57M), not more; the difference is the Supreme Court's 742,066 non-English chunks (1,113,313
+in the parquet against 371,159 English in Qdrant) and smaller per-court gaps. Kerala is the court where
+Qdrant is larger.
+
+**Inferred, not yet shown for the whole collection:** that every dead point is a second copy whose live
+twin carries a good `voyage-4` vector. If so: the "dead" vectors are valid embeddings from another
+model (section 17) loaded as extra copies, a chunk was never unreachable by dense search because its
+twin was, the re-embed repaired points that were redundant, and the damage was duplicate slots and a
+random choice of copy by `get_record`. **Pending the scan:** the exact duplicate count per court, how
+many dead points have a live twin, and whether any duplicate pair carries different text (the check
+that matters for verifier check 3).
+
