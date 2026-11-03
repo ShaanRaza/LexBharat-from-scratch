@@ -64,7 +64,10 @@ LAUNCH_CODES = {
     "KLHC": "Kerala",
     "INSC": _SC_NAME,
 }
-GATE_THRESHOLD_PCT = 1.0  # my rule, not the owner's: an English parquet-only share at or above this in a launch court
+# The gate binds on WHOLE MISSING CASES (owner, 4 Nov 2026): a case Qdrant holds no chunk of is invisible law, while
+# scattered missing chunks leave a findable case incomplete. The threshold (1% of a court's English cases) is still my
+# number, not the owner's. The scattered-chunk rate is reported beside it and does not bind.
+GATE_THRESHOLD_PCT = 1.0
 SPOT_N = 20
 
 
@@ -364,6 +367,44 @@ def pct(a: int, b: int) -> float:
     return 100.0 * a / b if b else 0.0
 
 
+def gate_row(c: dict) -> dict:
+    """The gate figures of one court (or the total) from its roll-up counts. `whole_pct` BINDS: English cases that
+    Qdrant holds no chunk of, as a share of the court's English cases. `scattered_pct` is reported beside it: English
+    chunks missing from cases that are otherwise present, as a share of the court's English chunks."""
+    return {
+        "english_parquet_chunks": c["parquet_english_chunks"],
+        "english_parquet_only": c["parquet_only_english_chunks"],
+        "pct": pct(c["parquet_only_english_chunks"], c["parquet_english_chunks"]),
+        "english_cases": c["parquet_english_cases"],
+        "whole_missing_english_cases": c["whole_missing_english_cases"],
+        "whole_missing_english_chunks": c["whole_missing_english_chunks"],
+        "whole_pct": pct(c["whole_missing_english_cases"], c["parquet_english_cases"]),
+        "scattered_english_chunks": c["partial_english_chunks"],
+        "scattered_pct": pct(c["partial_english_chunks"], c["parquet_english_chunks"]),
+    }
+
+
+def gate_figures(codes: dict) -> dict:
+    return {
+        name: gate_row(codes[code])
+        for code, name in LAUNCH_CODES.items()
+        if codes.get(code)
+    }
+
+
+def verdict(gate: dict, overall: dict) -> dict:
+    """The rule: a defect if whole missing English cases are GATE_THRESHOLD_PCT or more of the English cases of any
+    launch court or overall. Says which condition tripped; the scattered-chunk rate is reported and never binds."""
+    rows = {**gate, "All courts": overall}
+    whole = [k for k, g in rows.items() if g["whole_pct"] >= GATE_THRESHOLD_PCT]
+    scattered = [k for k, g in rows.items() if g["scattered_pct"] >= GATE_THRESHOLD_PCT]
+    return {
+        "tripped_whole_cases": whole,
+        "scattered_would_trip": scattered,
+        "verdict_defect": bool(whole),
+    }
+
+
 def stage_analyze(ctx: Ctx, partial_ok: bool = False) -> dict:
     raw, _ = court_table()
     P_ch, P_ca, P_co, P_lg, langs, codes = load_parquet(ctx)
@@ -407,6 +448,10 @@ def stage_analyze(ctx: Ctx, partial_ok: bool = False) -> dict:
         cmp_["parquet_only_english_chunks"] = int((only_p & ~non_en).sum())
         cmp_["parquet_only_non_english_chunks"] = int((only_p & non_en).sum())
         cmp_["whole_missing_english_chunks"] = int((whole & ~non_en).sum())
+        cmp_["partial_english_chunks"] = int((only_p & ~whole & ~non_en).sum())
+        # a case is English if it has an English chunk
+        cmp_["parquet_english_cases"] = int(len(np.unique(ca_u[~non_en])))
+        cmp_["whole_missing_english_cases"] = int(len(np.unique(ca_u[whole & ~non_en])))
         cmp_["parquet_only_languages"] = dict(
             collections.Counter(inv_lang[int(x)] for x in lang_u[only_p]).most_common(6)
         )
@@ -436,6 +481,9 @@ def stage_analyze(ctx: Ctx, partial_ok: bool = False) -> dict:
             "parquet_only_english_chunks",
             "parquet_only_non_english_chunks",
             "whole_missing_english_chunks",
+            "partial_english_chunks",
+            "parquet_english_cases",
+            "whole_missing_english_cases",
         ):
             agg[f] += c[f]
     res["courts"] = {k: dict(v) for k, v in courts.items()}
@@ -470,27 +518,27 @@ def stage_analyze(ctx: Ctx, partial_ok: bool = False) -> dict:
         lab[coll] = dict(kinds)
     res["labels"] = lab
     # launch-court gate figures and the verdict rule
-    gate = {}
-    for code, name in LAUNCH_CODES.items():
-        c = res["codes"].get(code)
-        if c:
-            gate[name] = {
-                "english_parquet_chunks": c["parquet_english_chunks"],
-                "english_parquet_only": c["parquet_only_english_chunks"],
-                "pct": pct(
-                    c["parquet_only_english_chunks"], c["parquet_english_chunks"]
-                ),
-                "whole_missing_english_chunks": c["whole_missing_english_chunks"],
-            }
-    res["gate"] = gate
+    res["gate"] = gate_figures(res["codes"])
     t = res["total"]
     res["overall_english_pct"] = pct(
         t["parquet_only_english_chunks"], t["parquet_english_chunks"]
     )
-    res["verdict_defect"] = bool(
-        any(g["pct"] >= GATE_THRESHOLD_PCT for g in gate.values())
-        or res["overall_english_pct"] >= GATE_THRESHOLD_PCT
-    )
+    res["overall"] = gate_row(t)
+    res.update(verdict(res["gate"], res["overall"]))
+    # where the court came from (CLAUDE.md section 6: a court label is missing on 0.58% of rows, so a label-based
+    # comparison would drop exactly the rows most likely to be absent)
+    unk = codes.index("?")
+    res["court_source"] = {
+        "method": "chunk id prefix (core/court_ids.json) for the parquet AND for Qdrant; the payload `court` label is not used to assign a court",
+        "parquet_rows_id_names_no_court": int((P_co == unk).sum()),
+        "qdrant_points_id_names_no_court": {
+            c: int((scans[c][2] == unk).sum()) for c in COLLECTIONS
+        },
+        "qdrant_points_without_court_label": {
+            c: int((scans[c][3] == scans[c][4].get("", -1)).sum()) for c in COLLECTIONS
+        },
+        "parquet_label_read": False,
+    }
     # spot-check
     rnd = random.Random(2026)
     picks: list[tuple[str, int]] = []
@@ -646,11 +694,14 @@ def write_section(ctx: Ctx, res: dict, spot: list[dict]) -> str:
     )
     L.append("### The launch courts (CLAUDE.md section 1)\n")
     L.append(
-        "| Court | English parquet chunks | English, in no collection | Share | of which in whole missing cases |\n|---|---:|---:|---:|---:|"
+        "The gate binds on the **whole-missing-case** column (a case Qdrant holds no chunk of at all is invisible law). The scattered-chunk column is the other shape (a findable case that is incomplete); it is reported beside it and does not bind.\n"
     )
-    for name, g in res["gate"].items():
+    L.append(
+        "| Court | English cases | **Whole English cases in no collection** | **Share of cases (binds)** | English chunks | English chunks scattered in present cases | Share of chunks (reported) | All English chunks in no collection |\n|---|---:|---:|---:|---:|---:|---:|---:|"
+    )
+    for name, g in [*res["gate"].items(), ("All courts", res["overall"])]:
         L.append(
-            f"| {name} | {n(g['english_parquet_chunks'])} | {n(g['english_parquet_only'])} | **{g['pct']:.2f}%** | {n(g['whole_missing_english_chunks'])} |"
+            f"| {name} | {n(g['english_cases'])} | {n(g['whole_missing_english_cases'])} | **{g['whole_pct']:.2f}%** | {n(g['english_parquet_chunks'])} | {n(g['scattered_english_chunks'])} | {g['scattered_pct']:.2f}% | {n(g['english_parquet_only'])} ({g['pct']:.2f}%) |"
         )
     L.append("")
     L.append(
@@ -686,10 +737,37 @@ def write_section(ctx: Ctx, res: dict, spot: list[dict]) -> str:
             )
         )
     L.append("")
-    L.append("### Verdict\n")
-    pcts = "; ".join(f"{k} {g['pct']:.2f}%" for k, g in res["gate"].items())
+    cs = res["court_source"]
+    L.append("### Where the court came from (CLAUDE.md section 6)\n")
     L.append(
-        f"By a rule I chose (not the owner's): **a defect for the launch gate if English parquet-only chunks are {GATE_THRESHOLD_PCT:.0f}% or more of a launch court's English chunks, or overall.** Launch courts: {pcts}; overall {res['overall_english_pct']:.2f}%. "
+        f"**The court of every row was taken from the chunk id, not from the `court` label**, on both sides: {cs['method']}. "
+        f"A label-based comparison would silently drop the rows with no label, which are the rows most likely to be absent, and would understate the gap. "
+        f"Ids that name no known court were kept, not dropped: {n(cs['parquet_rows_id_names_no_court'])} parquet rows and "
+        + ", ".join(
+            f"{n(v)} points of `{c}`"
+            for c, v in cs["qdrant_points_id_names_no_court"].items()
+        )
+        + " (they are the `?` row of the court counts). "
+        "Qdrant points with an empty `court` label (Measured; the rows a label-based comparison would have lost on the Qdrant side): "
+        + ", ".join(
+            f"`{c}` {n(v)}" for c, v in cs["qdrant_points_without_court_label"].items()
+        )
+        + ". The parquet `court` label was not read at all; the 0.58% missing-label rate for the parquet is section 6's figure, not re-measured here.\n"
+    )
+    L.append("### Verdict\n")
+    rows = {**res["gate"], "All courts": res["overall"]}
+    cases = "; ".join(
+        f"{k} {g['whole_pct']:.2f}% ({n(g['whole_missing_english_cases'])} of {n(g['english_cases'])} cases)"
+        for k, g in rows.items()
+    )
+    chunks = "; ".join(f"{k} {g['scattered_pct']:.2f}%" for k, g in rows.items())
+    tw, ts = res["tripped_whole_cases"], res["scattered_would_trip"]
+    L.append(
+        f"By a rule that binds on whole missing cases (owner, 4 Nov 2026; the {GATE_THRESHOLD_PCT:.0f}% threshold is my number, not the owner's): **a defect for the launch gate if whole English cases absent from Qdrant are {GATE_THRESHOLD_PCT:.0f}% or more of a launch court's English cases, or of all English cases.** "
+        f"Whole missing cases: {cases}. Scattered-chunk rate beside it (reported, does not bind): {chunks}.\n"
+    )
+    L.append(
+        f"**Which condition tripped: whole missing cases {'TRIPPED in ' + ', '.join(tw) if tw else 'did not trip anywhere'}; the scattered-chunk rate {'would have tripped in ' + ', '.join(ts) if ts else 'did not reach the threshold anywhere'} (it does not bind).** "
         f"**{'This is a coverage DEFECT that belongs in the launch gate.' if res['verdict_defect'] else 'By that rule this is not a defect for the launch courts.'}** "
         f"The spot-check classes above say whether the missing cases are real judgments (substantive English) or rows left out on purpose; **read the table before trusting the rule: its classes are automatic (language and chunk length only) and were not read by a person.**\n"
     )
@@ -737,6 +815,43 @@ def stage_commit(ctx: Ctx, text: str) -> str:
     return "commit failed: " + p.stderr[-200:]
 
 
+def morning_text(ctx: Ctx, res: dict, msg: str) -> str:
+    """MORNING.md: the one-line verdict, which condition tripped, and where the court came from."""
+
+    def n(x):
+        return f"{int(x):,}"
+
+    word = (
+        "COVERAGE DEFECT: belongs in the launch gate"
+        if res["verdict_defect"]
+        else "not a defect for the launch courts by the stated rule"
+    )
+    rows = {**res["gate"], "All courts": res["overall"]}
+    cases = "\n".join(
+        f"- {k}: {n(g['whole_missing_english_cases'])} of {n(g['english_cases'])} English cases wholly absent ({g['whole_pct']:.2f}%); scattered chunks {g['scattered_pct']:.2f}% of English chunks"
+        for k, g in rows.items()
+    )
+    tw = ", ".join(res["tripped_whole_cases"]) or "none"
+    ts = ", ".join(res["scattered_would_trip"]) or "none"
+    cs = res["court_source"]
+    return (
+        f"# Overnight lane A: finished {time.strftime('%Y-%m-%d %H:%M')}\n\n"
+        f"Verdict (by rule, see section 19): **{word}**.\n\n"
+        f"The rule binds on WHOLE MISSING CASES (invisible law), 1% of a court's English cases (my threshold). "
+        f"Whole-case condition tripped in: **{tw}**. The scattered-chunk rate (does not bind) would have tripped in: {ts}.\n\n{cases}\n\n"
+        f"**Court came from the chunk ID, not the label** (CLAUDE.md section 6: a missing label is 0.58% of rows, so a label-based comparison would drop the rows most likely to be absent). "
+        f"Ids naming no known court were kept: {n(cs['parquet_rows_id_names_no_court'])} parquet rows. "
+        "Qdrant points with no court label (what a label-based run would have lost): "
+        + ", ".join(
+            f"{c} {n(v)}" for c, v in cs["qdrant_points_without_court_label"].items()
+        )
+        + ". The parquet label was not read.\n\n"
+        "Not on the to-do list: the larger-model single-query-vector comparison. DECISIONS A136 ran it on 250 fresh targets (dense +1.6 @10 replicated, hybrid -0.1 did not); the query model is unchanged. "
+        "The only measurement left is the launch-collection real-mixture comparison (gate item 29).\n\n"
+        f"Section 19: {msg}.\nFull text: {ctx.home / 'SECTION19.md'}\nFigures: {ctx.home / 'results.json'}, spot-check: {ctx.home / 'spotcheck.json'}\n"
+    )
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("stage", choices=["all", "parquet", "scan", "analyze", "status"])
@@ -781,15 +896,9 @@ def main() -> None:
                 else stage_commit(ctx, text)
             )
             ctx.log(f"section 19: {msg}")
-            verdict = (
-                "COVERAGE DEFECT: belongs in the launch gate"
-                if res["verdict_defect"]
-                else "not a defect for the launch courts by the stated rule"
-            )
-            (ctx.home / "MORNING.md").write_text(
-                f"# Overnight lane A: finished {time.strftime('%Y-%m-%d %H:%M')}\n\nVerdict (by rule, see section 19): **{verdict}**.\n\nSection 19: {msg}.\nFull text: {ctx.home / 'SECTION19.md'}\nFigures: {ctx.home / 'results.json'}, spot-check: {ctx.home / 'spotcheck.json'}\n"
-            )
-            ctx.status(stage="FINISHED", verdict=verdict)
+            text_m = morning_text(ctx, res, msg)
+            (ctx.home / "MORNING.md").write_text(text_m)
+            ctx.status(stage="FINISHED", verdict=text_m.split("**")[1])
     except Stop as exc:
         ctx.log(
             f"HARD STOP: {exc}. State is kept; re-run `python scan/coverage_gap.py all` to resume."

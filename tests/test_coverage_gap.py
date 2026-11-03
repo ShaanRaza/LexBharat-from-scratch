@@ -261,3 +261,174 @@ def test_a_finished_collection_is_not_scanned_again(tmp_path, monkeypatch):
         lambda *a, **k: (_ for _ in ()).throw(AssertionError("scanned again")),
     )
     g.stage_scan(g.Ctx(tmp_path), ["legal_corpus_v2"])
+
+
+# --- the verdict binds on whole missing cases (owner, 4 Nov 2026) --------------------------------------------------
+KL, BM, TG = (g.LAUNCH_CODES[c] for c in ("KLHC", "HCBM", "HBHC"))
+
+
+def _synthetic_home(tmp_path):
+    """A tiny parquet and a tiny Qdrant with known shapes, written in the formats the stages write.
+    KLHC: 10 English cases of 2 chunks, 1 wholly absent, 1 with a chunk missing (label empty on every point).
+    HBHC: 100 cases of 2 chunks, a chunk missing from 3 of them (scattered 1.5%, no whole case missing).
+    HCBM: 100 cases, all present, plus one wholly absent HINDI case. One id names no court (absent) and one
+    Qdrant point with an id naming no court."""
+    _, codes = g.court_table()
+    codes = [*codes, "?"]
+    cix = {c: i for i, c in enumerate(codes)}
+    langs = {"en": 0, "hi": 1}
+    par, qd = [], []  # (chunk id, lang, label)
+    for i in range(10):
+        for k in (1, 2):
+            cid = f"KLHC{i:04d}_{k:03d}"
+            par.append((cid, "en", ""))
+            if i < 8 or (i == 8 and k == 1):
+                qd.append((cid, "en", ""))
+    for i in range(100):
+        for k in (1, 2):
+            cid = f"HBHC{i:04d}_{k:03d}"
+            par.append((cid, "en", ""))
+            if not (i < 3 and k == 2):
+                qd.append((cid, "en", "labelled"))
+        cid = f"HCBM{i:04d}_001"
+        par.append((cid, "en", ""))
+        qd.append((cid, "en", "labelled"))
+    par.append(("HCBM9999_001", "hi", ""))
+    par.append(("123_x", "en", ""))
+    qd.append(("456_y", "en", ""))
+
+    def arrays(rows):
+        ch = np.array([g.H(r[0]) for r in rows], dtype=np.uint64)
+        ca = np.array([g.H(g.case_key(r[0])) for r in rows], dtype=np.uint64)
+        co = np.array(
+            [
+                cix[g.code_of(r[0])] if g.code_of(r[0]) in cix else cix["?"]
+                for r in rows
+            ],
+            dtype=np.int8,
+        )
+        return ch, ca, co
+
+    d = tmp_path / "parquet"
+    d.mkdir()
+    ch, ca, co = arrays(par)
+    np.savez(
+        d / "in_x.npz",
+        chash=ch,
+        cash=ca,
+        code=co,
+        lang=np.array([langs[r[1]] for r in par], dtype=np.int16),
+    )
+    (d / "langs.json").write_text(json.dumps(langs))
+    (d / "codes.json").write_text(json.dumps(codes))
+    for coll in g.COLLECTIONS:
+        sd = tmp_path / "scan" / coll
+        sd.mkdir(parents=True)
+        rows = qd if coll == "legal_corpus_v2" else []
+        ch, ca, co = (
+            arrays(rows)
+            if rows
+            else (
+                np.array([], np.uint64),
+                np.array([], np.uint64),
+                np.array([], np.int8),
+            )
+        )
+        labels = {"": 0, "labelled": 1}
+        np.savez(
+            sd / "page_000000.npz",
+            chash=ch,
+            cash=ca,
+            code=co,
+            label=np.array([labels[r[2]] for r in rows], dtype=np.int32),
+        )
+        (sd / "labels.json").write_text(json.dumps(labels))
+        (sd / "state.json").write_text(
+            json.dumps(
+                {
+                    "offset": None,
+                    "pages": 1,
+                    "points": len(rows),
+                    "done": True,
+                    "count_at_start": len(rows),
+                }
+            )
+        )
+    return g.Ctx(tmp_path)
+
+
+def test_the_gate_binds_on_whole_missing_cases_and_reports_scattered_chunks_beside_it(
+    tmp_path,
+):
+    res = g.stage_analyze(_synthetic_home(tmp_path))
+    k, t, b = res["gate"][KL], res["gate"][TG], res["gate"][BM]
+    assert (k["english_cases"], k["whole_missing_english_cases"]) == (10, 1) and k[
+        "whole_pct"
+    ] == 10.0
+    assert k["scattered_english_chunks"] == 1 and k["scattered_pct"] == pytest.approx(
+        5.0
+    )  # 1 of 20 chunks
+    # scattered above the threshold, but it does not bind
+    assert t["whole_missing_english_cases"] == 0 and t[
+        "scattered_pct"
+    ] == pytest.approx(1.5)
+    # the Hindi case wholly absent from Qdrant is not English, so it is not a missing English case
+    assert b["whole_missing_english_cases"] == 0 and b["english_cases"] == 100
+    assert res["tripped_whole_cases"] == [KL] and res["verdict_defect"] is True
+    # reported, not binding (overall: 4 scattered of 322 chunks is also over 1%)
+    assert set(res["scattered_would_trip"]) == {KL, TG, "All courts"}
+
+
+def test_scattered_chunks_alone_never_make_a_defect():
+    scattered_only = {"whole_pct": 0.0, "scattered_pct": 7.5}
+    v = g.verdict({"a": scattered_only}, {"whole_pct": 0.0, "scattered_pct": 7.5})
+    assert (
+        v["verdict_defect"] is False
+        and v["tripped_whole_cases"] == []
+        and v["scattered_would_trip"] == ["a", "All courts"]
+    )
+    whole = {
+        "whole_pct": g.GATE_THRESHOLD_PCT,
+        "scattered_pct": 0.0,
+    }  # exactly at the line trips
+    assert g.verdict({"a": whole}, {"whole_pct": 0.1, "scattered_pct": 0.0})[
+        "tripped_whole_cases"
+    ] == ["a"]
+    assert g.verdict({"a": {"whole_pct": 0.0, "scattered_pct": 0.0}}, whole)[
+        "tripped_whole_cases"
+    ] == ["All courts"]
+
+
+def test_the_court_comes_from_the_id_and_unlabelled_or_unclassifiable_rows_are_kept_and_counted(
+    tmp_path,
+):
+    res = g.stage_analyze(_synthetic_home(tmp_path))
+    cs = res["court_source"]
+    assert "chunk id prefix" in cs["method"] and cs["parquet_label_read"] is False
+    assert (
+        cs["parquet_rows_id_names_no_court"] == 1
+        and cs["qdrant_points_id_names_no_court"]["legal_corpus_v2"] == 1
+    )
+    # every Kerala point carries no label (17) plus the unclassifiable point (1): a label-based run drops them all
+    assert cs["qdrant_points_without_court_label"]["legal_corpus_v2"] == 18
+    # and the id-based comparison still sees Kerala's gap in full
+    assert res["gate"][KL]["whole_missing_english_cases"] == 1
+    assert (
+        res["codes"]["?"]["parquet_only_chunks"] == 1
+    )  # the unclassifiable parquet row is in the totals
+
+
+def test_section_19_and_morning_say_which_condition_tripped_and_where_the_court_came_from(
+    tmp_path,
+):
+    ctx = _synthetic_home(tmp_path)
+    res = g.stage_analyze(ctx)
+    text = g.write_section(ctx, res, [])
+    assert f"whole missing cases TRIPPED in {KL}" in text
+    assert "would have tripped in" in text and "does not bind" in text
+    assert "taken from the chunk id, not from the `court` label" in text
+    morning = g.morning_text(ctx, res, "committed locally (not pushed)")
+    assert "COVERAGE DEFECT" in morning and f"tripped in: **{KL}**" in morning
+    assert "Court came from the chunk ID, not the label" in morning
+    # the single-query-vector comparison is settled (A136), so it is not listed as a job
+    assert "Not on the to-do list" in morning and "gate item 29" in morning
