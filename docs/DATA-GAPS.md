@@ -909,11 +909,70 @@ What the data says about the premise:
 **Conclusion: the repaired chunks do not reach healthy dense recall, and neither year nor case
 length nor chunk length explains why.** The cause is unknown. What is known: the vectors are exactly
 what `voyage-4` produces for the stored text (check 2), the sparse and payload are untouched, and
-hybrid search, which is what the product uses, is within a few points of healthy. Candidate causes
-not yet tested: the dead cases being unusual in kind (many are short orders, which are templated, so
-near-duplicates crowd each other in dense search), or the text of a dead case differing from the
-text that was embedded when the collection was built. A fresh matched draw (healthy chunks chosen
+hybrid search, which is what the product uses, is within a few points of healthy. One candidate cause
+is now refuted (next subsection): near-duplicate crowding. Still untested: the text of a dead case
+differing from the text that was embedded when the collection was built. A fresh matched draw (healthy chunks chosen
 by case length and year, about 500 new query embeddings, a fraction of a cent) would tighten the
 intervals, and could move the point estimates; nothing here predicts which way. **Do not promote into `legal_corpus_v2` or
 serve Kerala on the strength of "at parity"; it is not.**
+
+### Is known-item recall depressed by near-duplicates? No: the gap lives in the queries that have none
+
+**3 Nov 2026.** Known-item retrieval counts a near-identical chunk as a miss. If dead cases hold more
+near-identical chunks than healthy ones, the metric would penalise them whatever the vector quality.
+Measured on the text of the whole 100,326-chunk eval corpus (read-only from the original, sentence
+hashes kept, `kfix_pool.py` and `kfix_dups.py`), no Voyage calls.
+
+**At chunk level, dead chunks are somewhat denser in repeated text.** Share of a chunk's sentences
+(70 to 260 characters) that appear verbatim in another chunk: dead 41.3% against healthy 35.9%;
+chunks with any shared sentence 69.0% against 56.6%. Ignoring digits, case and punctuation: 44.3%
+against 37.8%. A real difference, but not large.
+
+**At query level it does not appear, and the prediction fails.** The queries are sentences taken
+from the chunk, so what matters is how many other chunks contain that sentence:
+
+| | Repaired targets | Healthy controls |
+|---|---|---|
+| Queries with at least one duplicate elsewhere | 33.5% | 36.9% |
+| Queries with five or more | 20.4% | 20.6% |
+| Mean duplicates per query | 10.8 | 8.8 |
+
+The two groups face the same duplicate burden. If duplicates caused the gap it would sit in the
+queries that have them and vanish in the ones that do not. It is the reverse:
+
+| Gap, targets minus controls | Dense @10 | Dense @50 | Hybrid @10 | Hybrid @50 |
+|---|---|---|---|---|
+| Queries with NO duplicate (132 targets, 87 controls) | **-15.9** [-26.1, -5.5] | -12.9 [-22.2, -2.9] | -5.9 [-11.0, -1.0] | **-5.0** [-8.5, -1.6] |
+| Queries WITH a duplicate (85, 68) | 0.0 [-12.0, +12.0] | n/a | n/a | +7.6 [-3.5, +18.9] |
+
+Where a duplicate exists the two groups are level. Where known-item cannot be penalised by one, the
+repaired chunks are clearly behind. **So the gap is not a measurement artefact.**
+
+**Correction to the earlier reading of hybrid.** Section 17 said hybrid @50 was within noise under
+every match. That holds for the overall number (89% against 88%) because the targets do better where
+duplicates exist and worse where they do not, and the two cancel. In the no-duplicate subset hybrid
+@50 is 5.0 points short, interval excluding zero. Hybrid is much closer to healthy than dense is, but
+it is not shown to be at parity.
+
+### Sibling bias: free proxy done, the real rebuild test is pending
+
+`kerala_recall_eval2` (100,326 points) is built on the copy instance with **every** dead vector in
+it replaced by its repaired one (6,906 in the slice), so no repaired target has a dead sibling.
+Running it needs the 850 check-4 query texts re-embedded with `voyage-4` (the first run did not save
+the query vectors): about 40,000 tokens, under a cent. **Not run**, because the instruction was no
+Voyage calls.
+
+A free proxy from the saved ranks, splitting by whether the chunk's case has other chunks in the
+corpus:
+
+| Dense recall @10 / @50 | No sibling in corpus | Has sibling(s) |
+|---|---|---|
+| Healthy controls | 50% / 60% | 30% / 43% |
+| Repaired targets (siblings still dead) | 37% / 50% | 27% / 39% |
+
+Two readings. **(1) Siblings do cost recall:** a healthy chunk whose case-mates are live loses about
+20 points at @10. **(2) The gap does not need siblings:** among chunks with none in the corpus, so
+the sibling bias cannot be acting, the targets are still 13 points behind at @10 (37% against 50%)
+and 10 behind at @50. So the sibling bias is not what explains the gap, though it may make a fully
+repaired corpus score lower still; the rebuild run is the test of that.
 
