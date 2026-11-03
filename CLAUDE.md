@@ -30,8 +30,8 @@ it should now record everything measured as usable, not a conservative launch su
 
 - **All High Courts**, not three. Their vectors already exist, so there is no embedding cost — but
   three things that were deferrable are now gate items: the **Kerala recall gap** (`DATA-GAPS.md`
-  §17) now ships rather than sitting unserved; the **per-court embedding-model config** (§13) is
-  required, not optional; and **how often `court` is simply wrong** (§15) is load-bearing, because
+  §17) now ships rather than sitting unserved; the **query embedding model** (§13) is a single model for
+  every court (the per-court config was dropped, A128; which model is still open); and **how often `court` is simply wrong** (§15) is load-bearing, because
   a bad label now serves one court's law under another's name. It is still unmeasured.
 - **State Acts and regulators.** Their BM25 sparse vectors must be repaired on the way into the
   serving collection — ~504,600 points, about half of them (§9). That step is no longer optional.

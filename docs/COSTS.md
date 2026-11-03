@@ -36,7 +36,7 @@ server and several, every month, forever.
 
 | Item | Figure | Label | Source |
 |---|---|---|---|
-| Re-embedding, if needed at all | **$0** for a per-court config (~92% matched); else ~$560 at `voyage-4-lite`, ~$1,700 at `voyage-4`, **~$3,400 at `voyage-4-large`** (what `kanoon_v1` serves) | **Measured** (28B tokens) | `DATA-GAPS.md` section 13 |
+| Re-embedding, if needed at all | **$0** (a single query model; the per-court config was dropped, A128); else ~$560 at `voyage-4-lite`, ~$1,700 at `voyage-4`, **~$3,400 at `voyage-4-large`** (what `kanoon_v1` serves) | **Measured** (28B tokens) | `DATA-GAPS.md` section 13 |
 | Measuring whether that is needed | under **$1** (~420,000 Voyage tokens) | **Estimate** | the known-item run, this file section 6 |
 | BM25 repair of broken sparse vectors already in the served copy | about **12 seconds** of compute, no vendor cost | **Measured** | `DATA-GAPS.md` section 9 |
 | Jev credits bought so far | **$5** | **Checked** | `PRD-v2.md` section 8 |
@@ -170,7 +170,7 @@ uploads set the risk.** Watch Qdrant memory and OCR time in Langfuse from week o
 | Unknown | What settles it | Owner | Status |
 |---|---|---|---|
 | Server size and whether managed Qdrant is worth it | Bombay sizing experiment — RAM, p50/p95, recall@10/@50 for three quantization settings, extrapolated | data session | running, 2 Nov 2026 |
-| ~~Whether the $1,900 re-embedding is needed~~ | **Measured 2 Nov 2026 — per-court config, $0** | data session | done (`DATA-GAPS.md` §13) |
+| ~~Whether the $1,900 re-embedding is needed~~ | **Settled: $0 — single query model; the per-court config was tried and dropped (A128)** | data session | done (`DATA-GAPS.md` §13) |
 | ~~Whether any dense vectors are unrelated to their text~~ | **Measured 3 Nov 2026 — 6.9% of Kerala v2, nowhere else; sparse intact so hybrid still finds them** | data session | done (`DATA-GAPS.md` §14) |
 | Finding the remaining ~215,000 dead Kerala vectors | the free detector: score every vector against the mean legal-text direction, validate the threshold on the 31 known-dead and 419 known-good | data session | **not started — costs nothing to run** |
 | Re-embedding what it flags | **blocked on the payment method, not on engineering** — $12 of tokens, but 13 days at the throttled free tier | owner | **one card activation** |
