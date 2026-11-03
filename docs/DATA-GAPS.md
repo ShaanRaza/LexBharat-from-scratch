@@ -608,6 +608,12 @@ hybrid absorbs the penalty, and it does not close A128 on "accept". Pinning the 
 that mixes natural phrasing with real citation anchors, which is advocate work, not generation work, and is
 already on the owner's list. Dense alone loses 5 to 8 points in both styles.
 
+**CORRECTED 4 Nov 2026 (A128): the 5.4 and 0.56 figures in this table are WRONG and withdrawn.** They multiply a mismatch share by ONE
+per-chunk cost measured on 42 chunks, which assumes every mismatched chunk loses the same amount. It does not: the end-to-end
+measurement (section "Measured end to end", below) found the cost is about 3 points for `voyage-4-large` chunks and roughly
+zero for `voyage-4-lite` chunks, and 17 of the 25 court codes are lite. The shares (73%, 7.6%) still describe how many chunks sit
+off the query's model; they do not give the recall cost. Read the table below as a record of the superseded arithmetic only.
+
 **Corpus-wide Estimates** (share of chunks mismatched times the per-chunk hybrid cost at @10; upper bounds use
 the bootstrap upper limits 4.5 and 13.4; shares are the sample-weighted 73% and 7.6% from the court table and
 the volume-weighted about 54% and 8%):
@@ -622,7 +628,7 @@ the volume-weighted about 54% and 8%):
 At @50 the same arithmetic gives 0 at the optimistic end and about 1.8 points (upper 4.5) for a single query
 model, 0.19 (upper 0.47) for a per-court config, at the pessimistic end. These are share times a per-chunk
 cost measured on 42 chunks (9 of them identified as lite or large) with `voyage-4` queries: Estimates, not
-measurements. The per-court config cuts the exposure by roughly a factor of ten at either end. Nothing here
+measurements. The per-court config cuts the exposure by roughly a factor of ten at either end. *(Withdrawn 4 Nov 2026: that arithmetic assumed a uniform per-chunk cost, which is false; see the correction above.)* Nothing here
 proposes or prices a re-embed.
 
 ### Two qualifications on the question-style number, and what a six-court re-embed would involve
@@ -679,7 +685,7 @@ corpus-wide residual. Whether that is worth $109 to $118 is the owner's call; th
 
 ### Measured end to end, 4 Nov 2026: the per-court config does not show a net gain
 
-The exposure figures above (5.4 points under one query model, 0.56 under a per-court config) are shares times a per-chunk
+The exposure figures above (5.4 points under one query model, 0.56 under a per-court config, both now withdrawn) are shares times a per-chunk
 cost; the end-to-end eval of A128 (DECISIONS A128, "REOPENED") measured the net effect on 18,399 chunks of 24 courts, 1,185
 queries, through the shipped code. **A per-court config fused by RRF against one `voyage-4` vector: hybrid @10 -0.7 (95%
 CI -1.9 to +0.4) equal weight, +1.4 (-0.4 to +3.2) weighted by court size; dense @10 -4.0 (-6.3 to -1.6) and +2.2
@@ -838,16 +844,19 @@ could cost more there than it does here. This was not measured. (2) 42 targets, 
 (4) The off-model share was measured only for Kerala v2 (about 12 to 18%); other courts differ (section 13
 above).
 
-**What this says about the per-court config: it is load-bearing, not optional.** An earlier version of this
-paragraph called it "unnecessary rather than merely wrong-grained"; that was wrong and is withdrawn. It rested
+**WITHDRAWN 4 Nov 2026: what this paragraph said about the per-court config (that it is "load-bearing, not optional") is wrong.**
+The end-to-end eval found no measurable hybrid gain from it, dense clearly worse (-4.0), a mismatch cost of about 3 points for
+`voyage-4-large` chunks and about zero for `voyage-4-lite` chunks, and 17 of the 25 court codes lite; the per-court design was
+DROPPED (DECISIONS A128). The shares and counts below are still true; the conclusion drawn from them is not. The original paragraph
+follows as a record. An earlier version of it called the config "unnecessary rather than merely wrong-grained"; that was wrong and is withdrawn. It rested
 on two tests whose corpora were almost entirely `voyage-4` (Bombay v1; the Kerala eval) and on sentence-style
 queries. The corpus is not like that: **73% of the sampled High Court chunks are not `voyage-4`** (about 54%
 volume-weighted), **7 courts show no `voyage-4` chunk at all** in any sampled group (Patna, Chhattisgarh,
 Sikkim, Jharkhand, Jammu and Kashmir, Karnataka, Rajasthan), and **1,543 of the 2,640 sampled chunks (58%) sit
 in court groups with no `voyage-4` chunk** (see the table below). Under one `voyage-4` query model that mismatch
-reaches most of the corpus; a per-court majority query model cuts it to **7.6%** (about 8% volume-weighted). That
+reaches most of the corpus; a per-court majority query model cuts it to **7.6%** (about 8% volume-weighted). *(That
 is the whole job the config does, and at those shares it matters. The dense deficit it avoids is 6 to 8 points
-per mismatched chunk (above). Whether *hybrid* also depends on it was tested ("The question-style retest", below): it does, at
+per mismatched chunk (above). Both sentences are WITHDRAWN: the cost of a mismatch is not uniform.)* Whether *hybrid* also depends on it was tested ("The question-style retest", below): it does, at
 the pessimistic end of the bracket (7.4 points at @10); the sentence-style numbers (1.8 points) are the **best
 case**, because keyword search is doing the absorbing. The decision, and whether any re-embedding is worth it, is the owner's; this
 section does not propose one.
@@ -997,7 +1006,7 @@ for the part of the corpus that is currently clean.
 
 **Working answer: the per-court config at $0.** Hybrid is what ships. *(3 Nov 2026: the second sentence of
 this answer, "hybrid loses nothing measurable to a mismatched query", was measured on sentence-style queries
-against a corpus believed single-model; see the end of this section. The config itself is load-bearing.)*
+against a corpus believed single-model; see the end of this section. The claim that the config itself is load-bearing is WITHDRAWN (4 Nov 2026): the per-court design was dropped, DECISIONS A128.)*
 
 ### Two findings in that report that deserve more weight than they got
 
