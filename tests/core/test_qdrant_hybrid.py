@@ -189,13 +189,22 @@ async def test_a_court_label_filter_also_matches_the_court_the_id_names():
 
 async def test_a_court_with_several_id_prefixes_matches_all_of_them():
     c = FakeClient()
-    await _store(c).search("legal_corpus_v1", [0.1], "x", {"court": "Calcutta High Court"}, 10)
+    await _store(c).search(
+        "legal_corpus_v1", [0.1], "x", {"court": "Calcutta High Court"}, 10
+    )
     (_, kw) = c.queries[0]
     label, codes = _court_branch(kw["prefetch"][0].filter)
-    assert label == "Calcutta High Court" and sorted(codes) == ["WBCHCA", "WBCHCJ", "WBCHCO", "WBCHCP"]
+    assert label == "Calcutta High Court" and sorted(codes) == [
+        "WBCHCA",
+        "WBCHCJ",
+        "WBCHCO",
+        "WBCHCP",
+    ]
 
 
-@pytest.mark.parametrize("label", ["High Court of Hyderabad", "High Court", "Some Tribunal", ""])
+@pytest.mark.parametrize(
+    "label", ["High Court of Hyderabad", "High Court", "Some Tribunal", ""]
+)
 async def test_an_unknown_generic_or_shared_label_gets_no_code_branch(label):
     """Nothing is guessed: a label that names no one court keeps the plain label filter."""
     c = FakeClient()

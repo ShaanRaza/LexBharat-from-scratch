@@ -37,10 +37,11 @@ class SearchResult:
 async def embed_query(text: str, deps: Deps) -> list[float] | QueryVectors | None:
     """Embed the query. None = Voyage down (search degrades to keyword only).
 
-    A single-model collection is embedded once, as before. A collection embedded per court
-    (A128) is embedded once per MODEL, concurrently, and returned as one dense group per
-    model, each to be searched only among the courts that model built. Any model failing
-    to answer counts as Voyage down: a half-matched search would be silently uneven."""
+    A single-model collection is embedded once, as before. A collection embedded per
+    court (A128) is embedded once per MODEL, concurrently, and returned as one dense
+    group per model, each to be searched only among the courts that model built. Any
+    model failing to answer counts as Voyage down: a half-matched search would be
+    silently uneven."""
     collection = deps.settings.CORPUS_COLLECTION
     plan = model_plan.plan_for(deps.settings, collection)
     try:

@@ -79,12 +79,13 @@ class Settings(BaseSettings):
         "kerala_v2_fix": "voyage-4",
     }
     # A collection that mixes courts embedded by DIFFERENT models is described per court
-    # instead: collection -> court code (the record-id prefix, core/court_id.py) -> model,
-    # the MAJORITY model of a measured sample. A query is embedded once per model and each
-    # vector is searched only among its courts. A court that is not listed is REFUSED, never
-    # given a default. A collection named in VOYAGE_EMBED_MODELS above uses that one model
-    # and ignores this table (so the served kanoon_v1 and any explicit override are
-    # unchanged). Override with a JSON object in VOYAGE_COURT_MODELS.
+    # instead: collection -> court code (the record-id prefix, core/court_id.py) ->
+    # model, the MAJORITY model of a measured sample. A query is embedded once per model
+    # and each vector is searched only among its courts. A court that is not listed is
+    # REFUSED, never given a default. A collection named in VOYAGE_EMBED_MODELS above
+    # uses that one model and ignores this table (so the served kanoon_v1 and any
+    # explicit override are unchanged). Override with a JSON object in
+    # VOYAGE_COURT_MODELS.
     VOYAGE_COURT_MODELS: dict[str, dict[str, str]] = Field(
         default_factory=_default_court_models
     )
@@ -166,9 +167,8 @@ class Settings(BaseSettings):
     # Helper calls (the "Improve my question" helper and next-question suggestions) are
     # NOT answers and never touch the plan limit (A52). They are rate-limited per user
     # per hour instead. PLACEHOLDER numbers until the load test (PRD-v2 gate 14); None
-    # switches the limit off.
-    # How long a share link lives (PRD-v2 O14, TECH-STACK-v2: default 30 days, owner
-    # sets the final number with the retention periods, O13).
+    # switches the limit off. How long a share link lives (PRD-v2 O14, TECH-STACK-v2:
+    # default 30 days, owner sets the final number with the retention periods, O13).
     SHARE_LINK_EXPIRY_DAYS: int = 30
     # Whether an Act may ever read "In force" (decision A181). OFF until the
     # act_status count settles whether in_force is a measurement or a
@@ -208,22 +208,24 @@ class Settings(BaseSettings):
     FEATURE_HINDI: bool = False
 
     def embed_model_for(self, collection: str, court_code: str | None = None) -> str:
-        """The model that built `collection`'s vectors (for `court_code`'s chunks, when the
-        collection is described per court). Refuses anything not recorded."""
+        """The model that built `collection`'s vectors (for `court_code`'s chunks, when
+        the collection is described per court). Refuses anything not recorded."""
         if collection in self.VOYAGE_EMBED_MODELS:  # one model for the whole collection
             return self.VOYAGE_EMBED_MODELS[collection]
         per_court = self.VOYAGE_COURT_MODELS.get(collection)
         if per_court is not None:
             if court_code is None:
                 raise UnknownEmbeddingModel(
-                    f"collection {collection!r} is embedded per court: name the court code"
+                    f"collection {collection!r} is embedded per court: name the "
+                    f"court code"
                 )
             try:
                 return per_court[court_code]
             except KeyError:
                 raise UnknownEmbeddingModel(
                     f"court {court_code!r} is not registered for {collection!r}; "
-                    "measure it and register it (data/build_court_models.py), do not default"
+                    "measure it and register it (data/build_court_models.py), do not "
+                    "default"
                 ) from None
         raise UnknownEmbeddingModel(
             f"no embedding model is recorded for collection {collection!r}; "

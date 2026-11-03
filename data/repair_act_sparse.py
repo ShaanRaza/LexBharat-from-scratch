@@ -67,7 +67,9 @@ def orig_scroll(offset, limit: int, with_vector: bool) -> dict:
     try:
         raw = urllib.request.urlopen(req, timeout=HARD_STOP_S).read()  # noqa: S310
     except Exception as exc:  # noqa: BLE001
-        sys.exit(f"HARD STOP reading the original after {time.time() - t0:.1f}s: {exc}\nNo retry. The checkpoint is kept; re-run to resume.")
+        sys.exit(
+            f"HARD STOP reading the original after {time.time() - t0:.1f}s: {exc}\nNo retry. The checkpoint is kept; re-run to resume."
+        )
     if time.time() - t0 > HARD_STOP_S:
         sys.exit(f"HARD STOP: a read took {time.time() - t0:.1f}s")
     time.sleep(PAUSE_S)
@@ -77,7 +79,9 @@ def orig_scroll(offset, limit: int, with_vector: bool) -> dict:
 def orig_retrieve(ids: list) -> list:
     req = urllib.request.Request(
         ORIG + f"/collections/{SOURCE}/points",
-        data=json.dumps({"ids": ids, "with_payload": False, "with_vector": ["dense", "sparse"]}).encode(),
+        data=json.dumps(
+            {"ids": ids, "with_payload": False, "with_vector": ["dense", "sparse"]}
+        ).encode(),
         headers={"Content-Type": "application/json"},
     )
     try:
@@ -89,7 +93,9 @@ def orig_retrieve(ids: list) -> list:
 
 
 # --- the copy instance ------------------------------------------------------------------------------
-def copy_http(path: str, body: dict | None = None, method: str = "POST", timeout: int = 900):
+def copy_http(
+    path: str, body: dict | None = None, method: str = "POST", timeout: int = 900
+):
     assert COPY.endswith(":7333")  # writes go to the copy instance only
     req = urllib.request.Request(
         COPY + path,
@@ -108,12 +114,18 @@ def encoder():
 
 def encode_many(enc, texts: list[str]) -> list[dict]:
     """Document-side BM25, as the stored healthy vectors were built."""
-    return [{"indices": [int(i) for i in e.indices], "values": [float(v) for v in e.values]} for e in enc.embed(texts)]
+    return [
+        {"indices": [int(i) for i in e.indices], "values": [float(v) for v in e.values]}
+        for e in enc.embed(texts)
+    ]
 
 
 def differs(stored: dict, new: dict) -> bool:
     """Broken = a different index set, or any value more than TOL away."""
-    a, b = dict(zip(stored["indices"], stored["values"])), dict(zip(new["indices"], new["values"]))
+    a, b = (
+        dict(zip(stored["indices"], stored["values"])),
+        dict(zip(new["indices"], new["values"])),
+    )
     return set(a) != set(b) or any(abs(a[k] - b[k]) > TOL for k in a)
 
 
@@ -140,20 +152,47 @@ def plan(a) -> None:
         off = r["next_page_offset"]
         if off is None:
             break
-    print(f"READ-ONLY plan over the first {n:,} non-central Act points of {SOURCE} (empty text {empty}):")
-    print(f"  broken (indices OR values): {broken:,} = {broken / max(n - empty, 1) * 100:.1f}%  | by index set alone (sparse_fix.py's test): {idx_broken:,} = {idx_broken / max(n - empty, 1) * 100:.1f}%")
-    print(f"  against the 49.4% of section 9's 10,000-point sample; of 1,024,068 points that is about {broken / max(n - empty, 1) * 1_024_068:,.0f}")
+    print(
+        f"READ-ONLY plan over the first {n:,} non-central Act points of {SOURCE} (empty text {empty}):"
+    )
+    print(
+        f"  broken (indices OR values): {broken:,} = {broken / max(n - empty, 1) * 100:.1f}%  | by index set alone (sparse_fix.py's test): {idx_broken:,} = {idx_broken / max(n - empty, 1) * 100:.1f}%"
+    )
+    print(
+        f"  against the 49.4% of section 9's 10,000-point sample; of 1,024,068 points that is about {broken / max(n - empty, 1) * 1_024_068:,.0f}"
+    )
 
 
 def ensure_dest(dest: str) -> None:
-    names = {c["name"] for c in copy_http("/collections", method="GET")["result"]["collections"]}
+    names = {
+        c["name"]
+        for c in copy_http("/collections", method="GET")["result"]["collections"]
+    }
     if dest in names:
         return
     copy_http(
         f"/collections/{dest}",
         {
-            "vectors": {"dense": {"size": 1024, "distance": "Cosine", "on_disk": True, "quantization_config": {"scalar": {"type": "int8", "quantile": 0.99, "always_ram": False}}}},
-            "sparse_vectors": {"sparse": {"index": {"full_scan_threshold": 5000, "on_disk": True}, "modifier": "idf"}},
+            "vectors": {
+                "dense": {
+                    "size": 1024,
+                    "distance": "Cosine",
+                    "on_disk": True,
+                    "quantization_config": {
+                        "scalar": {
+                            "type": "int8",
+                            "quantile": 0.99,
+                            "always_ram": False,
+                        }
+                    },
+                }
+            },
+            "sparse_vectors": {
+                "sparse": {
+                    "index": {"full_scan_threshold": 5000, "on_disk": True},
+                    "modifier": "idf",
+                }
+            },
             "shard_number": 1,
             "on_disk_payload": True,
             "hnsw_config": {"m": 16, "ef_construct": 100},
@@ -161,15 +200,32 @@ def ensure_dest(dest: str) -> None:
         "PUT",
     )
     for f in INDEXES:
-        copy_http(f"/collections/{dest}/index?wait=true", {"field_name": f, "field_schema": "keyword"}, "PUT")
+        copy_http(
+            f"/collections/{dest}/index?wait=true",
+            {"field_name": f, "field_schema": "keyword"},
+            "PUT",
+        )
 
 
 def copy(a) -> None:
     if a.dest in FORBIDDEN_DEST:
-        sys.exit(f"REFUSED: {a.dest} may not be the destination (an original, or the serving collection: promotion is a separate decision).")
+        sys.exit(
+            f"REFUSED: {a.dest} may not be the destination (an original, or the serving collection: promotion is a separate decision)."
+        )
     STATE.mkdir(parents=True, exist_ok=True)
     sf = STATE / f"{a.dest}.state.json"
-    st = json.loads(sf.read_text()) if sf.exists() else {"offset": None, "read": 0, "written": 0, "repaired": 0, "empty": 0, "done": False}
+    st = (
+        json.loads(sf.read_text())
+        if sf.exists()
+        else {
+            "offset": None,
+            "read": 0,
+            "written": 0,
+            "repaired": 0,
+            "empty": 0,
+            "done": False,
+        }
+    )
     if st["done"]:
         print("already complete:", st)
         return
@@ -202,23 +258,41 @@ def copy(a) -> None:
         st["offset"] = r["next_page_offset"]
         sf.write_text(json.dumps(st))
         rate = (st["read"] - start_read) / max(time.time() - t0, 1e-9)
-        print(f"  read {st['read']:,} | repaired {st['repaired']:,} ({st['repaired'] / max(st['read'], 1) * 100:.1f}%) | {rate:,.0f} points/s", flush=True)
+        print(
+            f"  read {st['read']:,} | repaired {st['repaired']:,} ({st['repaired'] / max(st['read'], 1) * 100:.1f}%) | {rate:,.0f} points/s",
+            flush=True,
+        )
         if st["offset"] is None:
             st["done"] = True
             sf.write_text(json.dumps(st))
             break
-    print(("COMPLETE" if st["done"] else "STOPPED at the limit (resumable)") + f": {st}")
+    print(
+        ("COMPLETE" if st["done"] else "STOPPED at the limit (resumable)") + f": {st}"
+    )
 
 
 def verify(a) -> None:
     enc = encoder()
-    n = copy_http(f"/collections/{a.dest}/points/count", {"exact": True})["result"]["count"]
-    rep = copy_http(f"/collections/{a.dest}/points/count", {"exact": True, "filter": {"must_not": [{"is_empty": {"key": "locally_repaired"}}]}})["result"]["count"]
+    n = copy_http(f"/collections/{a.dest}/points/count", {"exact": True})["result"][
+        "count"
+    ]
+    rep = copy_http(
+        f"/collections/{a.dest}/points/count",
+        {
+            "exact": True,
+            "filter": {"must_not": [{"is_empty": {"key": "locally_repaired"}}]},
+        },
+    )["result"]["count"]
     state = json.loads((STATE / f"{a.dest}.state.json").read_text())
-    print(f"{a.dest}: {n:,} points (state says written {state['written']:,}), {rep:,} marked locally_repaired (state says {state['repaired']:,}) -> {'OK' if (n, rep) == (state['written'], state['repaired']) else 'MISMATCH'}")
+    print(
+        f"{a.dest}: {n:,} points (state says written {state['written']:,}), {rep:,} marked locally_repaired (state says {state['repaired']:,}) -> {'OK' if (n, rep) == (state['written'], state['repaired']) else 'MISMATCH'}"
+    )
     ids, off = [], None
     while len(ids) < a.sample * 3:
-        r = copy_http(f"/collections/{a.dest}/points/scroll", {"limit": 2000, "offset": off, "with_payload": False, "with_vector": False})["result"]
+        r = copy_http(
+            f"/collections/{a.dest}/points/scroll",
+            {"limit": 2000, "offset": off, "with_payload": False, "with_vector": False},
+        )["result"]
         ids += [p["id"] for p in r["points"]]
         off = r["next_page_offset"]
         if off is None:
@@ -226,24 +300,53 @@ def verify(a) -> None:
     pick = random.Random(5).sample(ids, min(a.sample, len(ids)))
     bad_sparse = no_text = 0
     for i in range(0, len(pick), 500):
-        for p in copy_http(f"/collections/{a.dest}/points", {"ids": pick[i : i + 500], "with_payload": ["text"], "with_vector": ["sparse"]})["result"]:
+        for p in copy_http(
+            f"/collections/{a.dest}/points",
+            {
+                "ids": pick[i : i + 500],
+                "with_payload": ["text"],
+                "with_vector": ["sparse"],
+            },
+        )["result"]:
             t = p["payload"].get("text") or ""
             if not t:
                 no_text += 1
                 continue
             bad_sparse += differs(p["vector"]["sparse"], encode_many(enc, [t])[0])
-    print(f"  sparse check on {len(pick):,} random points: {bad_sparse} differ from a fresh BM25 encoding (must be 0), {no_text} with no text")
+    print(
+        f"  sparse check on {len(pick):,} random points: {bad_sparse} differ from a fresh BM25 encoding (must be 0), {no_text} with no text"
+    )
     sub = pick[: min(len(pick), 1000)]
     src = {p["id"]: p for p in orig_retrieve_batches(sub)}
     bad_dense = same_sparse_unrepaired = 0
     for i in range(0, len(sub), 500):
-        for p in copy_http(f"/collections/{a.dest}/points", {"ids": sub[i : i + 500], "with_payload": ["locally_repaired"], "with_vector": ["dense", "sparse"]})["result"]:
+        for p in copy_http(
+            f"/collections/{a.dest}/points",
+            {
+                "ids": sub[i : i + 500],
+                "with_payload": ["locally_repaired"],
+                "with_vector": ["dense", "sparse"],
+            },
+        )["result"]:
             s = src[p["id"]]
-            bad_dense += max(abs(x - y) for x, y in zip(p["vector"]["dense"], s["vector"]["dense"])) > 1e-6
+            bad_dense += (
+                max(
+                    abs(x - y)
+                    for x, y in zip(p["vector"]["dense"], s["vector"]["dense"])
+                )
+                > 1e-6
+            )
             if not (p["payload"] or {}).get("locally_repaired"):
                 same_sparse_unrepaired += p["vector"]["sparse"] != s["vector"]["sparse"]
-    print(f"  against the ORIGINAL on {len(sub):,} points: dense differs on {bad_dense} (must be 0); an UNrepaired point whose sparse differs from the original: {same_sparse_unrepaired} (must be 0)")
-    ok = bad_sparse == 0 and bad_dense == 0 and same_sparse_unrepaired == 0 and (n, rep) == (state["written"], state["repaired"])
+    print(
+        f"  against the ORIGINAL on {len(sub):,} points: dense differs on {bad_dense} (must be 0); an UNrepaired point whose sparse differs from the original: {same_sparse_unrepaired} (must be 0)"
+    )
+    ok = (
+        bad_sparse == 0
+        and bad_dense == 0
+        and same_sparse_unrepaired == 0
+        and (n, rep) == (state["written"], state["repaired"])
+    )
     print("VERIFY", "PASSED" if ok else "FAILED")
     sys.exit(0 if ok else 1)
 

@@ -60,7 +60,10 @@ def test_every_courts_rows_add_up_from_its_prefixes_and_its_label_kinds():
 
 def test_the_table_is_what_the_builder_makes_from_the_committed_counts():
     """Not stale and not hand-edited (python data/build_court_ids.py rewrites it)."""
-    assert json.dumps(build_court_ids.build(), indent=1, ensure_ascii=False) + "\n" == court_id.PATH.read_text()
+    assert (
+        json.dumps(build_court_ids.build(), indent=1, ensure_ascii=False) + "\n"
+        == court_id.PATH.read_text()
+    )
 
 
 def test_the_counts_file_has_30_prefixes_each_in_one_source_file():
@@ -112,11 +115,18 @@ def test_labels_are_classified_against_the_court_the_id_names():
 def test_a_label_names_a_court_only_when_it_names_exactly_one():
     f = court_id.court_for_label
     assert f("Supreme Court of India").id == "supreme-court"
-    assert f("  high court   OF kerala ").id == "kerala"  # case and spacing do not matter
+    assert (
+        f("  high court   OF kerala ").id == "kerala"
+    )  # case and spacing do not matter
     assert f("High Court  for State of Telangana").id == "telangana"
     assert f("High Court of Hyderabad") is None  # shared by two courts
     assert f("High Court") is None  # names no place
-    assert f("Some Tribunal") is None and f("") is None and f(None) is None and f(5) is None
+    assert (
+        f("Some Tribunal") is None
+        and f("") is None
+        and f(None) is None
+        and f(5) is None
+    )
 
 
 def test_every_registered_label_that_names_one_court_finds_that_court():
@@ -132,7 +142,9 @@ def test_an_unregistered_court_id_raises_instead_of_defaulting():
 
 def test_the_original_label_is_kept_the_table_records_the_other_court_labels():
     delhi = RAW["courts"]["delhi"]
-    assert "High Court of Patna" in delhi["other_court_labels"]  # kept as data, never merged in
+    assert (
+        "High Court of Patna" in delhi["other_court_labels"]
+    )  # kept as data, never merged in
 
 
 # --- the backfill: planning only ------------------------------------------------------------
@@ -158,15 +170,24 @@ def test_the_plan_derives_beside_the_label_and_counts_what_a_label_filter_would_
     assert pl.scanned == 6
     assert dict(pl.updates) == {"KLHC": [1, 2], "APHC": [3], "DLHC": [4]}
     assert pl.already == 1 and pl.to_write == 4
-    assert pl.kinds["usual"] == 2 and pl.kinds["missing"] == 1 and pl.kinds["alias"] == 1
+    assert (
+        pl.kinds["usual"] == 2 and pl.kinds["missing"] == 1 and pl.kinds["alias"] == 1
+    )
     assert pl.kinds["other_court"] == 1 and pl.kinds["unknown_id"] == 1
-    assert pl.label_filter_would_drop == 3  # the missing, the variant and the foreign label
+    assert (
+        pl.label_filter_would_drop == 3
+    )  # the missing, the variant and the foreign label
     assert pl.conflicts == [(4, "DLHC010123452021_001", "High Court of Patna", "DLHC")]
 
 
 def test_the_plan_is_idempotent_a_second_pass_writes_nothing():
-    first = add_court_code.plan([_pt(1, "KLHC010123452021_001"), _pt(2, "1952_INSC_28_078")])
-    done = [_pt(1, "KLHC010123452021_001", None, "KLHC"), _pt(2, "1952_INSC_28_078", None, "INSC")]
+    first = add_court_code.plan(
+        [_pt(1, "KLHC010123452021_001"), _pt(2, "1952_INSC_28_078")]
+    )
+    done = [
+        _pt(1, "KLHC010123452021_001", None, "KLHC"),
+        _pt(2, "1952_INSC_28_078", None, "INSC"),
+    ]
     second = add_court_code.plan(done)
     assert first.to_write == 2 and second.to_write == 0 and second.already == 2
 

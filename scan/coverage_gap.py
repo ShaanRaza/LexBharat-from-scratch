@@ -53,8 +53,17 @@ PAUSE_S = 0.25
 BACKOFF_S = 30
 MAX_CONSECUTIVE_FAILURES = 5
 # The one court name this script prints comes from core/coverage.json (A51); none is typed here.
-_SC_NAME = next(c["name"] for c in json.loads((REPO / "core" / "coverage.json").read_text())["courts"] if c["id"] == "supreme_court")
-LAUNCH_CODES = {"HCBM": "Bombay", "HBHC": "Telangana", "KLHC": "Kerala", "INSC": _SC_NAME}
+_SC_NAME = next(
+    c["name"]
+    for c in json.loads((REPO / "core" / "coverage.json").read_text())["courts"]
+    if c["id"] == "supreme_court"
+)
+LAUNCH_CODES = {
+    "HCBM": "Bombay",
+    "HBHC": "Telangana",
+    "KLHC": "Kerala",
+    "INSC": _SC_NAME,
+}
 GATE_THRESHOLD_PCT = 1.0  # my rule, not the owner's: an English parquet-only share at or above this in a launch court
 SPOT_N = 20
 
@@ -122,13 +131,19 @@ class Stop(Exception):
 
 def orig_post(path: str, body: dict, log) -> dict:
     """One read of the original with the night's retry rule. Only scroll and count are allowed."""
-    if not re.match(r"^/collections/(legal_corpus_v1|legal_corpus_v2)/points/(scroll|count)$", path):
+    if not re.match(
+        r"^/collections/(legal_corpus_v1|legal_corpus_v2)/points/(scroll|count)$", path
+    ):
         raise Stop(f"refused non-whitelisted path {path}")
     fails = 0
     while True:
         t0 = time.time()
         try:
-            req = urllib.request.Request(ORIG + path, data=json.dumps(body).encode(), headers={"Content-Type": "application/json"})
+            req = urllib.request.Request(
+                ORIG + path,
+                data=json.dumps(body).encode(),
+                headers={"Content-Type": "application/json"},
+            )
             raw = urllib.request.urlopen(req, timeout=TIMEOUT_S).read()  # noqa: S310
             if time.time() - t0 > TIMEOUT_S:
                 raise TimeoutError(f"took {time.time() - t0:.1f}s")
@@ -136,7 +151,9 @@ def orig_post(path: str, body: dict, log) -> dict:
             return json.loads(raw)["result"]
         except Exception as exc:  # noqa: BLE001
             fails += 1
-            log(f"FAIL {fails}/{MAX_CONSECUTIVE_FAILURES} on {path} after {time.time() - t0:.1f}s: {exc}")
+            log(
+                f"FAIL {fails}/{MAX_CONSECUTIVE_FAILURES} on {path} after {time.time() - t0:.1f}s: {exc}"
+            )
             if fails >= MAX_CONSECUTIVE_FAILURES:
                 raise Stop(f"{fails} consecutive failures on {path}: {exc}") from exc
             time.sleep(BACKOFF_S)
@@ -159,8 +176,16 @@ class Ctx:
             self.timeouts += 1
 
     def status(self, **kw) -> None:
-        cur = json.loads(self.status_path.read_text()) if self.status_path.exists() else {}
-        cur.update(kw, updated=time.strftime("%Y-%m-%d %H:%M:%S"), failures_logged=self.timeouts)
+        cur = (
+            json.loads(self.status_path.read_text())
+            if self.status_path.exists()
+            else {}
+        )
+        cur.update(
+            kw,
+            updated=time.strftime("%Y-%m-%d %H:%M:%S"),
+            failures_logged=self.timeouts,
+        )
         tmp = self.status_path.with_suffix(".tmp")
         tmp.write_text(json.dumps(cur, indent=1))
         os.replace(tmp, self.status_path)
@@ -181,7 +206,11 @@ def stage_parquet(ctx: Ctx, limit_files: int | None = None) -> None:
     cidx = {c: i for i, c in enumerate(codes)}
     out = ctx.home / "parquet"
     out.mkdir(exist_ok=True)
-    langs: dict[str, int] = json.loads((out / "langs.json").read_text()) if (out / "langs.json").exists() else {}
+    langs: dict[str, int] = (
+        json.loads((out / "langs.json").read_text())
+        if (out / "langs.json").exists()
+        else {}
+    )
     files = sorted(PARQUET_DIR.glob("in_*_judgments.parquet"))[: limit_files or None]
     ctx.status(stage="parquet", parquet_files=len(files))
     for n, f in enumerate(files, 1):
@@ -190,7 +219,9 @@ def stage_parquet(ctx: Ctx, limit_files: int | None = None) -> None:
             continue
         t0 = time.time()
         ch, ca, co, lg = [], [], [], []
-        for b in pq.ParquetFile(f).iter_batches(batch_size=200_000, columns=["chunk_id", "language_code"]):
+        for b in pq.ParquetFile(f).iter_batches(
+            batch_size=200_000, columns=["chunk_id", "language_code"]
+        ):
             ids = b.column(0).to_pylist()
             ls = b.column(1).to_pylist()
             for cid, lc in zip(ids, ls):
@@ -198,34 +229,56 @@ def stage_parquet(ctx: Ctx, limit_files: int | None = None) -> None:
                 ca.append(H(case_key(cid)))
                 co.append(cidx.get(code_of(cid), cidx["?"]))
                 lg.append(langs.setdefault((lc or "").lower(), len(langs)))
-        np.savez(dst, chash=np.array(ch, dtype=np.uint64), cash=np.array(ca, dtype=np.uint64), code=np.array(co, dtype=np.int8), lang=np.array(lg, dtype=np.int16))
+        np.savez(
+            dst,
+            chash=np.array(ch, dtype=np.uint64),
+            cash=np.array(ca, dtype=np.uint64),
+            code=np.array(co, dtype=np.int8),
+            lang=np.array(lg, dtype=np.int16),
+        )
         (out / "langs.json").write_text(json.dumps(langs))
-        ctx.log(f"parquet {n}/{len(files)} {f.name}: {len(ch):,} rows in {time.time() - t0:.0f}s")
+        ctx.log(
+            f"parquet {n}/{len(files)} {f.name}: {len(ch):,} rows in {time.time() - t0:.0f}s"
+        )
         ctx.status(parquet_done=n)
     (out / "codes.json").write_text(json.dumps(codes))
     ctx.status(parquet_complete=True)
 
 
 # --- stage: scan ----------------------------------------------------------------------------------------------------
-def stage_scan(ctx: Ctx, collections: list[str], limit_pages: int | None = None) -> None:
+def stage_scan(
+    ctx: Ctx, collections: list[str], limit_pages: int | None = None
+) -> None:
     _, codes = court_table()
     cidx = {c: i for i, c in enumerate([*codes, "?"])}
     for coll in collections:
         d = ctx.home / "scan" / coll
         d.mkdir(parents=True, exist_ok=True)
         sp = d / "state.json"
-        st = json.loads(sp.read_text()) if sp.exists() else {"offset": None, "pages": 0, "points": 0, "done": False}
+        st = (
+            json.loads(sp.read_text())
+            if sp.exists()
+            else {"offset": None, "pages": 0, "points": 0, "done": False}
+        )
         if st["done"]:
             ctx.log(f"{coll}: already scanned ({st['points']:,} points)")
             continue
-        total = orig_post(f"/collections/{coll}/points/count", {"exact": True}, ctx.log)["count"]
+        total = orig_post(
+            f"/collections/{coll}/points/count", {"exact": True}, ctx.log
+        )["count"]
         st["count_at_start"] = total
         lab_path = d / "labels.json"
-        labels: dict[str, int] = json.loads(lab_path.read_text()) if lab_path.exists() else {}
+        labels: dict[str, int] = (
+            json.loads(lab_path.read_text()) if lab_path.exists() else {}
+        )
         t0, p0, pages_this_run = time.time(), st["points"], 0
         ctx.status(stage="scan", collection=coll, total=total)
         while True:
-            body = {"limit": PAGE, "with_payload": ["chunk_id", "court", "court_code"], "with_vector": False}
+            body = {
+                "limit": PAGE,
+                "with_payload": ["chunk_id", "court", "court_code"],
+                "with_vector": False,
+            }
             if st["offset"] is not None:
                 body["offset"] = st["offset"]
             r = orig_post(f"/collections/{coll}/points/scroll", body, ctx.log)
@@ -237,7 +290,13 @@ def stage_scan(ctx: Ctx, collections: list[str], limit_pages: int | None = None)
                 ca.append(H(case_key(cid)))
                 co.append(cidx.get(code_of(cid), cidx["?"]))
                 lb.append(labels.setdefault(pl.get("court") or "", len(labels)))
-            np.savez(d / f"page_{st['pages']:06d}.npz", chash=np.array(ch, dtype=np.uint64), cash=np.array(ca, dtype=np.uint64), code=np.array(co, dtype=np.int8), label=np.array(lb, dtype=np.int32))
+            np.savez(
+                d / f"page_{st['pages']:06d}.npz",
+                chash=np.array(ch, dtype=np.uint64),
+                cash=np.array(ca, dtype=np.uint64),
+                code=np.array(co, dtype=np.int8),
+                label=np.array(lb, dtype=np.int32),
+            )
             lab_path.write_text(json.dumps(labels))
             st["pages"] += 1
             st["points"] += len(r["points"])
@@ -247,20 +306,44 @@ def stage_scan(ctx: Ctx, collections: list[str], limit_pages: int | None = None)
             pages_this_run += 1
             rate = (st["points"] - p0) / max(time.time() - t0, 1e-9)
             eta = (total - st["points"]) / max(rate, 1e-9) / 3600
-            ctx.status(stage="scan", collection=coll, points=st["points"], total=total, pages=st["pages"], rate_pts_s=round(rate), eta_hours=round(eta, 2))
+            ctx.status(
+                stage="scan",
+                collection=coll,
+                points=st["points"],
+                total=total,
+                pages=st["pages"],
+                rate_pts_s=round(rate),
+                eta_hours=round(eta, 2),
+            )
             if st["pages"] % 20 == 0 or st["done"]:
-                ctx.log(f"{coll}: {st['points']:,}/{total:,} points ({st['points'] / total * 100:.1f}%), {rate:,.0f} pts/s, ETA {eta:.1f} h")
+                ctx.log(
+                    f"{coll}: {st['points']:,}/{total:,} points ({st['points'] / total * 100:.1f}%), {rate:,.0f} pts/s, ETA {eta:.1f} h"
+                )
             if st["done"] or (limit_pages and pages_this_run >= limit_pages):
                 break
         if st["done"]:
-            ctx.log(f"{coll}: SCAN COMPLETE {st['points']:,} points (collection count {total:,}) in {(time.time() - t0) / 60:.0f} min")
+            ctx.log(
+                f"{coll}: SCAN COMPLETE {st['points']:,} points (collection count {total:,}) in {(time.time() - t0) / 60:.0f} min"
+            )
 
 
 def load_scan(ctx: Ctx, coll: str):
     d = ctx.home / "scan" / coll
     parts = [np.load(f) for f in sorted(d.glob("page_*.npz"))]
-    cat = lambda k: np.concatenate([p[k] for p in parts]) if parts else np.array([], dtype=np.uint64)  # noqa: E731
-    return cat("chash"), cat("cash"), cat("code"), cat("label"), json.loads((d / "labels.json").read_text()), json.loads((d / "state.json").read_text())
+
+    def cat(k):
+        if parts:
+            return np.concatenate([p[k] for p in parts])
+        return np.array([], dtype=np.uint64)
+
+    return (
+        cat("chash"),
+        cat("cash"),
+        cat("code"),
+        cat("label"),
+        json.loads((d / "labels.json").read_text()),
+        json.loads((d / "state.json").read_text()),
+    )
 
 
 def load_parquet(ctx: Ctx):
@@ -291,9 +374,17 @@ def stage_analyze(ctx: Ctx, partial_ok: bool = False) -> dict:
         raise Stop(f"a scan is not complete: {complete}")
     code_of_idx = {i: c for i, c in enumerate(codes)}
     en = langs.get("en")
-    court_of_code = {code: cid for cid, c in raw["courts"].items() for code in c["prefixes"]}
+    court_of_code = {
+        code: cid for cid, c in raw["courts"].items() for code in c["prefixes"]
+    }
     counts = {c: scans[c][5].get("count_at_start") for c in COLLECTIONS}
-    res: dict = {"collection_counts": counts, "complete": complete, "scan_points": {c: int(len(scans[c][0])) for c in COLLECTIONS}, "scan_state": {c: scans[c][5] for c in COLLECTIONS}, "codes": {}}
+    res: dict = {
+        "collection_counts": counts,
+        "complete": complete,
+        "scan_points": {c: int(len(scans[c][0])) for c in COLLECTIONS},
+        "scan_state": {c: scans[c][5] for c in COLLECTIONS},
+        "codes": {},
+    }
     Q_ch = np.concatenate([scans[c][0] for c in COLLECTIONS])
     Q_ca = np.concatenate([scans[c][1] for c in COLLECTIONS])
     Q_co = np.concatenate([scans[c][2] for c in COLLECTIONS])
@@ -304,7 +395,11 @@ def stage_analyze(ctx: Ctx, partial_ok: bool = False) -> dict:
         if not pm.any() and not qm.any():
             continue
         cmp_ = compare(P_ch[pm], P_ca[pm], Q_ch[qm], Q_ca[qm])
-        only_p, whole, idx = cmp_.pop("_only_p_mask"), cmp_.pop("_whole_mask"), cmp_.pop("_idx")
+        only_p, whole, idx = (
+            cmp_.pop("_only_p_mask"),
+            cmp_.pop("_whole_mask"),
+            cmp_.pop("_idx"),
+        )
         lang_u = P_lg[pm][idx]
         ca_u = P_ca[pm][idx]
         non_en = lang_u != en if en is not None else np.zeros_like(only_p)
@@ -312,17 +407,36 @@ def stage_analyze(ctx: Ctx, partial_ok: bool = False) -> dict:
         cmp_["parquet_only_english_chunks"] = int((only_p & ~non_en).sum())
         cmp_["parquet_only_non_english_chunks"] = int((only_p & non_en).sum())
         cmp_["whole_missing_english_chunks"] = int((whole & ~non_en).sum())
-        cmp_["parquet_only_languages"] = dict(collections.Counter(inv_lang[int(x)] for x in lang_u[only_p]).most_common(6))
+        cmp_["parquet_only_languages"] = dict(
+            collections.Counter(inv_lang[int(x)] for x in lang_u[only_p]).most_common(6)
+        )
         cmp_["overlap_pct"] = pct(cmp_["overlap_chunks"], cmp_["parquet_chunks"])
         cmp_["court"] = court_of_code.get(code, "?")
         res["codes"][code] = cmp_
-        only_cases[code] = np.unique(ca_u[whole & ~non_en])  # whole missing English cases, for the spot-check
+        only_cases[code] = np.unique(
+            ca_u[whole & ~non_en]
+        )  # whole missing English cases, for the spot-check
     # court-level roll-up (a court may have several id prefixes)
     courts: dict[str, dict] = {}
     for code, c in res["codes"].items():
         k = c["court"]
         agg = courts.setdefault(k, collections.Counter())
-        for f in ("parquet_chunks", "parquet_cases", "qdrant_chunks", "overlap_chunks", "parquet_only_chunks", "parquet_only_in_whole_missing_cases", "parquet_only_in_partial_cases", "whole_missing_cases", "partial_cases", "qdrant_only_chunks", "parquet_english_chunks", "parquet_only_english_chunks", "parquet_only_non_english_chunks", "whole_missing_english_chunks"):
+        for f in (
+            "parquet_chunks",
+            "parquet_cases",
+            "qdrant_chunks",
+            "overlap_chunks",
+            "parquet_only_chunks",
+            "parquet_only_in_whole_missing_cases",
+            "parquet_only_in_partial_cases",
+            "whole_missing_cases",
+            "partial_cases",
+            "qdrant_only_chunks",
+            "parquet_english_chunks",
+            "parquet_only_english_chunks",
+            "parquet_only_non_english_chunks",
+            "whole_missing_english_chunks",
+        ):
             agg[f] += c[f]
     res["courts"] = {k: dict(v) for k, v in courts.items()}
     tot = collections.Counter()
@@ -344,7 +458,15 @@ def stage_analyze(ctx: Ctx, partial_ok: bool = False) -> dict:
             c = raw["courts"][court_of_code[code]]
             label = inv[li]
             same = {c["label"], *c["aliases"]}
-            kinds["usual" if label == c["label"] else "alias" if label in same else "missing" if not label else "other_court"] += n
+            kinds[
+                "usual"
+                if label == c["label"]
+                else "alias"
+                if label in same
+                else "missing"
+                if not label
+                else "other_court"
+            ] += n
         lab[coll] = dict(kinds)
     res["labels"] = lab
     # launch-court gate figures and the verdict rule
@@ -352,26 +474,49 @@ def stage_analyze(ctx: Ctx, partial_ok: bool = False) -> dict:
     for code, name in LAUNCH_CODES.items():
         c = res["codes"].get(code)
         if c:
-            gate[name] = {"english_parquet_chunks": c["parquet_english_chunks"], "english_parquet_only": c["parquet_only_english_chunks"], "pct": pct(c["parquet_only_english_chunks"], c["parquet_english_chunks"]), "whole_missing_english_chunks": c["whole_missing_english_chunks"]}
+            gate[name] = {
+                "english_parquet_chunks": c["parquet_english_chunks"],
+                "english_parquet_only": c["parquet_only_english_chunks"],
+                "pct": pct(
+                    c["parquet_only_english_chunks"], c["parquet_english_chunks"]
+                ),
+                "whole_missing_english_chunks": c["whole_missing_english_chunks"],
+            }
     res["gate"] = gate
     t = res["total"]
-    res["overall_english_pct"] = pct(t["parquet_only_english_chunks"], t["parquet_english_chunks"])
-    res["verdict_defect"] = bool(any(g["pct"] >= GATE_THRESHOLD_PCT for g in gate.values()) or res["overall_english_pct"] >= GATE_THRESHOLD_PCT)
+    res["overall_english_pct"] = pct(
+        t["parquet_only_english_chunks"], t["parquet_english_chunks"]
+    )
+    res["verdict_defect"] = bool(
+        any(g["pct"] >= GATE_THRESHOLD_PCT for g in gate.values())
+        or res["overall_english_pct"] >= GATE_THRESHOLD_PCT
+    )
     # spot-check
     rnd = random.Random(2026)
     picks: list[tuple[str, int]] = []
     for code in ("KLHC", "HCBM", "HBHC"):
-        for h in rnd.sample(list(only_cases.get(code, [])), min(3, len(only_cases.get(code, [])))):
+        for h in rnd.sample(
+            list(only_cases.get(code, [])), min(3, len(only_cases.get(code, [])))
+        ):
             picks.append((code, int(h)))
-    for h in rnd.sample(list(only_cases.get("INSC", [])), min(2, len(only_cases.get("INSC", [])))):
+    for h in rnd.sample(
+        list(only_cases.get("INSC", [])), min(2, len(only_cases.get("INSC", [])))
+    ):
         picks.append(("INSC", int(h)))
-    pool = [(c, int(h)) for c, arr in only_cases.items() if c not in LAUNCH_CODES for h in arr]
+    pool = [
+        (c, int(h))
+        for c, arr in only_cases.items()
+        if c not in LAUNCH_CODES
+        for h in arr
+    ]
     weights_total = len(pool)
     for c, h in rnd.sample(pool, min(SPOT_N - len(picks), weights_total)):
         picks.append((c, h))
     res["spot_check_picks"] = picks
     (ctx.home / "results.json").write_text(json.dumps(res, indent=1, default=int))
-    ctx.log(f"analysis done: total parquet-only {t['parquet_only_chunks']:,} of {t['parquet_chunks']:,} parquet chunks; verdict_defect={res['verdict_defect']}")
+    ctx.log(
+        f"analysis done: total parquet-only {t['parquet_only_chunks']:,} of {t['parquet_chunks']:,} parquet chunks; verdict_defect={res['verdict_defect']}"
+    )
     return res
 
 
@@ -382,7 +527,9 @@ def stage_spotcheck(ctx: Ctx, res: dict) -> list[dict]:
 
     raw, _ = court_table()
     picks = res["spot_check_picks"]
-    src_of_code = {code: cid for cid, c in raw["courts"].items() for code in c["prefixes"]}
+    src_of_code = {
+        code: cid for cid, c in raw["courts"].items() for code in c["prefixes"]
+    }
     by_src: dict[str, list[tuple[str, int]]] = collections.defaultdict(list)
     for code, h in picks:
         by_src[src_of_code[code]].append((code, h))
@@ -392,7 +539,9 @@ def stage_spotcheck(ctx: Ctx, res: dict) -> list[dict]:
         f = PARQUET_DIR / f"in_{src}_judgments.parquet"
         want = {h for _, h in items}
         keys: dict[int, str] = {}
-        for b in pq.ParquetFile(f).iter_batches(batch_size=500_000, columns=["chunk_id"]):
+        for b in pq.ParquetFile(f).iter_batches(
+            batch_size=500_000, columns=["chunk_id"]
+        ):
             for cid in b.column(0).to_pylist():
                 k = case_key(cid)
                 h = H(k)
@@ -405,16 +554,49 @@ def stage_spotcheck(ctx: Ctx, res: dict) -> list[dict]:
             k = keys.get(h)
             if not k:
                 continue
-            rows = con.execute(f"select chunk_id, language_code, length(text), substr(text, 1, 260), source_url from read_parquet('{f}') where starts_with(chunk_id, ?) order by chunk_index", [k + "_"]).fetchall()
+            rows = con.execute(
+                f"select chunk_id, language_code, length(text), substr(text, 1, 260), source_url from read_parquet('{f}') where starts_with(chunk_id, ?) order by chunk_index",
+                [k + "_"],
+            ).fetchall()
             n_q = {}
             for coll in COLLECTIONS:
-                n_q[coll] = orig_post(f"/collections/{coll}/points/count", {"exact": True, "filter": {"must": [{"key": "case_id", "match": {"value": k}}]}}, ctx.log)["count"]
+                n_q[coll] = orig_post(
+                    f"/collections/{coll}/points/count",
+                    {
+                        "exact": True,
+                        "filter": {"must": [{"key": "case_id", "match": {"value": k}}]},
+                    },
+                    ctx.log,
+                )["count"]
             lens = sorted(r[2] for r in rows)
             langs = collections.Counter((r[1] or "").lower() for r in rows)
             med = lens[len(lens) // 2] if lens else 0
-            low = "non-English" if (langs and langs.most_common(1)[0][0] != "en") else "short or placeholder" if med < 300 else "substantive English"
-            out.append({"code": code, "case_id": k, "chunks": len(rows), "languages": dict(langs), "median_chars": med, "min_chars": lens[0] if lens else 0, "short_chunks_lt200": sum(1 for x in lens if x < 200), "class": low, "in_qdrant_v1": n_q["legal_corpus_v1"], "in_qdrant_v2": n_q["legal_corpus_v2"], "source_url": rows[0][4] if rows else None, "first_text": re.sub(r"\s+", " ", rows[0][3])[:200] if rows else ""})
-            ctx.log(f"spot-check {k}: {len(rows)} chunks, median {med} chars, {low}, in Qdrant v1/v2: {n_q['legal_corpus_v1']}/{n_q['legal_corpus_v2']}")
+            low = (
+                "non-English"
+                if (langs and langs.most_common(1)[0][0] != "en")
+                else "short or placeholder"
+                if med < 300
+                else "substantive English"
+            )
+            out.append(
+                {
+                    "code": code,
+                    "case_id": k,
+                    "chunks": len(rows),
+                    "languages": dict(langs),
+                    "median_chars": med,
+                    "min_chars": lens[0] if lens else 0,
+                    "short_chunks_lt200": sum(1 for x in lens if x < 200),
+                    "class": low,
+                    "in_qdrant_v1": n_q["legal_corpus_v1"],
+                    "in_qdrant_v2": n_q["legal_corpus_v2"],
+                    "source_url": rows[0][4] if rows else None,
+                    "first_text": re.sub(r"\s+", " ", rows[0][3])[:200] if rows else "",
+                }
+            )
+            ctx.log(
+                f"spot-check {k}: {len(rows)} chunks, median {med} chars, {low}, in Qdrant v1/v2: {n_q['legal_corpus_v1']}/{n_q['legal_corpus_v2']}"
+            )
     (ctx.home / "spotcheck.json").write_text(json.dumps(out, indent=1))
     return out
 
@@ -425,52 +607,96 @@ def write_section(ctx: Ctx, res: dict, spot: list[dict]) -> str:
     t = res["total"]
     done = all(res["complete"].values())
     L = []
-    L.append("## 19. Is law missing from the search index? Per-court gap between the parquet and Qdrant\n")
-    L.append(f"**{time.strftime('%-d %b %Y')} (overnight lane A).** **{'Measured' if done else 'PARTIAL: a scan did not finish, figures are lower bounds on what Qdrant holds, so gaps are overstated'}**, "
-             f"from an exhaustive read-only scroll of `legal_corpus_v2` ({n(res['scan_points']['legal_corpus_v2'])} points) and `legal_corpus_v1` ({n(res['scan_points']['legal_corpus_v1'])} points) "
-             f"and all 26 judgment parquet files ({n(t['parquet_chunks'])} distinct chunk ids). A chunk counts as indexed if its id is in EITHER collection. Nothing was written to any Qdrant; no embedding, no cost. "
-             f"The scan read {', '.join(f'{res['scan_points'][c]:,} points of {c} (its count was {res['collection_counts'][c]:,})' for c in COLLECTIONS)}. "
-             f"The scan used the night's rule (60 s timeout, a checkpoint every page, 30 s back-off and retry, hard stop after 5 consecutive failures): {ctx.timeouts} failed or slow requests were logged and retried.\n")
+    L.append(
+        "## 19. Is law missing from the search index? Per-court gap between the parquet and Qdrant\n"
+    )
+    L.append(
+        f"**{time.strftime('%-d %b %Y')} (overnight lane A).** **{'Measured' if done else 'PARTIAL: a scan did not finish, figures are lower bounds on what Qdrant holds, so gaps are overstated'}**, "
+        f"from an exhaustive read-only scroll of `legal_corpus_v2` ({n(res['scan_points']['legal_corpus_v2'])} points) and `legal_corpus_v1` ({n(res['scan_points']['legal_corpus_v1'])} points) "
+        f"and all 26 judgment parquet files ({n(t['parquet_chunks'])} distinct chunk ids). A chunk counts as indexed if its id is in EITHER collection. Nothing was written to any Qdrant; no embedding, no cost. "
+        f"The scan read {', '.join(f'{res["scan_points"][c]:,} points of {c} (its count was {res["collection_counts"][c]:,})' for c in COLLECTIONS)}. "
+        f"The scan used the night's rule (60 s timeout, a checkpoint every page, 30 s back-off and retry, hard stop after 5 consecutive failures): {ctx.timeouts} failed or slow requests were logged and retried.\n"
+    )
     L.append("### What was found\n")
-    L.append(f"- **{n(t['parquet_only_chunks'])} of {n(t['parquet_chunks'])} parquet chunks ({pct(t['parquet_only_chunks'], t['parquet_chunks']):.2f}%) are in no Qdrant collection** (Measured). "
-             f"**{n(t['parquet_only_in_whole_missing_cases'])} of them ({pct(t['parquet_only_in_whole_missing_cases'], t['parquet_only_chunks']):.0f}%) sit in {n(t['whole_missing_cases'])} WHOLE cases that Qdrant holds no chunk of at all** (invisible law); "
-             f"{n(t['parquet_only_in_partial_cases'])} are scattered chunks of {n(t['partial_cases'])} cases that are otherwise present (findable but incomplete). "
-             f"**{'Whole missing cases dominate.' if t['parquet_only_in_whole_missing_cases'] >= t['parquet_only_in_partial_cases'] else 'Scattered chunks dominate.'}**")
-    L.append(f"- Of the parquet-only chunks, {n(t['parquet_only_english_chunks'])} are English and {n(t['parquet_only_non_english_chunks'])} are not (the dataset card says English only; the non-English chunks of {_SC_NAME} are the known exclusion, section 8). "
-             f"English parquet-only chunks are **{res['overall_english_pct']:.2f}%** of all English parquet chunks.")
-    L.append(f"- The reverse: {n(t['qdrant_only_chunks'])} chunk ids are in Qdrant and not in the parquet.\n")
+    L.append(
+        f"- **{n(t['parquet_only_chunks'])} of {n(t['parquet_chunks'])} parquet chunks ({pct(t['parquet_only_chunks'], t['parquet_chunks']):.2f}%) are in no Qdrant collection** (Measured). "
+        f"**{n(t['parquet_only_in_whole_missing_cases'])} of them ({pct(t['parquet_only_in_whole_missing_cases'], t['parquet_only_chunks']):.0f}%) sit in {n(t['whole_missing_cases'])} WHOLE cases that Qdrant holds no chunk of at all** (invisible law); "
+        f"{n(t['parquet_only_in_partial_cases'])} are scattered chunks of {n(t['partial_cases'])} cases that are otherwise present (findable but incomplete). "
+        f"**{'Whole missing cases dominate.' if t['parquet_only_in_whole_missing_cases'] >= t['parquet_only_in_partial_cases'] else 'Scattered chunks dominate.'}**"
+    )
+    L.append(
+        f"- Of the parquet-only chunks, {n(t['parquet_only_english_chunks'])} are English and {n(t['parquet_only_non_english_chunks'])} are not (the dataset card says English only; the non-English chunks of {_SC_NAME} are the known exclusion, section 8). "
+        f"English parquet-only chunks are **{res['overall_english_pct']:.2f}%** of all English parquet chunks."
+    )
+    L.append(
+        f"- The reverse: {n(t['qdrant_only_chunks'])} chunk ids are in Qdrant and not in the parquet.\n"
+    )
     L.append("### Per court (all id prefixes of a court summed; Measured)\n")
-    L.append("| Court | Parquet chunks | In Qdrant | Overlap | Parquet-only | in whole missing cases | in partial cases | whole cases missing | English parquet-only | Qdrant-only |\n|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
-    for k, v in sorted(res["courts"].items(), key=lambda kv: -kv[1]["parquet_only_chunks"]):
-        L.append(f"| {k} | {n(v['parquet_chunks'])} | {n(v['overlap_chunks'])} | {pct(v['overlap_chunks'], v['parquet_chunks']):.1f}% | **{n(v['parquet_only_chunks'])}** | {n(v['parquet_only_in_whole_missing_cases'])} | {n(v['parquet_only_in_partial_cases'])} | {n(v['whole_missing_cases'])} | {n(v['parquet_only_english_chunks'])} | {n(v['qdrant_only_chunks'])} |")
-    L.append(f"| **Total** | {n(t['parquet_chunks'])} | {n(t['overlap_chunks'])} | {pct(t['overlap_chunks'], t['parquet_chunks']):.1f}% | **{n(t['parquet_only_chunks'])}** | {n(t['parquet_only_in_whole_missing_cases'])} | {n(t['parquet_only_in_partial_cases'])} | {n(t['whole_missing_cases'])} | {n(t['parquet_only_english_chunks'])} | {n(t['qdrant_only_chunks'])} |\n")
+    L.append(
+        "| Court | Parquet chunks | In Qdrant | Overlap | Parquet-only | in whole missing cases | in partial cases | whole cases missing | English parquet-only | Qdrant-only |\n|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|"
+    )
+    for k, v in sorted(
+        res["courts"].items(), key=lambda kv: -kv[1]["parquet_only_chunks"]
+    ):
+        L.append(
+            f"| {k} | {n(v['parquet_chunks'])} | {n(v['overlap_chunks'])} | {pct(v['overlap_chunks'], v['parquet_chunks']):.1f}% | **{n(v['parquet_only_chunks'])}** | {n(v['parquet_only_in_whole_missing_cases'])} | {n(v['parquet_only_in_partial_cases'])} | {n(v['whole_missing_cases'])} | {n(v['parquet_only_english_chunks'])} | {n(v['qdrant_only_chunks'])} |"
+        )
+    L.append(
+        f"| **Total** | {n(t['parquet_chunks'])} | {n(t['overlap_chunks'])} | {pct(t['overlap_chunks'], t['parquet_chunks']):.1f}% | **{n(t['parquet_only_chunks'])}** | {n(t['parquet_only_in_whole_missing_cases'])} | {n(t['parquet_only_in_partial_cases'])} | {n(t['whole_missing_cases'])} | {n(t['parquet_only_english_chunks'])} | {n(t['qdrant_only_chunks'])} |\n"
+    )
     L.append("### The launch courts (CLAUDE.md section 1)\n")
-    L.append("| Court | English parquet chunks | English, in no collection | Share | of which in whole missing cases |\n|---|---:|---:|---:|---:|")
+    L.append(
+        "| Court | English parquet chunks | English, in no collection | Share | of which in whole missing cases |\n|---|---:|---:|---:|---:|"
+    )
     for name, g in res["gate"].items():
-        L.append(f"| {name} | {n(g['english_parquet_chunks'])} | {n(g['english_parquet_only'])} | **{g['pct']:.2f}%** | {n(g['whole_missing_english_chunks'])} |")
+        L.append(
+            f"| {name} | {n(g['english_parquet_chunks'])} | {n(g['english_parquet_only'])} | **{g['pct']:.2f}%** | {n(g['whole_missing_english_chunks'])} |"
+        )
     L.append("")
-    L.append(f"### Spot-check: {len(spot)} wholly missing English cases read from the parquet (Measured; samples drawn at random, 3 each from Kerala, Bombay and Telangana, 2 {_SC_NAME}, the rest across other courts)\n")
+    L.append(
+        f"### Spot-check: {len(spot)} wholly missing English cases read from the parquet (Measured; samples drawn at random, 3 each from Kerala, Bombay and Telangana, 2 {_SC_NAME}, the rest across other courts)\n"
+    )
     cls = collections.Counter(s["class"] for s in spot)
     absent = sum(1 for s in spot if s["in_qdrant_v1"] == 0 and s["in_qdrant_v2"] == 0)
-    L.append(f"Classes: {dict(cls)}. **Absence re-confirmed directly in Qdrant (an indexed `case_id` count on both collections): {absent} of {len(spot)} have 0 chunks.**\n")
+    L.append(
+        f"Classes: {dict(cls)}. **Absence re-confirmed directly in Qdrant (an indexed `case_id` count on both collections): {absent} of {len(spot)} have 0 chunks.**\n"
+    )
     if absent != len(spot):
-        L.append(f"**WARNING: {len(spot) - absent} of the {len(spot)} spot-checked cases ARE present in Qdrant by a direct `case_id` count, so the hash comparison and the direct check DISAGREE for them. Treat the per-court table as suspect until this is explained (a case id that differs from the chunk-id prefix, or a scan that missed points).**\n")
-    L.append("| Case id | Chunks | Languages | Median chars | Chunks under 200 chars | Class | Opens with |\n|---|---:|---|---:|---:|---|---|")
+        L.append(
+            f"**WARNING: {len(spot) - absent} of the {len(spot)} spot-checked cases ARE present in Qdrant by a direct `case_id` count, so the hash comparison and the direct check DISAGREE for them. Treat the per-court table as suspect until this is explained (a case id that differs from the chunk-id prefix, or a scan that missed points).**\n"
+        )
+    L.append(
+        "| Case id | Chunks | Languages | Median chars | Chunks under 200 chars | Class | Opens with |\n|---|---:|---|---:|---:|---|---|"
+    )
     for s in spot:
-        L.append(f"| `{s['case_id']}` | {s['chunks']} | {s['languages']} | {s['median_chars']} | {s['short_chunks_lt200']} | {s['class']} | {s['first_text'][:110].replace('|', '/')} |")
+        L.append(
+            f"| `{s['case_id']}` | {s['chunks']} | {s['languages']} | {s['median_chars']} | {s['short_chunks_lt200']} | {s['class']} | {s['first_text'][:110].replace('|', '/')} |"
+        )
     L.append("")
-    L.append("### Qdrant-wide `court` label rate (the figure section 18 left pending; Measured on the whole originals)\n")
+    L.append(
+        "### Qdrant-wide `court` label rate (the figure section 18 left pending; Measured on the whole originals)\n"
+    )
     for coll, k in res["labels"].items():
         tot = sum(k.values())
-        L.append(f"- `{coll}`: {n(tot)} points: " + ", ".join(f"{name} {n(v)} ({pct(v, tot):.2f}%)" for name, v in sorted(k.items(), key=lambda kv: -kv[1])))
+        L.append(
+            f"- `{coll}`: {n(tot)} points: "
+            + ", ".join(
+                f"{name} {n(v)} ({pct(v, tot):.2f}%)"
+                for name, v in sorted(k.items(), key=lambda kv: -kv[1])
+            )
+        )
     L.append("")
     L.append("### Verdict\n")
     pcts = "; ".join(f"{k} {g['pct']:.2f}%" for k, g in res["gate"].items())
-    L.append(f"By a rule I chose (not the owner's): **a defect for the launch gate if English parquet-only chunks are {GATE_THRESHOLD_PCT:.0f}% or more of a launch court's English chunks, or overall.** Launch courts: {pcts}; overall {res['overall_english_pct']:.2f}%. "
-             f"**{'This is a coverage DEFECT that belongs in the launch gate.' if res['verdict_defect'] else 'By that rule this is not a defect for the launch courts.'}** "
-             f"The spot-check classes above say whether the missing cases are real judgments (substantive English) or rows left out on purpose; **read the table before trusting the rule: its classes are automatic (language and chunk length only) and were not read by a person.**\n")
+    L.append(
+        f"By a rule I chose (not the owner's): **a defect for the launch gate if English parquet-only chunks are {GATE_THRESHOLD_PCT:.0f}% or more of a launch court's English chunks, or overall.** Launch courts: {pcts}; overall {res['overall_english_pct']:.2f}%. "
+        f"**{'This is a coverage DEFECT that belongs in the launch gate.' if res['verdict_defect'] else 'By that rule this is not a defect for the launch courts.'}** "
+        f"The spot-check classes above say whether the missing cases are real judgments (substantive English) or rows left out on purpose; **read the table before trusting the rule: its classes are automatic (language and chunk length only) and were not read by a person.**\n"
+    )
     L.append("### What this does not cover\n")
-    L.append("- Chunk presence is by id. A chunk present with the wrong text or an empty vector counts as present. Nothing here checks vectors.\n- The parquet is the reference: a chunk missing from the parquet but present in Qdrant is reported, not judged. The case key is the chunk id without its trailing `_<n>`, which matched the `case_id` in every parquet row measured earlier (section 18).\n- The overall `court` label counts treat an id that names no known court as unclassifiable. The classification of a missing case as real or placeholder is from language and length only for the ones not spot-checked.\n- The hashes are 64-bit (a collision among 64M ids has probability under 1e-4); not verified beyond that.\n")
+    L.append(
+        "- Chunk presence is by id. A chunk present with the wrong text or an empty vector counts as present. Nothing here checks vectors.\n- The parquet is the reference: a chunk missing from the parquet but present in Qdrant is reported, not judged. The case key is the chunk id without its trailing `_<n>`, which matched the `case_id` in every parquet row measured earlier (section 18).\n- The overall `court` label counts treat an id that names no known court as unclassifiable. The classification of a missing case as real or placeholder is from language and length only for the ones not spot-checked.\n- The hashes are 64-bit (a collision among 64M ids has probability under 1e-4); not verified beyond that.\n"
+    )
     text = "\n".join(L)
     (ctx.home / "SECTION19.md").write_text(text)
     return text
@@ -478,7 +704,12 @@ def write_section(ctx: Ctx, res: dict, spot: list[dict]) -> str:
 
 def stage_commit(ctx: Ctx, text: str) -> str:
     path = REPO / "docs" / "DATA-GAPS.md"
-    dirty = subprocess.run(["git", "diff", "--quiet", "--", "docs/DATA-GAPS.md"], cwd=REPO).returncode != 0
+    dirty = (
+        subprocess.run(
+            ["git", "diff", "--quiet", "--", "docs/DATA-GAPS.md"], cwd=REPO
+        ).returncode
+        != 0
+    )
     cur = path.read_text(encoding="utf-8")
     if "## 19. Is law missing from the search index?" in cur:
         return "section 19 already present; not appended"
@@ -487,7 +718,19 @@ def stage_commit(ctx: Ctx, text: str) -> str:
     path.write_text(cur.rstrip("\n") + "\n\n" + text + "\n", encoding="utf-8")
     for _ in range(5):
         subprocess.run(["git", "add", "docs/DATA-GAPS.md"], cwd=REPO)
-        p = subprocess.run(["git", "commit", "--only", "docs/DATA-GAPS.md", "-m", "docs: section 19 - per-court gap between the parquet and Qdrant (overnight lane A)\n\nPipeline steps touched: none (documentation, measured by a read-only scan).\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"], cwd=REPO, capture_output=True, text=True)
+        p = subprocess.run(
+            [
+                "git",
+                "commit",
+                "--only",
+                "docs/DATA-GAPS.md",
+                "-m",
+                "docs: section 19 - per-court gap between the parquet and Qdrant (overnight lane A)\n\nPipeline steps touched: none (documentation, measured by a read-only scan).\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>",
+            ],
+            cwd=REPO,
+            capture_output=True,
+            text=True,
+        )
         if p.returncode == 0:
             return "committed locally (not pushed)"
         time.sleep(10)
@@ -498,14 +741,30 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("stage", choices=["all", "parquet", "scan", "analyze", "status"])
     ap.add_argument("--home", default=str(HOME_DEFAULT))
-    ap.add_argument("--limit-pages", type=int, default=None, help="testing: stop each scan after this many pages")
-    ap.add_argument("--limit-files", type=int, default=None, help="testing: only the first N parquet files")
-    ap.add_argument("--partial", action="store_true", help="analyze even if a scan is incomplete (testing)")
+    ap.add_argument(
+        "--limit-pages",
+        type=int,
+        default=None,
+        help="testing: stop each scan after this many pages",
+    )
+    ap.add_argument(
+        "--limit-files",
+        type=int,
+        default=None,
+        help="testing: only the first N parquet files",
+    )
+    ap.add_argument(
+        "--partial",
+        action="store_true",
+        help="analyze even if a scan is incomplete (testing)",
+    )
     ap.add_argument("--no-commit", action="store_true")
     a = ap.parse_args()
     ctx = Ctx(Path(a.home))
     if a.stage == "status":
-        print(ctx.status_path.read_text() if ctx.status_path.exists() else "no status yet")
+        print(
+            ctx.status_path.read_text() if ctx.status_path.exists() else "no status yet"
+        )
         return
     try:
         if a.stage in ("all", "parquet"):
@@ -516,13 +775,25 @@ def main() -> None:
             res = stage_analyze(ctx, partial_ok=a.partial)
             spot = stage_spotcheck(ctx, res)
             text = write_section(ctx, res, spot)
-            msg = "not committed (--no-commit)" if a.no_commit else stage_commit(ctx, text)
+            msg = (
+                "not committed (--no-commit)"
+                if a.no_commit
+                else stage_commit(ctx, text)
+            )
             ctx.log(f"section 19: {msg}")
-            verdict = "COVERAGE DEFECT: belongs in the launch gate" if res["verdict_defect"] else "not a defect for the launch courts by the stated rule"
-            (ctx.home / "MORNING.md").write_text(f"# Overnight lane A: finished {time.strftime('%Y-%m-%d %H:%M')}\n\nVerdict (by rule, see section 19): **{verdict}**.\n\nSection 19: {msg}.\nFull text: {ctx.home / 'SECTION19.md'}\nFigures: {ctx.home / 'results.json'}, spot-check: {ctx.home / 'spotcheck.json'}\n")
+            verdict = (
+                "COVERAGE DEFECT: belongs in the launch gate"
+                if res["verdict_defect"]
+                else "not a defect for the launch courts by the stated rule"
+            )
+            (ctx.home / "MORNING.md").write_text(
+                f"# Overnight lane A: finished {time.strftime('%Y-%m-%d %H:%M')}\n\nVerdict (by rule, see section 19): **{verdict}**.\n\nSection 19: {msg}.\nFull text: {ctx.home / 'SECTION19.md'}\nFigures: {ctx.home / 'results.json'}, spot-check: {ctx.home / 'spotcheck.json'}\n"
+            )
             ctx.status(stage="FINISHED", verdict=verdict)
     except Stop as exc:
-        ctx.log(f"HARD STOP: {exc}. State is kept; re-run `python scan/coverage_gap.py all` to resume.")
+        ctx.log(
+            f"HARD STOP: {exc}. State is kept; re-run `python scan/coverage_gap.py all` to resume."
+        )
         ctx.status(stage="HARD STOP", error=str(exc))
         sys.exit(3)
 

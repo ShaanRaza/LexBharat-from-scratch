@@ -1,6 +1,6 @@
 "use client";
 import { usePathname } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { Suspense, useState, type ReactNode } from "react";
 import { Button } from "./Button";
 import { Dialog } from "./Dialog";
 import { Sidebar, type SidebarItem } from "./Sidebar";
@@ -8,7 +8,17 @@ import { Sidebar, type SidebarItem } from "./Sidebar";
 // A section of the site with its own menu (Account, Admin, Help): a 240px sidebar on a desktop
 // and a sheet behind a Menu button on a phone (docs/DESIGN-DIRECTION.md section 5). The
 // same Sidebar component serves both; this file only decides where it sits.
-export function AreaLayout({ title, items, children }: { title: string; items: SidebarItem[]; children: ReactNode }) {
+export function AreaLayout(props: { title: string; items: SidebarItem[]; children: ReactNode }) {
+  // usePathname() is runtime-only data, so Next cannot prerender a page that reads it outside a
+  // Suspense boundary. Until the path arrives the page content is shown without the menu.
+  return (
+    <Suspense fallback={<div className="min-w-0 flex-1">{props.children}</div>}>
+      <AreaLayoutWithPath {...props} />
+    </Suspense>
+  );
+}
+
+function AreaLayoutWithPath({ title, items, children }: { title: string; items: SidebarItem[]; children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const path = usePathname();
   return (

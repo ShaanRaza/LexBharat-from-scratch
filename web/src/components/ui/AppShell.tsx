@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState, type ReactNode } from "react";
+import { Suspense, useState, type ReactNode } from "react";
 import { PRODUCT_NAME } from "@/lib/config";
 import { NAV } from "@/lib/copy";
 import { AppSidebar } from "./AppSidebar";
@@ -17,7 +17,10 @@ export function AppShell({ children, width = "reading" }: { children: ReactNode;
   return (
     <div className="flex min-h-screen flex-1 flex-col lg:flex-row">
       <aside className="hidden w-(--container-appnav) shrink-0 border-r border-line bg-page p-gutter lg:sticky lg:top-0 lg:block lg:h-screen">
-        <AppSidebar />
+        {/* the sidebar reads the path at runtime; without a boundary Next cannot prerender the page */}
+        <Suspense fallback={null}>
+          <AppSidebar />
+        </Suspense>
       </aside>
       <header className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-page px-gutter py-3 lg:hidden">
         <Link href="/" className="font-serif text-lead font-bold text-ink">

@@ -38,7 +38,9 @@ INPUT_TYPES: tuple[str, ...] = ("query", "document")
 def check_input_type(input_type: object) -> InputType:
     """Python does not enforce a Literal at runtime, so a typo would reach Voyage."""
     if input_type not in INPUT_TYPES:
-        raise ValueError(f"input_type must be 'query' or 'document', got {input_type!r}")
+        raise ValueError(
+            f"input_type must be 'query' or 'document', got {input_type!r}"
+        )
     return input_type  # type: ignore[return-value]
 
 
@@ -154,7 +156,9 @@ class VoyageClient:
             raise VoyageUnavailable(
                 f"asked for {len(texts)} embeddings, got {len(vectors)}"
             )
-        return EmbeddingBatch(vectors, int((data.get("usage") or {}).get("total_tokens", 0)))
+        return EmbeddingBatch(
+            vectors, int((data.get("usage") or {}).get("total_tokens", 0))
+        )
 
     async def embed(
         self,
@@ -192,9 +196,9 @@ def words(text: str) -> list[str]:
 
 
 class FakeEmbedder:
-    """Deterministic hashed bag-of-words vector. `down=True` simulates an outage. A query
-    and a document of the same text get DIFFERENT vectors (as with the real service), so a
-    caller that picks the wrong input_type shows up in a test."""
+    """Deterministic hashed bag-of-words vector. `down=True` simulates an outage. A
+    query and a document of the same text get DIFFERENT vectors (as with the real
+    service), so a caller that picks the wrong input_type shows up in a test."""
 
     def __init__(self, dim: int = 64, down: bool = False):
         refuse_in_production()
@@ -206,7 +210,9 @@ class FakeEmbedder:
         for w in words(text):
             h = int(hashlib.md5(w.encode(), usedforsecurity=False).hexdigest(), 16)
             v[h % self.dim] += 1.0
-        salt = int(hashlib.md5(input_type.encode(), usedforsecurity=False).hexdigest(), 16)
+        salt = int(
+            hashlib.md5(input_type.encode(), usedforsecurity=False).hexdigest(), 16
+        )
         v[salt % self.dim] += 0.25
         n = math.sqrt(sum(x * x for x in v)) or 1.0
         return [x / n for x in v]

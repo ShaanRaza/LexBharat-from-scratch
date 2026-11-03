@@ -20,14 +20,22 @@ import pytest
 
 from data import dedupe_copy as dc
 
-FIX = json.loads((Path(__file__).resolve().parents[1] / "fixtures" / "kerala_dup_groups.json").read_text())["groups"]
+FIX = json.loads(
+    (
+        Path(__file__).resolve().parents[1] / "fixtures" / "kerala_dup_groups.json"
+    ).read_text()
+)["groups"]
 MU = np.load(dc.DIRECTION).astype(np.float64)
 RNG = np.random.default_rng(3)
 
 
 def _members(group):
     return [
-        dc.Member(m["id"], np.array(m["vector"], dtype=np.float64), dc.detector_score(np.array(m["vector"]), MU))
+        dc.Member(
+            m["id"],
+            np.array(m["vector"], dtype=np.float64),
+            dc.detector_score(np.array(m["vector"]), MU),
+        )
         for m in group["members"]
     ]
 
@@ -40,13 +48,17 @@ def test_the_fixture_holds_real_pairs_of_both_kinds_and_a_triple():
         assert all(len(m["vector"]) == 1024 for m in g["members"])
 
 
-@pytest.mark.parametrize("group", FIX, ids=[f"{g['kind']}-{g['chunk_id']}" for g in FIX])
+@pytest.mark.parametrize(
+    "group", FIX, ids=[f"{g['kind']}-{g['chunk_id']}" for g in FIX]
+)
 def test_a_real_group_deletes_exactly_the_dead_copy_and_nothing_in_a_live_group(group):
     members = _members(group)
     plan = dc.plan_group(members)
     dead = {m["id"] for m in group["members"] if m["truth_dead"]}
     ids = {m["id"] for m in group["members"]}
-    assert set(plan.delete) == dead  # a dead copy is removed; a live group loses nothing
+    assert (
+        set(plan.delete) == dead
+    )  # a dead copy is removed; a live group loses nothing
     assert set(plan.keep) == ids - dead and set(plan.delete) | set(plan.keep) == ids
     assert plan.status == ("dead_removed" if dead else "all_live")
 
@@ -55,8 +67,12 @@ def test_the_two_live_copies_of_a_real_live_group_are_different_models_and_both_
     live = [g for g in FIX if g["kind"] == "pair live+live"]
     for g in live:
         a, b = _members(g)
-        cos = float(a.vector @ b.vector / np.linalg.norm(a.vector) / np.linalg.norm(b.vector))
-        assert 0.85 < cos < 0.99  # two models embedding the same text, not the same vector
+        cos = float(
+            a.vector @ b.vector / np.linalg.norm(a.vector) / np.linalg.norm(b.vector)
+        )
+        assert (
+            0.85 < cos < 0.99
+        )  # two models embedding the same text, not the same vector
         assert dc.plan_group([a, b]).keep == (a.id, b.id)
 
 
@@ -100,9 +116,13 @@ def test_a_pair_that_disagrees_removes_the_clearly_lower_scoring_copy():
 
 def test_a_pair_that_disagrees_but_the_detector_cannot_separate_is_kept_whole():
     v = _vec(4)
-    close = dc.plan_group([M(1, _near(v, 0.0, 7), 0.05), M(2, v, 0.07)])  # 0.02 apart, under the margin
+    close = dc.plan_group(
+        [M(1, _near(v, 0.0, 7), 0.05), M(2, v, 0.07)]
+    )  # 0.02 apart, under the margin
     assert (close.status, close.delete) == ("unclear", ())
-    neither = dc.plan_group([M(1, _near(v, 0.0, 7), 0.20), M(2, v, 0.50)])  # no copy under the line
+    neither = dc.plan_group(
+        [M(1, _near(v, 0.0, 7), 0.20), M(2, v, 0.50)]
+    )  # no copy under the line
     assert (neither.status, neither.delete) == ("unclear", ())
 
 
@@ -118,25 +138,35 @@ def test_a_long_healthy_chunk_scoring_low_is_not_deleted_by_the_detector_alone()
 
 def test_a_triple_with_one_odd_copy_removes_only_that_copy():
     v = _vec(6)
-    p = dc.plan_group([M(1, v, 0.5), M(2, _near(v, 0.95, 9), 0.48), M(3, _near(v, 0.0, 10), 0.003)])
+    p = dc.plan_group(
+        [M(1, v, 0.5), M(2, _near(v, 0.95, 9), 0.48), M(3, _near(v, 0.0, 10), 0.003)]
+    )
     assert (p.status, p.delete, p.keep) == ("dead_removed", (3,), (1, 2))
 
 
 def test_a_triple_where_two_copies_disagree_with_everyone_is_unclear_and_kept():
-    p = dc.plan_group([M(1, _vec(11), 0.4), M(2, _vec(12), 0.003), M(3, _vec(13), 0.002)])
+    p = dc.plan_group(
+        [M(1, _vec(11), 0.4), M(2, _vec(12), 0.003), M(3, _vec(13), 0.002)]
+    )
     assert (p.status, p.delete) == ("unclear", ())
 
 
 def test_a_triple_whose_remaining_copies_disagree_is_unclear_and_kept():
     v = _vec(14)
-    p = dc.plan_group([M(1, v, 0.5), M(2, _near(v, 0.3, 15), 0.45), M(3, _vec(16), 0.001)])
+    p = dc.plan_group(
+        [M(1, v, 0.5), M(2, _near(v, 0.3, 15), 0.45), M(3, _vec(16), 0.001)]
+    )
     assert p.delete == ()
 
 
 def test_the_dead_copy_must_be_under_the_detector_line_as_well():
     v = _vec(17)
-    p = dc.plan_group([M(1, v, 0.5), M(2, _near(v, 0.0, 18), 0.12), M(3, _near(v, 0.97, 19), 0.5)])
-    assert p.status == "unclear" and p.delete == ()  # disagrees with the rest but scores 0.12
+    p = dc.plan_group(
+        [M(1, v, 0.5), M(2, _near(v, 0.0, 18), 0.12), M(3, _near(v, 0.97, 19), 0.5)]
+    )
+    assert (
+        p.status == "unclear" and p.delete == ()
+    )  # disagrees with the rest but scores 0.12
 
 
 # --- invariants, fuzzed -----------------------------------------------------------------------------
@@ -147,7 +177,13 @@ def test_whatever_the_vectors_the_last_copy_is_never_deleted_and_only_a_dead_rem
         mem = []
         for i in range(n):
             kind = RNG.choice(["same", "near", "far"])
-            vec = base if kind == "same" else _near(base, float(RNG.uniform(0.3, 0.99)), 5000 + t * 7 + i) if kind == "near" else _vec(9000 + t * 7 + i)
+            vec = (
+                base
+                if kind == "same"
+                else _near(base, float(RNG.uniform(0.3, 0.99)), 5000 + t * 7 + i)
+                if kind == "near"
+                else _vec(9000 + t * 7 + i)
+            )
             mem.append(M(100 + i, vec, float(RNG.uniform(-0.1, 0.7))))
         p = dc.plan_group(mem)
         ids = {m.id for m in mem}
@@ -165,7 +201,11 @@ def test_the_collection_plan_counts_every_kind_and_the_identical_live_pairs():
         "a": [M(1, v, 0.5), M(2, v, 0.5)],  # live, the same vector
         "b": [M(3, v, 0.5), M(4, _near(v, 0.93, 21), 0.5)],  # live, two models
         "c": [M(5, _near(v, 0.0, 22), 0.001), M(6, v, 0.5)],  # dead + live
-        "d": [M(7, _vec(23), 0.3), M(8, _vec(24), 0.002), M(9, _vec(25), 0.001)],  # unclear
+        "d": [
+            M(7, _vec(23), 0.3),
+            M(8, _vec(24), 0.002),
+            M(9, _vec(25), 0.001),
+        ],  # unclear
     }
     pl = dc.plan_collection(groups)
     assert dict(pl.statuses) == {"all_live": 2, "dead_removed": 1, "unclear": 1}

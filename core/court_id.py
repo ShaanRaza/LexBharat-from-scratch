@@ -2,22 +2,22 @@
 
 Plain words: a judgment's record id names its court. Letters then digits (KLHC0103...,
 WBCHCA01...) for the courts that have a letter prefix, and <year>_INSC_<n>_<k> for the
-country's apex court. Measured across all 32,572,660 judgment rows (3 Nov 2026): 30 prefixes,
-each in exactly one source file, so each means exactly one court. The `court` label is less
-reliable in a quiet way: 0.58% of rows carry none, 0.21% a spelling variant, and 282 rows
-(0.00087%) another court's name. A filter on the label silently drops the first two groups,
-which is a recall loss, not a refinement. So the id is trusted and the label is kept beside
-it (data/add_court_code.py writes the derived `court_code` into the payload; the label is
-never changed or removed, because a few alias labels may be historically real).
+country's apex court. Measured across all 32,572,660 judgment rows (3 Nov 2026): 30
+prefixes, each in exactly one source file, so each means exactly one court. The `court`
+label is less reliable in a quiet way: 0.58% of rows carry none, 0.21% a spelling
+variant, and 282 rows (0.00087%) another court's name. A filter on the label silently
+drops the first two groups, which is a recall loss, not a refinement. So the id is
+trusted and the label is kept beside it (data/add_court_code.py writes the derived
+`court_code` into the payload; the label is never changed or removed, because a few
+alias labels may be historically real).
 
 Pipeline step touched: 5 (Search): payload filters built in adapters/qdrant.py use this.
-Nothing here is a coverage claim: what the product covers is core/coverage.json only. The
-table in core/court_ids.json says what the snapshot's ids mean, and is built by
+Nothing here is a coverage claim: what the product covers is core/coverage.json only.
+The table in core/court_ids.json says what the snapshot's ids mean, and is built by
 data/build_court_ids.py from measured counts.
 
-Nothing is guessed. An id that matches no prefix has no court (None), and a label that is
-generic or shared by two courts is never used to look a court up.
-"""
+Nothing is guessed. An id that matches no prefix has no court (None), and a label that
+is generic or shared by two courts is never used to look a court up."""
 
 from __future__ import annotations
 
@@ -41,7 +41,9 @@ class CourtId:
     id: str  # the source-file slug, e.g. "kerala"
     label: str  # the court's usual spelling in the `court` field
     aliases: tuple[str, ...]
-    codes: tuple[str, ...]  # the id prefixes (payload `court_code` values); INSC for the apex court
+    codes: tuple[
+        str, ...
+    ]  # the id prefixes (payload `court_code` values); INSC for the apex court
     rows: int
 
 
@@ -51,7 +53,8 @@ class CourtTable:
     by_code: dict[str, str]  # code -> court id
     sc_pattern: re.Pattern
     sc_code: str
-    generic_labels: frozenset[str]  # labels that name no place, never used to look a court up
+    # labels that name no place, never used to look a court up
+    generic_labels: frozenset[str]
     totals: dict[str, int]
 
 
@@ -108,7 +111,8 @@ def _norm(label: str) -> str:
 @lru_cache(maxsize=1)
 def _lookup() -> dict[str, str | None]:
     """label -> court id, for labels that name exactly ONE court. A label shared by two
-    courts, or one that names no place (listed as generic in the table), maps to None: ambiguous."""
+    courts, or one that names no place (listed as generic in the table), maps to None:
+    ambiguous."""
     seen: dict[str, set[str]] = {}
     for c in load().courts.values():
         for lab in (c.label, *c.aliases):

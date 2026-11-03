@@ -38,7 +38,9 @@ BATCH = 5000
 
 @dataclass
 class Plan:
-    updates: dict[str, list] = field(default_factory=lambda: collections.defaultdict(list))
+    updates: dict[str, list] = field(
+        default_factory=lambda: collections.defaultdict(list)
+    )
     kinds: collections.Counter = field(default_factory=collections.Counter)
     codes: collections.Counter = field(default_factory=collections.Counter)
     already: int = 0
@@ -92,7 +94,12 @@ def scan(collection: str) -> Iterable[dict]:
     while True:
         r = http(
             f"/collections/{collection}/points/scroll",
-            {"limit": PAGE, "offset": off, "with_payload": ["chunk_id", "court", "court_code"], "with_vector": False},
+            {
+                "limit": PAGE,
+                "offset": off,
+                "with_payload": ["chunk_id", "court", "court_code"],
+                "with_vector": False,
+            },
         )["result"]
         yield from r["points"]
         off = r["next_page_offset"]
@@ -101,7 +108,11 @@ def scan(collection: str) -> Iterable[dict]:
 
 
 def apply(collection: str, pl: Plan) -> None:
-    http(f"/collections/{collection}/index?wait=true", {"field_name": "court_code", "field_schema": "keyword"}, "PUT")
+    http(
+        f"/collections/{collection}/index?wait=true",
+        {"field_name": "court_code", "field_schema": "keyword"},
+        "PUT",
+    )
     for code, ids in pl.updates.items():
         for i in range(0, len(ids), BATCH):
             http(
@@ -116,27 +127,44 @@ def main() -> None:
     ap.add_argument("--apply", action="store_true")
     a = ap.parse_args()
     if a.collection in FORBIDDEN:
-        sys.exit(f"REFUSED: {a.collection} is an original; this writes to the copy instance only.")
-    names = {c["name"] for c in http("/collections", method="GET")["result"]["collections"]}
+        sys.exit(
+            f"REFUSED: {a.collection} is an original; this writes to the copy instance only."
+        )
+    names = {
+        c["name"] for c in http("/collections", method="GET")["result"]["collections"]
+    }
     if a.collection not in names:
         sys.exit(f"no collection {a.collection!r} on the copy instance")
     pl = plan(scan(a.collection))
     k = pl.kinds
     print(f"{a.collection}: {pl.scanned:,} points scanned")
     print(f"  id names a court: {sum(pl.codes.values()):,} points {dict(pl.codes)}")
-    print(f"  label vs id: usual {k['usual']:,} | alias {k['alias']:,} | missing {k['missing']:,} | other court {k['other_court']:,} | id names no court (left alone) {k['unknown_id']:,}")
-    print(f"  a label-only filter would drop {pl.label_filter_would_drop:,} of those points")
-    print(f"  already carry the right court_code: {pl.already:,} | to write: {pl.to_write:,}")
+    print(
+        f"  label vs id: usual {k['usual']:,} | alias {k['alias']:,} | missing {k['missing']:,} | other court {k['other_court']:,} | id names no court (left alone) {k['unknown_id']:,}"
+    )
+    print(
+        f"  a label-only filter would drop {pl.label_filter_would_drop:,} of those points"
+    )
+    print(
+        f"  already carry the right court_code: {pl.already:,} | to write: {pl.to_write:,}"
+    )
     if pl.conflicts:
-        print(f"  label names ANOTHER court than the id ({len(pl.conflicts)}), first 5: {pl.conflicts[:5]}")
+        print(
+            f"  label names ANOTHER court than the id ({len(pl.conflicts)}), first 5: {pl.conflicts[:5]}"
+        )
     if not a.apply:
         print("DRY RUN: nothing written. Re-run with --apply.")
         return
     apply(a.collection, pl)
-    r = http(f"/collections/{a.collection}/points/count", {"exact": True, "filter": {"must_not": [{"is_empty": {"key": "court_code"}}]}})
+    r = http(
+        f"/collections/{a.collection}/points/count",
+        {"exact": True, "filter": {"must_not": [{"is_empty": {"key": "court_code"}}]}},
+    )
     have = r["result"]["count"]
     expect = sum(pl.codes.values())
-    print(f"WROTE: {a.collection} now has {have:,} points with court_code (expected {expect:,}) -> {'OK' if have == expect else 'MISMATCH'}")
+    print(
+        f"WROTE: {a.collection} now has {have:,} points with court_code (expected {expect:,}) -> {'OK' if have == expect else 'MISMATCH'}"
+    )
     sys.exit(0 if have == expect else 1)
 
 

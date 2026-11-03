@@ -34,8 +34,13 @@ def http(path: str, body: dict | None = None, method: str = "POST"):
 
 
 def present_codes(collection: str) -> dict[str, int]:
-    total = http(f"/collections/{collection}/points/count", {"exact": True})["result"]["count"]
-    hits = http(f"/collections/{collection}/facet", {"key": "court_code", "limit": 200, "exact": True})["result"]["hits"]
+    total = http(f"/collections/{collection}/points/count", {"exact": True})["result"][
+        "count"
+    ]
+    hits = http(
+        f"/collections/{collection}/facet",
+        {"key": "court_code", "limit": 200, "exact": True},
+    )["result"]["hits"]
     codes = {h["value"]: h["count"] for h in hits}
     if total - sum(codes.values()):
         codes[""] = total - sum(codes.values())  # points with no court code (Acts)
@@ -43,13 +48,19 @@ def present_codes(collection: str) -> dict[str, int]:
 
 
 def main() -> None:
-    collection = sys.argv[1] if len(sys.argv) > 1 else sys.exit("usage: check_court_models.py <collection>")
+    collection = (
+        sys.argv[1]
+        if len(sys.argv) > 1
+        else sys.exit("usage: check_court_models.py <collection>")
+    )
     s = Settings(_env_file=None)
     codes = present_codes(collection)
     plan = model_plan.plan_for(s, collection)
     print(f"{collection}: court codes present {dict(sorted(codes.items()))}")
     if plan is None:
-        print("single-model collection (or not described per court): nothing to register")
+        print(
+            "single-model collection (or not described per court): nothing to register"
+        )
         return
     bad = model_plan.unregistered(s, collection, codes)
     print(f"model groups: {[(g.model, len(g.codes) + g.no_court) for g in plan]}")

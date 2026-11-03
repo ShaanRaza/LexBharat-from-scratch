@@ -37,17 +37,29 @@ def build() -> dict:
     all_codes = sorted(c for ct in ids["courts"].values() for c in ct["prefixes"])
     collections: dict[str, dict] = {}
     for r in csv.DictReader(SAMPLE.open()):
-        col = collections.setdefault(r["collection"], {"courts": {}, "not_registered": {}})
-        counts = {"voyage-4": int(r["voyage_4"]), "voyage-4-lite": int(r["voyage_4_lite"]), "voyage-4-large": int(r["voyage_4_large"])}
+        col = collections.setdefault(
+            r["collection"], {"courts": {}, "not_registered": {}}
+        )
+        counts = {
+            "voyage-4": int(r["voyage_4"]),
+            "voyage-4-lite": int(r["voyage_4_lite"]),
+            "voyage-4-large": int(r["voyage_4_large"]),
+        }
         n = int(r["healthy_chunks"])
         top = sorted(counts.items(), key=lambda kv: -kv[1])
         code = r["court_code"]
         if n < MIN_SAMPLE:
-            col["not_registered"][code] = f"measured on {n} chunk(s), fewer than {MIN_SAMPLE}"
+            col["not_registered"][code] = (
+                f"measured on {n} chunk(s), fewer than {MIN_SAMPLE}"
+            )
         elif top[0][1] == top[1][1]:
             col["not_registered"][code] = "a tie for the majority model"
         else:
-            col["courts"][code] = {"model": top[0][0], "sample": {"n": n, **counts}, "outside_majority": n - top[0][1]}
+            col["courts"][code] = {
+                "model": top[0][0],
+                "sample": {"n": n, **counts},
+                "outside_majority": n - top[0][1],
+            }
     for name, col in collections.items():
         for code in all_codes:
             if code not in col["courts"] and code not in col["not_registered"]:
@@ -73,7 +85,9 @@ def main() -> None:
     OUT.write_text(text)
     d = json.loads(text)
     for name, c in d["collections"].items():
-        print(f"{name}: {len(c['courts'])} courts registered, {len(c['not_registered'])} refused")
+        print(
+            f"{name}: {len(c['courts'])} courts registered, {len(c['not_registered'])} refused"
+        )
 
 
 if __name__ == "__main__":

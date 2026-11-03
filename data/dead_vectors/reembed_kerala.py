@@ -47,9 +47,10 @@ import numpy as np
 
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO))
+from pydantic import SecretStr  # noqa: E402
+
 from adapters.voyage import VoyageClient  # noqa: E402
 from core.settings import Settings, UnknownEmbeddingModel  # noqa: E402
-from pydantic import SecretStr  # noqa: E402
 
 ORIG = "http://localhost:6333"
 COPY = "http://127.0.0.1:7333"
@@ -237,11 +238,18 @@ def voyage_embed(
     out: list[list[float]] = []
     spent = 0
     for i in range(0, len(texts), CALL):
-        batch = asyncio.run(client.embed_batch(texts[i : i + CALL], collection, "document"))
+        batch = asyncio.run(
+            client.embed_batch(texts[i : i + CALL], collection, "document")
+        )
         with LOCK, LEDGER.open("a") as f:
             f.write(
                 json.dumps(
-                    {"t": time.time(), "model": model, "tokens": batch.total_tokens, "tag": tag}
+                    {
+                        "t": time.time(),
+                        "model": model,
+                        "tokens": batch.total_tokens,
+                        "tag": tag,
+                    }
                 )
                 + "\n"
             )

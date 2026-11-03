@@ -54,7 +54,9 @@ _spec = importlib.util.spec_from_file_location(
     "reembed_kerala", REPO / "data" / "dead_vectors" / "reembed_kerala.py"
 )
 rk = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(rk)  # the Kerala fix's own Voyage call, so the two runs share one path
+_spec.loader.exec_module(
+    rk
+)  # the Kerala fix's own Voyage call, so the two runs share one path
 
 ORIG = "http://localhost:6333"
 COPY = "http://127.0.0.1:7333"
@@ -74,7 +76,9 @@ MODEL_REQUIRED = "voyage-4-large"
 EXPECTED = 10_112
 TOLERANCE = 0.10
 CALL = 32  # texts per Voyage request
-RUN_TOKEN_CAP = 20_000_000  # about 2x the estimate; a loop bug at corpus scale would be ~$2,400
+RUN_TOKEN_CAP = (
+    20_000_000  # about 2x the estimate; a loop bug at corpus scale would be ~$2,400
+)
 DOLLAR_CAP = 3.00
 MAX_REQUESTS = 400  # 316 are needed
 PRICE_PER_MTOK = 0.12  # list price of voyage-4-large
@@ -137,7 +141,9 @@ def voyage_key() -> str:
 
 def resolve_model(cli_model: str | None) -> str:
     if os.environ.get("VOYAGE_EMBED_MODELS"):
-        sys.exit("REFUSED: VOYAGE_EMBED_MODELS is set in the environment (an override).")
+        sys.exit(
+            "REFUSED: VOYAGE_EMBED_MODELS is set in the environment (an override)."
+        )
     try:
         model = Settings(_env_file=None).embed_model_for(SERVING)
     except UnknownEmbeddingModel as exc:
@@ -145,7 +151,9 @@ def resolve_model(cli_model: str | None) -> str:
     if cli_model and cli_model != model:
         sys.exit(f"REFUSED: --model {cli_model!r} differs from the recorded {model!r}.")
     if model != MODEL_REQUIRED:
-        sys.exit(f"REFUSED: recorded model is {model!r}; A129 approves {MODEL_REQUIRED!r}.")
+        sys.exit(
+            f"REFUSED: recorded model is {model!r}; A129 approves {MODEL_REQUIRED!r}."
+        )
     return model
 
 
@@ -153,7 +161,9 @@ def load_chunks() -> list[dict]:
     chunks = [json.loads(line) for line in CHUNKS.open()]
     lo, hi = int(EXPECTED * (1 - TOLERANCE)), int(EXPECTED * (1 + TOLERANCE))
     if not lo <= len(chunks) <= hi:
-        sys.exit(f"ABORT: {len(chunks):,} chunks; expected {EXPECTED:,} within 10% ({lo:,} to {hi:,}).")
+        sys.exit(
+            f"ABORT: {len(chunks):,} chunks; expected {EXPECTED:,} within 10% ({lo:,} to {hi:,})."
+        )
     ids = {int(c["id"]) for c in chunks}
     cids = {c["payload"]["chunk_id"] for c in chunks}
     if len(ids) != len(chunks) or len(cids) != len(chunks):
@@ -183,7 +193,10 @@ def scan_serving() -> dict:
             if pl.get("court") == "Supreme Court of India":
                 sc.append((p["id"], pl.get("chunk_id")))
                 if pl.get("pdf_url") and pl.get("case_id") not in pdf:
-                    pdf[pl["case_id"]] = {"pdf_url": pl["pdf_url"], "pdf_urls": pl.get("pdf_urls")}
+                    pdf[pl["case_id"]] = {
+                        "pdf_url": pl["pdf_url"],
+                        "pdf_urls": pl.get("pdf_urls"),
+                    }
         off = r["next_page_offset"]
         if off is None:
             break
@@ -192,21 +205,31 @@ def scan_serving() -> dict:
 
 def guards(chunks: list[dict], serving: dict) -> dict:
     """Count (already asserted in load_chunks) and absence. Aborts on any failure."""
-    present = [c["payload"]["chunk_id"] for c in chunks if c["payload"]["chunk_id"] in serving["cids"]]
+    present = [
+        c["payload"]["chunk_id"]
+        for c in chunks
+        if c["payload"]["chunk_id"] in serving["cids"]
+    ]
     clash = [c["id"] for c in chunks if int(c["id"]) in serving["ids"]]
     if present or clash:
-        sys.exit(f"ABORT: {len(present)} chunk ids and {len(clash)} point ids already exist in {SERVING}.")
+        sys.exit(
+            f"ABORT: {len(present)} chunk ids and {len(clash)} point ids already exist in {SERVING}."
+        )
     cases = sorted({c["payload"]["case_id"] for c in chunks})
     ours = {c["payload"]["chunk_id"] for c in chunks}
     found = 0
     for case in random.Random(5).sample(cases, min(ORIG_SAMPLE_CASES, len(cases))):
         found += len(ours & set(orig_scroll(case)))
     if found:
-        sys.exit(f"ABORT: {found} of our chunk ids already exist in the original for {ORIG_SAMPLE_CASES} sampled cases.")
+        sys.exit(
+            f"ABORT: {found} of our chunk ids already exist in the original for {ORIG_SAMPLE_CASES} sampled cases."
+        )
     return {
         "chunks": len(chunks),
         "cases": len(cases),
-        "serving_points": http(f"/collections/{SERVING}", method="GET")["result"]["points_count"],
+        "serving_points": http(f"/collections/{SERVING}", method="GET")["result"][
+            "points_count"
+        ],
         "serving_sc_points": len(serving["sc"]),
         "original_cases_sampled": min(ORIG_SAMPLE_CASES, len(cases)),
     }
@@ -217,7 +240,11 @@ def cosine_rows(a: np.ndarray, b: np.ndarray) -> np.ndarray:
 
 
 def nov2_ids() -> set[str]:
-    return set(re.findall(r"^\s*\d+\.\s+(\S+)\s+year", NOV2_LOG.read_text(), flags=re.M)) if NOV2_LOG.exists() else set()
+    return (
+        set(re.findall(r"^\s*\d+\.\s+(\S+)\s+year", NOV2_LOG.read_text(), flags=re.M))
+        if NOV2_LOG.exists()
+        else set()
+    )
 
 
 # --- preflight ---------------------------------------------------------------------------
@@ -236,21 +263,35 @@ def preflight(model: str, key: str) -> None:
     pick = random.Random(20261103).sample(pool, 20)
     pts = http(
         f"/collections/{SERVING}/points",
-        {"ids": [i for i, _ in pick], "with_payload": ["text", "chunk_id"], "with_vector": ["dense"]},
+        {
+            "ids": [i for i, _ in pick],
+            "with_payload": ["text", "chunk_id"],
+            "with_vector": ["dense"],
+        },
     )["result"]
     pts.sort(key=lambda p: p["id"])
-    vecs, spent = rk.voyage_embed([p["payload"]["text"] for p in pts], SERVING, key, "sc preflight 20 fresh")
+    vecs, spent = rk.voyage_embed(
+        [p["payload"]["text"] for p in pts], SERVING, key, "sc preflight 20 fresh"
+    )
     cos = cosine_rows(np.array(vecs), np.array([p["vector"]["dense"] for p in pts]))
     for p, c in zip(pts, cos):
         print(f"  {p['payload']['chunk_id']:24} cosine(new, stored) = {c:.5f}")
     ok = bool((cos >= PREFLIGHT_MIN).all())
-    print(f"PREFLIGHT {'PASSED' if ok else 'FAILED'} (need every cosine >= {PREFLIGHT_MIN}); min {cos.min():.5f}, "
-          f"median {np.median(cos):.5f}; {spent:,} tokens (about ${spent / 1e6 * PRICE_PER_MTOK:.4f}); "
-          f"{len(excl)} of the 2 Nov chunks excluded from the draw")
+    print(
+        f"PREFLIGHT {'PASSED' if ok else 'FAILED'} (need every cosine >= {PREFLIGHT_MIN}); min {cos.min():.5f}, "
+        f"median {np.median(cos):.5f}; {spent:,} tokens (about ${spent / 1e6 * PRICE_PER_MTOK:.4f}); "
+        f"{len(excl)} of the 2 Nov chunks excluded from the draw"
+    )
     WORK.mkdir(parents=True, exist_ok=True)
     PREFLIGHT.write_text(
         json.dumps(
-            {"passed": ok, "model": model, "time": time.time(), "cosines": [float(c) for c in cos], **info}
+            {
+                "passed": ok,
+                "model": model,
+                "time": time.time(),
+                "cosines": [float(c) for c in cos],
+                **info,
+            }
         )
     )
     sys.exit(0 if ok else 2)
@@ -258,7 +299,9 @@ def preflight(model: str, key: str) -> None:
 
 # --- the run -----------------------------------------------------------------------------
 def ensure_staging() -> None:
-    names = {c["name"] for c in http("/collections", method="GET")["result"]["collections"]}
+    names = {
+        c["name"] for c in http("/collections", method="GET")["result"]["collections"]
+    }
     if STAGING in names:
         return
     http(
@@ -269,10 +312,21 @@ def ensure_staging() -> None:
                     "size": 1024,
                     "distance": "Cosine",
                     "on_disk": True,
-                    "quantization_config": {"scalar": {"type": "int8", "quantile": 0.99, "always_ram": False}},
+                    "quantization_config": {
+                        "scalar": {
+                            "type": "int8",
+                            "quantile": 0.99,
+                            "always_ram": False,
+                        }
+                    },
                 }
             },
-            "sparse_vectors": {"sparse": {"index": {"full_scan_threshold": 5000, "on_disk": True}, "modifier": "idf"}},
+            "sparse_vectors": {
+                "sparse": {
+                    "index": {"full_scan_threshold": 5000, "on_disk": True},
+                    "modifier": "idf",
+                }
+            },
             "shard_number": 1,
             "on_disk_payload": True,
             "hnsw_config": {"m": 16, "ef_construct": 100},
@@ -280,13 +334,23 @@ def ensure_staging() -> None:
         "PUT",
     )
     for field in ("court", "chunk_id"):
-        http(f"/collections/{STAGING}/index?wait=true", {"field_name": field, "field_schema": "keyword"}, "PUT")
+        http(
+            f"/collections/{STAGING}/index?wait=true",
+            {"field_name": field, "field_schema": "keyword"},
+            "PUT",
+        )
 
 
 def run(model: str, key: str) -> None:
     pf = json.loads(PREFLIGHT.read_text()) if PREFLIGHT.exists() else {}
-    if not pf.get("passed") or pf.get("model") != model or time.time() - pf.get("time", 0) > 12 * 3600:
-        sys.exit("REFUSED: no passing preflight for this model in the last 12 hours. Run `preflight` first.")
+    if (
+        not pf.get("passed")
+        or pf.get("model") != model
+        or time.time() - pf.get("time", 0) > 12 * 3600
+    ):
+        sys.exit(
+            "REFUSED: no passing preflight for this model in the last 12 hours. Run `preflight` first."
+        )
     chunks = load_chunks()
     serving = scan_serving()
     guards(chunks, serving)  # re-asserted immediately before the spend
@@ -295,7 +359,9 @@ def run(model: str, key: str) -> None:
         d = json.loads(line)
         sparse[d["id"]] = d
     if set(sparse) != {int(c["id"]) for c in chunks}:
-        sys.exit("ABORT: sparse.jsonl does not cover exactly the chunk file (run embed_sc_sparse.py).")
+        sys.exit(
+            "ABORT: sparse.jsonl does not cover exactly the chunk file (run embed_sc_sparse.py)."
+        )
     ensure_staging()
     done = {int(x) for x in DONE.read_text().split()} if DONE.exists() else set()
     batches = [chunks[i : i + CALL] for i in range(0, len(chunks), CALL)]
@@ -308,16 +374,23 @@ def run(model: str, key: str) -> None:
     )
     reserved_max = 0
     requests = len(done)
-    print(f"model {model} | {len(batches)} batches of {CALL}, {len(done)} already done | ceilings: {RUN_TOKEN_CAP:,} tokens, ${DOLLAR_CAP:.2f}, {MAX_REQUESTS} requests", flush=True)
+    print(
+        f"model {model} | {len(batches)} batches of {CALL}, {len(done)} already done | ceilings: {RUN_TOKEN_CAP:,} tokens, ${DOLLAR_CAP:.2f}, {MAX_REQUESTS} requests",
+        flush=True,
+    )
     for bi, batch in enumerate(batches):
         if bi in done:
             continue
         texts = [c["payload"]["text"] for c in batch]
         est = int(sum(len(t) for t in texts) / CHARS_PER_TOKEN_LOW)
         if used + est > RUN_TOKEN_CAP:
-            raise Ceiling(f"{used:,} used + {est:,} next > RUN_TOKEN_CAP {RUN_TOKEN_CAP:,}")
+            raise Ceiling(
+                f"{used:,} used + {est:,} next > RUN_TOKEN_CAP {RUN_TOKEN_CAP:,}"
+            )
         if (used + est) / 1e6 * PRICE_PER_MTOK > DOLLAR_CAP:
-            raise Ceiling(f"projected ${(used + est) / 1e6 * PRICE_PER_MTOK:.2f} > DOLLAR_CAP ${DOLLAR_CAP:.2f}")
+            raise Ceiling(
+                f"projected ${(used + est) / 1e6 * PRICE_PER_MTOK:.2f} > DOLLAR_CAP ${DOLLAR_CAP:.2f}"
+            )
         requests += 1
         if requests > MAX_REQUESTS:
             raise Ceiling(f"{requests} requests > MAX_REQUESTS {MAX_REQUESTS}")
@@ -325,7 +398,9 @@ def run(model: str, key: str) -> None:
         used += tok
         reserved_max = max(reserved_max, est)
         if tok > 1.5 * est:
-            raise Ceiling(f"batch {bi} billed {tok:,} tokens against an estimate of {est:,}: the estimate is wrong, stopping")
+            raise Ceiling(
+                f"batch {bi} billed {tok:,} tokens against an estimate of {est:,}: the estimate is wrong, stopping"
+            )
         points = []
         for c, v in zip(batch, vecs):
             pid = int(c["id"])
@@ -339,7 +414,13 @@ def run(model: str, key: str) -> None:
             points.append(
                 {
                     "id": pid,
-                    "vector": {"dense": v, "sparse": {"indices": sparse[pid]["indices"], "values": sparse[pid]["values"]}},
+                    "vector": {
+                        "dense": v,
+                        "sparse": {
+                            "indices": sparse[pid]["indices"],
+                            "values": sparse[pid]["values"],
+                        },
+                    },
                     "payload": payload,
                 }
             )
@@ -349,27 +430,46 @@ def run(model: str, key: str) -> None:
             f.flush()
             os.fsync(f.fileno())
         if (bi + 1) % 20 == 0 or bi == len(batches) - 1:
-            print(f"  batch {bi + 1}/{len(batches)}: {used:,} tokens so far (${used / 1e6 * PRICE_PER_MTOK:.3f}); projected total {used / (bi + 1) * len(batches):,.0f}", flush=True)
-    print(f"RUN COMPLETE: {used:,} tokens this run (${used / 1e6 * PRICE_PER_MTOK:.3f} at list price) against an estimate of ${ESTIMATE_USD}; {requests} requests")
+            print(
+                f"  batch {bi + 1}/{len(batches)}: {used:,} tokens so far (${used / 1e6 * PRICE_PER_MTOK:.3f}); projected total {used / (bi + 1) * len(batches):,.0f}",
+                flush=True,
+            )
+    print(
+        f"RUN COMPLETE: {used:,} tokens this run (${used / 1e6 * PRICE_PER_MTOK:.3f} at list price) against an estimate of ${ESTIMATE_USD}; {requests} requests"
+    )
 
 
 # --- verification ------------------------------------------------------------------------
 def verify(model: str, key: str) -> None:
     chunks = load_chunks()
     pf = json.loads(PREFLIGHT.read_text())
-    cnt = http(f"/collections/{STAGING}/points/count", {"exact": True})["result"]["count"]
+    cnt = http(f"/collections/{STAGING}/points/count", {"exact": True})["result"][
+        "count"
+    ]
     serving = http(f"/collections/{SERVING}", method="GET")["result"]["points_count"]
     sc_count = http(
         f"/collections/{SERVING}/points/count",
-        {"exact": True, "filter": {"must": [{"key": "court", "match": {"value": "Supreme Court of India"}}]}},
+        {
+            "exact": True,
+            "filter": {
+                "must": [{"key": "court", "match": {"value": "Supreme Court of India"}}]
+            },
+        },
     )["result"]["count"]
-    print(f"staging points {cnt:,} (expected {len(chunks):,}) | {SERVING} points {serving:,} (before: {pf['serving_points']:,}), Supreme Court {sc_count:,} (before: {pf['serving_sc_points']:,})")
+    print(
+        f"staging points {cnt:,} (expected {len(chunks):,}) | {SERVING} points {serving:,} (before: {pf['serving_points']:,}), Supreme Court {sc_count:,} (before: {pf['serving_sc_points']:,})"
+    )
     mu = np.load(DIRECTION).astype(np.float64)
     ids, dense, scores, no_sparse, bad_norm, off = [], [], [], 0, 0, None
     while True:
         r = http(
             f"/collections/{STAGING}/points/scroll",
-            {"limit": 1000, "offset": off, "with_payload": ["chunk_id"], "with_vector": True},
+            {
+                "limit": 1000,
+                "offset": off,
+                "with_payload": ["chunk_id"],
+                "with_vector": True,
+            },
         )["result"]
         for p in r["points"]:
             v = np.array(p["vector"]["dense"], dtype=np.float64)
@@ -385,35 +485,76 @@ def verify(model: str, key: str) -> None:
     s = np.array(scores)
     q = np.percentile(s, [0, 1, 5, 25, 50, 75, 95, 100])
     dead = int((s < DEAD_BELOW).sum())
-    print(f"DETECTOR over all {len(s):,} staged vectors (cosine with the legal direction; healthy 0.56 to 0.63, dead below {DEAD_BELOW}):")
-    print(f"  min {q[0]:.3f} | p1 {q[1]:.3f} | p5 {q[2]:.3f} | p25 {q[3]:.3f} | median {q[4]:.3f} | p75 {q[5]:.3f} | p95 {q[6]:.3f} | max {q[7]:.3f} | mean {s.mean():.3f}")
-    print(f"  below {DEAD_BELOW} (dead): {dead} | below 0.30: {(s < 0.30).sum()} | vectors without a sparse part: {no_sparse} | bad norm or size: {bad_norm}")
+    print(
+        f"DETECTOR over all {len(s):,} staged vectors (cosine with the legal direction; healthy 0.56 to 0.63, dead below {DEAD_BELOW}):"
+    )
+    print(
+        f"  min {q[0]:.3f} | p1 {q[1]:.3f} | p5 {q[2]:.3f} | p25 {q[3]:.3f} | median {q[4]:.3f} | p75 {q[5]:.3f} | p95 {q[6]:.3f} | max {q[7]:.3f} | mean {s.mean():.3f}"
+    )
+    print(
+        f"  below {DEAD_BELOW} (dead): {dead} | below 0.30: {(s < 0.30).sum()} | vectors without a sparse part: {no_sparse} | bad norm or size: {bad_norm}"
+    )
     rnd = random.Random(99)
     pick = rnd.sample(range(len(ids)), 20)
     text_of = {int(c["id"]): c["payload"]["text"] for c in chunks}
     texts = [text_of[ids[i]] for i in pick]
     stored = np.array([dense[i] for i in pick])
-    large, t1 = rk.voyage_embed(texts, SERVING, key, "sc verify 20 under voyage-4-large")
+    large, t1 = rk.voyage_embed(
+        texts, SERVING, key, "sc verify 20 under voyage-4-large"
+    )
     c_large = cosine_rows(np.array(large), stored)
-    control = Settings(_env_file=None, VOYAGE_EMBED_MODELS={"negative_control": "voyage-4"})  # a model the adapter is told about, not a backdoor
-    small, t2 = rk.voyage_embed(texts, "negative_control", key, "sc verify 20 under voyage-4 (negative control)", control)
+    control = Settings(
+        _env_file=None, VOYAGE_EMBED_MODELS={"negative_control": "voyage-4"}
+    )  # a model the adapter is told about, not a backdoor
+    small, t2 = rk.voyage_embed(
+        texts,
+        "negative_control",
+        key,
+        "sc verify 20 under voyage-4 (negative control)",
+        control,
+    )
     c_small = cosine_rows(np.array(small), stored)
-    print(f"RE-EMBED 20 staged chunks: under {model} cosine to written vector min {c_large.min():.6f} (need >= {DETERMINISM_MIN}); under voyage-4 (must NOT match) max {c_small.max():.4f}, min {c_small.min():.4f}")
+    print(
+        f"RE-EMBED 20 staged chunks: under {model} cosine to written vector min {c_large.min():.6f} (need >= {DETERMINISM_MIN}); under voyage-4 (must NOT match) max {c_small.max():.4f}, min {c_small.min():.4f}"
+    )
     run_tok = sum(
         json.loads(line)["tokens"]
         for line in rk.LEDGER.open()
         if json.loads(line).get("tag", "").startswith("sc embed batch")
     )
-    pre_tok = sum(json.loads(line)["tokens"] for line in rk.LEDGER.open() if json.loads(line).get("tag", "").startswith(("sc preflight", "sc verify")))
+    pre_tok = sum(
+        json.loads(line)["tokens"]
+        for line in rk.LEDGER.open()
+        if json.loads(line).get("tag", "").startswith(("sc preflight", "sc verify"))
+    )
     cost = run_tok / 1e6 * PRICE_PER_MTOK
-    print(f"SPEND: embed {run_tok:,} tokens = ${cost:.3f} at the ${PRICE_PER_MTOK}/M list price (estimate ${ESTIMATE_USD}); preflight + verify {pre_tok:,} tokens; per chunk {run_tok / max(len(chunks), 1):,.0f} tokens")
+    print(
+        f"SPEND: embed {run_tok:,} tokens = ${cost:.3f} at the ${PRICE_PER_MTOK}/M list price (estimate ${ESTIMATE_USD}); preflight + verify {pre_tok:,} tokens; per chunk {run_tok / max(len(chunks), 1):,.0f} tokens"
+    )
     out = {
-        "staging_points": cnt, "serving_points": serving, "serving_sc_points": sc_count, "detector_quantiles": [float(x) for x in q], "detector_mean": float(s.mean()),
-        "dead": dead, "no_sparse": no_sparse, "bad_norm": bad_norm, "determinism_min": float(c_large.min()), "voyage4_max": float(c_small.max()),
-        "embed_tokens": run_tok, "embed_cost_usd": cost, "other_tokens": pre_tok,
+        "staging_points": cnt,
+        "serving_points": serving,
+        "serving_sc_points": sc_count,
+        "detector_quantiles": [float(x) for x in q],
+        "detector_mean": float(s.mean()),
+        "dead": dead,
+        "no_sparse": no_sparse,
+        "bad_norm": bad_norm,
+        "determinism_min": float(c_large.min()),
+        "voyage4_max": float(c_small.max()),
+        "embed_tokens": run_tok,
+        "embed_cost_usd": cost,
+        "other_tokens": pre_tok,
     }
     VERIFY.write_text(json.dumps(out))
-    ok = cnt == len(chunks) and dead == 0 and no_sparse == 0 and bad_norm == 0 and c_large.min() >= DETERMINISM_MIN and c_small.max() < PREFLIGHT_MIN
+    ok = (
+        cnt == len(chunks)
+        and dead == 0
+        and no_sparse == 0
+        and bad_norm == 0
+        and c_large.min() >= DETERMINISM_MIN
+        and c_small.max() < PREFLIGHT_MIN
+    )
     print("VERIFY", "PASSED" if ok else "FAILED")
     sys.exit(0 if ok else 3)
 

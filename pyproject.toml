@@ -50,8 +50,11 @@ target-version = "py312"
 select = ["E", "F", "I", "S", "BLE"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S101"]
-"data/**" = ["S101", "E501"]
+"tests/**" = ["S101", "E501"]
+"data/**" = ["S101", "E501", "S310", "S311"]
+# Operational read-only scripts, like data/: long report lines, a loopback-URL read,
+# a seeded sample and `df`/`diskutil` calls are what they are for.
+"scan/**" = ["S101", "E501", "S310", "S311", "S607", "S608"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

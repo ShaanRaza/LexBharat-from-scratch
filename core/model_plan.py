@@ -1,15 +1,18 @@
-"""Which Voyage model embeds the query, and for which courts (A128). Pipeline step 5 (Search).
+"""Which Voyage model embeds the query, and for which courts (A128). Pipeline step 5
+(Search).
 
-Plain words: some collections hold chunks embedded by three different models, by court. A query
-vector made with one model matches that model's chunks well and the others only to about 0.95
-cosine, so a single query vector under-retrieves the mismatched share (measured: 73% of sampled
-chunks if everything is queried with voyage-4, 7.6% if each court is queried with its own
-majority model). The fix is to embed the query once per model and search each vector only among
-the courts that model built, all in ONE Qdrant call (adapters/qdrant.py).
+Plain words: some collections hold chunks embedded by three different models, by court.
+A query vector made with one model matches that model's chunks well and the others only
+to about 0.95 cosine, so a single query vector under-retrieves the mismatched share
+(measured: 73% of sampled chunks if everything is queried with voyage-4, 7.6% if each
+court is queried with its own majority model). The fix is to embed the query once per
+model and search each vector only among the courts that model built, all in ONE Qdrant
+call (adapters/qdrant.py).
 
-A collection named in VOYAGE_EMBED_MODELS is single-model: plan_for() returns None and nothing
-changes (the served kanoon_v1 is one). Only a collection registered per court in
-VOYAGE_COURT_MODELS gets a plan. A court that is not registered is refused, never defaulted.
+A collection named in VOYAGE_EMBED_MODELS is single-model: plan_for() returns None and
+nothing changes (the served kanoon_v1 is one). Only a collection registered per court in
+VOYAGE_COURT_MODELS gets a plan. A court that is not registered is refused, never
+defaulted.
 
 NO_COURT registers the records that carry no court code (Acts): without it they would be
 reachable by keyword search only.
@@ -63,9 +66,9 @@ def plan_for(settings: Settings, collection: str) -> tuple[ModelGroup, ...] | No
 def unregistered(
     settings: Settings, collection: str, present_codes: dict[str, int]
 ) -> dict[str, int]:
-    """Court codes present in `collection` (code -> points) that are NOT registered. Each
-    is reachable by keyword search only, so a copy step must see this empty. The empty
-    code (no court) is reported under NO_COURT unless that is registered."""
+    """Court codes present in `collection` (code -> points) that are NOT registered.
+    Each is reachable by keyword search only, so a copy step must see this empty. The
+    empty code (no court) is reported under NO_COURT unless that is registered."""
     per_court = settings.VOYAGE_COURT_MODELS.get(collection)
     if per_court is None:
         return {}

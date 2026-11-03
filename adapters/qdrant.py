@@ -27,7 +27,8 @@ class VectorStoreUnavailable(Exception):
 # the local copy, see docs/DATASET.md).
 DENSE_VECTOR = "dense"
 SPARSE_VECTOR = "sparse"
-# The court the record ID names, written beside the `court` label (data/add_court_code.py).
+# The court the record ID names, written beside the `court` label
+# (data/add_court_code.py).
 COURT_CODE = "court_code"
 
 # English judgments are selected by the court payload field (value from the coverage
@@ -76,7 +77,8 @@ class FastEmbedBm25:
 class DenseGroup:
     """One query vector and the courts it is searched among (A128): the vector was made
     with the model that built those courts' chunks. `codes=None` means every point (the
-    ordinary single-model search). `no_court` adds the points with no court code (Acts)."""
+    ordinary single-model search). `no_court` adds the points with no court code
+    (Acts)."""
 
     vector: Sequence[float]
     codes: tuple[str, ...] | None = None
@@ -118,10 +120,9 @@ class VectorStore(Protocol):
     ) -> list[Hit]:
         """Law collection only. vector=None means keyword-only (Voyage down). A
         QueryVectors is a per-court search: one dense prefetch per model group, in the
-        same single call.
-        `must` is an exact payload filter; a non-empty must on section/case number is
-        the exact-lookup path. `mode` is for the retrieval-quality measurement
-        (evals/known_item.py): the pipeline always uses "hybrid"."""
+        same single call. `must` is an exact payload filter; a non-empty must on
+        section/case number is the exact-lookup path. `mode` is for the retrieval-
+        quality measurement (evals/known_item.py): the pipeline always uses "hybrid"."""
         ...
 
     async def sample_chunks(
@@ -198,10 +199,11 @@ class QdrantStore:
     @staticmethod
     def _filter(must: Mapping[str, Any], group: DenseGroup | None = None):
         """An exact payload filter. A `court` label also matches on the court the record
-        ID names (`court_code`, written beside the label by data/add_court_code.py): 0.58%
-        of judgments carry no label and 0.21% a spelling variant, and a label-only filter
-        silently drops them (CLAUDE.md section 6). The label stays in the filter, so a
-        collection with no `court_code` yet behaves exactly as before."""
+        ID names (`court_code`, written beside the label by data/add_court_code.py):
+        0.58%
+        of judgments carry no label and 0.21% a spelling variant, and a label-only
+        filter silently drops them (CLAUDE.md section 6). The label stays in the filter,
+        so a collection with no `court_code` yet behaves exactly as before."""
         from qdrant_client import models
 
         conds: list[Any] = []
@@ -227,7 +229,9 @@ class QdrantStore:
             ]
             if group.no_court:  # this model also built the records with no court code
                 only.append(
-                    models.IsEmptyCondition(is_empty=models.PayloadField(key=COURT_CODE))
+                    models.IsEmptyCondition(
+                        is_empty=models.PayloadField(key=COURT_CODE)
+                    )
                 )
             conds.append(only[0] if len(only) == 1 else models.Filter(should=only))
         return models.Filter(must=conds)
@@ -263,15 +267,18 @@ class QdrantStore:
         groups = self._groups(vector)
         try:
             if any(k in must for k in EXACT_KEYS):
-                # one vector ranks the few matches; with several models there is no single
-                # vector, so the matches come back in stored order (not verified for ranking)
+                # one vector ranks the few matches; with several models there is no
+                # single vector, so the matches come back in stored order (not verified
+                # for ranking)
                 only = groups[0].vector if len(groups) == 1 else None
                 r = await self._exact(collection, only, flt, limit)
             elif mode != "hybrid":
-                r = await self._one_half(collection, groups, text, must, flt, limit, mode)
+                r = await self._one_half(
+                    collection, groups, text, must, flt, limit, mode
+                )
             else:
-                # one dense prefetch per model group (each only among its courts) plus the
-                # keyword half, in ONE call, merged by rank
+                # one dense prefetch per model group (each only among its courts) plus
+                # the keyword half, in ONE call, merged by rank
                 prefetch = [
                     models.Prefetch(
                         query=list(g.vector),

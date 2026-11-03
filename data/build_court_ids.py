@@ -67,13 +67,17 @@ SAME: dict[str, list[str]] = {
 # labels that name no place: kept as aliases for classifying rows, never used to look a court up
 GENERIC_LABELS = ["High Court", "Court"]
 
-SC_CODE = "INSC"  # the Supreme Court has no letter prefix; its ids are <year>_INSC_<n>_<k>
+SC_CODE = (
+    "INSC"  # the Supreme Court has no letter prefix; its ids are <year>_INSC_<n>_<k>
+)
 SC_PATTERN = r"^\d{4}_INSC_\d+_\d+$"
 
 
 def build() -> dict:
     rows = list(csv.DictReader(COUNTS.open()))
-    by_src: dict[str, dict[str, dict[str, int]]] = collections.defaultdict(lambda: collections.defaultdict(lambda: collections.defaultdict(int)))
+    by_src: dict[str, dict[str, dict[str, int]]] = collections.defaultdict(
+        lambda: collections.defaultdict(lambda: collections.defaultdict(int))
+    )
     for r in rows:
         by_src[r["source_file"]][r["id_prefix"]][r["court_label"]] += int(r["rows"])
     courts: dict[str, dict] = {}
@@ -99,10 +103,27 @@ def build() -> dict:
             "aliases": aliases,
             "prefixes": dict(sorted(prefixes.items())),
             "rows": sum(prefixes.values()),
-            "label_rows": {"usual": usual, "alias": alias_rows, "missing": missing, "other_court": foreign},
-            "other_court_labels": {k: v for k, v in sorted(named.items(), key=lambda kv: -kv[1]) if k not in same},
+            "label_rows": {
+                "usual": usual,
+                "alias": alias_rows,
+                "missing": missing,
+                "other_court": foreign,
+            },
+            "other_court_labels": {
+                k: v
+                for k, v in sorted(named.items(), key=lambda kv: -kv[1])
+                if k not in same
+            },
         }
-        totals.update({"rows": courts[src]["rows"], "usual": usual, "alias": alias_rows, "missing": missing, "other_court": foreign})
+        totals.update(
+            {
+                "rows": courts[src]["rows"],
+                "usual": usual,
+                "alias": alias_rows,
+                "missing": missing,
+                "other_court": foreign,
+            }
+        )
     return {
         "_note": "IDENTIFICATION, not coverage: which court an id prefix means, from the snapshot's own data. What the product covers is core/coverage.json and only that. Built by data/build_court_ids.py from data/court_prefix_counts.csv; do not edit by hand.",
         "snapshot": "v2026.08",
@@ -123,7 +144,9 @@ def main() -> None:
         sys.exit(0 if OUT.exists() and OUT.read_text() == text else 1)
     OUT.write_text(text)
     t = json.loads(text)["totals"]
-    print(f"wrote {OUT.relative_to(ROOT)}: {len(json.loads(text)['courts'])} courts, {t}")
+    print(
+        f"wrote {OUT.relative_to(ROOT)}: {len(json.loads(text)['courts'])} courts, {t}"
+    )
 
 
 if __name__ == "__main__":

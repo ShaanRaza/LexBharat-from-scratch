@@ -25,7 +25,9 @@ def sv(pairs: dict[int, float]) -> dict:
 
 # --- what counts as broken ---------------------------------------------------------------------------
 def test_a_vector_equal_to_the_fresh_encoding_is_not_broken():
-    assert r.differs(sv({1: 1.2, 5: 0.7}), sv({5: 0.7, 1: 1.2})) is False  # order does not matter
+    assert (
+        r.differs(sv({1: 1.2, 5: 0.7}), sv({5: 0.7, 1: 1.2})) is False
+    )  # order does not matter
 
 
 def test_raw_term_counts_are_broken_even_when_they_share_the_index_set():
@@ -52,8 +54,12 @@ def test_an_empty_vector_against_an_empty_encoding_is_not_broken():
 
 
 # --- the original is never written ------------------------------------------------------------------------
-@pytest.mark.parametrize("dest", ["legal_corpus_v1", "legal_corpus_v2", "acts_india", "kanoon_v1"])
-def test_the_destination_may_not_be_an_original_or_the_serving_collection(dest, monkeypatch):
+@pytest.mark.parametrize(
+    "dest", ["legal_corpus_v1", "legal_corpus_v2", "acts_india", "kanoon_v1"]
+)
+def test_the_destination_may_not_be_an_original_or_the_serving_collection(
+    dest, monkeypatch
+):
     calls = []
     monkeypatch.setattr(r, "copy_http", lambda *a, **k: calls.append(a))
     monkeypatch.setattr(r, "orig_scroll", lambda *a, **k: calls.append(a))
@@ -81,7 +87,9 @@ def test_only_the_two_read_helpers_can_reach_the_original():
     touching = {
         f.name
         for f in funcs
-        if any(isinstance(n, ast.Name) and n.id == "ORIG" for n in ast.walk(f))  # the constant, not the word
+        if any(
+            isinstance(n, ast.Name) and n.id == "ORIG" for n in ast.walk(f)
+        )  # the constant, not the word
     }
     assert touching == {"orig_scroll", "orig_retrieve"}
     for name in touching:
@@ -91,7 +99,9 @@ def test_only_the_two_read_helpers_can_reach_the_original():
 
 
 def test_the_source_filter_selects_everything_except_the_central_acts():
-    assert r.NOT_CENTRAL == {"must_not": [{"key": "jurisdiction", "match": {"value": "central"}}]}
+    assert r.NOT_CENTRAL == {
+        "must_not": [{"key": "jurisdiction", "match": {"value": "central"}}]
+    }
     assert r.SOURCE == "acts_india"
 
 
@@ -105,4 +115,6 @@ def test_a_read_that_fails_stops_without_retrying(monkeypatch):
     monkeypatch.setattr(r.urllib.request, "urlopen", boom)
     with pytest.raises(SystemExit) as e:
         r.orig_scroll(None, 10, with_vector=False)
-    assert "HARD STOP" in str(e.value) and "No retry" in str(e.value) and len(calls) == 1
+    assert (
+        "HARD STOP" in str(e.value) and "No retry" in str(e.value) and len(calls) == 1
+    )

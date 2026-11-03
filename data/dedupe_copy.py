@@ -46,8 +46,12 @@ COPY = "http://127.0.0.1:7333"
 FORBIDDEN = {"legal_corpus_v1", "legal_corpus_v2", "acts_india"}  # the originals
 BACKUP = Path.home() / "qdrant-kanoon" / "dedupe"
 
-DISAGREE_BELOW = 0.5  # a copy agreeing with no other copy above this is a candidate dead copy
-AGREE_AT_LEAST = 0.5  # the copies that stay must agree with one another at least this much
+DISAGREE_BELOW = (
+    0.5  # a copy agreeing with no other copy above this is a candidate dead copy
+)
+AGREE_AT_LEAST = (
+    0.5  # the copies that stay must agree with one another at least this much
+)
 DETECTOR_DEAD_BELOW = 0.10  # the dead copy must also be under the detector's line
 MIN_SCORE_MARGIN = 0.03  # and clearly lower than the live copy's score
 
@@ -73,7 +77,9 @@ def detector_score(vector: np.ndarray, direction: np.ndarray) -> float:
 
 
 def _cosines(members: list[Member]) -> np.ndarray:
-    m = np.array([x.vector / np.linalg.norm(x.vector) for x in members], dtype=np.float64)
+    m = np.array(
+        [x.vector / np.linalg.norm(x.vector) for x in members], dtype=np.float64
+    )
     return m @ m.T
 
 
@@ -91,26 +97,57 @@ def plan_group(members: list[Member]) -> GroupPlan:
             return GroupPlan("all_live", (), ids, "the two copies agree")
         dead, live = sorted(members, key=lambda m: m.score)
         if dead.score >= DETECTOR_DEAD_BELOW:
-            return GroupPlan("unclear", (), ids, f"the two disagree but neither scores under {DETECTOR_DEAD_BELOW}")
+            return GroupPlan(
+                "unclear",
+                (),
+                ids,
+                f"the two disagree but neither scores under {DETECTOR_DEAD_BELOW}",
+            )
         if live.score - dead.score < MIN_SCORE_MARGIN:
-            return GroupPlan("unclear", (), ids, "the detector does not clearly separate the two")
-        return GroupPlan("dead_removed", (dead.id,), (live.id,), "the copies disagree and one scores clearly lower")
+            return GroupPlan(
+                "unclear", (), ids, "the detector does not clearly separate the two"
+            )
+        return GroupPlan(
+            "dead_removed",
+            (dead.id,),
+            (live.id,),
+            "the copies disagree and one scores clearly lower",
+        )
     np.fill_diagonal(cos, -1.0)
     loners = [i for i in range(n) if cos[i].max() < DISAGREE_BELOW]  # agree with nobody
     if not loners:
         return GroupPlan("all_live", (), ids, "every copy agrees with another")
     if len(loners) > 1:
-        return GroupPlan("unclear", (), ids, f"{len(loners)} copies agree with no other")
+        return GroupPlan(
+            "unclear", (), ids, f"{len(loners)} copies agree with no other"
+        )
     d = loners[0]
     rest = [i for i in range(n) if i != d]
-    if len(rest) > 1 and min(cos[a, b] for a in rest for b in rest if a < b) < AGREE_AT_LEAST:
-        return GroupPlan("unclear", (), ids, "the copies that would stay disagree with each other")
+    if (
+        len(rest) > 1
+        and min(cos[a, b] for a in rest for b in rest if a < b) < AGREE_AT_LEAST
+    ):
+        return GroupPlan(
+            "unclear", (), ids, "the copies that would stay disagree with each other"
+        )
     dead, live_low = members[d], min(members[i].score for i in rest)
     if dead.score >= DETECTOR_DEAD_BELOW:
-        return GroupPlan("unclear", (), ids, f"the odd copy scores {dead.score:.3f}, not under {DETECTOR_DEAD_BELOW}")
+        return GroupPlan(
+            "unclear",
+            (),
+            ids,
+            f"the odd copy scores {dead.score:.3f}, not under {DETECTOR_DEAD_BELOW}",
+        )
     if live_low - dead.score < MIN_SCORE_MARGIN:
-        return GroupPlan("unclear", (), ids, "the detector does not clearly separate the odd copy")
-    return GroupPlan("dead_removed", (dead.id,), tuple(members[i].id for i in rest), "one copy disagrees with the rest and scores clearly lower")
+        return GroupPlan(
+            "unclear", (), ids, "the detector does not clearly separate the odd copy"
+        )
+    return GroupPlan(
+        "dead_removed",
+        (dead.id,),
+        tuple(members[i].id for i in rest),
+        "one copy disagrees with the rest and scores clearly lower",
+    )
 
 
 @dataclass
@@ -119,7 +156,9 @@ class Plan:
     statuses: collections.Counter = field(default_factory=collections.Counter)
     delete: list[int] = field(default_factory=list)
     unclear: list[tuple[str, str]] = field(default_factory=list)  # (chunk id, why)
-    identical_live_pairs: int = 0  # live groups whose copies are the SAME vector (a possible later saving)
+    identical_live_pairs: int = (
+        0  # live groups whose copies are the SAME vector (a possible later saving)
+    )
     delete_chunk: dict[int, str] = field(default_factory=dict)
 
 
@@ -157,7 +196,15 @@ def duplicated_chunks(collection: str) -> dict[str, list[int]]:
     seen: dict[str, list[int]] = collections.defaultdict(list)
     off = None
     while True:
-        r = http(f"/collections/{collection}/points/scroll", {"limit": 5000, "offset": off, "with_payload": ["chunk_id"], "with_vector": False})["result"]
+        r = http(
+            f"/collections/{collection}/points/scroll",
+            {
+                "limit": 5000,
+                "offset": off,
+                "with_payload": ["chunk_id"],
+                "with_vector": False,
+            },
+        )["result"]
         for p in r["points"]:
             cid = (p.get("payload") or {}).get("chunk_id")
             if cid is not None:
@@ -167,12 +214,17 @@ def duplicated_chunks(collection: str) -> dict[str, list[int]]:
             return {c: ids for c, ids in seen.items() if len(ids) > 1}
 
 
-def load_members(collection: str, dup: dict[str, list[int]], direction: np.ndarray) -> dict[str, list[Member]]:
+def load_members(
+    collection: str, dup: dict[str, list[int]], direction: np.ndarray
+) -> dict[str, list[Member]]:
     by_id = {i: c for c, ids in dup.items() for i in ids}
     ids = list(by_id)
     out: dict[str, list[Member]] = collections.defaultdict(list)
     for i in range(0, len(ids), 500):
-        for p in http(f"/collections/{collection}/points", {"ids": ids[i : i + 500], "with_payload": False, "with_vector": ["dense"]})["result"]:
+        for p in http(
+            f"/collections/{collection}/points",
+            {"ids": ids[i : i + 500], "with_payload": False, "with_vector": ["dense"]},
+        )["result"]:
             v = np.array(p["vector"]["dense"], dtype=np.float64)
             out[by_id[p["id"]]].append(Member(p["id"], v, detector_score(v, direction)))
     return out
@@ -184,20 +236,35 @@ def main() -> None:
     ap.add_argument("--apply", action="store_true")
     a = ap.parse_args()
     if a.collection in FORBIDDEN:
-        sys.exit(f"REFUSED: {a.collection} is an original; this writes to the copy instance only.")
-    names = {c["name"] for c in http("/collections", method="GET")["result"]["collections"]}
+        sys.exit(
+            f"REFUSED: {a.collection} is an original; this writes to the copy instance only."
+        )
+    names = {
+        c["name"] for c in http("/collections", method="GET")["result"]["collections"]
+    }
     if a.collection not in names:
         sys.exit(f"no collection {a.collection!r} on the copy instance")
     direction = np.load(DIRECTION).astype(np.float64)
-    before = http(f"/collections/{a.collection}", method="GET")["result"]["points_count"]
+    before = http(f"/collections/{a.collection}", method="GET")["result"][
+        "points_count"
+    ]
     dup = duplicated_chunks(a.collection)
     members = load_members(a.collection, dup, direction)
     pl = plan_collection(members)
     st = pl.statuses
-    print(f"{a.collection}: {before:,} points; {len(dup):,} chunk ids on more than one point ({sum(len(v) for v in dup.values()):,} points)")
-    print(f"  dead copy with a live twin (to delete): {st['dead_removed']:,} groups, {len(pl.delete):,} points")
-    print(f"  every copy live (KEEP ALL, A126 amended): {st['all_live']:,} groups, of which {pl.identical_live_pairs:,} are the SAME vector")
-    print(f"  unclear (KEEP ALL): {st['unclear']:,}" + (f", first 3: {pl.unclear[:3]}" if pl.unclear else ""))
+    print(
+        f"{a.collection}: {before:,} points; {len(dup):,} chunk ids on more than one point ({sum(len(v) for v in dup.values()):,} points)"
+    )
+    print(
+        f"  dead copy with a live twin (to delete): {st['dead_removed']:,} groups, {len(pl.delete):,} points"
+    )
+    print(
+        f"  every copy live (KEEP ALL, A126 amended): {st['all_live']:,} groups, of which {pl.identical_live_pairs:,} are the SAME vector"
+    )
+    print(
+        f"  unclear (KEEP ALL): {st['unclear']:,}"
+        + (f", first 3: {pl.unclear[:3]}" if pl.unclear else "")
+    )
     if not a.apply:
         print("DRY RUN: nothing written. Re-run with --apply.")
         return
@@ -208,21 +275,49 @@ def main() -> None:
     backup = BACKUP / f"{a.collection}_deleted.jsonl"
     with backup.open("a") as f:
         for i in range(0, len(pl.delete), 200):
-            for p in http(f"/collections/{a.collection}/points", {"ids": pl.delete[i : i + 200], "with_payload": True, "with_vector": True})["result"]:
+            for p in http(
+                f"/collections/{a.collection}/points",
+                {
+                    "ids": pl.delete[i : i + 200],
+                    "with_payload": True,
+                    "with_vector": True,
+                },
+            )["result"]:
                 f.write(json.dumps(p) + "\n")
     for i in range(0, len(pl.delete), 500):
-        http(f"/collections/{a.collection}/points/delete?wait=true", {"points": pl.delete[i : i + 500]})
+        http(
+            f"/collections/{a.collection}/points/delete?wait=true",
+            {"points": pl.delete[i : i + 500]},
+        )
     after = http(f"/collections/{a.collection}", method="GET")["result"]["points_count"]
     still = duplicated_chunks(a.collection)
-    survive = http(f"/collections/{a.collection}/points/count", {"exact": True})["result"]["count"]
-    lost = [c for c in {pl.delete_chunk[d] for d in pl.delete} if c not in still and not _has_chunk(a.collection, c)]
-    print(f"DELETED {len(pl.delete):,}: {before:,} -> {after:,} points (expected {before - len(pl.delete):,}); backup {backup}")
-    print(f"  chunk ids that lost their LAST copy: {len(lost)} (must be 0); count check {survive:,}")
+    survive = http(f"/collections/{a.collection}/points/count", {"exact": True})[
+        "result"
+    ]["count"]
+    lost = [
+        c
+        for c in {pl.delete_chunk[d] for d in pl.delete}
+        if c not in still and not _has_chunk(a.collection, c)
+    ]
+    print(
+        f"DELETED {len(pl.delete):,}: {before:,} -> {after:,} points (expected {before - len(pl.delete):,}); backup {backup}"
+    )
+    print(
+        f"  chunk ids that lost their LAST copy: {len(lost)} (must be 0); count check {survive:,}"
+    )
     sys.exit(0 if after == before - len(pl.delete) and not lost else 1)
 
 
 def _has_chunk(collection: str, chunk_id: str) -> bool:
-    r = http(f"/collections/{collection}/points/scroll", {"limit": 1, "filter": {"must": [{"key": "chunk_id", "match": {"value": chunk_id}}]}, "with_payload": False, "with_vector": False})["result"]
+    r = http(
+        f"/collections/{collection}/points/scroll",
+        {
+            "limit": 1,
+            "filter": {"must": [{"key": "chunk_id", "match": {"value": chunk_id}}]},
+            "with_payload": False,
+            "with_vector": False,
+        },
+    )["result"]
     return bool(r["points"])
 
 

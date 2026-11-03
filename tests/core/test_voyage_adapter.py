@@ -34,7 +34,9 @@ from adapters.voyage import (
 from core.settings import Settings, UnknownEmbeddingModel
 
 ROOT = Path(__file__).resolve().parents[2]
-FIXTURE = json.loads((ROOT / "tests" / "fixtures" / "voyage_known_vectors.json").read_text())
+FIXTURE = json.loads(
+    (ROOT / "tests" / "fixtures" / "voyage_known_vectors.json").read_text()
+)
 ROWS = FIXTURE["rows"]
 
 
@@ -62,7 +64,9 @@ def _cos(a, b) -> float:
 )
 def test_input_type_has_no_default_anywhere_an_embedder_is_defined(fn):
     p = inspect.signature(fn).parameters["input_type"]
-    assert p.default is inspect.Parameter.empty, f"{fn.__qualname__} gives input_type a default"
+    assert p.default is inspect.Parameter.empty, (
+        f"{fn.__qualname__} gives input_type a default"
+    )
 
 
 async def test_leaving_input_type_out_is_a_type_error_not_a_silent_query():
@@ -95,7 +99,9 @@ async def test_a_value_that_is_not_query_or_document_is_refused_before_any_reque
 async def test_the_fake_embedder_gives_a_query_and_a_document_different_vectors():
     f = FakeEmbedder()
     q = await f.embed("limitation period for a cheque bounce complaint", None, "query")
-    d = await f.embed("limitation period for a cheque bounce complaint", None, "document")
+    d = await f.embed(
+        "limitation period for a cheque bounce complaint", None, "document"
+    )
     assert q != d and _cos(q, d) < 0.999  # a wrong choice would show up in a test
 
 
@@ -131,15 +137,25 @@ async def test_the_request_carries_the_chosen_input_type_the_model_and_1024_dime
     await c.embed("d", "b", "document")
     (u1, auth1, b1), (u2, _, b2) = sent
     assert DIM == 1024 and u1.endswith("/embeddings") and auth1 == "Bearer test-key"
-    assert (b1["model"], b1["input_type"], b1["output_dimension"]) == ("voyage-4", "query", 1024)
-    assert (b2["model"], b2["input_type"], b2["output_dimension"]) == ("voyage-4-large", "document", 1024)
+    assert (b1["model"], b1["input_type"], b1["output_dimension"]) == (
+        "voyage-4",
+        "query",
+        1024,
+    )
+    assert (b2["model"], b2["input_type"], b2["output_dimension"]) == (
+        "voyage-4-large",
+        "document",
+        1024,
+    )
     assert b1["input"] == ["q"] and b2["input"] == ["d"]
 
 
 async def test_a_batch_is_one_request_returned_in_input_order_with_the_billed_tokens():
     vecs = [[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]
     sent, transport = _capturing(vectors=vecs, usage=123)
-    c = VoyageClient(_settings(VOYAGE_EMBED_MODELS={"c": "voyage-4"}), transport=transport)
+    c = VoyageClient(
+        _settings(VOYAGE_EMBED_MODELS={"c": "voyage-4"}), transport=transport
+    )
     batch = await c.embed_batch(["x", "y", "z"], "c", "document")
     assert len(sent) == 1 and sent[0][2]["input"] == ["x", "y", "z"]
     assert batch.vectors == vecs  # the response came back reversed; order is restored
@@ -188,7 +204,9 @@ def _voyage_stand_in():
                 and body["input_type"] == "document"
                 and body["output_dimension"] == 1024
             )
-            vec = row["stored_vector"] if right else list(reversed(row["stored_vector"]))
+            vec = (
+                row["stored_vector"] if right else list(reversed(row["stored_vector"]))
+            )
             out.append({"index": i, "embedding": vec})
         return httpx.Response(200, json={"data": out, "usage": {"total_tokens": 1}})
 
@@ -208,10 +226,17 @@ async def test_a_document_call_reproduces_the_stored_vector(row):
 
 
 def test_the_fixture_is_real_and_covers_both_models():
-    assert len(ROWS) >= 5 and {r["expected_model"] for r in ROWS} == {"voyage-4", "voyage-4-large"}
+    assert len(ROWS) >= 5 and {r["expected_model"] for r in ROWS} == {
+        "voyage-4",
+        "voyage-4-large",
+    }
     for r in ROWS:
         v = np.asarray(r["stored_vector"])
-        assert v.shape == (1024,) and abs(np.linalg.norm(v) - 1) < 1e-3 and len(r["text"]) > 400
+        assert (
+            v.shape == (1024,)
+            and abs(np.linalg.norm(v) - 1) < 1e-3
+            and len(r["text"]) > 400
+        )
 
 
 def test_the_models_in_the_fixture_are_the_ones_the_settings_record():
@@ -228,7 +253,13 @@ def _flaky(statuses):
         calls.append(1)
         status = statuses[min(len(calls) - 1, len(statuses) - 1)]
         if status == 200:
-            return httpx.Response(200, json={"data": [{"index": 0, "embedding": [0.1]}], "usage": {"total_tokens": 3}})
+            return httpx.Response(
+                200,
+                json={
+                    "data": [{"index": 0, "embedding": [0.1]}],
+                    "usage": {"total_tokens": 3},
+                },
+            )
         return httpx.Response(status, json={"error": "x"})
 
     return calls, httpx.MockTransport(handler)
@@ -248,7 +279,9 @@ def no_sleep(monkeypatch):
 async def test_the_batch_path_retries_a_rate_limit_then_succeeds(no_sleep):
     calls, transport = _flaky([429, 503, 200])
     c = VoyageClient(
-        _settings(VOYAGE_EMBED_MODELS={"c": "voyage-4"}), max_attempts=5, transport=transport
+        _settings(VOYAGE_EMBED_MODELS={"c": "voyage-4"}),
+        max_attempts=5,
+        transport=transport,
     )
     batch = await c.embed_batch(["x"], "c", "document")
     assert len(calls) == 3 and batch.total_tokens == 3 and len(no_sleep) == 2
@@ -256,7 +289,9 @@ async def test_the_batch_path_retries_a_rate_limit_then_succeeds(no_sleep):
 
 async def test_the_online_path_makes_one_attempt_and_falls_back(no_sleep):
     calls, transport = _flaky([503])
-    c = VoyageClient(_settings(VOYAGE_EMBED_MODELS={"c": "voyage-4"}), transport=transport)
+    c = VoyageClient(
+        _settings(VOYAGE_EMBED_MODELS={"c": "voyage-4"}), transport=transport
+    )
     with pytest.raises(VoyageUnavailable):
         await c.embed("x", "c", "query")
     assert len(calls) == 1 and no_sleep == []  # keyword-only search takes over, at once
@@ -265,7 +300,9 @@ async def test_the_online_path_makes_one_attempt_and_falls_back(no_sleep):
 async def test_a_bad_key_is_not_retried(no_sleep):
     calls, transport = _flaky([401])
     c = VoyageClient(
-        _settings(VOYAGE_EMBED_MODELS={"c": "voyage-4"}), max_attempts=5, transport=transport
+        _settings(VOYAGE_EMBED_MODELS={"c": "voyage-4"}),
+        max_attempts=5,
+        transport=transport,
     )
     with pytest.raises(VoyageUnavailable):
         await c.embed_batch(["x"], "c", "document")
@@ -284,6 +321,8 @@ def test_nothing_outside_the_voyage_adapter_talks_to_voyage():
                 continue
             for n, line in enumerate(f.read_text().splitlines(), 1):
                 code = line.split("#", 1)[0]
-                if re.search(r"api\.voyageai\.com|^\s*(?:import|from)\s+voyageai\b", code):
+                if re.search(
+                    r"api\.voyageai\.com|^\s*(?:import|from)\s+voyageai\b", code
+                ):
                     bad.append(f"{f.relative_to(ROOT)}:{n}")
     assert bad == [], bad

@@ -27,16 +27,20 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from adversarial_helpers import make_deps
+from test_dedupe import spy  # the gate spy: what the gate was given, and what it kept
 
 from adapters.llm import FakeLLM
 from adapters.qdrant import QdrantStore
 from core.contracts import PipelineRequest, run_pipeline
 from core.gate import gate as real_gate
 from core.settings import get_settings
-from test_dedupe import spy  # the gate spy: what the gate was given, and what it kept
 
 PAIR = json.loads(
-    (Path(__file__).resolve().parents[1] / "fixtures" / "live_live_duplicate_pair.json").read_text()
+    (
+        Path(__file__).resolve().parents[1]
+        / "fixtures"
+        / "live_live_duplicate_pair.json"
+    ).read_text()
 )
 CHUNK_ID = PAIR["chunk_id"]
 ID_A, ID_B = PAIR["point_ids"]
@@ -99,39 +103,55 @@ def _llm() -> FakeLLM:
     return FakeLLM(respond)
 
 
-REQUEST = PipelineRequest("u1", QUERY)  # the stand-in rater scores word overlap with the question
+REQUEST = PipelineRequest(
+    "u1", QUERY
+)  # the stand-in rater scores word overlap with the question
 
 
 # --- the real mapping: a point id is NOT the record id ------------------------------------
 async def test_two_points_with_different_ids_get_the_same_record_id_from_the_real_store():
-    hits = await _store(FakeQdrantClient()).search("kanoon_v1", [0.1] * 4, QUERY, {}, 50)
+    hits = await _store(FakeQdrantClient()).search(
+        "kanoon_v1", [0.1] * 4, QUERY, {}, 50
+    )
     ids = [h.record_id for h in hits]
-    assert ids.count(CHUNK_ID) == 2, ids  # the record id is the chunk id, not the point id
+    assert ids.count(CHUNK_ID) == 2, (
+        ids
+    )  # the record id is the chunk id, not the point id
     assert str(ID_A) not in ids and str(ID_B) not in ids
     assert PAIR["cosine_between_copies"] < 0.99  # a different-model pair, as A126 says
 
 
 # --- step 5 on its own --------------------------------------------------------------------
 async def test_search_keeps_one_copy_of_the_pair_and_it_is_the_higher_scoring_one():
-    from core.search import search
     from core.contracts import Decision, Filters, RewrittenQuery
+    from core.search import search
 
     deps = make_deps(vectors=_store(FakeQdrantClient(scores=(0.61, 0.83))))
     rq = RewrittenQuery(query=QUERY)
-    res = await search(REQUEST, rq, Decision("in_scope", Filters(), "normal"), [0.1] * 4, deps)
+    res = await search(
+        REQUEST, rq, Decision("in_scope", Filters(), "normal"), [0.1] * 4, deps
+    )
     assert [p.record_id for p in res.passages].count(CHUNK_ID) == 1
     kept = next(p for p in res.passages if p.record_id == CHUNK_ID)
-    assert kept.score == 0.83  # the copy that matches the query model usually scores higher
-    assert len(res.passages) == 2  # the pair collapsed to one; the other authority is still there
+    assert (
+        kept.score == 0.83
+    )  # the copy that matches the query model usually scores higher
+    assert (
+        len(res.passages) == 2
+    )  # the pair collapsed to one; the other authority is still there
 
 
 async def test_the_lower_scoring_copy_arriving_first_does_not_win():
-    from core.search import search
     from core.contracts import Decision, Filters, RewrittenQuery
+    from core.search import search
 
-    deps = make_deps(vectors=_store(FakeQdrantClient(order=("a", "b"), scores=(0.61, 0.83))))
+    deps = make_deps(
+        vectors=_store(FakeQdrantClient(order=("a", "b"), scores=(0.61, 0.83)))
+    )
     rq = RewrittenQuery(query=QUERY)
-    res = await search(REQUEST, rq, Decision("in_scope", Filters(), "normal"), [0.1] * 4, deps)
+    res = await search(
+        REQUEST, rq, Decision("in_scope", Filters(), "normal"), [0.1] * 4, deps
+    )
     assert next(p for p in res.passages if p.record_id == CHUNK_ID).score == 0.83
 
 
@@ -146,7 +166,9 @@ async def test_only_one_copy_of_a_live_live_pair_reaches_the_gate_and_the_other_
     assert gate_in.count(CHUNK_ID) == 1, f"both copies reached the gate: {gate_in}"
     assert OTHER["chunk_id"] in gate_in  # the different authority was not crowded out
     labelled = [(p.source_id, p.record_id) for p in seen["out"]]
-    assert len({rid for _, rid in labelled}) == len(labelled), labelled  # no S1 and S4 for one passage
+    assert len({rid for _, rid in labelled}) == len(labelled), (
+        labelled
+    )  # no S1 and S4 for one passage
     assert [rid for _, rid in labelled].count(CHUNK_ID) <= 1
 
 
@@ -156,10 +178,16 @@ async def test_the_second_rule_catches_the_pair_even_if_the_chunk_id_is_missing(
     same case is rule 2, and it does."""
     client = FakeQdrantClient(drop_chunk_id=True)
     hits = await _store(client).search("kanoon_v1", [0.1] * 4, QUERY, {}, 50)
-    assert len({h.record_id for h in hits}) == 3  # three distinct record ids: rule 1 is blind here
+    assert (
+        len({h.record_id for h in hits}) == 3
+    )  # three distinct record ids: rule 1 is blind here
     spy_gate, seen = spy()
-    deps = make_deps(vectors=_store(FakeQdrantClient(drop_chunk_id=True)), llm=_llm(), gate=spy_gate)
-    await run_pipeline(REQUEST, deps)  # the answer itself is not the point: with no chunk_id the
+    deps = make_deps(
+        vectors=_store(FakeQdrantClient(drop_chunk_id=True)), llm=_llm(), gate=spy_gate
+    )
+    await run_pipeline(
+        REQUEST, deps
+    )  # the answer itself is not the point: with no chunk_id the
     # verifier cannot resolve the record (record_missing), which is correct and not under test
     same_case = [p for p in seen["in"] if p.case_id == PAIR["payload"]["case_id"]]
     assert len(same_case) == 1, [p.record_id for p in seen["in"]]
@@ -180,7 +208,9 @@ async def test_get_record_returns_the_same_text_whichever_copy_qdrant_returns_fi
     with each copy in turn first."""
     got = []
     for order in (("a", "b"), ("b", "a")):
-        rec = await _store(FakeQdrantClient(order=order)).get_record("kanoon_v1", CHUNK_ID)
+        rec = await _store(FakeQdrantClient(order=order)).get_record(
+            "kanoon_v1", CHUNK_ID
+        )
         got.append(rec)
     assert all(r is not None and r.record_id == CHUNK_ID for r in got)
     assert got[0].text == got[1].text == PAIR["payload"]["text"]
