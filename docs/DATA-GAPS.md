@@ -693,3 +693,86 @@ judgments. Consequences nobody has accounted for:
 
 Seen in 17 points, which is tiny — but nobody has measured how often `court` is wrong rather than
 merely spelled differently, and the three consequences above all assume it is right.
+
+## 16. The full Kerala scan: 217,766 dead, the threshold holds, no other court affected
+
+**Measured**, 3 Nov 2026, full scan with the fixed scorer. Source: `~/qdrant-kanoon/reports/
+kerala_scan_report.md`, `scan_confirm.log`, `scan/kerala_v2.tsv`.
+
+### The count
+
+**217,766 flagged** — 217,688 of Kerala v2's 3,125,018 chunks (**6.97%**), plus 78 of the 909
+`KLHC` chunks hiding in v2's no-court group. Against section 14's 215,000 estimate, which came
+from a 450-chunk sample: close enough to be reassuring, but the checks below are the evidence,
+not the closeness.
+
+### The gap survived at scale — this is the finding that validates the threshold
+
+The worry was that a clean separation on 450 chunks would dissolve into a continuum at 3.1M,
+making the 0.10 cut arbitrary. It did not.
+
+- Dead cluster: **−0.12 to +0.099**, mean +0.003, sd 0.030.
+- The valley between 0.09 and 0.13 holds **31, 5, 14, 16 and 65** chunks per 0.01 bin.
+- The two peaks hold **102,250 and 680,629** chunks per 0.05 bin.
+
+The valley is about four orders of magnitude below the peaks. And the cut is insensitive:
+**moving it from 0.08 to 0.14 changes the flagged count by −243 to +100** — under 0.2% across a
+range six times wider than the threshold's own uncertainty. The number does not depend on where
+in the valley the line is drawn.
+
+### Length contamination: ruled out
+
+Section 14 flagged that good chunks score lower the longer they are, so long legitimate chunks
+might be swept in. They were not. Flagged median body length **3,784** characters against
+**3,840** for all Kerala chunks, and the flagged rate is **6.6–8.1% in every length bucket of 500
+characters or more**. Below 500 characters it is 5.0% (n=5,500). No skew.
+
+### Confirmed by re-embedding, from both sides of the cut
+
+59 chunks, 66,483 Voyage tokens.
+
+| Group | Result |
+|---|---|
+| 30 random flagged | **30 dead** |
+| 10 flagged near the cut (0.05–0.10) | **10 dead** |
+| 5 flagged Kerala no-court | **5 dead** |
+| 10 just **above** the cut (0.135–0.148) | **10 live** (cosine 0.95–1.00) |
+| 4 flagged in other courts | **4 live** (cosine 0.94–0.95) |
+
+**45 of 45** flagged Kerala chunks confirmed dead, and **10 of 10** just above the cut confirmed
+live. Validating both sides of the boundary is what makes 217,766 a count rather than an estimate.
+
+### Every other court is clean — now with a real denominator
+
+The 4 cross-court flags are **false positives**: live chunks whose embedding model differs from
+the detector's reference direction, scoring 0.093–0.097. So **0 confirmed dead outside Kerala**,
+out of **275,216** non-Kerala chunks scored (200,339 across 73 court files plus 74,877 non-Kerala
+no-court points). Pooled bound about 0.001%.
+
+Section 14's "0 of 2,694" rested on ~35 chunks a court. This is two orders of magnitude better,
+and it confirms the job is Kerala's alone.
+
+### Two things the reconciliation turned up
+
+**A reporting error the session found and fixed itself.** The report's line 2 said 200,023 and
+line 7 said 275,216. The first was a *planned quota* read out of `driver.log`, never a result;
+the actual written count was 200,339, and the real denominator adds the 74,877 non-Kerala
+no-court points. The session reconciled both figures against the scan files, corrected the
+report, and also corrected its own earlier claim about the J&K denominator (4,800 → 5,907).
+
+**A duplicated `chunk_id`, and it may matter to the verifier.** The two J&K flags are **one**
+chunk id (`JKHC020055362012_005`) stored on **two points**, with identical score, length and
+chunk index — "the same duplicated-chunk-id pattern as in the Supreme Court data". So three
+distinct chunks were flagged, not four.
+
+*Verified at `adapters/qdrant.py:375-380`:* `get_record` filters on `{"chunk_id": record_id}` and
+returns **one** `RecordText`. Verifier check 3 matches quoted words against *that* record's text.
+If two points share a `chunk_id` **and their text differs**, the verifier can compare a quote
+against a different point's text than the one retrieved, and strip a legitimate citation
+nondeterministically. That fails closed, so it is safe rather than dangerous — but it would
+remove real authorities for no reason, and the user would be told one could not be verified.
+
+**Unmeasured, and cheap:** how many `chunk_id` values appear on more than one point, and whether
+duplicates ever carry *different* text. If duplicates are always identical copies, this is
+harmless. Nobody has checked. It connects to `CLAUDE.md` §6's existing warning that `case_id` is
+not one per case.

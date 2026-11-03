@@ -62,7 +62,7 @@ Every embedding and vector cost measured as of 3 Nov 2026. Sources: `DATA-GAPS.m
 | ~~BM25 repair, 19,835 Central Act points in `kanoon_v1`~~ | **$0 — ALREADY DONE** | Applied earlier with a verified backup, dense vectors untouched; re-checked read-only 3 Nov 2026, 0 of 74,484 Central points would change. The copy is **not** serving broken keyword vectors. The 19,835 are still broken in the original `acts_india` and matter only when those are copied |
 | BM25 repair, ~504,600 remaining Act points | **$0** | Same, local; write speed at that scale untested |
 | Kerala dead-vector **detection**, all 3.1M | **$0** | One dot product per point, no vendor calls (§14) |
-| Kerala dead-vector **re-embed**, ~215,000 chunks | **~$12** | ~194M tokens at `voyage-4`; Kerala's majority model, so it matches the court |
+| Kerala dead-vector **re-embed**, **217,766 chunks (measured, not estimated)** | **~$11.8** | ~196M tokens at `voyage-4`, Kerala's majority model. Count, threshold and precision all validated — `DATA-GAPS.md` §16 |
 | The 10,112 missing Supreme Court chunks | **~$0.61** | ~10M tokens |
 | Per-court query models for High Courts | **$0** | Config plus ~1.8 ms latency — this replaced the $1,900 |
 | Serving the three High Courts | **$0** | Already embedded in `legal_corpus_v1`/`v2`; only the local copy costs anything |
