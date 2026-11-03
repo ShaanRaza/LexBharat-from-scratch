@@ -196,3 +196,37 @@ def test_stripping_m_s_never_leaves_a_name_unchecked():
     that would leave nothing to check and the name would pass unexamined."""
     assert flagged("See M/s v. Others and Union on this point.", SMITH)
     assert flagged("See Messrs v. Zorblax Holdings on this point.", SMITH)
+
+
+# ---- the digit / punctuation exemption (A120) ----------------------------------------
+VELLUM = Passage(
+    record_id="r6",
+    source_id="S1",
+    title="VELLUM LTD versus 1 VEDANTA LIMITED",
+    text="The tenancy dispute was decided on the facts.",
+)
+
+
+def test_a_numbered_respondent_is_examined():
+    """'X v. 1 Vedanta Limited': a digit on ONE side used to skip the whole name."""
+    assert flagged("The leading authority is Zorblax v. 1 Vedanta Limited.", SMITH)
+    assert not flagged("The leading authority is Vellum v. 1 Vedanta Limited.", VELLUM)
+
+
+def test_a_numbered_left_party_is_examined():
+    """'Ward No 16 2 v. X': a number before the v used to skip the whole name."""
+    assert flagged("See Ward No 16 2 v. Zorblax Holdings on this point.", SMITH)
+
+
+def test_a_bare_punctuation_side_is_looked_past():
+    """'State v. & Ors.': the '&' is skipped and the name is checked from 'Ors.' on.
+    It has no distinctive word, so only an exact run in a retrieved name can pass it."""
+    assert flagged("The point is settled in State v. & Ors. on bail.", SMITH)
+    assert flagged("See Zorblax & v. Ors. on this point.", SMITH)
+
+
+def test_two_bare_numbers_are_still_not_a_case_name():
+    """A number on BOTH sides ('Article 14 v. 19', 'Article 14 v. Article 19') stays
+    exempt: that is a comparison of provisions, not a case."""
+    assert not flagged("Article 14 v. 19 is a matter of equality in law.", SMITH)
+    assert not flagged("Article 14 v. Article 19 is a common framing.", SMITH)

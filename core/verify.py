@@ -399,6 +399,10 @@ def _name_like(raw: str, first_of_party: bool) -> bool:
     return low in _NAME_JOINERS or (first_of_party and low == "the")
 
 
+def _is_number(raw: str) -> bool:
+    return normalise(raw).isdigit()
+
+
 def _case_names(plain: str) -> list[list[str]]:
     """Every written case name in `plain`, as normalised words with "v" between the
     parties. The two words next to the v are ALWAYS kept (as before), so a name in
@@ -406,11 +410,20 @@ def _case_names(plain: str) -> list[list[str]]:
     like part of a party name, and stop at punctuation that ends the clause."""
     out = []
     for m in _VERSUS_CORE.finditer(plain):
-        left_adj, right_adj = normalise(m.group(1)), normalise(m.group(2))
-        if not left_adj or not right_adj or left_adj.isdigit() or right_adj.isdigit():
-            continue  # "Article 14 v. 19": not a case name
         left = plain[: m.end(1)].split()
         right = plain[m.start(2) :].split()
+        # A side that is bare punctuation ("State v. & Ors.") is looked past, to the
+        # next word-like token, instead of abandoning the name (A120).
+        while left and not normalise(left[-1]):
+            left.pop()
+        while right and not normalise(right[0]):
+            right.pop(0)
+        if not left or not right:
+            continue  # nothing on one side to check
+        # "Article 14 v. Article 19": a number on EACH side: not a case. A number
+        # on one side ("Zorblax v. 1 Vedanta Limited") is a numbered party: checked.
+        if any(map(_is_number, left[-2:])) and any(map(_is_number, right[:2])):
+            continue
         keep_left, keep_right = [left[-1]], [right[0]]
         for tok in reversed(left[:-1][-_NAME_SIDE:]):
             if tok[-1] in ",;:)]" or not _name_like(tok, False):
