@@ -1,0 +1,36 @@
+{
+ "about": "One REAL live+live duplicate group of the Kerala court in legal_corpus_v2, read from the original on 4 Nov 2026: the same chunk id on two points (two point ids), identical payload and text, vectors from two DIFFERENT models (cosine between the copies is recorded). This is the group A126 keeps both copies of. Public judgment.",
+ "chunk_id": "KLHC010348322009_001",
+ "point_ids": [
+  2740437415798525250,
+  1321323758176477674
+ ],
+ "cosine_between_copies": 0.9511,
+ "payload": {
+  "chunk_id": "KLHC010348322009_001",
+  "case_id": "KLHC010348322009",
+  "text": "Case: RP/240/2009 of ANANDAVALLY Vs C.RAJENDRAN (2009)\nCourt: High Court of Kerala\nSection: BODY\n\n[SECTION] ## Page numbers\n\n3.The review petition is filed on the allegation that the Tahsildarhad closed off a way that the review petitioner had at one endof the Government land.  It appears that the said allegation istrue.  However, this Court does not give its seal of approval tothe assertion of the review petitioner that she has easementover that parcel in terms of law.  I say this in the context of thefact that there is a civil suit pending at the instance of certainothers  and  the  review  petitioner  can  very  well  get  reliefagainst the Government authorities also from the civil court.Therefore, if any way has been forcefully closed off followingthe judgment sought to be reviewed, the Tahsildar will do theneedful to provide the petitioner egress and ingress without inany manner conceding the review petitioner's right, if any, foreasement.  If the review petitioner does not obtain favourableorders  from  the  civil  court,  within  a  reasonable  time,  theTahsildar will ensure that the said pathway is also closed.  It isalso clarified that any civil court deciding on the issues willensure that the judgment sought to be reviewed as well as this\n\nRP.240/09\n\nPage numbers\n\norder, in no manner, affects the decision making process bythe civil court since this order  and the judgment sought to bereviewed do not speak anything on the merits of the matter.\n\nSd/-\n\nkkb.31/7.\n\nTHOTTATHIL B.RADHAKRISHNAN,Judge.",
+  "title": "RP/240/2009 of ANANDAVALLY Vs C.RAJENDRAN",
+  "pdf_url": "https://pub-1cb8b3775f3a49a4b4466580291aadc5.r2.dev/data/pdf/year=2009/court=32_4/bench=highcourtofkerala/KLHC010348322009_1_2009-07-29.pdf",
+  "char_start": 3032,
+  "char_end": 4464,
+  "page_start": 3,
+  "page_end": 4,
+  "chunk_index": 1,
+  "total_chunks": 2,
+  "section_type": "body",
+  "section_priority": 30,
+  "case_number": "240 of 2009",
+  "year": 2009,
+  "decision_date": "2009-07-29 00:00:00",
+  "court": "High Court of Kerala",
+  "petitioner": "RP/240/2009 of ANANDAVALLY",
+  "respondent": "C.RAJENDRAN",
+  "bench_strength": 0,
+  "disposition": "DISPOSED OF",
+  "court_type": "high_court",
+  "bench": "highcourtofkerala",
+  "description": "HIGH COURT OF KERALA AT ERNAKULAM PRESENT : THE HONOURABLE MR. JUSTICE THOTTATHIL B.RADHAKRISHNAN WEDNESDAY, THE 29TH JULY 2009 / 7TH SRAVANA 1931 RP.No. 240 of 2009(B) --------------------- AGAINST THE JUDGEMENT IN OP.227/1999 Dated 08/10/2007 .................... REVIEW PETITIONER(/NON-PARTY:",
+  "country_code": "IN"
+ }
+}
