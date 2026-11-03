@@ -833,7 +833,7 @@ Two consequences beyond this job:
 | Tokens | **272.66M** for the whole task (probes, estimate, pre-flight, run, verification); about **$16.36** at the $0.06 per million list price |
 | Time | 36.1 min, then 6.2 min after the resume; about 4.7M tokens a minute |
 | Original reads | 2,180 read-only retrieves, slowest 0.54 s, none failed |
-| Old vs new vector | cosine max 0.133, mean -0.002: all 217,766 old vectors were unrelated to their text |
+| Old vs new vector | cosine max 0.133, mean -0.002: none of the 217,766 old vectors is a `voyage-4` embedding of its own text (but they are not noise; see the misalignment subsection) |
 | Backup | old dense vectors in `~/qdrant-kanoon/kerala_fix/old_dense.f32` (217,766 x 1024), no all-zero row |
 | Byte-identical | 2,000-point spot-check: 0 payload mismatches, 0 sparse mismatches, 0 points still holding the old dense vector |
 
@@ -1030,5 +1030,91 @@ the extracted text at all.
 Ruled out as the cause of the residual dense gap, each measured: case year, case length, chunk length,
 near-duplicate crowding, sibling state, script. **Left: the stored text of a dead case differs from the
 text that was embedded when the collection was built.** That needs its own design. The repair itself
-is not in question: the old vectors failed to match their own stored text under the same model.
+is not in question for a `voyage-4` collection: the old vectors do not match their own stored text under
+`voyage-4`. But see the next two subsections: they are not corruption, which changes what the mechanism is.
+
+### Is an old vector the embedding of some OTHER chunk's text? No, and it is not noise either
+
+**3 Nov 2026.** Local only: the backed-up old vectors against the repaired ones (which are the true
+`voyage-4` embeddings of the stored text), plus 23,269 healthy stored vectors from the slice
+(`kfix_misalign.py`, `kfix_neighbours.py`).
+
+| | Result |
+|---|---|
+| Best match of an old vector among all 217,766 repaired vectors (itself excluded) | median 0.110, max 0.190; **none at or above 0.5** |
+| Best match among 23,269 healthy Kerala vectors | median 0.101, max 0.176; none at or above 0.9 |
+| For comparison: a repaired vector's best match among the others | median 0.896 |
+| Old vector against its own repaired vector | -0.002 |
+
+**So there is no shuffle of vectors against text:** no old vector is a `voyage-4` embedding of any
+chunk in the dead set or the healthy sample. This also follows from the detector itself: a valid
+embedding of legal text scores about +0.45, the old vectors score +0.003.
+
+**But the old vectors are not garbage.** They keep the geometry of text similarity:
+
+- The top 10 neighbours of a chunk inside the dead set are the same chunks under the old vectors and
+  the repaired ones **50.0% of the time** (3,000 chunks; chance is 0.005%); 57.5% of chunks share five or
+  more. Counting only neighbours from other cases: 48.2%.
+- Pairwise cosines are preserved: two chunks of the same case 0.705 (old) against 0.736 (repaired);
+  random pairs 0.349 against 0.353; near-duplicate chunks have near-identical old vectors (best
+  match 1.000 at the 99th percentile in both spaces).
+- A linear map fitted between the two spaces, with each space's mean vector removed, explains **77% of
+  the variance** on held-out chunks (cosine 0.88, shuffled baseline 0.000). It is not a single
+  rotation: an orthogonal fit reaches only 0.86 (0.999 would be a rotation), and there is no dimension
+  permutation (best per-dimension correlation 0.77).
+
+**Reading:** the old vectors are real embeddings of the same text, in a space that is **not** the
+`voyage-4` family's shared one. The most likely explanation is a **different embedding model** run on
+those documents (the dead set is whole cases, 99.9% of them), the same by-document batch mixing as
+section 12, except that this batch left the shared space entirely. **Not verified:** which model. None
+of the other Voyage families was ever tested against these vectors (a probe of about 20 chunks across
+six models would cost on the order of a cent).
+
+What this changes:
+
+- **The vectors were not corrupted, and they were not "wrong" in themselves.** They are wrong for a
+  collection queried with `voyage-4`. Our earlier wording ("unrelated to their text") overstated it.
+  The re-embed is still correct for a `voyage-4` collection and was verified; it is just a model
+  replacement, not a data repair.
+- **Recurrence.** The mechanism (a batch of cases embedded outside the family) can occur in any court.
+  The detector would catch it, because such vectors score near zero against the legal direction, and
+  it found none in 200,339 sampled chunks of 73 other-court files (4 live false positives); the
+  per-court upper bound is about 0.06% at roughly 4,800 chunks each, so a small batch could still be
+  missed. **A true shuffle (a vector belonging to another chunk) would NOT be caught by the
+  detector**, since a shuffled vector still looks like legal text. None was found here, and the only
+  check elsewhere is the per-court reproduction sample of about 35 chunks (section 13).
+
+### Semantic crowding: not the cause
+
+**3 Nov 2026.** The duplicate test above was verbatim. This one is semantic: for each target and
+control, the cosine to its nearest neighbours in the fully repaired corpus (`kerala_recall_eval2`,
+exact search, neighbours from other cases only; `kfix_crowd.py`).
+
+| | Repaired targets (198) | Healthy controls (146) | p |
+|---|---|---|---|
+| Cosine to the nearest other-case chunk | 0.846 | 0.840 | 0.63 |
+| Mean of the 5 nearest | 0.823 | 0.814 | 0.52 |
+| Other-case chunks at cosine 0.90 or more | 11.9 | 15.0 | 0.20 |
+| Other-case chunks at cosine 0.95 or more | 4.4 | 6.9 | 0.095 |
+
+**The targets are not in denser neighbourhoods; if anything they have fewer very close neighbours.**
+Matched on neighbourhood density (tertiles), the dense @10 gap is -6, -24 and +0.5 points in the
+sparse, middle and dense tertiles: not monotone, and 40 to 75 chunks per cell. The gap does not follow
+density.
+
+One query-level difference does appear: a query is **less similar to its own repaired chunk**, 0.489
+against 0.511 (difference -0.021, 95% interval -0.039 to -0.003), while the best competitor is equally
+strong (0.567 against 0.560). Split by chunk length the differences are -0.007, -0.021 and -0.011, none
+significant alone. This does not account for the recall gap: at the same own-similarity the targets
+still trail where it is high (own cosine 0.60 or more: 54% against 76% found in the top 10, 80 queries
+each). **Crowding is ruled out; the cause of the dense gap remains unknown.**
+
+### Limitation: one slice
+
+Every recall measurement in this section (check 4, the matched controls, the duplicate, sibling, script
+and crowding tests) used the same first 100,000 Kerala v2 points (3.2% of the court), plus the
+rewritten targets and controls drawn from the whole of Kerala and the other courts. The dead rate in
+that slice (6.89%) matches the court's (6.97%), but one matching dimension does not make a slice
+representative: the slice could differ in year mix, case type, case length or court bench in ways
+that were not checked, and none of the results here should be read as estimates for the whole court.
 
