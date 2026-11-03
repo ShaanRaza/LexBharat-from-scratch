@@ -213,8 +213,15 @@ as stored, labelled "as recorded in the dataset".
   filter leaks one lawyer's client files to another.
 - **Only models on no-training terms.** The model list in config accepts only providers
   marked "no training". Never a free tier that may train on user data.
-- Langfuse logs are **masked** (upload text, emails, phone numbers → placeholders). Sentry
-  reports are **scrubbed** (request bodies, tokens, emails, document text removed).
+- Langfuse logs must be **masked** (upload text, emails, phone numbers → placeholders) and
+  Sentry reports **scrubbed** (request bodies, tokens, emails, document text removed).
+  **NEITHER IS BUILT (measured 4 Nov 2026, finding F10).** No file in `api/ core/ adapters/
+  workers/` imports `sentry_sdk` or `langfuse` or sets a litellm callback; `core/settings.py`
+  holds four unused keys and nothing else. This is safe only because neither vendor is wired.
+  **Write the masking and scrubbing before either goes live**, then prove it with a hostile
+  document that puts one known string into the question, a passage, the answer and an
+  exception message. Two tripwire tests in `tests/security/` now fail if either vendor is
+  wired first. Read this line as a requirement, not as a description of what exists.
 - Delete means **hard delete**: file from S3, extracted text from PostgreSQL, all vectors
   from Qdrant by `document_id`, in one job, logged, with a nightly leftover check.
 
