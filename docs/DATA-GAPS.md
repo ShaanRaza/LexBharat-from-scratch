@@ -776,3 +776,49 @@ remove real authorities for no reason, and the user would be told one could not 
 duplicates ever carry *different* text. If duplicates are always identical copies, this is
 harmless. Nobody has checked. It connects to `CLAUDE.md` §6's existing warning that `case_id` is
 not one per case.
+
+
+## 17. The Kerala fix lives in `kerala_v2_fix`, not in the original
+
+**3 Nov 2026.** The re-embed wrote to a staging collection, **`kerala_v2_fix`** on the copy
+instance. `legal_corpus_v2` was deliberately **not** touched, so the original still holds the
+217,766 dead vectors.
+
+**This is a trap waiting for whoever builds Kerala.** Nothing serves Kerala today — it is a
+post-gate court (`CLAUDE.md` §1). So `kerala_v2_fix` is now the only good copy of Kerala's dense
+vectors, and the obvious move when building a Kerala serving collection is to read
+`legal_corpus_v2`, which would silently discard every repaired vector and reinstate a 6.97%
+dead rate.
+
+**Rule: any collection that will serve Kerala is built from `kerala_v2_fix`, never from
+`legal_corpus_v2`.** If the staging collection is ever lost, the repair must be re-run before
+Kerala is served — the detector makes finding the dead vectors free, so this is recoverable, but
+only if someone notices.
+
+### Token count per chunk was 39% higher than assumed
+
+The $11.8 figure in `COSTS.md` rested on **900 tokens a chunk**, which was an estimate that got
+carried forward as though measured. Measured on 300 random flagged chunks: **about 1,250**. So
+the job is ~269M tokens and about **$16**, not ~196M and $11.8.
+
+Two consequences beyond this job:
+
+- The 250M cap set for the run was below the real requirement and would have stopped it at ~93%,
+  leaving roughly 15,000 chunks dead. Raised to 300M.
+- **Section 13's full-corpus re-embedding prices are built on the same 900-token assumption** and
+  are therefore low by the same proportion: ~28B tokens becomes ~39B, so `voyage-4` is nearer
+  **$2,300** than $1,700, and `voyage-4-large` nearer **$4,700** than $3,400. Those are not being
+  spent — the per-court config settled that at $0 — but the figures should not be quoted as they
+  stand. **Unverified:** whether 1,250 tokens a chunk holds outside Kerala; it is measured only
+  on Kerala flagged chunks.
+
+### What the run confirmed on the way
+
+- **The rate limit is real:** `voyage-4` sustained 5.0M tokens a minute, `voyage-4-large` 6.3M in
+  a burst, neither hitting a ceiling, against the old 10,000 TPM / 3 RPM.
+- **Pre-flight passed:** 5 known-live Kerala chunks reproduced at cosine 0.99998–0.99999, so the
+  model and pipeline were right before anything was written.
+- **A 300-chunk trial was checked before the full run:** all 300 scored at most 0.08 against
+  their old vectors (so the dense vector genuinely changed), and all 300 had **byte-identical
+  payload and sparse vectors**. That is the check that proves the write touched only what it
+  should.
