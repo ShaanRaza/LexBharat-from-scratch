@@ -1164,6 +1164,72 @@ a repaired vector with no twin competing. In the real service every dead chunk h
 healthy rate. The gap remains unexplained as a property of the repaired vectors, and the claim that
 it is a measurement artefact is **not** supported, because the cause was not duplicates.
 
+### Is it the embedding call? No: the adapter test (and the gap's tenth hypothesis)
+
+**3 Nov 2026.** The question: does our call to Voyage sit off the corpus's own space, so that a chunk
+we embed (the pending 10,112 Supreme Court chunks, which have no twin) would carry the dense penalty?
+
+**What is actually sent** (read from the code, not from intent):
+
+| Setting | `adapters/voyage.py` `VoyageClient.embed` | `data/dead_vectors/reembed_kerala.py` `voyage_embed` (the Kerala fix) |
+|---|---|---|
+| Purpose | **queries only** | documents |
+| `input_type` | `"query"` | `"document"` |
+| model | `settings.embed_model_for(collection)` | `settings.embed_model_for("kerala_v2_fix")` = `voyage-4`; overrides refused |
+| `output_dimension` | **not sent** (API default, 1024) | `1024` |
+| `output_dtype`, `truncation`, `encoding_format` | **not sent** (API defaults: float, truncation on) | **not sent** (same defaults) |
+| Text preprocessing | none: the text goes in verbatim, one per request | none: the stored payload `text` goes in verbatim, 50 per request; no strip, no normalisation, no header removal or title prepending |
+
+**The adapter has no document-embedding path at all.** The Kerala fix, and any future SC embed, use a
+separate script that sends `document`. The adapter's `query` setting is correct for queries and
+**wrong for documents**: measured 2 Nov on SC chunks, `input_type=query` against the stored vectors gives
+cosine **0.82 to 0.90**, which is exactly the offset the question feared. A chunk embedded through
+`VoyageClient.embed` would ship that offset. The `embed_new_sc.py` plan sends `document` (and its `--go`
+is not implemented), so it is not exposed, but the trap is real: the next person to need a document
+vector will find `embed` and use it. Nothing was changed; adding a document method is a decision to record
+first.
+
+**Result, 50 healthy Kerala chunks** (random, drawn without looking at any cosine, through the Kerala fix's
+own `voyage_embed`, `voyage-4`, 64,727 tokens, about Rs 0.33), cosine against the vector stored in the corpus:
+
+| Cosine to the stored vector | Chunks |
+|---|---:|
+| 0.998 or more | **41** (median 0.99999) |
+| 0.99 to 0.998 | 0 |
+| 0.90 to 0.99 | 9 (0.937 to 0.959) |
+| below 0.90 | 0 |
+
+Mean 0.991, which hides a **bimodal** distribution: 82% reproduce Vaquill's vector exactly and 18% sit at
+about 0.95, nothing between. That is not a systematic offset. 0.95 is the agreement between two members of
+the `voyage-4` family on the same text (sections 11 to 13: the collections mix `voyage-4`,
+`voyage-4-large` and `voyage-4-lite` by document batch), so the 9 are chunks Vaquill embedded with
+another model (**inferred from the band, not re-measured here**). The same chunks were low in the earlier,
+independent measurement (371 healthy Kerala chunks: 328 at 0.998 or more, 43 at 0.929 to 0.960, none below
+0.90; the two runs differ by at most 0.0002 per chunk). Earlier checks agree: 5 of 5 pre-flight chunks at
+0.998 or more; SC under `voyage-4-large` and `document`, 20 of 20 at 0.9987 to 0.9995 (the shortfall from
+1.0 is storage precision, `part7_why.log`); a v1 High Court chunk under `voyage-4` at 0.999984.
+Output dimension, truncation and the default dtype make no difference (same cosines with the setting
+omitted); collapsing whitespace costs 0.004, prepending the title 0.003, stripping the header 0.02 to 0.05.
+
+**So the call reproduces the corpus's own vectors, and the hypothesis dies.** It also follows from the
+design: for a `voyage-4` chunk the repaired vector is what the same call yields for a healthy chunk, at
+cosine 1.0. A defect in the vector cannot explain a recall gap between two sets of vectors made the same
+way. The gap, if it is real, comes from which chunks the dead set holds, not from how they were embedded.
+Kerala was not "produced with the wrong setting"; `document`, 1024 is the right one.
+
+**The gap, recorded as a known unknown.** Ruled out, each measured: (1) case year and filing year
+(matched controls), (2) case length, (3) chunk length, (4) verbatim near-duplicate crowding, (5) sibling
+state (corpus fully repaired), (6) script (Malayalam), (7) vector misalignment (old vectors are real
+embeddings from another space, not a shuffle), (8) semantic crowding, (9) same-chunk twins, and now
+(10) the embedding call. Only 21 of 849 queries have a twin in the eval corpus, which is why (9) failed.
+Unexplained: a repaired target still trails a healthy control by about 10 points at dense @10 and 12 at @50;
+hybrid is at parity. **Service impact: none for Kerala**, because each dead chunk has a healthy twin and
+the service keeps that one (A126). For chunks we would embed that have no twin (SC), this test says the
+vector will match what the corpus would have held; it does not prove those chunks will recall at the
+healthy rate, because the gap is a property of the population and was not explained.
+**Limits:** one court, one model (`voyage-4`) in this run; the SC path (`voyage-4-large`) rests on the
+2 Nov pre-flight and was not re-run; 50 chunks; the low group's model is inferred.
+
 ## 18. Court labels, `act_status` and duplicate chunk ids: measured (interim, the Qdrant scan stopped twice at the 20-second limit)
 
 **3 Nov 2026.** Parquet results are exhaustive (75 files, 33.7M rows). Qdrant results come from
