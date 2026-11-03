@@ -198,7 +198,7 @@ def test_stripping_m_s_never_leaves_a_name_unchecked():
     assert flagged("See Messrs v. Zorblax Holdings on this point.", SMITH)
 
 
-# ---- the digit / punctuation exemption (A120) ----------------------------------------
+# ---- the digit / punctuation exemption (A121) ----------------------------------------
 VELLUM = Passage(
     record_id="r6",
     source_id="S1",

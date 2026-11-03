@@ -413,7 +413,7 @@ def _case_names(plain: str) -> list[list[str]]:
         left = plain[: m.end(1)].split()
         right = plain[m.start(2) :].split()
         # A side that is bare punctuation ("State v. & Ors.") is looked past, to the
-        # next word-like token, instead of abandoning the name (A120).
+        # next word-like token, instead of abandoning the name (A121).
         while left and not normalise(left[-1]):
             left.pop()
         while right and not normalise(right[0]):
