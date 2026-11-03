@@ -214,12 +214,12 @@ async def test_voyage_client_sends_the_model_of_the_collection_searched():
             _env_file=None, VOYAGE_EMBED_MODELS={"a": "voyage-4", "b": "voyage-4-large"}
         )
     )
-    await client.embed("q", "a")
-    await client.embed("q", "b")
+    await client.embed("q", "a", "query")
+    await client.embed("q", "b", "query")
     assert [b["model"] for b in sent] == ["voyage-4", "voyage-4-large"]
     assert all(b["input_type"] == "query" for b in sent)
     with pytest.raises(UnknownEmbeddingModel):
-        await client.embed("q", "never-measured")
+        await client.embed("q", "never-measured", "query")
     assert len(sent) == 2  # nothing was sent for the unmeasured collection
 
 
@@ -231,8 +231,8 @@ async def test_the_pipeline_embeds_the_query_for_the_corpus_collection():
     seen = []
 
     class Recorder:
-        async def embed(self, text, collection):
-            seen.append(collection)
+        async def embed(self, text, collection, input_type):
+            seen.append((collection, input_type))
             return [0.0]
 
     deps = SimpleNamespace(
@@ -240,4 +240,4 @@ async def test_the_pipeline_embeds_the_query_for_the_corpus_collection():
         settings=Settings(_env_file=None, CORPUS_COLLECTION="kanoon_v1"),
     )
     await embed_query("bail", deps)
-    assert seen == ["kanoon_v1"]
+    assert seen == [("kanoon_v1", "query")]  # the pipeline embeds a QUERY

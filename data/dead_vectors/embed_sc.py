@@ -239,7 +239,7 @@ def preflight(model: str, key: str) -> None:
         {"ids": [i for i, _ in pick], "with_payload": ["text", "chunk_id"], "with_vector": ["dense"]},
     )["result"]
     pts.sort(key=lambda p: p["id"])
-    vecs, spent = rk.voyage_embed([p["payload"]["text"] for p in pts], model, key, "sc preflight 20 fresh")
+    vecs, spent = rk.voyage_embed([p["payload"]["text"] for p in pts], SERVING, key, "sc preflight 20 fresh")
     cos = cosine_rows(np.array(vecs), np.array([p["vector"]["dense"] for p in pts]))
     for p, c in zip(pts, cos):
         print(f"  {p['payload']['chunk_id']:24} cosine(new, stored) = {c:.5f}")
@@ -321,7 +321,7 @@ def run(model: str, key: str) -> None:
         requests += 1
         if requests > MAX_REQUESTS:
             raise Ceiling(f"{requests} requests > MAX_REQUESTS {MAX_REQUESTS}")
-        vecs, tok = rk.voyage_embed(texts, model, key, f"sc embed batch {bi}")
+        vecs, tok = rk.voyage_embed(texts, SERVING, key, f"sc embed batch {bi}")
         used += tok
         reserved_max = max(reserved_max, est)
         if tok > 1.5 * est:
@@ -393,9 +393,10 @@ def verify(model: str, key: str) -> None:
     text_of = {int(c["id"]): c["payload"]["text"] for c in chunks}
     texts = [text_of[ids[i]] for i in pick]
     stored = np.array([dense[i] for i in pick])
-    large, t1 = rk.voyage_embed(texts, model, key, "sc verify 20 under voyage-4-large")
+    large, t1 = rk.voyage_embed(texts, SERVING, key, "sc verify 20 under voyage-4-large")
     c_large = cosine_rows(np.array(large), stored)
-    small, t2 = rk.voyage_embed(texts, "voyage-4", key, "sc verify 20 under voyage-4 (negative control)")
+    control = Settings(_env_file=None, VOYAGE_EMBED_MODELS={"negative_control": "voyage-4"})  # a model the adapter is told about, not a backdoor
+    small, t2 = rk.voyage_embed(texts, "negative_control", key, "sc verify 20 under voyage-4 (negative control)", control)
     c_small = cosine_rows(np.array(small), stored)
     print(f"RE-EMBED 20 staged chunks: under {model} cosine to written vector min {c_large.min():.6f} (need >= {DETERMINISM_MIN}); under voyage-4 (must NOT match) max {c_small.max():.4f}, min {c_small.min():.4f}")
     run_tok = sum(

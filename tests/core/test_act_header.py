@@ -181,7 +181,7 @@ def test_the_search_step_appends_the_checked_line(settings, store):
 
     deps = make_deps(settings, store, gate=None)
     q = RewrittenQuery("cheque bill of exchange banker")
-    v = asyncio.run(FakeEmbedder().embed(q.query, None))
+    v = asyncio.run(FakeEmbedder().embed(q.query, None, "query"))
     d = Decision("in_scope", Filters(), "normal", (), True)
     found = asyncio.run(search(PipelineRequest("u", q.query), q, d, v, deps))
     acts = [p for p in found.passages if p.kind == "act_section"]

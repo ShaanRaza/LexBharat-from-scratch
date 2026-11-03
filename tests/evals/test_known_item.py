@@ -297,13 +297,15 @@ async def test_the_override_names_the_model_for_the_measurement_embedder_only():
     other = "legal_corpus_v1"  # a collection nobody recorded a model for
     # without the override, the refusal (A120) holds
     with pytest.raises(UnknownEmbeddingModel):
-        await _Capture(base).embed("q", other)
+        await _Capture(base).embed("q", other, "query")
     # with it, the measurement embedder sends the model it was told to
     over = with_query_model(base, other, "voyage-4")
     c = _Capture(over)
-    await c.embed("q", other)
+    await c.embed("q", other, "query")
     assert c.models == ["voyage-4"]
-    await _Capture(with_query_model(base, other, "voyage-4-large")).embed("q", other)
+    await _Capture(with_query_model(base, other, "voyage-4-large")).embed(
+        "q", other, "query"
+    )
 
 
 def test_the_override_leaves_the_original_settings_and_the_refusal_untouched():
@@ -406,16 +408,16 @@ async def test_the_token_cap_stops_the_run_and_writes_nothing(tmp_path, capsys):
 
 async def test_the_budget_counts_every_embed_call_and_reports_an_estimate():
     class Inner:
-        async def embed(self, text, collection):
+        async def embed(self, text, collection, input_type):
             return [0.0]
 
     b = BudgetedEmbedder(Inner(), 20)
-    await b.embed("x" * 40, "c")  # ~10 tokens
+    await b.embed("x" * 40, "c", "query")  # ~10 tokens
     assert b.tokens == 10
     with pytest.raises(BudgetExceeded):
-        await b.embed("y" * 80, "c")
+        await b.embed("y" * 80, "c", "query")
     unlimited = BudgetedEmbedder(Inner(), None)
-    await unlimited.embed("z" * 4000, "c")
+    await unlimited.embed("z" * 4000, "c", "query")
     assert unlimited.tokens == 1000
 
 

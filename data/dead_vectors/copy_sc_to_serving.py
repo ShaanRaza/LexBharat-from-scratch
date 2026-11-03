@@ -151,7 +151,7 @@ def main() -> None:
     pick = random.Random(77).sample(ids, 10)
     pts = http(f"/collections/{SERVING}/points", {"ids": pick, "with_payload": ["text", "chunk_id"], "with_vector": ["dense"]})["result"]
     pts.sort(key=lambda p: p["id"])
-    vecs, tok = esc.rk.voyage_embed([p["payload"]["text"] for p in pts], model, key, "sc copy spot-check 10")
+    vecs, tok = esc.rk.voyage_embed([p["payload"]["text"] for p in pts], SERVING, key, "sc copy spot-check 10")
     cos = esc.cosine_rows(np.array(vecs), np.array([p["vector"]["dense"] for p in pts]))
     print(f"SPOT-CHECK 10 copied points under {model}: cosine min {cos.min():.6f}, max {cos.max():.6f} (need >= 0.998); {tok:,} tokens")
     if cos.min() < 0.998:

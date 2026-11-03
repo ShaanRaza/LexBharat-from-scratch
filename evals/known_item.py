@@ -65,6 +65,7 @@ from pathlib import Path
 from typing import Any
 
 from adapters.qdrant import EXACT_KEYS, Hit, SearchMode, VectorStore
+from adapters.voyage import InputType
 from core.contracts import SEARCH_TOP_K
 from core.search import hit_to_passage
 from core.settings import Settings, UnknownEmbeddingModel
@@ -272,14 +273,16 @@ class BudgetedEmbedder:
         self._inner, self._max = inner, max_tokens
         self.tokens = 0
 
-    async def embed(self, text: str, collection: str) -> list[float]:
+    async def embed(
+        self, text: str, collection: str, input_type: InputType
+    ) -> list[float]:
         self.tokens += max(1, len(text) // 4)
         if self._max is not None and self.tokens > self._max:
             raise BudgetExceeded(
                 f"estimated {self.tokens:,} Voyage tokens passed the cap "
                 f"of {self._max:,}"
             )
-        return await self._inner.embed(text, collection)
+        return await self._inner.embed(text, collection, input_type)
 
 
 # --- 3. Search ------------------------------------------------------------------------
@@ -306,7 +309,7 @@ def store_retriever(
         vec = None
         if mode != "sparse":
             if query not in vectors:
-                vectors[query] = await embedder.embed(query, collection)
+                vectors[query] = await embedder.embed(query, collection, "query")
             vec = vectors[query]
         hits = await store.search(collection, vec, query, must or {}, limit, mode)
         return [h.record_id for h in hits]

@@ -32,6 +32,7 @@ The Voyage key is taken from the environment variable VOYAGE_API_KEY only and is
 from __future__ import annotations
 
 import argparse
+import asyncio
 import json
 import os
 import sys
@@ -46,7 +47,9 @@ import numpy as np
 
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO))
+from adapters.voyage import VoyageClient  # noqa: E402
 from core.settings import Settings, UnknownEmbeddingModel  # noqa: E402
+from pydantic import SecretStr  # noqa: E402
 
 ORIG = "http://localhost:6333"
 COPY = "http://127.0.0.1:7333"
@@ -82,7 +85,9 @@ class CapReached(Exception):
 # --- the model: from the repo setting, nothing else --------------------------------------
 def resolve_model(cli_model: str | None) -> str:
     if os.environ.get("VOYAGE_EMBED_MODELS"):
-        sys.exit("REFUSED: VOYAGE_EMBED_MODELS is set in the environment (an override).")
+        sys.exit(
+            "REFUSED: VOYAGE_EMBED_MODELS is set in the environment (an override)."
+        )
     try:
         model = Settings(_env_file=None).embed_model_for(DEST)
     except UnknownEmbeddingModel as exc:
@@ -93,7 +98,9 @@ def resolve_model(cli_model: str | None) -> str:
             f"({model!r})."
         )
     if model != "voyage-4":
-        sys.exit(f"REFUSED: recorded model is {model!r}; this script is approved for voyage-4.")
+        sys.exit(
+            f"REFUSED: recorded model is {model!r}; this script is approved for voyage-4."
+        )
     return model
 
 
@@ -113,7 +120,9 @@ def orig_retrieve(ids: list[int]) -> list[dict]:
     try:
         raw = urllib.request.urlopen(req, timeout=HARD_STOP_S).read()  # noqa: S310
     except Exception as exc:  # noqa: BLE001
-        sys.exit(f"HARD STOP reading the original: {exc}. No retry. Nothing more written.")
+        sys.exit(
+            f"HARD STOP reading the original: {exc}. No retry. Nothing more written."
+        )
     dt = time.time() - t0
     if dt > HARD_STOP_S:
         sys.exit(f"HARD STOP: a read of the original took {dt:.1f}s. No retry.")
@@ -123,24 +132,34 @@ def orig_retrieve(ids: list[int]) -> list[dict]:
 
 
 # --- the copy: the only place anything is written ----------------------------------------
-def copy_call(path: str, body: dict | None, method: str = "PUT", tries: int = 4) -> dict:
+def copy_call(
+    path: str, body: dict | None, method: str = "PUT", tries: int = 4
+) -> dict:
     assert COPY.endswith(":7333"), "writes go to port 7333 only"
     data = json.dumps(body).encode() if body is not None else None
     for k in range(tries):
         req = urllib.request.Request(
-            COPY + path, data=data, method=method, headers={"Content-Type": "application/json"}
+            COPY + path,
+            data=data,
+            method=method,
+            headers={"Content-Type": "application/json"},
         )
         try:
             return json.load(urllib.request.urlopen(req, timeout=600))  # noqa: S310
         except Exception as exc:  # noqa: BLE001
             if k == tries - 1:
-                raise RuntimeError(f"copy instance {method} {path} failed: {exc}") from exc
+                raise RuntimeError(
+                    f"copy instance {method} {path} failed: {exc}"
+                ) from exc
             time.sleep(3 * (k + 1))
     raise AssertionError
 
 
 def ensure_collection() -> None:
-    have = {c["name"] for c in copy_call("/collections", None, "GET")["result"]["collections"]}
+    have = {
+        c["name"]
+        for c in copy_call("/collections", None, "GET")["result"]["collections"]
+    }
     if DEST in have:
         return
     copy_call(
@@ -151,10 +170,21 @@ def ensure_collection() -> None:
                     "size": 1024,
                     "distance": "Cosine",
                     "on_disk": True,
-                    "quantization_config": {"scalar": {"type": "int8", "quantile": 0.99, "always_ram": False}},
+                    "quantization_config": {
+                        "scalar": {
+                            "type": "int8",
+                            "quantile": 0.99,
+                            "always_ram": False,
+                        }
+                    },
                 }
             },
-            "sparse_vectors": {"sparse": {"index": {"full_scan_threshold": 5000, "on_disk": True}, "modifier": "idf"}},
+            "sparse_vectors": {
+                "sparse": {
+                    "index": {"full_scan_threshold": 5000, "on_disk": True},
+                    "modifier": "idf",
+                }
+            },
             "shard_number": 1,
             "on_disk_payload": True,
             "hnsw_config": {"m": 16, "ef_construct": 100},
@@ -168,12 +198,18 @@ class Budget:
 
     def __init__(self, cap: int) -> None:
         self.cap, self.reserved = cap, 0
-        self.used = sum(json.loads(line)["tokens"] for line in LEDGER.open()) if LEDGER.exists() else 0
+        self.used = (
+            sum(json.loads(line)["tokens"] for line in LEDGER.open())
+            if LEDGER.exists()
+            else 0
+        )
 
     def reserve(self, est: int) -> None:
         with LOCK:
             if self.used + self.reserved + est > self.cap:
-                raise CapReached(f"{self.used:,} used + {self.reserved:,} reserved + {est:,} next > cap {self.cap:,}")
+                raise CapReached(
+                    f"{self.used:,} used + {self.reserved:,} reserved + {est:,} next > cap {self.cap:,}"
+                )
             self.reserved += est
 
     def settle(self, est: int, actual: int) -> None:
@@ -182,38 +218,35 @@ class Budget:
             self.used += actual
 
 
-def voyage_embed(texts: list[str], model: str, key: str, tag: str) -> tuple[list[list[float]], int]:
-    """Embed `texts` (documents) in requests of CALL texts. Returns (vectors, tokens billed).
-    Every billed request is appended to the ledger the moment it succeeds."""
+def voyage_embed(
+    texts: list[str],
+    collection: str,
+    key: str,
+    tag: str,
+    settings: Settings | None = None,
+) -> tuple[list[list[float]], int]:
+    """Embed `texts` as DOCUMENTS, in requests of CALL texts, through adapters/voyage.py
+    (A127: the only code that talks to Voyage). The model is the one recorded for
+    `collection` in the settings, which refuses a collection nobody measured. Returns
+    (vectors, tokens billed). Every billed request is appended to the ledger the moment
+    it succeeds."""
+    s = settings or Settings(_env_file=None)
+    s = s.model_copy(update={"VOYAGE_API_KEY": SecretStr(key)})
+    model = s.embed_model_for(collection)
+    client = VoyageClient(s, timeout_s=180, max_attempts=10)
     out: list[list[float]] = []
     spent = 0
     for i in range(0, len(texts), CALL):
-        chunk = texts[i : i + CALL]
-        for attempt in range(10):
-            req = urllib.request.Request(
-                "https://api.voyageai.com/v1/embeddings",
-                data=json.dumps({"input": chunk, "model": model, "input_type": "document", "output_dimension": 1024}).encode(),
-                headers={"Content-Type": "application/json", "Authorization": "Bearer " + key},
+        batch = asyncio.run(client.embed_batch(texts[i : i + CALL], collection, "document"))
+        with LOCK, LEDGER.open("a") as f:
+            f.write(
+                json.dumps(
+                    {"t": time.time(), "model": model, "tokens": batch.total_tokens, "tag": tag}
+                )
+                + "\n"
             )
-            try:
-                d = json.load(urllib.request.urlopen(req, timeout=180))  # noqa: S310
-            except urllib.error.HTTPError as exc:
-                if exc.code in (429, 500, 502, 503, 504):
-                    time.sleep(min(60, 2 ** (attempt + 1)))
-                    continue
-                raise RuntimeError(f"Voyage HTTP {exc.code}") from None
-            except (urllib.error.URLError, TimeoutError, ConnectionError):
-                time.sleep(min(60, 2 ** (attempt + 1)))
-                continue
-            tok = d["usage"]["total_tokens"]
-            with LOCK, LEDGER.open("a") as f:
-                f.write(json.dumps({"t": time.time(), "model": model, "tokens": tok, "tag": tag}) + "\n")
-            assert [x["index"] for x in d["data"]] == list(range(len(chunk)))
-            out += [x["embedding"] for x in d["data"]]
-            spent += tok
-            break
-        else:
-            raise RuntimeError("Voyage kept failing after 10 attempts")
+        out += batch.vectors
+        spent += batch.total_tokens
     return out, spent
 
 
@@ -226,7 +259,9 @@ def est_tokens(texts: list[str]) -> int:
 
 
 def load_ids() -> list[int]:
-    ids = sorted(int(line.split("\t")[0]) for line in FLAGGED.read_text().splitlines()[1:])
+    ids = sorted(
+        int(line.split("\t")[0]) for line in FLAGGED.read_text().splitlines()[1:]
+    )
     assert len(ids) == EXPECTED == len(set(ids)), (len(ids), len(set(ids)))
     return ids
 
@@ -239,23 +274,39 @@ def preflight(model: str, key: str) -> None:
     live = [
         c["id"]
         for c in sample
-        if c["coll"] == SRC and c["court"] == "High Court of Kerala" and res[c["coll"] + str(c["id"])]["voyage-4"] >= 0.998
+        if c["coll"] == SRC
+        and c["court"] == "High Court of Kerala"
+        and res[c["coll"] + str(c["id"])]["voyage-4"] >= 0.998
     ]
     rnd = np.random.default_rng(20261104)
     ids = [int(x) for x in rnd.choice(live, 5, replace=False)]
     pts = orig_retrieve(ids)
     assert len(pts) == 5
     texts = [p["payload"]["text"] for p in pts]
-    vecs, spent = voyage_embed(texts, model, key, "preflight")
+    vecs, spent = voyage_embed(texts, DEST, key, "preflight")
     new = np.array(vecs)
     old = np.array([p["vector"]["dense"] for p in pts])
     cos = cosine_rows(new, old)
     ok = bool((cos >= PREFLIGHT_MIN).all())
     print(f"model {model} (from core/settings.py via embed_model_for({DEST!r}))")
     for p, c in zip(pts, cos):
-        print(f"  {p['payload'].get('chunk_id')}  id {p['id']}  cosine(new, stored) = {c:.5f}")
-    print(f"PREFLIGHT {'PASSED' if ok else 'FAILED'} (need every cosine >= {PREFLIGHT_MIN}); {spent:,} tokens")
-    PREFLIGHT.write_text(json.dumps({"passed": ok, "model": model, "ids": ids, "cosines": [float(c) for c in cos], "time": time.time()}))
+        print(
+            f"  {p['payload'].get('chunk_id')}  id {p['id']}  cosine(new, stored) = {c:.5f}"
+        )
+    print(
+        f"PREFLIGHT {'PASSED' if ok else 'FAILED'} (need every cosine >= {PREFLIGHT_MIN}); {spent:,} tokens"
+    )
+    PREFLIGHT.write_text(
+        json.dumps(
+            {
+                "passed": ok,
+                "model": model,
+                "ids": ids,
+                "cosines": [float(c) for c in cos],
+                "time": time.time(),
+            }
+        )
+    )
     sys.exit(0 if ok else 2)
 
 
@@ -269,15 +320,34 @@ def run(model: str, key: str, max_batches: int | None) -> None:
     batches = [ids[k : k + BATCH] for k in range(0, len(ids), BATCH)]
     done = set()
     if DONE.exists():
-        done = {int(line.split("\t")[0]) for line in DONE.read_text().splitlines() if line.strip()}
+        done = {
+            int(line.split("\t")[0])
+            for line in DONE.read_text().splitlines()
+            if line.strip()
+        }
     todo = [b for b in range(len(batches)) if b not in done]
     if max_batches:
         todo = todo[:max_batches]
     ensure_collection()
-    old = np.memmap(OLD, dtype=np.float32, mode="r+" if OLD.exists() else "w+", shape=(len(ids), 1024))
+    old = np.memmap(
+        OLD,
+        dtype=np.float32,
+        mode="r+" if OLD.exists() else "w+",
+        shape=(len(ids), 1024),
+    )
     budget = Budget(TOKEN_CAP)
-    print(f"model {model} | {len(done)} batches already done, {len(todo)} to do | tokens already on ledger {budget.used:,} of cap {TOKEN_CAP:,}", flush=True)
-    state = {"written": 0, "skipped": 0, "tokens": 0, "batches": 0, "error": None, "capped": None}
+    print(
+        f"model {model} | {len(done)} batches already done, {len(todo)} to do | tokens already on ledger {budget.used:,} of cap {TOKEN_CAP:,}",
+        flush=True,
+    )
+    state = {
+        "written": 0,
+        "skipped": 0,
+        "tokens": 0,
+        "batches": 0,
+        "error": None,
+        "capped": None,
+    }
     t0 = time.time()
     sem = threading.BoundedSemaphore(WORKERS * 2)
 
@@ -289,15 +359,19 @@ def run(model: str, key: str, max_batches: int | None) -> None:
             got = {p["id"] for p in pts}
             missing = [i for i in want if i not in got]
             if missing:
-                raise RuntimeError(f"batch {bi}: {len(missing)} flagged ids missing from the original, e.g. {missing[:3]}")
+                raise RuntimeError(
+                    f"batch {bi}: {len(missing)} flagged ids missing from the original, e.g. {missing[:3]}"
+                )
             texts = [p["payload"].get("text") or "" for p in pts]
             if not all(texts):
                 raise RuntimeError(f"batch {bi}: a chunk has no text")
             est = est_tokens(texts)
-            budget.reserve(est)  # raises CapReached BEFORE any request if the cap would be passed
+            budget.reserve(
+                est
+            )  # raises CapReached BEFORE any request if the cap would be passed
             spent = 0
             try:
-                vecs, spent = voyage_embed(texts, model, key, f"kerala batch {bi}")
+                vecs, spent = voyage_embed(texts, DEST, key, f"kerala batch {bi}")
             finally:
                 budget.settle(est, spent)
             new = np.array(vecs)
@@ -311,7 +385,9 @@ def run(model: str, key: str, max_batches: int | None) -> None:
                 vectors = {"dense": [float(x) for x in vec]}
                 if p["vector"].get("sparse") is not None:
                     vectors["sparse"] = p["vector"]["sparse"]
-                points.append({"id": p["id"], "vector": vectors, "payload": p["payload"]})
+                points.append(
+                    {"id": p["id"], "vector": vectors, "payload": p["payload"]}
+                )
             if points:
                 copy_call(f"/collections/{DEST}/points?wait=true", {"points": points})
             with LOCK:
@@ -320,11 +396,15 @@ def run(model: str, key: str, max_batches: int | None) -> None:
                 old.flush()
                 with COSINES.open("a") as f:
                     for p, c, k in zip(pts, cos, keep):
-                        f.write(f"{p['id']}\t{c:.5f}\t{'written' if k else 'skipped'}\n")
+                        f.write(
+                            f"{p['id']}\t{c:.5f}\t{'written' if k else 'skipped'}\n"
+                        )
                 with SKIPPED.open("a") as f:
                     for p, c, k in zip(pts, cos, keep):
                         if not k:
-                            f.write(f"{p['id']}\t{p['payload'].get('chunk_id')}\t{c:.5f}\n")
+                            f.write(
+                                f"{p['id']}\t{p['payload'].get('chunk_id')}\t{c:.5f}\n"
+                            )
                 nw = int(keep.sum())
                 with DONE.open("a") as f:
                     f.write(f"{bi}\t{nw}\t{len(pts) - nw}\n")
@@ -355,9 +435,14 @@ def run(model: str, key: str, max_batches: int | None) -> None:
             if n % 25 == 0:
                 el = time.time() - t0
                 rate = state["batches"] / el if el else 0
-                print(f"{state['batches']:,}/{len(todo):,} batches | written {state['written']:,} skipped {state['skipped']:,} | tokens on ledger {budget.used:,} | {el/60:.1f} min | eta {(len(todo) - state['batches']) / rate / 60 if rate else 0:.0f} min | slowest original read {max(ORIG_LOG):.2f}s", flush=True)
+                print(
+                    f"{state['batches']:,}/{len(todo):,} batches | written {state['written']:,} skipped {state['skipped']:,} | tokens on ledger {budget.used:,} | {el / 60:.1f} min | eta {(len(todo) - state['batches']) / rate / 60 if rate else 0:.0f} min | slowest original read {max(ORIG_LOG):.2f}s",
+                    flush=True,
+                )
     old.flush()
-    print(f"END: batches this run {state['batches']}, written {state['written']:,}, skipped {state['skipped']:,}, tokens on ledger {budget.used:,}, {(time.time() - t0) / 60:.1f} min, original reads {len(ORIG_LOG)} (slowest {max(ORIG_LOG) if ORIG_LOG else 0:.2f}s)")
+    print(
+        f"END: batches this run {state['batches']}, written {state['written']:,}, skipped {state['skipped']:,}, tokens on ledger {budget.used:,}, {(time.time() - t0) / 60:.1f} min, original reads {len(ORIG_LOG)} (slowest {max(ORIG_LOG) if ORIG_LOG else 0:.2f}s)"
+    )
     if state["capped"]:
         print(f"STOPPED AT THE SPEND CAP: {state['capped']}")
         sys.exit(4)
@@ -369,10 +454,14 @@ def run(model: str, key: str, max_batches: int | None) -> None:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("command", choices=["preflight", "run"])
-    ap.add_argument("--model", default=None, help="refused unless identical to the recorded model")
+    ap.add_argument(
+        "--model", default=None, help="refused unless identical to the recorded model"
+    )
     ap.add_argument("--max-batches", type=int, default=None)
     a = ap.parse_args()
-    key = os.environ.get("VOYAGE_API_KEY") or sys.exit("no VOYAGE_API_KEY in the environment")
+    key = os.environ.get("VOYAGE_API_KEY") or sys.exit(
+        "no VOYAGE_API_KEY in the environment"
+    )
     model = resolve_model(a.model)
     FIX.mkdir(parents=True, exist_ok=True)
     if a.command == "preflight":
