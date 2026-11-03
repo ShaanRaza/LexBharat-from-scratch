@@ -28,6 +28,7 @@ dev = [
     "ruff",
     "pytest",
     "pytest-asyncio",
+    "fastembed",  # the A136 evidence scripts (c_sparse.py) and any BM25 re-encode; was only in `search` and `data`
 ]
 search = [
     "fastembed",  # keyword (BM25) half of hybrid search; needed by the API image
