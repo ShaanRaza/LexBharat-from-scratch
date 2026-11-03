@@ -6,8 +6,8 @@
 INPUT: records with `full_text` (or `text`), `court`, `decision_date`, `case_number` and
 optionally `citation`. A record that HAS a stored citation is not eligible (the stored
 string is never replaced); `--ignore-stored` counts it anyway, which is the only way to
-run the practice fixtures, because they hold judgments that all carry a stored citation and none has
-an empty citation. That run proves the counting, not the coverage.
+run the practice fixtures, because every one of them carries a stored citation (none
+is empty). That run proves the counting, not the coverage.
 
 OUTPUT: records, how many had a candidate in the header, how many passed all three
 guards, why the rest were rejected, how many had a candidate only in the body (the
