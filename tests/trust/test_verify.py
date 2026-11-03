@@ -301,13 +301,17 @@ async def test_quote_in_sentence_without_marker_is_checked(world_jev_down):
     assert "quote_not_found" in reasons(w)
 
 
-async def test_uncited_quote_that_is_in_a_passage_is_kept(world):
+async def test_uncited_quote_that_is_in_a_passage_is_still_removed_as_unmarked(world):
+    """Before A137 this sentence was kept (a quote that IS in a passage passes check 3
+    even with no marker). Strict removes every sentence without a marker, so the quote
+    check no longer rescues it: the changed expectation is the point of A137."""
     text = (
-        "The Court said “bail is the rule”. "
+        "The Court said \u201cbail is the rule\u201d. "
         "Bail is the rule and jail the exception [S1]."
     )
     ans = await verify(world.draft(text), world.passages, world.deps)
-    assert "bail is the rule" in ans.text and reasons(world) == []
+    assert "The Court said" not in ans.text and "Bail is the rule" in ans.text
+    assert reasons(world) == []
 
 
 async def test_backtick_quotes_fail_closed(world_jev_down):

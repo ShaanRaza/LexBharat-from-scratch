@@ -283,6 +283,21 @@ mark must come off, as in `tests/trust`.
 | `test_injection_uncited_text.py` | injected uncited claim, link, image (BREAK ×4) and the pin |
 | `test_injection_uploads.py` | upload text never to Jev; never cached; F1, F2, F5 (BREAK ×3); the log and vendor tripwires |
 
+### Update 4 Nov 2026 - F6 closed STRICT (A137)
+
+Pipeline step 9 (`core/verify.py`) now removes every sentence that carries no `[S#]`
+marker, and cuts any words welded after a sentence's last marker (`[S1]. ![x](url)`; the
+splitter does not break before a lowercase letter, digit or `!`). The check order is
+unchanged: the quote and unretrieved-authority checks still run first and still log
+their own removals; an ordinary unmarked sentence is dropped silently (no note, no log
+row, because a note says an *authority* failed and a log row would store the sentence
+text, which is the F2 problem). If nothing is left the turn takes the existing not-found
+path (`core/pipeline.py:121`). Answer prompt changed first (`core/prompts/answer.txt`).
+Measured on the 95 of the 200 questions that reach the writer, real Gemini
+(`gemini-3.5-flash-lite`, practice-fixture retrieval): unmarked sentences 132 of 255
+(52%) before the prompt change, 4 of 70 (6%) after. Tests: `tests/trust/test_unmarked_sentences.py`,
+`tests/security/test_injection_uncited_text.py` (four former BREAK tests now plain tests).
+
 ## Related
 
 - [RETENTION.md](RETENTION.md) — the per-type retention schedule, still undecided

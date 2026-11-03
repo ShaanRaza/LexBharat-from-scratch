@@ -11,7 +11,8 @@ whether Jev is up, down or timing out:
   4. Claim supported: Jev rates supports / partly / does not support.
 
 A citation that fails is REMOVED. If that leaves a sentence with no surviving citation
-the sentence is removed too (an uncited claim is worse than none). One note is added
+the sentence is removed too (an uncited claim is worse than none). A sentence that
+never had a marker is removed the same way (A137, strict). One note is added
 saying an authority could not be verified, and a row per failure goes to
 invented_citation_log with the reason. Survivors get status "verified", "partly" or
 "unchecked"; there is no "unverified" status. If Jev and Gemini are both down, check 4
@@ -87,6 +88,9 @@ _ABBREVIATIONS = (
     "Hon",
     "Addl",
     "Dy",
+    "Messrs",
+    "cl",
+    "Cl",
 )
 _NOT_ABBREV = "".join(rf"(?<!\b{a}\.)" for a in _ABBREVIATIONS)
 _BOUNDARY = re.compile(rf"(?<=[.!?]){_NOT_ABBREV}\s+(?=[A-Z\"“‘\[(])|\n+")
@@ -608,6 +612,16 @@ async def verify(
             removed.append(RemovedCitation("", None, "not_retrieved", sentence))
             continue
 
+        if labels:
+            # A137: _BOUNDARY only splits before a capital, quote or bracket, so text
+            # after a marker can be welded into the same "sentence" (`[S1]. ![x](url)`,
+            # `[S1]. 2023 ...`). Words after the LAST marker carry no marker: cut them.
+            last = list(_MARKER.finditer(sentence))[-1]
+            tail = sentence[last.end() :]
+            if re.search(r"\w", tail):
+                lead = re.match(r"[\s.,;:!?)\"'”’]*", tail).group(0)
+                sentence = sentence[: last.end()] + lead.rstrip()
+
         failed: set[str] = set()
         passed: dict[str, Citation] = {}
         for label in dict.fromkeys(labels):
@@ -650,8 +664,12 @@ async def verify(
                 continue
             passed[label] = _to_citation(passage, status, quotes[0] if quotes else None)
 
-        if labels and not passed:
-            continue  # every citation failed: drop the now-unsupported sentence
+        if not passed:
+            # Every citation failed, or (A137, F6 STRICT) the sentence never had a marker:
+            # drop it. This runs after the quote and unretrieved-authority checks above,
+            # so those still log their own removals; an ordinary unmarked sentence is
+            # dropped silently, like a bare "[S1]". `labels and` here was the exemption.
+            continue
         if failed:  # strip only the failed markers, keep the survivors
             sentence = _strip_markers(sentence, failed)
         kept_sentences.append((sentence, sep))
