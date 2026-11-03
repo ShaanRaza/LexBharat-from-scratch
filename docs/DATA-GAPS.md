@@ -1868,3 +1868,106 @@ against 32.57M), not more; the difference is the Supreme Court's 742,066 non-Eng
 in the parquet against 371,159 English in Qdrant) and smaller per-court gaps. Kerala is the court where
 Qdrant is larger.
 
+## 19. Is law missing from the search index? Per-court gap between the parquet and Qdrant
+
+**4 Nov 2026 (overnight lane A).** **Measured**, from an exhaustive read-only scroll of `legal_corpus_v2` (11,823,753 points) and `legal_corpus_v1` (19,595,718 points) and all 26 judgment parquet files (32,572,660 distinct chunk ids). A chunk counts as indexed if its id is in EITHER collection. Nothing was written to any Qdrant; no embedding, no cost. The scan read 11,823,753 points of legal_corpus_v2 (its count was 11,823,753), 19,595,718 points of legal_corpus_v1 (its count was 19,595,718). The scan used the night's rule (60 s timeout, a checkpoint every page, 30 s back-off and retry, hard stop after 5 consecutive failures): 0 failed or slow requests were logged and retried.
+
+### What was found
+
+- **4,982,402 of 32,572,660 parquet chunks (15.30%) are in no Qdrant collection** (Measured). **4,945,000 of them (99%) sit in 3,216,075 WHOLE cases that Qdrant holds no chunk of at all** (invisible law); 37,402 are scattered chunks of 26,429 cases that are otherwise present (findable but incomplete). **Whole missing cases dominate.**
+- Of the parquet-only chunks, 4,240,336 are English and 742,066 are not (the dataset card says English only; the non-English chunks of Supreme Court of India are the known exclusion, section 8). English parquet-only chunks are **13.32%** of all English parquet chunks.
+- The reverse: 218,239 chunk ids are in Qdrant and not in the parquet.
+
+### Per court (all id prefixes of a court summed; Measured)
+
+| Court | Parquet chunks | In Qdrant | Overlap | Parquet-only | in whole missing cases | in partial cases | whole cases missing | English parquet-only | Qdrant-only |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| rajasthan | 2,676,195 | 1,076,467 | 40.2% | **1,599,728** | 1,596,831 | 2,897 | 732,511 | 1,599,728 | 516 |
+| punjab-and-haryana | 1,845,344 | 929,325 | 50.4% | **916,019** | 906,975 | 9,044 | 652,833 | 916,019 | 12,012 |
+| supreme-court | 1,113,313 | 361,135 | 32.4% | **752,178** | 751,976 | 202 | 351,665 | 10,112 | 5,153 |
+| orissa | 872,833 | 463,256 | 53.1% | **409,577** | 409,441 | 136 | 408,974 | 409,577 | 18,478 |
+| madhya-pradesh | 970,908 | 726,428 | 74.8% | **244,480** | 244,378 | 102 | 243,679 | 244,480 | 344 |
+| calcutta | 535,453 | 318,399 | 59.5% | **217,054** | 217,053 | 1 | 139,586 | 217,054 | 9,444 |
+| jharkhand | 777,734 | 599,973 | 77.1% | **177,761** | 177,748 | 13 | 176,690 | 177,761 | 13,209 |
+| uttarakhand | 307,144 | 172,144 | 56.0% | **135,000** | 134,987 | 13 | 79,117 | 135,000 | 60 |
+| karnataka | 1,471,128 | 1,351,996 | 91.9% | **119,132** | 105,639 | 13,493 | 102,616 | 119,132 | 6,517 |
+| kerala | 2,777,738 | 2,661,397 | 95.8% | **116,341** | 115,343 | 998 | 111,528 | 116,341 | 27,277 |
+| allahabad | 2,007,927 | 1,913,371 | 95.3% | **94,556** | 94,370 | 186 | 67,857 | 94,556 | 13,541 |
+| himachal-pradesh | 619,919 | 556,295 | 89.7% | **63,624** | 63,364 | 260 | 62,970 | 63,624 | 569 |
+| jammu-and-kashmir | 181,221 | 121,760 | 67.2% | **59,461** | 59,396 | 65 | 59,164 | 59,461 | 108 |
+| tripura | 112,120 | 69,817 | 62.3% | **42,303** | 42,272 | 31 | 10,569 | 42,303 | 170 |
+| sikkim | 11,389 | 1,398 | 12.3% | **9,991** | 9,991 | 0 | 1,757 | 9,991 | 9 |
+| gujarat | 1,400,249 | 1,390,771 | 99.3% | **9,478** | 809 | 8,669 | 682 | 9,478 | 29,811 |
+| manipur | 39,507 | 30,701 | 77.7% | **8,806** | 8,806 | 0 | 8,730 | 8,806 | 136 |
+| meghalaya | 25,558 | 20,780 | 81.3% | **4,778** | 4,683 | 95 | 4,669 | 4,778 | 375 |
+| telangana | 2,732,387 | 2,730,642 | 99.9% | **1,745** | 820 | 925 | 363 | 1,745 | 10,460 |
+| chhattisgarh | 1,744,438 | 1,744,285 | 100.0% | **153** | 13 | 140 | 13 | 153 | 13,148 |
+| bombay | 2,788,384 | 2,788,309 | 100.0% | **75** | 36 | 39 | 36 | 75 | 36,613 |
+| gauhati | 663,094 | 663,046 | 100.0% | **48** | 34 | 14 | 31 | 48 | 1,318 |
+| madras | 2,610,596 | 2,610,555 | 100.0% | **41** | 25 | 16 | 25 | 41 | 2,223 |
+| patna | 2,562,269 | 2,562,239 | 100.0% | **30** | 0 | 30 | 0 | 30 | 945 |
+| delhi | 1,064,459 | 1,064,431 | 100.0% | **28** | 10 | 18 | 10 | 28 | 15,512 |
+| andhra-pradesh | 661,353 | 661,338 | 100.0% | **15** | 0 | 15 | 0 | 15 | 291 |
+| **Total** | 32,572,660 | 27,590,258 | 84.7% | **4,982,402** | 4,945,000 | 37,402 | 3,216,075 | 4,240,336 | 218,239 |
+
+### The launch courts (CLAUDE.md section 1)
+
+The gate binds on the **whole-missing-case** column (a case Qdrant holds no chunk of at all is invisible law). The scattered-chunk column is the other shape (a findable case that is incomplete); it is reported beside it and does not bind.
+
+| Court | English cases | **Whole English cases in no collection** | **Share of cases (binds)** | English chunks | English chunks scattered in present cases | Share of chunks (reported) | All English chunks in no collection |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Bombay | 1,578,864 | 36 | **0.00%** | 2,788,384 | 39 | 0.00% | 75 (0.00%) |
+| Telangana | 1,005,147 | 363 | **0.04%** | 2,732,387 | 925 | 0.03% | 1,745 (0.06%) |
+| Kerala | 1,018,715 | 111,528 | **10.95%** | 2,777,738 | 998 | 0.04% | 116,341 (4.19%) |
+| Supreme Court of India | 35,596 | 734 | **2.06%** | 371,247 | 202 | 0.05% | 10,112 (2.72%) |
+| All courts | 15,692,122 | 2,865,144 | **18.26%** | 31,830,594 | 37,402 | 0.12% | 4,240,336 (13.32%) |
+
+### Spot-check: 20 wholly missing English cases read from the parquet (Measured; samples drawn at random, 3 each from Kerala, Bombay and Telangana, 2 Supreme Court of India, the rest across other courts)
+
+Classes: {'substantive English': 20}. **Absence re-confirmed directly in Qdrant (an indexed `case_id` count on both collections): 20 of 20 have 0 chunks.**
+
+| Case id | Chunks | Languages | Median chars | Chunks under 200 chars | Class | Opens with |
+|---|---:|---|---:|---:|---|---|
+| `KLHC010085532010` | 1 | {'en': 1} | 1817 | 0 | substantive English | Case: Bail Appl./8431/2010 of K.ARUN KUMAR Vs STATE OF KERALA (2011) Court: High Court of Kerala Section: BODY |
+| `KLHC010314332010` | 1 | {'en': 1} | 1021 | 0 | substantive English | Case: MACA/1904/2010 of MOHANAN Vs KANNAN AND OTHERS (2018) Court: High Court of Kerala Section: BODY [TITLE]  |
+| `KLHC010021732016` | 1 | {'en': 1} | 1898 | 0 | substantive English | Case: Bail Appl./1992/2016 of SUBHASH Vs STATE OF KERALA (2016) Court: High Court of Kerala Section: BODY [TIT |
+| `HCBM040231782008` | 1 | {'en': 1} | 3922 | 0 | substantive English | Case: LPA/378/2008 of REKHA MUKUNDRAO BHAGWAT Vs STATE OF MAH. THR. SECRETAY AND 2 ORS (2009) Court: Bombay Hi |
+| `HCBM040143812004` | 1 | {'en': 1} | 1073 | 0 | substantive English | Case: CA/1816/2004 of SAU. YASHREE YASHODHAN SADAPHAL.. Vs STATE OF MAH and OTHERS. (2009) Court: Bombay High  |
+| `HCBM040052472009` | 1 | {'en': 1} | 1657 | 0 | substantive English | Case: CAW/574/2009 of SHIVNANDA W/O BHAGWANDAS MESHRAM and ANR. Vs VATSALABAI WD/O PARASRAM DHONGDE and OR...  |
+| `HBHC010002082004` | 3 | {'en': 3} | 1566 | 0 | substantive English | Case: CMA/2335/2004 of Cheekumalla Salman Raju Vs Vijay Ramingle (2015) Court: High Court for State of Telanga |
+| `HBHC010384082013` | 3 | {'en': 3} | 2101 | 0 | substantive English | Case: CC/508/2013 of P. Mariya Dass Vs Sri A.K.Khan IPS, (2015) Court: High Court for State of Telangana Secti |
+| `HBHC010454162014` | 2 | {'en': 2} | 3062 | 0 | substantive English | Case: CC/824/2014 of Sri Venkateswara Saw Mill, Vs Sri Nagarjuna Reddy (2015) Court: High Court for State of T |
+| `2019_INSC_1284` | 20 | {'ben': 3, 'pun': 5, 'en': 7, 'hin': 5} | 3720 | 0 | substantive English | Case: NASIMA NAQI versus TODI TEA COMPANY LTD. AND ORS [[2019] 17 S.C.R. 1048] (2019) Section: PARAGRAPH �িতেব |
+| `2021_INSC_66` | 15 | {'en': 6, 'pun': 4, 'hin': 5} | 3548 | 0 | substantive English | Case: BOLORAM BORDOLOI versus LAKHIMI GAOLIA BANK & ORS. [[2021] 1 S.C.R. 858] (2021) Section: BODY 858 SUPREM |
+| `RJHC020646992014` | 1 | {'en': 1} | 2511 | 0 | substantive English | Case: CRLMP/3302/2014 of GIRRAJ MEENA AND ORS Vs STATE OF RAJASTHAN THROUGH PP (2015) Court: High Court Of Raj |
+| `RJHC020037652020` | 2 | {'en': 2} | 3848 | 0 | substantive English | Case: CRLMA/19/2020 of AVININDRA SINGH BHATI S/O SHRI RAGHUNATH SINGH BHATI Vs NARAYAN SINGH S/O GOVIND SI...  |
+| `RJHC020684362015` | 5 | {'en': 5} | 3964 | 0 | substantive English | Case: CW/6799/2015 of LAHRI RAM MEENA Vs U O I AND ORS (2018) Court: High Court Of Rajasthan Section: PARAGRAP |
+| `TRHC010026122019` | 1 | {'en': 1} | 1528 | 0 | substantive English | Case: WA/190/2019 of SANIT DEBROY Vs THE STATE OF TRIPURA AND ORS. (2020) Court: High Court of Tripura Section |
+| `ODHC010406782018` | 1 | {'en': 1} | 596 | 0 | substantive English | Case: CRLMA/200/2018 of RAJAT KUMAR BEHERA Vs STATE OF ORISSA (2019) Court: Orissa High Court Section: BODY 02 |
+| `HPHC010485892023` | 1 | {'en': 1} | 1051 | 0 | substantive English | Case: CRMPM/3021/2023 of CHAMAN LAL Vs STATE OF HP (2024) Court: High Court of Himachal Pradesh Section: BODY  |
+| `UPHC020528792024` | 1 | {'en': 1} | 2554 | 0 | substantive English | Case: /8443/2024 of AMIT KUMAR Vs STATE OF U.P. THRU. PRIN. SECY. HOME LKO. (2024) Court: Allahabad High Court |
+| `KAHC010172562015` | 1 | {'en': 1} | 1918 | 0 | substantive English | Case: WP/5874/2015 of M/S. HOTEL PRANAM Vs THE STATE OF KARNATAKA (2017) Court: High Court of Karnataka Sectio |
+| `MPHC030211692020` | 1 | {'en': 1} | 1024 | 0 | substantive English | Case: MCRC/42863/2020 of RAM BHARAT SEN Vs THE STATE OF MADHYA PRADESH (2020) Court: High Court of Madhya Prad |
+
+### Qdrant-wide `court` label rate (the figure section 18 left pending; Measured on the whole originals)
+
+- `legal_corpus_v2`: 11,823,753 points: usual 11,742,541 (99.31%), missing 75,786 (0.64%), alias 5,221 (0.04%), other_court 205 (0.00%)
+- `legal_corpus_v1`: 19,595,718 points: usual 19,412,246 (99.06%), missing 125,741 (0.64%), alias 57,519 (0.29%), other_court 212 (0.00%)
+
+### Where the court came from (CLAUDE.md section 6)
+
+**The court of every row was taken from the chunk id, not from the `court` label**, on both sides: chunk id prefix (core/court_ids.json) for the parquet AND for Qdrant; the payload `court` label is not used to assign a court. A label-based comparison would silently drop the rows with no label, which are the rows most likely to be absent, and would understate the gap. Ids that name no known court were kept, not dropped: 0 parquet rows and 0 points of `legal_corpus_v2`, 0 points of `legal_corpus_v1` (they are the `?` row of the court counts). Qdrant points with an empty `court` label (Measured; the rows a label-based comparison would have lost on the Qdrant side): `legal_corpus_v2` 75,786, `legal_corpus_v1` 125,741. The parquet `court` label was not read at all; the 0.58% missing-label rate for the parquet is section 6's figure, not re-measured here.
+
+### Verdict
+
+By a rule that binds on whole missing cases (owner, 4 Nov 2026; the 1% threshold is my number, not the owner's): **a defect for the launch gate if whole English cases absent from Qdrant are 1% or more of a launch court's English cases, or of all English cases.** Whole missing cases: Bombay 0.00% (36 of 1,578,864 cases); Telangana 0.04% (363 of 1,005,147 cases); Kerala 10.95% (111,528 of 1,018,715 cases); Supreme Court of India 2.06% (734 of 35,596 cases); All courts 18.26% (2,865,144 of 15,692,122 cases). Scattered-chunk rate beside it (reported, does not bind): Bombay 0.00%; Telangana 0.03%; Kerala 0.04%; Supreme Court of India 0.05%; All courts 0.12%.
+
+**Which condition tripped: whole missing cases TRIPPED in Kerala, Supreme Court of India, All courts; the scattered-chunk rate did not reach the threshold anywhere (it does not bind).** **This is a coverage DEFECT that belongs in the launch gate.** The spot-check classes above say whether the missing cases are real judgments (substantive English) or rows left out on purpose; **read the table before trusting the rule: its classes are automatic (language and chunk length only) and were not read by a person.**
+
+### What this does not cover
+
+- Chunk presence is by id. A chunk present with the wrong text or an empty vector counts as present. Nothing here checks vectors.
+- The parquet is the reference: a chunk missing from the parquet but present in Qdrant is reported, not judged. The case key is the chunk id without its trailing `_<n>`, which matched the `case_id` in every parquet row measured earlier (section 18).
+- The overall `court` label counts treat an id that names no known court as unclassifiable. The classification of a missing case as real or placeholder is from language and length only for the ones not spot-checked.
+- The hashes are 64-bit (a collision among 64M ids has probability under 1e-4); not verified beyond that.
+
