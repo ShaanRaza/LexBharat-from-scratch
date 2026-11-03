@@ -7,8 +7,9 @@ import logging
 import re
 from dataclasses import dataclass
 
-from adapters.qdrant import Hit, VectorStoreUnavailable
+from adapters.qdrant import DenseGroup, Hit, QueryVectors, VectorStoreUnavailable
 from adapters.voyage import VoyageUnavailable
+from core import model_plan
 from core.act_status import read_act_status
 from core.contracts import (
     SEARCH_TOP_K,
@@ -33,15 +34,37 @@ class SearchResult:
     keyword_only: bool  # Voyage was down: label "keyword results only"
 
 
-async def embed_query(text: str, deps: Deps) -> list[float] | None:
-    """Embed the query. None = Voyage down (search degrades to keyword only)."""
+async def embed_query(text: str, deps: Deps) -> list[float] | QueryVectors | None:
+    """Embed the query. None = Voyage down (search degrades to keyword only).
+
+    A single-model collection is embedded once, as before. A collection embedded per court
+    (A128) is embedded once per MODEL, concurrently, and returned as one dense group per
+    model, each to be searched only among the courts that model built. Any model failing
+    to answer counts as Voyage down: a half-matched search would be silently uneven."""
+    collection = deps.settings.CORPUS_COLLECTION
+    plan = model_plan.plan_for(deps.settings, collection)
     try:
-        return await deps.embedder.embed(
-            text, deps.settings.CORPUS_COLLECTION, "query"
+        if plan is None:
+            return await deps.embedder.embed(text, collection, "query")
+        results = await asyncio.gather(
+            *(
+                deps.embedder.embed(text, collection, "query", court_code=g.embed_code)
+                for g in plan
+            ),
+            return_exceptions=True,
         )
     except VoyageUnavailable:
         log.warning("voyage down; keyword-only search")
         return None
+    for r in results:
+        if isinstance(r, VoyageUnavailable):
+            log.warning("voyage down; keyword-only search")
+            return None
+        if isinstance(r, BaseException):
+            raise r  # an unregistered model or a bug is not an outage
+    return QueryVectors(
+        tuple(DenseGroup(v, g.codes, g.no_court) for g, v in zip(plan, results))
+    )
 
 
 # An Act point's stored text opens "Act: <title> | India | <Central|State|Repealed> |
@@ -151,7 +174,7 @@ async def search(
     request: PipelineRequest,
     rq: RewrittenQuery,
     decision: Decision,
-    vector: list[float] | None,
+    vector: list[float] | QueryVectors | None,
     deps: Deps,
 ) -> SearchResult:
     """Input: query, decision, query vector. Output: at most 50 passages, best first,

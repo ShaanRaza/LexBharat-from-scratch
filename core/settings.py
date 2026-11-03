@@ -4,14 +4,26 @@ Rule 2 (CLAUDE.md): model names, keys, limits and thresholds live in config,
 never in code. Secrets use SecretStr so they never print.
 """
 
+import json
 from functools import lru_cache
+from pathlib import Path
 
-from pydantic import SecretStr, model_validator
+from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class UnknownEmbeddingModel(ValueError):
     """A collection was searched whose embedding model has not been measured."""
+
+
+def _default_court_models() -> dict[str, dict[str, str]]:
+    """collection -> court code -> model, from core/court_models.json (built by
+    data/build_court_models.py from a measured sample; A128)."""
+    raw = json.loads(Path(__file__).with_name("court_models.json").read_text())
+    return {
+        name: {code: c["model"] for code, c in col["courts"].items()}
+        for name, col in raw["collections"].items()
+    }
 
 
 class Settings(BaseSettings):
@@ -66,6 +78,16 @@ class Settings(BaseSettings):
         "kanoon_v1": "voyage-4-large",
         "kerala_v2_fix": "voyage-4",
     }
+    # A collection that mixes courts embedded by DIFFERENT models is described per court
+    # instead: collection -> court code (the record-id prefix, core/court_id.py) -> model,
+    # the MAJORITY model of a measured sample. A query is embedded once per model and each
+    # vector is searched only among its courts. A court that is not listed is REFUSED, never
+    # given a default. A collection named in VOYAGE_EMBED_MODELS above uses that one model
+    # and ignores this table (so the served kanoon_v1 and any explicit override are
+    # unchanged). Override with a JSON object in VOYAGE_COURT_MODELS.
+    VOYAGE_COURT_MODELS: dict[str, dict[str, str]] = Field(
+        default_factory=_default_court_models
+    )
     VOYAGE_RERANK_MODEL: str = "rerank-2.5-lite"
 
     # --- Jev (TypeSafe AI) ---
@@ -185,16 +207,29 @@ class Settings(BaseSettings):
     FEATURE_MODEL_ROUTING: bool = False
     FEATURE_HINDI: bool = False
 
-    def embed_model_for(self, collection: str) -> str:
-        """The model that built `collection`'s vectors. Refuses an unlisted name."""
-        try:
+    def embed_model_for(self, collection: str, court_code: str | None = None) -> str:
+        """The model that built `collection`'s vectors (for `court_code`'s chunks, when the
+        collection is described per court). Refuses anything not recorded."""
+        if collection in self.VOYAGE_EMBED_MODELS:  # one model for the whole collection
             return self.VOYAGE_EMBED_MODELS[collection]
-        except KeyError:
-            raise UnknownEmbeddingModel(
-                f"no embedding model is recorded for collection {collection!r}; "
-                "add it to VOYAGE_EMBED_MODELS only after re-embedding stored "
-                "text reproduces the vectors"
-            ) from None
+        per_court = self.VOYAGE_COURT_MODELS.get(collection)
+        if per_court is not None:
+            if court_code is None:
+                raise UnknownEmbeddingModel(
+                    f"collection {collection!r} is embedded per court: name the court code"
+                )
+            try:
+                return per_court[court_code]
+            except KeyError:
+                raise UnknownEmbeddingModel(
+                    f"court {court_code!r} is not registered for {collection!r}; "
+                    "measure it and register it (data/build_court_models.py), do not default"
+                ) from None
+        raise UnknownEmbeddingModel(
+            f"no embedding model is recorded for collection {collection!r}; "
+            "add it to VOYAGE_EMBED_MODELS only after re-embedding stored "
+            "text reproduces the vectors"
+        )
 
     @model_validator(mode="after")
     def _production_needs_seal_key(self) -> "Settings":

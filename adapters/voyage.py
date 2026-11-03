@@ -54,11 +54,21 @@ class EmbeddingBatch:
 
 class Embedder(Protocol):
     async def embed(
-        self, text: str, collection: str, input_type: InputType
+        self,
+        text: str,
+        collection: str,
+        input_type: InputType,
+        *,
+        court_code: str | None = None,
     ) -> list[float]: ...
 
     async def embed_batch(
-        self, texts: Sequence[str], collection: str, input_type: InputType
+        self,
+        texts: Sequence[str],
+        collection: str,
+        input_type: InputType,
+        *,
+        court_code: str | None = None,
     ) -> EmbeddingBatch: ...
 
 
@@ -113,12 +123,20 @@ class VoyageClient:
         raise VoyageUnavailable(str(last)) from last
 
     async def embed_batch(
-        self, texts: Sequence[str], collection: str, input_type: InputType
+        self,
+        texts: Sequence[str],
+        collection: str,
+        input_type: InputType,
+        *,
+        court_code: str | None = None,
     ) -> EmbeddingBatch:
         """Embed several texts in ONE request. `input_type` is required: "query" for
-        a search query, "document" for text that will be stored and searched."""
+        a search query, "document" for text that will be stored and searched. For a
+        collection embedded per court (A128), `court_code` names the court whose model
+        is wanted; a court that is not registered is refused."""
         check_input_type(input_type)
-        model = self._s.embed_model_for(collection)  # raises before any request is sent
+        # raises before any request is sent
+        model = self._s.embed_model_for(collection, court_code)
         if not texts:
             raise ValueError("nothing to embed")
         data = await self._post(
@@ -139,9 +157,17 @@ class VoyageClient:
         return EmbeddingBatch(vectors, int((data.get("usage") or {}).get("total_tokens", 0)))
 
     async def embed(
-        self, text: str, collection: str, input_type: InputType
+        self,
+        text: str,
+        collection: str,
+        input_type: InputType,
+        *,
+        court_code: str | None = None,
     ) -> list[float]:
-        return (await self.embed_batch([text], collection, input_type)).vectors[0]
+        batch = await self.embed_batch(
+            [text], collection, input_type, court_code=court_code
+        )
+        return batch.vectors[0]
 
     async def rerank(
         self, query: str, docs: Sequence[str], top_k: int
@@ -190,6 +216,8 @@ class FakeEmbedder:
         texts: Sequence[str],
         collection: str | None,
         input_type: InputType,
+        *,
+        court_code: str | None = None,
     ) -> EmbeddingBatch:
         check_input_type(input_type)
         self.calls += 1
@@ -201,9 +229,15 @@ class FakeEmbedder:
         )
 
     async def embed(
-        self, text: str, collection: str | None, input_type: InputType
+        self,
+        text: str,
+        collection: str | None,
+        input_type: InputType,
+        *,
+        court_code: str | None = None,
     ) -> list[float]:
-        return (await self.embed_batch([text], collection, input_type)).vectors[0]
+        batch = await self.embed_batch([text], collection, input_type)
+        return batch.vectors[0]
 
 
 class FakeReranker:

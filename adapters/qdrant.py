@@ -73,6 +73,25 @@ class FastEmbedBm25:
 
 
 @dataclass(frozen=True)
+class DenseGroup:
+    """One query vector and the courts it is searched among (A128): the vector was made
+    with the model that built those courts' chunks. `codes=None` means every point (the
+    ordinary single-model search). `no_court` adds the points with no court code (Acts)."""
+
+    vector: Sequence[float]
+    codes: tuple[str, ...] | None = None
+    no_court: bool = False
+
+
+@dataclass(frozen=True)
+class QueryVectors:
+    """The dense half of a per-court search: one group per model. Fused by rank (RRF),
+    never by score: scores from different models are not comparable."""
+
+    groups: tuple[DenseGroup, ...]
+
+
+@dataclass(frozen=True)
 class Hit:
     record_id: str
     text: str  # body text (header stripped)
@@ -91,13 +110,15 @@ class VectorStore(Protocol):
     async def search(
         self,
         collection: str,
-        vector: Sequence[float] | None,
+        vector: Sequence[float] | QueryVectors | None,
         text: str,
         must: Mapping[str, Any],
         limit: int,
         mode: SearchMode = "hybrid",
     ) -> list[Hit]:
-        """Law collection only. vector=None means keyword-only (Voyage down).
+        """Law collection only. vector=None means keyword-only (Voyage down). A
+        QueryVectors is a per-court search: one dense prefetch per model group, in the
+        same single call.
         `must` is an exact payload filter; a non-empty must on section/case number is
         the exact-lookup path. `mode` is for the retrieval-quality measurement
         (evals/known_item.py): the pipeline always uses "hybrid"."""
@@ -175,7 +196,7 @@ class QdrantStore:
         return self._client
 
     @staticmethod
-    def _filter(must: Mapping[str, Any]):
+    def _filter(must: Mapping[str, Any], group: DenseGroup | None = None):
         """An exact payload filter. A `court` label also matches on the court the record
         ID names (`court_code`, written beside the label by data/add_court_code.py): 0.58%
         of judgments carry no label and 0.21% a spelling variant, and a label-only filter
@@ -198,6 +219,17 @@ class QdrantStore:
                         ]
                     )
             conds.append(cond)
+        if group is not None and group.codes is not None:
+            only = [
+                models.FieldCondition(
+                    key=COURT_CODE, match=models.MatchAny(any=list(group.codes))
+                )
+            ]
+            if group.no_court:  # this model also built the records with no court code
+                only.append(
+                    models.IsEmptyCondition(is_empty=models.PayloadField(key=COURT_CODE))
+                )
+            conds.append(only[0] if len(only) == 1 else models.Filter(should=only))
         return models.Filter(must=conds)
 
     @staticmethod
@@ -228,22 +260,27 @@ class QdrantStore:
         from qdrant_client import models
 
         flt = self._filter(must)
+        groups = self._groups(vector)
         try:
             if any(k in must for k in EXACT_KEYS):
-                r = await self._exact(collection, vector, flt, limit)
+                # one vector ranks the few matches; with several models there is no single
+                # vector, so the matches come back in stored order (not verified for ranking)
+                only = groups[0].vector if len(groups) == 1 else None
+                r = await self._exact(collection, only, flt, limit)
             elif mode != "hybrid":
-                r = await self._one_half(collection, vector, text, flt, limit, mode)
+                r = await self._one_half(collection, groups, text, must, flt, limit, mode)
             else:
-                prefetch = []
-                if vector is not None:
-                    prefetch.append(
-                        models.Prefetch(
-                            query=list(vector),
-                            using=DENSE_VECTOR,
-                            filter=flt,
-                            limit=limit,
-                        )
+                # one dense prefetch per model group (each only among its courts) plus the
+                # keyword half, in ONE call, merged by rank
+                prefetch = [
+                    models.Prefetch(
+                        query=list(g.vector),
+                        using=DENSE_VECTOR,
+                        filter=self._filter(must, g),
+                        limit=limit,
                     )
+                    for g in groups
+                ]
                 prefetch.append(
                     models.Prefetch(
                         query=await self._sparse_query(text),
@@ -265,24 +302,60 @@ class QdrantStore:
             raise VectorStoreUnavailable(str(e)) from e
         return [self._hit(p) for p in r.points]
 
-    async def _one_half(self, collection, vector, text, flt, limit, mode):
-        """Only the dense half or only the keyword half, no merge (measurement only)."""
+    @staticmethod
+    def _groups(vector) -> list[DenseGroup]:
+        """The dense half as groups: none (Voyage down), one unrestricted (the ordinary
+        search) or one per model (per-court)."""
+        if vector is None:
+            return []
+        if isinstance(vector, QueryVectors):
+            return list(vector.groups)
+        return [DenseGroup(vector)]
+
+    async def _one_half(self, collection, groups, text, must, flt, limit, mode):
+        """Only the dense half or only the keyword half, no merge across halves
+        (measurement only). With several model groups the dense half is the groups fused
+        by rank."""
+        from qdrant_client import models
+
         if mode == "dense":
-            if vector is None:
+            if not groups:
                 raise ValueError("dense-only search needs a query vector")
-            query, using = list(vector), DENSE_VECTOR
-        elif mode == "sparse":
-            query, using = await self._sparse_query(text), SPARSE_VECTOR
-        else:
-            raise ValueError(f"unknown search mode {mode!r}")
-        return await self._c().query_points(
-            collection,
-            query=query,
-            using=using,
-            query_filter=flt,
-            limit=limit,
-            with_payload=True,
-        )
+            if len(groups) == 1:
+                g = groups[0]
+                return await self._c().query_points(
+                    collection,
+                    query=list(g.vector),
+                    using=DENSE_VECTOR,
+                    query_filter=self._filter(must, g),
+                    limit=limit,
+                    with_payload=True,
+                )
+            return await self._c().query_points(
+                collection,
+                prefetch=[
+                    models.Prefetch(
+                        query=list(g.vector),
+                        using=DENSE_VECTOR,
+                        filter=self._filter(must, g),
+                        limit=limit,
+                    )
+                    for g in groups
+                ],
+                query=models.FusionQuery(fusion=models.Fusion.RRF),
+                limit=limit,
+                with_payload=True,
+            )
+        if mode == "sparse":
+            return await self._c().query_points(
+                collection,
+                query=await self._sparse_query(text),
+                using=SPARSE_VECTOR,
+                query_filter=flt,
+                limit=limit,
+                with_payload=True,
+            )
+        raise ValueError(f"unknown search mode {mode!r}")
 
     async def sample_chunks(self, collection, must, n):
         if collection == self._s.QDRANT_UPLOADS_COLLECTION:
