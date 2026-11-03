@@ -33,5 +33,6 @@
     "editor.wordWrap": "bounded",
     "editor.wordWrapColumn": 90,
     "editor.formatOnSave": false
-  }
+  },
+  "python.terminal.useEnvFile": true
 }
