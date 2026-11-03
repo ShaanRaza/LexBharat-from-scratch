@@ -618,6 +618,101 @@ not hurt hybrid measurably either. That supports calling it unnecessary rather t
 recorded as 6 to 8 points rather than none. The decision, and whether any re-embedding is worth it, is the
 owner's; this section does not propose one.
 
+### Off-model share by court, and why the dead-vector scan could not have seen it
+
+**Measured** 2 Nov 2026, tabulated 3 Nov. This is the step-3 design, and it had already been run: up to 50
+chunks per court group from `legal_corpus_v1` and `v2`, different cases, random id ranges, each stored vector
+compared with a fresh `voyage-4` / `document` embedding, then `voyage-4-lite` and `voyage-4-large` for any
+chunk that did not reproduce, so every chunk's model is **identified**, not just flagged
+(`hc_model_results.json`; 2,642 chunks, 1.4M tokens). It was not re-sampled; no Voyage call was made for this
+table. "Reproduces" is cosine 0.99 or more (two chunks at 0.997 to 0.998 sat just under the earlier 0.998
+line and are counted as reproduced). 2 of the 2,642 are dead vectors, not off-model, and are excluded.
+
+**Two shares, because they answer different questions.** *Not `voyage-4`* is the mismatch if every court is
+queried with `voyage-4`, the model used in sections 13 and 17. *Outside majority* is the mismatch if each court
+is queried with its own majority model (the per-court config). Many courts are 100% not `voyage-4` yet
+perfectly uniform (all `voyage-4-lite`), so they cost nothing under the per-court config and a great deal
+under a single query model.
+
+| Court | Coll | Prefix | Healthy chunks | `voyage-4` | lite | large | Not `voyage-4` (95% interval) | Majority model | Outside majority |
+|---|---|---|---:|---:|---:|---:|---|---|---:|
+| Allahabad | v1 | UPHC | 100 | 0 | 100 | 0 | **100%** (96 to 100) | lite | 0% |
+| Calcutta | v1 | WBCHCA | 58 | 0 | 58 | 0 | **100%** (94 to 100) | lite | 0% |
+| Calcutta | v1 | WBCHCJ | 1* | 0 | 1 | 0 | **100%** (21 to 100) | lite | 0% |
+| Calcutta | v1 | WBCHCO | 49 | 0 | 49 | 0 | **100%** (93 to 100) | lite | 0% |
+| Chhattisgarh | v1 | CGHC | 55 | 0 | 0 | 55 | **100%** (93 to 100) | large | 0% |
+| Patna | v1 | BRHC | 100 | 0 | 0 | 100 | **100%** (96 to 100) | large | 0% |
+| Sikkim | v1 | SKHC | 50 | 0 | 50 | 0 | **100%** (93 to 100) | lite | 0% |
+| Tripura | v1 | TRHC | 54 | 0 | 54 | 0 | **100%** (93 to 100) | lite | 0% |
+| Uttarakhand | v1 | UKHC | 52 | 0 | 52 | 0 | **100%** (93 to 100) | lite | 0% |
+| Andhra Pradesh | v1 | APHC | 76 | 1 | 0 | 75 | **99%** (93 to 100) | large | 1% |
+| Delhi | v1 | DLHC | 59 | 16 | 0 | 43 | **73%** (60 to 83) | large | 27% |
+| for State of Telangana | v1 | HBHC | 67 | 67 | 0 | 0 | **0%** (0 to 5) | voyage-4 | 0% |
+| Bombay | v1 | HCBM | 114 | 114 | 0 | 0 | **0%** (0 to 3) | voyage-4 | 0% |
+| Gauhati | v1 | GAHC | 102 | 102 | 0 | 0 | **0%** (0 to 4) | voyage-4 | 0% |
+| Gujarat | v1 | GJHC | 50 | 50 | 0 | 0 | **0%** (0 to 7) | voyage-4 | 0% |
+| Himachal Pradesh | v1 | HPHC | 60 | 60 | 0 | 0 | **0%** (-0 to 6) | voyage-4 | 0% |
+| Madras | v1 | HCMA | 95 | 95 | 0 | 0 | **0%** (0 to 4) | voyage-4 | 0% |
+| Madras | v1 | HCMD | 17* | 17 | 0 | 0 | **0%** (0 to 18) | voyage-4 | 0% |
+| for State of Telangana | v2 | HBHC | 56 | 0 | 56 | 0 | **100%** (94 to 100) | lite | 0% |
+| Andhra Pradesh | v2 | APHC | 62 | 0 | 62 | 0 | **100%** (94 to 100) | lite | 0% |
+| Bombay | v2 | HCBM | 100 | 0 | 100 | 0 | **100%** (96 to 100) | lite | 0% |
+| Calcutta | v2 | WBCHCJ | 11* | 0 | 11 | 0 | **100%** (74 to 100) | lite | 0% |
+| Delhi | v2 | DLHC | 55 | 0 | 55 | 0 | **100%** (93 to 100) | lite | 0% |
+| Gauhati | v2 | GAHC | 99 | 0 | 99 | 0 | **100%** (96 to 100) | lite | 0% |
+| Gujarat | v2 | GJHC | 50 | 0 | 50 | 0 | **100%** (93 to 100) | lite | 0% |
+| Himachal Pradesh | v2 | HPHC | 60 | 0 | 16 | 44 | **100%** (94 to 100) | large | 27% |
+| Jammu and Kashmir | v2 | JKHC | 58 | 0 | 22 | 36 | **100%** (94 to 100) | large | 38% |
+| Jharkhand | v2 | JHHC | 54 | 0 | 10 | 44 | **100%** (93 to 100) | large | 19% |
+| Karnataka | v2 | KAHC | 54 | 0 | 4 | 50 | **100%** (93 to 100) | large | 7% |
+| Madras | v2 | HCMA | 73 | 0 | 73 | 0 | **100%** (95 to 100) | lite | 0% |
+| Madras | v2 | HCMD | 31 | 0 | 31 | 0 | **100%** (89 to 100) | lite | 0% |
+| Chhattisgarh | v2 | CGHC | 50 | 0 | 50 | 0 | **100%** (93 to 100) | lite | 0% |
+| Rajasthan | v2 | RJHC | 99 | 0 | 99 | 0 | **100%** (96 to 100) | lite | 0% |
+| Patna | v2 | BRHC | 98 | 0 | 98 | 0 | **100%** (96 to 100) | lite | 0% |
+| Sikkim | v2 | SKHC | 14* | 0 | 14 | 0 | **100%** (78 to 100) | lite | 0% |
+| Calcutta | v2 | WBCHCA | 25 | 1 | 24 | 0 | **96%** (80 to 99) | lite | 4% |
+| Punjab and Haryana | v2 | PHHC | 69 | 10 | 59 | 0 | **86%** (75 to 92) | lite | 14% |
+| Allahabad | v2 | UPHC | 52 | 10 | 42 | 0 | **81%** (68 to 89) | lite | 19% |
+| Uttarakhand | v2 | UKHC | 37 | 11 | 26 | 0 | **70%** (54 to 83) | lite | 30% |
+| Manipur | v2 | MNHC | 50 | 21 | 29 | 0 | **58%** (44 to 71) | lite | 42% |
+| Orissa | v2 | ODHC | 73 | 31 | 42 | 0 | **58%** (46 to 68) | lite | 42% |
+| Madhya Pradesh | v2 | MPHC | 50 | 27 | 23 | 0 | **46%** (33 to 60) | voyage-4 | 46% |
+| Meghalaya | v2 | MLHC | 50 | 33 | 17 | 0 | **34%** (22 to 48) | voyage-4 | 34% |
+| Kerala | v2 | KLHC | 48 | 40 | 5 | 3 | **17%** (9 to 30) | voyage-4 | 17% |
+| Calcutta | v2 | WBCHCO | 2* | 2 | 0 | 0 | **0%** (0 to 66) | voyage-4 | 0% |
+| Tripura | v2 | TRHC | 1* | 1 | 0 | 0 | **0%** (0 to 79) | voyage-4 | 0% |
+
+*n under 20: read as an anecdote. Shares are of the 2,640 healthy chunks in 46 court groups (a court
+label with several spellings or prefixes is split by the id prefix, which agrees with the court in every
+parquet row, section 18). Intervals are Wilson 95%.*
+
+**Summary.** Not `voyage-4`: 73% of the sampled chunks overall (v1 55%, v2 87%). Outside the court's own
+majority model: 7.6% overall (**v1 1%, 2 of 18 groups; v2 12%, 13 of 28 groups, 11 of them at 10% or
+more**: Madhya Pradesh 46%, Orissa 42%, Manipur 42%, Jammu & Kashmir 38%, Meghalaya 34%, Uttarakhand 30%,
+Himachal Pradesh 27%, Delhi v1 27%, Allahabad v2 19%, Jharkhand 19%, Kerala 17%, Punjab and Haryana 14%).
+These are sample shares of 50-ish chunks per group, **not volume-weighted**; the volume-weighted estimate
+stays the one above (about 92% of all High Court points matched by a per-court majority, 98% of v1, 84% of v2).
+Courts such as Bombay v1, Gauhati v1, Madras v1, Gujarat v1 and Telangana v1 are uniformly `voyage-4`; Bombay v2,
+Delhi v2, Gujarat v2, Rajasthan, Patna v2 and Andhra v2 are uniformly lite, and Patna v1, Chhattisgarh v1 and
+Karnataka (mostly) are large. Kerala's 17% (9 to 30) agrees with the random-length Kerala sample (11.6%), which
+is the only check made that this sample's restriction to short chunks (342 to 3,000 characters, median 768)
+does not bias the shares. It is one court, and the model follows the ingestion batch, not length, so no bias is
+expected; none was tested elsewhere.
+
+**The dead-vector detector could not have caught any of this.** It scores a stored vector's cosine with the
+mean legal-text direction. Measured on these 2,640 vectors, by identified model: `voyage-4` mean 0.60
+(minimum 0.29), `voyage-4-lite` mean 0.63 (0.20), `voyage-4-large` mean 0.56 (0.26); **none of the 1,931
+off-`voyage-4` vectors fell below the 0.10 threshold**, and only the 2 dead vectors did. A lite or large
+vector of legal text looks like a healthy one to the detector, which is why the 9 off-model Kerala chunks
+sat in the healthy set. (The figure of about 0.45 quoted for a healthy vector is the Kerala live population
+of section 17; across courts the means are higher.) So the 200,339-chunk, 73-court scan, and the 275,216
+non-Kerala chunks of section 16, **carry no information about model mixing**. "Clean" in sections 14 and 16
+means "no dead vectors", never "one model". If anything the detector is slightly miscalibrated across models:
+the 4 cross-court false positives of section 16 were live chunks from another model scoring 0.093 to 0.097.
+
+Nothing here proposes or prices a re-embed; that is the owner's spend decision.
+
 ### Qdrant can serve per-court models in one call
 
 On 1.16.3, several dense prefetch branches — each with its own query vector, court filter and
@@ -678,7 +773,7 @@ Kerala v2 over-sampled to 450. Full table: `~/qdrant-kanoon/reports/hc_followup_
   4% (2 of 50) was a low draw inside that interval. Not length-specific: 29 of 400 random-length.
 - **About 215,000 of Kerala's 3.1M chunks** (range 147,000–300,000), against the ~124,000 the
   earlier estimate implied.
-- **Every other court is clean:** 0 of 2,694 across v1 and v2, 95% upper bound 0.13%. Overall
+- **Every other court is clean** (**of dead vectors only; this says nothing about which model built them**, section 13): 0 of 2,694 across v1 and v2, 95% upper bound 0.13%. Overall
   0.69% of the 31.0M High Court points, all of it Kerala v2.
 - **The text is fine in all 31** — 430 to 4,211 characters, no replacement characters. A bad
   vector, not bad text.
@@ -860,6 +955,10 @@ characters or more**. Below 500 characters it is 5.0% (n=5,500). No skew.
 live. Validating both sides of the boundary is what makes 217,766 a count rather than an estimate.
 
 ### Every other court is clean — now with a real denominator
+
+**"Clean" here means no dead vectors. The detector cannot see which model built a vector** (section 13: a
+`voyage-4-lite` or `voyage-4-large` vector scores like a healthy one), so this scan carries no information
+about model mixing and must not be read as if it did.
 
 The 4 cross-court flags are **false positives**: live chunks whose embedding model differs from
 the detector's reference direction, scoring 0.093–0.097. So **0 confirmed dead outside Kerala**,
