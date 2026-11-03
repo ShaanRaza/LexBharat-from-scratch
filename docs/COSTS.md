@@ -264,6 +264,16 @@ Those RAM figures are arithmetic, **not measured**: 1024-dimension vectors at in
 1 KB per point in memory, plus the HNSW graph. The Bombay sizing experiment measures this
 directly and its result replaces this table.
 
+**Duplicate points, added 3 Nov 2026 (`DATA-GAPS.md` section 18).** "32.5M points" is the parquet's row
+count; Qdrant holds 31.42M points (19.60M in v1, 11.82M in v2), and some of them are second copies of the
+same chunk. **Measured:** Kerala has 437,097 extra points of 3,125,018 (14.0%). **Estimate (sample of the
+first 200,000 v2 points, about plus or minus 4%):** v2 as a whole about 2.45M extra points (21%). **Unknown:**
+v1, which was not sampled. RAM follows points, so serving one point per chunk id would trim the full-corpus
+row to roughly **40-49 GB** if only v2 is deduplicated, and **34-42 GB** if v1 duplicates at v2's rate
+(unmeasured; the table's own 45-55 GB scaled by point count). Both stay above the 32 GB of r7g.xlarge, so
+this saves 10-25% of the RAM, not a server tier. The "complete product" row (Bombay, Telangana, Kerala)
+is not moved by it beyond Kerala's 14%. Sizing, not trust: duplicate text is identical (section 18).
+
 ### What this tells us
 
 **The margin target is not at risk.** `METRICS.md` wants 60% or better; this sketch gives

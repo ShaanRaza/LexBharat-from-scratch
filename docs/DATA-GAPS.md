@@ -543,6 +543,11 @@ measurable to a mismatched query.
    than any ranking bias:** a chunk that cannot be retrieved cannot be cited, so the user is told
    "not in our dataset" about something the dataset holds.
 
+   **Corrected 3 Nov 2026 (sections 14, 17 and 18).** The claim in the first point is wrong, and
+   section 14 only half-corrected it. Not one of the 217,766 dead Kerala points was ever the only
+   copy of its chunk: each has a live twin with the same `chunk_id` (section 18). No chunk was
+   unfindable by dense search, and the "not in our dataset" failure described here did not occur.
+
 2. **The absolute recall level, which nobody remarked on.** Hybrid recall@50 is 87% — a query
    built from a chunk's own sentences fails to bring that chunk back in the top 50 about one time
    in eight, on a 200k corpus the report itself calls optimistic against 2.8M. Dense-only @10 is
@@ -570,6 +575,10 @@ Kerala v2 over-sampled to 450. Full table: `~/qdrant-kanoon/reports/hc_followup_
 - **The sparse vector is intact in all 31.** Hybrid finds every one of them. **Nothing is
   unreachable by any path**, so the severity is roughly half what section 13 feared: degraded
   ranking, not invisibility, and a citation to such a chunk still verifies.
+  **Corrected 3 Nov 2026:** "degraded ranking" is also too strong for the service. Every dead
+  point has a live twin with the same `chunk_id` (section 18), so a chunk's dense rank is that of
+  its best copy, which was never dead. What the dead copy costs is a wasted slot and a duplicate
+  source id, not lost retrieval. The measurements in this section describe the dead copy alone.
 - **What they embed is unknown.** Well-formed unit vectors, pairwise cosine 0.33 (not one repeated
   placeholder), cosine **0.00** against the mean legal-text direction where real chunks average
   **0.62**. Title, parties, case number and URL do not reproduce them. Case years 2019 (9 of 31)
@@ -1118,6 +1127,43 @@ that slice (6.89%) matches the court's (6.97%), but one matching dimension does 
 representative: the slice could differ in year mix, case type, case length or court bench in ways
 that were not checked, and none of the results here should be read as estimates for the whole court.
 
+### The twin hypothesis, tested: duplicates do not explain the recall gap
+
+**Hypothesis (from the duplicate finding):** the dense gap lives almost entirely in targets whose chunk
+has a twin point in the corpus. **3 Nov 2026, free and local:** the saved query vectors against
+`kerala_recall_eval2` on the copy instance, no Voyage calls, nothing written to any Qdrant.
+
+**The match key was the point id, not the chunk id.** Check 4 scored a query a hit when the target's
+point id was in the top k (`q["id"] in ids`, `kfix_rerun.py`). A twin of the target is a different
+point id with the same text, so it could take the target's place and count as a miss. I therefore
+re-scored every query under both keys (`kfix_twin.py`, results in `recall_twin.json`).
+
+**Result: the hypothesis fails.** In the searched corpus only **21 of 849 queries** have a target whose
+chunk_id sits on two points (18 repaired-dead targets, 7 distinct chunks; 3 healthy, 1 chunk). The other
+**828 queries have no twin in the corpus and carry the whole gap**:
+
+| Healthy minus repaired (percentage points, 95% cluster-bootstrap CI over targets) | dense @10 | dense @50 |
+|---|---|---|
+| All 849 queries, point-id key (as originally run) | 11.1 (2.6 to 19.7) | 12.4 (3.7 to 20.7) |
+| All 849 queries, chunk-id key | 11.1 (2.7 to 19.9) | 12.4 (4.0 to 21.1) |
+| The 828 queries with no twin | **10.0** (1.3 to 18.9) | **12.2** (3.8 to 20.8) |
+
+Scoring by chunk id instead of point id changes dense recall for no group and hybrid @10 for the
+duplicated targets alone (61% to 67%, 18 queries). Removing the duplicated queries leaves the gap at 10.0
+and 12.2 points. The gap sits where there are no twins, so twins do not produce it. These are raw,
+unmatched gaps in this corpus; the matched figures are in the subsection above.
+
+**The crowding test could not have seen a twin**, as pointed out: it measured the nearest neighbour
+from another case, which excludes a same-chunk twin by construction. This test is the one that looks
+for it.
+
+**What the eval cannot say.** Only 3.2% of Kerala is in the 100,000-point slice, so a target's twin is
+in the slice about 3% of the time. That is why 7 of 198 targets have one. The eval therefore measures
+a repaired vector with no twin competing. In the real service every dead chunk has a twin
+(section 18), which makes this gap irrelevant to what a user would see: the live copy answers, at the
+healthy rate. The gap remains unexplained as a property of the repaired vectors, and the claim that
+it is a measurement artefact is **not** supported, because the cause was not duplicates.
+
 ## 18. Court labels, `act_status` and duplicate chunk ids: measured (interim, the Qdrant scan stopped twice at the 20-second limit)
 
 **3 Nov 2026.** Parquet results are exhaustive (75 files, 33.7M rows). Qdrant results come from
@@ -1125,6 +1171,11 @@ that were not checked, and none of the results here should be read as estimates 
 exhaustive read-only scroll (`kfix_idscan.py`, checkpointed). The scan hit the standing 20-second
 hard stop on the first `legal_corpus_v2` request and again at page 46; v2 beyond 200,000 and all of v1
 are **not yet read**. Nothing was written to any Qdrant.
+
+**Limit raised, 3 Nov 2026.** The owner raised the read-only request limit on the originals from 20 s to 60 s,
+citing `CLAUDE.md` section 9. That section's 60 s is for waiting on a service *start*; it says nothing about a
+request timeout, so the 60 s rests on the owner's instruction, not on that line. The hard stop and the
+no-retry rule are unchanged. The scan has **not** been resumed.
 
 ### How often is `court` wrong? Almost never; it is more often missing
 
@@ -1181,23 +1232,76 @@ Dead points are 5.5 times as likely as live ones to have a twin inside the slice
 In a sample of 3,000 dead points, the text is identical to the parquet text of the same chunk id in
 99.4% of the 2,970 found.
 
-**Established, the Kerala count.** About 99% of Qdrant's Kerala chunk ids (dead and healthy alike) are in
-the Kerala parquet, which holds 2,777,738 distinct ids. So of Qdrant's 3,125,018 Kerala points, about
-3.09M carry ids from that set, which forces **at least about 312,000 duplicate points**. The rest of
-Qdrant's excess over the parquet (347,280) is the roughly 1% of points whose ids the parquet does not
-have. The Kerala excess is therefore mostly duplicates, and the two datasets are the same dataset (for
-Kerala): section 8's cross-check is sound.
+**Established, the Kerala count, exactly** (from `scan/kerala_v2.tsv`, which holds the id and chunk id of
+all 3,125,018 Kerala points, against the Kerala parquet's 2,777,738 distinct ids; `kfix_dup_*` scripts).
+Qdrant's Kerala points are 2,687,921 distinct chunk ids on 3,125,018 points:
+
+| Group size | Chunk ids | Points |
+|---|---:|---:|
+| 1 | 2,310,291 | 2,310,291 |
+| 2 | 320,127 | 640,254 |
+| 3 | 55,539 | 166,617 |
+| 4 | 1,964 | 7,856 |
+
+**437,097 points are extra copies (14.0% of Kerala's points)**, on 377,630 chunk ids. They break down as
+217,688 dead copies and 219,409 live copies (57,581 of them in groups that also hold a dead copy, 161,828 in groups of live points only). The other 78 dead points have no `court` label and sit in the no-court scan, outside this count. Reconciliation with the parquet, to the point:
+
+> 2,777,738 parquet ids − 117,119 parquet-only + 27,302 Qdrant-only = 2,687,921 distinct ids in Qdrant;
+> 2,687,921 + 437,097 duplicates = **3,125,018**.
+
+So duplicates account for more than the whole per-court excess (347,280): they exceed it by 89,817, which
+is the net of two real differences. **117,119 parquet chunks (111,804 whole cases) are not in Qdrant**
+(4.2% of the parquet's Kerala ids), and **27,302 Qdrant chunks (9,276 whole cases) are not in the
+parquet**. Only 997 of those 117,119 missing chunks lie inside a case Qdrant otherwise holds. This
+corrects my earlier reading ("about 99% overlap, so the two datasets are the same, section 8's
+cross-check is sound"): the overlap is 95.8% of the parquet and 99.0% of Qdrant, and the difference is
+whole cases on both sides, the same shape as the Supreme Court's 10,112 and 5,153 in section 8. It is a
+snapshot mismatch worth a line on the coverage page, not noise. It does not make section 8's comparison
+one between unrelated datasets.
+
+**Established: every dead point has a live twin, and none has two dead members.** All 217,766 flagged
+points sit in a duplicate group with at least one unflagged point (217,688 in the labelled Kerala scan,
+the other 78, which have no `court` label, in the no-court scan under a different id). Groups containing
+a dead point: 162,071 pairs, 53,653 triples and 1,964 quadruples, **each with exactly one dead member**.
+The 159,942 groups with no dead member are live-on-live duplicates. That is the whole of the "inferred"
+claim in the earlier draft of this section, now exact for Kerala: the "dead" vectors are valid embeddings
+from another model (section 17) attached to **second copies** of chunks whose first copy is healthy.
+
+**Established: duplicates carry identical text.** All **697 of 697** duplicated chunk-id groups in the
+first 200,000 `legal_corpus_v2` points (695 pairs, 2 triples, 11 or more courts) hold byte-identical
+`text`, and every other payload field (`case_id`, `title`, `pdf_url`, offsets, pages, year and the rest)
+is identical as well. So are **511 of 511** groups in the Kerala slice, including the 298 dead+live
+pairs. Whitespace-only and real-content differences: none in either. A record fetched by either point
+id is the same record, so **verifier check 3 cannot be fooled by which copy `get_record` returns**
+(it matches quotes against that text). The duplicate risk that remains is the one in section 8 (two
+source ids for one passage), a presentation problem, not a verification one. **Limits:** the 697 are the
+first 200,000 v2 points only; v1, the rest of v2 and the Supreme Court's 4,871 duplicates were not
+text-compared.
+
+**Estimated: duplication across `legal_corpus_v2`.** Two copies sit at unrelated random point ids, so a
+sample of the first 200,000 points (1.69% of the collection) contains both copies of a pair with
+probability 1.69% squared; the in-sample pair count therefore scales as 1 / 0.000286. The estimator is
+checked against the exact Kerala count: it predicts 142.6 Kerala groups in the sample and 146 were seen.
+It gives about **2.45 million extra points in v2, or roughly 21% of its 11.8M (±4% from sampling alone)**.
+By court prefix (points in v2 are the estimated total, the share is of that court): Jharkhand about 54%,
+J&K 53%, Himachal Pradesh 48%, Punjab and Haryana 23%, Rajasthan 22%, Kerala 16% (exact: 14.0%),
+Karnataka 14%, Orissa 8%, Madhya Pradesh 5%, Supreme Court 3% (3 groups seen; section 8's exact count
+is 4,871 chunk ids on 371,159 points). No duplicate was seen in the sample for Delhi (829 sample points),
+Bombay (HCBM, 2,412), Madras (HCMA and HCMD, 2,261), Telangana (HBHC, 1,917) or Gujarat (1,071); with the
+sample's reach that bounds each below roughly 10,000 extra points (95%), which is weak for a court as
+small as Delhi's. Of the three launch High Courts, Kerala is duplicated at 14.0%; Bombay and Telangana
+showed none in the sample. **v1 (19.6M points) was not sampled at all**, so no figure for it exists, and the
+total across both collections is **not** known. It needs the scan.
+
+**What this does to the dead-vector story.** The re-embed (A123, about $16.36) repaired 217,766 points
+whose chunk already had a healthy copy. It was not harmful, but with a live twin present it is also not
+needed to find those chunks, and it turns a dead copy, which rarely ranked, into a live copy that now ranks
+beside its twin. **Serving Kerala from one point per chunk id, the healthy one, makes the repaired
+collection unnecessary** and needs no model call. That is a serving decision for the owner (dedup in the
+pipeline, section 8); nothing was changed.
 
 **Overall, the premise needs one correction.** Qdrant has **fewer** points than the parquet (31.42M
 against 32.57M), not more; the difference is the Supreme Court's 742,066 non-English chunks (1,113,313
 in the parquet against 371,159 English in Qdrant) and smaller per-court gaps. Kerala is the court where
 Qdrant is larger.
-
-**Inferred, not yet shown for the whole collection:** that every dead point is a second copy whose live
-twin carries a good `voyage-4` vector. If so: the "dead" vectors are valid embeddings from another
-model (section 17) loaded as extra copies, a chunk was never unreachable by dense search because its
-twin was, the re-embed repaired points that were redundant, and the damage was duplicate slots and a
-random choice of copy by `get_record`. **Pending the scan:** the exact duplicate count per court, how
-many dead points have a live twin, and whether any duplicate pair carries different text (the check
-that matters for verifier check 3).
 
