@@ -938,6 +938,21 @@ vectors fall under it. The Kerala count (217,766 flagged, confirmed by re-embedd
 section 16) is not affected, because it was confirmed by re-embedding, not by the threshold alone; a future use of
 the threshold on long chunks should confirm a flag the same way.
 
+**Direction of the error: false positives on long healthy chunks, not missed dead vectors (stated explicitly,
+because "length-dependent" alone can be read the other way).** The length effect pulls healthy long chunks
+*toward* the dead range; it does not lift dead vectors out of it. Measured on the 217,766 dead Kerala vectors
+(`kerala_flagged.tsv`): median 0.002, 99th percentile 0.066, maximum 0.099 (the flagged set stops at the 0.10
+line by construction), and the 159,695 of them with a body of 3,000 characters or more sit at median -0.004,
+99th percentile 0.063. A long healthy chunk bottoms out around 0.075 in the new Supreme Court set (minimum 0.075)
+and at 0.035 in Vaquill's stored Supreme Court vectors (4,000 sampled, minimum 0.035, 1.1% below 0.10). So dead
+and long-healthy overlap only in the band from about 0.035 to 0.10, which is where the roughly 1% of spurious
+flags comes from; dead vectors do not score above 0.10 because a chunk is long, so **separation survives and
+section 16's clearance of the other courts still holds** (a missed dead vector is not what this effect
+produces). **Running the detector over long chunks (3,000 characters or more) would flag about 1% of healthy
+ones spuriously** and each flag there needs the re-embedding check. Not measured here: the same effect for
+short chunks, where scores run higher for both populations (section 16's length-bucket check, flagged rate 5.0%
+below 500 characters against 6.6 to 8.1% above, already covers that).
+
 Nothing here proposes or prices a re-embed; that is the owner's spend decision.
 
 ### Qdrant can serve per-court models in one call
