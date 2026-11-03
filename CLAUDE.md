@@ -222,17 +222,24 @@ as stored, labelled "as recorded in the dataset".
 - **Never display judges or party names.** `judges` is 32.7% filled and sampled values were
   extraction garbage; `petitioner`/`respondent` are 99.9% filled but often counsel names or
   sentence fragments (Measured).
-- **Never show "in force" until the `act_status` conflict is settled (open, 2 Nov 2026).** Two
-  of our own measurements disagree: `docs/DATASET.md` says `act_status` is filled for 1,568 of
-  22,264 acts, while the Qdrant field-fill sample finds it 100% non-empty — and every sampled
-  state Act reads `in_force`, which looks like a default rather than a check. If that is right,
-  "in force" on state Acts and regulators rests on a default, and showing it tells a lawyer an
-  Act is good law when nobody checked. **Repealed is the safe direction and may be shown**
-  (`act_status`, an `IND_REP_` id, `is_repealed`, or a clean `(Rep., Act NN of YYYY)` title
-  marker — `core/act_status.py`); "in force" is the dangerous one. Until the full count is run,
-  anything not provably repealed reads "In-force status not checked for this Act."
-- (Superseded, kept for context) The earlier rule said: show the in-force flag only where `act_status` is filled — it covers 1,568 of 22,264
-  acts. Label every other Act result "in-force status not checked".
+- **"In force" is OFF PERMANENTLY. Measured and settled 3 Nov 2026 (was open since 2 Nov).**
+  The conflict is resolved and the answer is the dangerous one. `act_status` is filled in every
+  row of all 22,264 Acts — `DATASET.md`'s "1,568" was the central legislation file alone, not the
+  whole set. But it carries **no information the record id does not already carry**: all 8,544
+  state Acts and all 848 central Acts read `in_force`, and the only variation sits where the id
+  already says it (every one of the 710 `repealed` is an `IND_REP_` id; the 378 `superseded` are
+  all SEBI; 10 `spent` are central). A field that agrees with the id and varies nowhere else is a
+  **default, not a determination**. So `SHOW_IN_FORCE` stays false — it currently withholds 21,162
+  of 22,264 Acts — and anything not provably repealed reads "In-force status not checked for this
+  Act." **Repealed remains safe to show** from the four signals in `core/act_status.py`.
+- **Derive `court` from the record id, not the `court` field.** Measured 3 Nov 2026 across all
+  32.57M judgment rows: 30 id prefixes, each mapping to exactly one court. A **wrong** label is a
+  non-problem (282 rows, 0.00087%). A **missing** one is the real cost: **0.58%** of rows carry no
+  `court` at all (189,320 rows; Himachal Pradesh 4.1%, Andhra Pradesh 3.0%, Delhi 2.9%), plus
+  0.21% alternate spellings. A court filter silently drops every one of them — and `DATA-GAPS.md`
+  §14 established the filter is a **recall** mechanism at scale, not just a refinement. Deriving
+  from the id fixes both for free. Do not do it blindly: a few alias labels may be historically
+  real.
 - **High Courts have no citation strings** (0.0% filled). The verifier falls back to record
   existence and quoted text, and High Court answers show no citation string.
 - **Never write a coverage category outside `core/coverage.json`.** What the product
