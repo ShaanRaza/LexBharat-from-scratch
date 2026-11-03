@@ -539,8 +539,84 @@ Paired per query, a mismatched model cost 2 queries of 55 on dense@50 and **zero
 rescued 10 of 17 dense misses, and 12 of 19 under mismatch. With names and numbers stripped from
 the queries, dense@50 falls 62% to 52% while hybrid holds at 81%.
 
-**Not tested:** a *mixed* corpus, where a matched and a mismatched document compete in one ranking.
-This shows only that changing the query model does not hurt a single-model corpus.
+**Not tested here:** a *mixed* corpus, where a matched and a mismatched document compete in one ranking
+(done 3 Nov, next subsection). This test shows only that changing the query model does not hurt a corpus
+that was *believed* single-model. **How that belief was established:** it was not checked chunk by chunk.
+The 200,020 local Bombay points were never classified. "Single-model" came from re-embedding 100 sampled
+Bombay v1 chunks (50 per label spelling), all of which reproduced under `voyage-4` (100 of 100). That bounds
+the off-model share of Bombay v1 below about 3.6% at 95%, so the corpus could hold a few percent off-model
+chunks, and the 20 target chunks were chosen as `voyage-4`-confirmed. Hybrid's numbers here therefore contain
+at most a few percent of whatever mixing costs, not 12 to 18%.
+
+### Does an off-`voyage-4` chunk retrieve worse? Dense yes, by about 6 to 8 points; hybrid by almost nothing
+
+**Measured**, 3 Nov 2026, on the copy instance (`kerala_recall_eval3`, the Kerala eval corpus plus the
+off-model chunks; scripts `kfix_off_*.py`, results `kerala_fix/recall_offmodel.json`). Queries are
+`voyage-4` / `query` throughout, as in the earlier checks.
+
+**The existing eval could not answer this, and why.** Its 849 queries aim at 344 distinct targets: 198 repaired
+chunks (fresh `voyage-4` vectors by construction) and 146 healthy controls. Those controls were *chosen* as
+chunks that reproduce under `voyage-4` (`kerala_proof.py`: cosine 0.998 or more), and all 146 do. **The eval
+contained no off-model target**, so splitting it by model family gives one full group and an empty one.
+Step 1 as planned (re-embed all targets, about 1.06M tokens, Rs 6) was unnecessary: the stored cosines already
+cover all 146 and the call reproduces them to 0.0002 (section 17), so it was not run.
+
+**What was built instead.** The 43 off-model healthy Kerala chunks from the 371-chunk sample (cosine 0.929 to
+0.960 under `voyage-4`: 5 `voyage-4-lite`, 4 `voyage-4-large` among the 9 identified; the rest not
+identified) became targets, with queries from the same recipe as the controls (longest sentence, middle
+sentence, names and numbers stripped): 111 queries on 42 targets. Total spend about 54,000 tokens, Rs 0.3.
+
+**Comparison with the `voyage-4` controls** (344 queries, 146 targets; 95% cluster bootstrap over targets):
+
+| Recall | `voyage-4` controls | Off-model | Off minus controls | 95% interval |
+|---|---:|---:|---:|---|
+| Dense @10 | 44.2% | 36.0% | -8.2 | -21.2 to +5.0 |
+| Dense @50 | 56.7% | 45.0% | -11.6 | -23.9 to +0.8 |
+| Sparse @10 | 84.0% | 91.9% | +7.9 | +0.6 to +15.1 |
+| Sparse @50 | 89.2% | 96.4% | +7.2 | +2.0 to +12.2 |
+| Hybrid @10 | 78.8% | 83.8% | +5.0 | -5.2 to +15.1 |
+| Hybrid @50 | 88.4% | 95.5% | +7.1 | +1.3 to +12.6 |
+
+The group comparison is **confounded**: the off-model chunks come from different cases (shorter, earlier
+in the case, section 13 above), and they are *easier* for keyword search (sparse +7 to +8). It shows a
+dense deficit in the expected direction that is not significant with 42 targets, and no hybrid deficit.
+
+**The clean test is the within-chunk swap**: the same 42 chunks and 111 queries, only the dense vector
+changed, from the stored off-model one to a fresh `voyage-4` document vector:
+
+| | Stored off-model vector | Fresh `voyage-4` vector | Gained / lost (of 111) |
+|---|---:|---:|---|
+| Dense @10 | 36.0% | 42.3% | 7 / **0** (sign test p = 0.016) |
+| Dense @50 | 45.0% | 53.2% | 9 / **0** (p = 0.004) |
+| Hybrid @10 | 83.8% | 85.6% | 2 / 0 (not significant) |
+| Hybrid @50 | 95.5% | 95.5% | 0 / 0 |
+| Sparse | unchanged | unchanged | 0 / 0 |
+
+Exact (non-approximate) dense search gives the same picture (36.0% to 41.4% at 10, 45.9% to 52.3% at 50).
+The other groups did not move (the swap touches only those 43 points).
+
+**Outcome, stated as measured: neither of the two clean cases.** There **is** a dense penalty for an
+off-model chunk, **about 6 points at @10 and 8 at @50**, caused by the model and not by the population
+(every changed query moved in one direction). **Hybrid, which is what ships, absorbs nearly all of it:**
+2 of 111 queries at @10 (1.8 points, not distinguishable from zero; 95% upper bound about 6.4) and 0 of 111
+at @50 (upper bound about 3.3). Scaled to a corpus with 12 to 18% off-model chunks, that is about 0.2 to 0.3
+points of hybrid @10 overall, an **Estimate**, not measured. The names-and-numbers-stripped queries, where
+dense should matter most, show the same: 1 of 28 gained at hybrid @10.
+
+**Limits, plainly.** (1) The queries are sentences lifted from the target chunk, which is the best case for
+keyword search (sparse alone finds 84 to 92% at 10). Real questions lean on dense more, so a dense deficit
+could cost more there than it does here. This was not measured. (2) 42 targets, one court, one query model.
+(3) Which of lite or large each chunk is made no difference to what was measured, and was not separated.
+(4) The off-model share was measured only for Kerala v2 (about 12 to 18%); other courts differ (section 13
+above).
+
+**What this does and does not say about the per-court config.** A per-court majority model picks the query
+model. The query-model test and this document-model test both found a hybrid cost of about zero, so the config
+buys no measurable hybrid recall on this eval, and the heterogeneity it cannot address within a court does
+not hurt hybrid measurably either. That supports calling it unnecessary rather than merely wrong-grained,
+**for hybrid and for this kind of query**. It does not remove the dense deficit, which is why it is
+recorded as 6 to 8 points rather than none. The decision, and whether any re-embedding is worth it, is the
+owner's; this section does not propose one.
 
 ### Qdrant can serve per-court models in one call
 
