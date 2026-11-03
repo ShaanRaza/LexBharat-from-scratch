@@ -926,6 +926,18 @@ non-Kerala chunks of section 16, **carry no information about model mixing**. "C
 means "no dead vectors", never "one model". If anything the detector is slightly miscalibrated across models:
 the 4 cross-court false positives of section 16 were live chunks from another model scoring 0.093 to 0.097.
 
+**Added 3 Nov 2026: the detector's "healthy" range depends on chunk length, and 0.56 to 0.63 does not hold for
+long chunks.** The range above comes from the 2,640-chunk sample, which used short chunks (342 to 3,000
+characters, median 768). Measured on the Supreme Court: Vaquill's own stored `voyage-4-large` vectors in
+`kanoon_v1` (4,000 sampled, mostly 3,000+ characters) score **median 0.270, with 44 of 4,000 (1.1%) below the
+0.10 line**, and the score falls with length (r = -0.26). The 10,112 newly embedded Supreme Court chunks (median
+3,914 characters) score median 0.304, 1 of 10,112 (0.01%) below 0.10, and that one re-embeds to its stored vector
+at cosine 1.000000, so it is a false positive of the same kind. **Read the detector as length-dependent:** below
+0.10 is a strong signal for a short chunk, and for a long one (3,000 characters or more) roughly 1% of healthy
+vectors fall under it. The Kerala count (217,766 flagged, confirmed by re-embedding from both sides of the cut in
+section 16) is not affected, because it was confirmed by re-embedding, not by the threshold alone; a future use of
+the threshold on long chunks should confirm a flag the same way.
+
 Nothing here proposes or prices a re-embed; that is the owner's spend decision.
 
 ### Qdrant can serve per-court models in one call
