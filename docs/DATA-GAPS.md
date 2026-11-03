@@ -1800,7 +1800,13 @@ from another model (section 17) attached to **second copies** of chunks whose fi
 first 200,000 `legal_corpus_v2` points (695 pairs, 2 triples, 11 or more courts) hold byte-identical
 `text`, and every other payload field (`case_id`, `title`, `pdf_url`, offsets, pages, year and the rest)
 is identical as well. So are **511 of 511** groups in the Kerala slice, including the 298 dead+live
-pairs. Whitespace-only and real-content differences: none in either. A record fetched by either point
+pairs. **Corrected 4 Nov 2026:** the first version of this slice check was
+vacuous. It read the slice file, which stores only `chunk_id`, `case_id` and `court` (no text), so it compared
+empty values and proved nothing. It was redone from full payloads fetched from the original for all 26,105 slice
+points that sit in a duplicated chunk id (1,306 read-only requests, slowest 0.23 s, every text non-empty): **511 of
+511 groups hold byte-identical text (211 live+live, 300 dead+live including the three-member groups) and no other
+payload field differs inside any group.** The conclusion stands; the evidence for it now exists. The 697-group check
+above was never affected (its payloads came from the original with text). Whitespace-only and real-content differences: none in either. A record fetched by either point
 id is the same record, so **verifier check 3 cannot be fooled by which copy `get_record` returns**
 (it matches quotes against that text). The duplicate risk that remains is the one in section 8 (two
 source ids for one passage), a presentation problem, not a verification one. **Limits:** the 697 are the
