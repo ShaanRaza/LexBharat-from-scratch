@@ -958,9 +958,9 @@ it is not shown to be at parity.
 
 `kerala_recall_eval2` (100,326 points) is built on the copy instance with **every** dead vector in
 it replaced by its repaired one (6,906 in the slice), so no repaired target has a dead sibling.
-Running it needs the 850 check-4 query texts re-embedded with `voyage-4` (the first run did not save
-the query vectors): about 40,000 tokens, under a cent. **Not run**, because the instruction was no
-Voyage calls.
+Running it needed the 849 check-4 query texts re-embedded with `voyage-4` (the first run did not save
+the query vectors): 45,856 tokens, under a cent. **Run afterwards, owner-approved; results in the
+next subsection.**
 
 A free proxy from the saved ranks, splitting by whether the chunk's case has other chunks in the
 corpus:
@@ -975,4 +975,62 @@ Two readings. **(1) Siblings do cost recall:** a healthy chunk whose case-mates 
 the sibling bias cannot be acting, the targets are still 13 points behind at @10 (37% against 50%)
 and 10 behind at @50. So the sibling bias is not what explains the gap, though it may make a fully
 repaired corpus score lower still; the rebuild run is the test of that.
+
+### Sibling bias, tested: a fully repaired corpus scores a little lower, as predicted
+
+**3 Nov 2026.** The same 849 queries, re-embedded (`voyage-4`, query side, 45,856 tokens), run against
+two collections on the copy instance: **A** the original check-4 corpus (some siblings still dead) and
+**B** `kerala_recall_eval2`, where every dead vector in the 100k slice is repaired. Control: A
+reproduced the earlier numbers (dense 34% / 46%, healthy 43% / 54%), so the new query vectors behave
+like the old ones. Query vectors are now saved in `kerala_fix/query_vectors.npy`.
+
+| Repaired targets | A | B | Change (paired, 95% interval) |
+|---|---|---|---|
+| Dense recall @10 | 34% | 32% | -1.2 [-2.2, -0.4]; 6 hit-to-miss, 0 miss-to-hit |
+| Dense recall @50 | 46% | 45% | -1.6 [-3.0, -0.6]; 8 hit-to-miss, 0 miss-to-hit |
+| Hybrid recall @50 | 89% | 89% | +0.2 |
+
+Healthy controls moved +0.6 (@10) and +2.6 (@50, interval 0.0 to +5.4), which is noise-sized.
+
+| Gap, targets minus controls | A | B |
+|---|---|---|
+| Dense @10 | -9.4 [-18.1, -0.6] | -11.1 [-19.2, -2.0] |
+| Dense @50 | -8.2 [-16.4, +0.1] | -12.4 [-21.2, -4.0] |
+| Hybrid @10 | -3.0 | -4.4 |
+| Hybrid @50 | +0.1 | +0.3 |
+
+**The prediction holds in direction and is small in size:** repairing the siblings costs these
+chunks a point or two, so the sibling bias explains little of a 9 to 12 point gap. Dense @50 in A
+was at the edge of significance and in B it clears it.
+
+### Script composition tested: Malayalam does not explain the gap
+
+**3 Nov 2026.** Counted on the text of all 100,326 chunks of the eval corpus (read-only from the
+original, counts only kept; `kfix_script_pool.py`, `kfix_scripts.py`).
+
+| | Dead chunks (7,104) | Healthy chunks (93,222) |
+|---|---|---|
+| Any Malayalam character | 0.3% | 0.2% |
+| Mean Malayalam share of characters | 0.018% | 0.027% |
+| Any non-Latin letter | 0.4% | 0.3% |
+| Any non-ASCII character | 22.4% | 30.0% |
+| ...of which typographic only (quotes, dashes) | 22.0% | 29.7% |
+
+Case level (4,624 dead cases, 67,714 healthy, judged by their chunks in the corpus): any Malayalam
+0.4% against 0.3%. **Malayalam is nearly absent from this corpus** (0.2% to 0.3% of chunks), and the
+dead set is not richer in it; if anything it has less non-ASCII text overall. Of the 344 queried
+chunks only 3 contain any (2 targets, 1 control), so a mixed-script subset cannot be tested. The 196
+targets and 145 controls with **no** Malayalam show the same gap as the whole: dense @10 -11.1
+[-19.9, -2.5] in B, -9.6 in A. Hybrid @50 is level there (89% against 89%).
+
+**Script is not the cause.** Caveats: the corpus is the first 100,000 Kerala v2 points, about 3.2% of
+the court, and annexures in Malayalam may sit in parts of the court it does not reach or may not be in
+the extracted text at all.
+
+### What is left
+
+Ruled out as the cause of the residual dense gap, each measured: case year, case length, chunk length,
+near-duplicate crowding, sibling state, script. **Left: the stored text of a dead case differs from the
+text that was embedded when the collection was built.** That needs its own design. The repair itself
+is not in question: the old vectors failed to match their own stored text under the same model.
 
