@@ -354,6 +354,13 @@ justifies running the repair; it does not price it.
 
 **Priority — settled 3 Nov 2026.** The 19,830 Central Act points in `kanoon_v1` are **already repaired** (verified read-only: 0 of 74,484 would change; `COSTS.md` §2b). The other ~504,600 sit in the original `acts_india`, which **nothing serves** — only Central Acts are in the copy. **Do not repair them now:** it would mean writing to an original for no present benefit, and §17's rule exists precisely to keep originals untouched. **Instead, the repair belongs in whatever copies them.** Any job that builds a serving collection containing state Acts or regulators must recompute their BM25 sparse vectors on the way in, and say in its report how many it fixed. If that step is skipped, roughly half of those provisions reach users with keyword search finding **nothing** for them — which is how they were found in the first place.
 
+**Built and run, 4 Nov 2026 (DECISIONS A133).** `data/repair_act_sparse.py` copied the 1,024,068 non-central Acts out of the
+original (read-only) into the staging collection `acts_noncentral_v1` on the copy instance with every broken sparse vector
+re-encoded: **510,366 repaired (49.8%)**, inside the estimate above. Checked: 0 of 20,000 random points differ from a fresh BM25
+encoding; dense vectors equal the original's; the original is untouched. On a 5,000-point rehearsal, 193 broken points asked a
+keyword question from their own words were found in the top 100 in **0 of 193 before and 184 of 193 after**. Nothing is
+promoted into a served collection; that, and the cost of tripling `kanoon_v1`'s points, is the owner's call.
+
 (Superseded note: this section previously said to test on `acts_sample_v1` first — that test is the table above.)
 
 The original guidance stood: test on `acts_sample_v1` — that collection is disposable, already measured, and gives a
