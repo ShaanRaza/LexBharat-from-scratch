@@ -352,9 +352,7 @@ So this is not a marginal gain — for a broken point, keyword search was findin
 measured rather than precision, and encode-and-write speed untested at 524,400 points. It
 justifies running the repair; it does not price it.
 
-**Priority:** the 19,835 broken Central Act points inside `kanoon_v1` are the ones actually
-being served, and they are a twelve-second job. The other ~504,600 are not in the copy yet and
-can be repaired as part of whatever copies them.
+**Priority — settled 3 Nov 2026.** The 19,830 Central Act points in `kanoon_v1` are **already repaired** (verified read-only: 0 of 74,484 would change; `COSTS.md` §2b). The other ~504,600 sit in the original `acts_india`, which **nothing serves** — only Central Acts are in the copy. **Do not repair them now:** it would mean writing to an original for no present benefit, and §17's rule exists precisely to keep originals untouched. **Instead, the repair belongs in whatever copies them.** Any job that builds a serving collection containing state Acts or regulators must recompute their BM25 sparse vectors on the way in, and say in its report how many it fixed. If that step is skipped, roughly half of those provisions reach users with keyword search finding **nothing** for them — which is how they were found in the first place.
 
 (Superseded note: this section previously said to test on `acts_sample_v1` first — that test is the table above.)
 
