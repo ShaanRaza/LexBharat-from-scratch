@@ -599,8 +599,18 @@ The other groups did not move (the swap touches only those 43 points).
 off-model chunk, **about 6 points at @10 and 8 at @50**, caused by the model and not by the population
 (every changed query moved in one direction). **Hybrid, which is what ships, absorbs nearly all of it:**
 2 of 111 queries at @10 (1.8 points, not distinguishable from zero; 95% upper bound about 6.4) and 0 of 111
-at @50 (upper bound about 3.3). Scaled to a corpus with 12 to 18% off-model chunks, that is about 0.2 to 0.3
-points of hybrid @10 overall, an **Estimate**, not measured. The names-and-numbers-stripped queries, where
+at @50 (upper bound about 3.3). **Corrected 3 Nov 2026 (the first version of this sentence scaled by Kerala's 12 to 18%, which is the wrong
+share for the corpus).** Per-chunk hybrid cost, stored against fresh `voyage-4` vector, **sentence-style
+queries**: 1.8 points at @10 (95% upper bound 6.4), 0 at @50 (upper bound 3.3); dense 6.3 and 8.2. The share
+of the corpus those costs apply to depends on the query design (end of section 13): **73%** of the sampled
+chunks (volume-weighted about 54%) are not `voyage-4`, so under one `voyage-4` query model the corpus-wide
+hybrid cost at @10 would be about **1.3 points (upper bound about 4.7)** (about 1.0 and 3.4 volume-weighted),
+and 0 at @50 (upper bound about 2.4); dense about 4.6 and 6.0. Under a per-court majority query model the
+mismatched share is **7.6%** (volume-weighted about 8%), giving about **0.14 points at @10 (upper bound about
+0.5)** and 0 at @50. All **Estimates** (share times per-chunk cost; the per-chunk cost was measured on 9
+identified lite and large chunks among the 42, query model `voyage-4`) and, until the question-style retest
+is in, **valid for sentence-style queries only**, the best case for keyword search.
+The names-and-numbers-stripped queries, where
 dense should matter most, show the same: 1 of 28 gained at hybrid @10.
 
 **Limits, plainly.** (1) The queries are sentences lifted from the target chunk, which is the best case for
@@ -610,13 +620,19 @@ could cost more there than it does here. This was not measured. (2) 42 targets, 
 (4) The off-model share was measured only for Kerala v2 (about 12 to 18%); other courts differ (section 13
 above).
 
-**What this does and does not say about the per-court config.** A per-court majority model picks the query
-model. The query-model test and this document-model test both found a hybrid cost of about zero, so the config
-buys no measurable hybrid recall on this eval, and the heterogeneity it cannot address within a court does
-not hurt hybrid measurably either. That supports calling it unnecessary rather than merely wrong-grained,
-**for hybrid and for this kind of query**. It does not remove the dense deficit, which is why it is
-recorded as 6 to 8 points rather than none. The decision, and whether any re-embedding is worth it, is the
-owner's; this section does not propose one.
+**What this says about the per-court config: it is load-bearing, not optional.** An earlier version of this
+paragraph called it "unnecessary rather than merely wrong-grained"; that was wrong and is withdrawn. It rested
+on two tests whose corpora were almost entirely `voyage-4` (Bombay v1; the Kerala eval) and on sentence-style
+queries. The corpus is not like that: **73% of the sampled High Court chunks are not `voyage-4`** (about 54%
+volume-weighted), **7 courts show no `voyage-4` chunk at all** in any sampled group (Patna, Chhattisgarh,
+Sikkim, Jharkhand, Jammu and Kashmir, Karnataka, Rajasthan), and **1,543 of the 2,640 sampled chunks (58%) sit
+in court groups with no `voyage-4` chunk** (see the table below). Under one `voyage-4` query model that mismatch
+reaches most of the corpus; a per-court majority query model cuts it to **7.6%** (about 8% volume-weighted). That
+is the whole job the config does, and at those shares it matters. The dense deficit it avoids is 6 to 8 points
+per mismatched chunk (above). Whether *hybrid* also depends on it is what the question-style retest is for; the
+sentence-style numbers (hybrid cost 1.8 points at @10, upper bound 6.4) are the **best case**, because keyword
+search is doing the absorbing. The decision, and whether any re-embedding is worth it, is the owner's; this
+section does not propose one.
 
 ### Off-model share by court, and why the dead-vector scan could not have seen it
 
@@ -734,8 +750,9 @@ today — is `voyage-4-large` (A120). Matching it means the $3,400 column, not t
 Choosing a cheaper model means re-embedding the launch corpus too, and accepting a weaker model
 for the part of the corpus that is currently clean.
 
-**Working answer: the per-court config at $0.** Hybrid is what ships, and hybrid loses nothing
-measurable to a mismatched query.
+**Working answer: the per-court config at $0.** Hybrid is what ships. *(3 Nov 2026: the second sentence of
+this answer, "hybrid loses nothing measurable to a mismatched query", was measured on sentence-style queries
+against a corpus believed single-model; see the end of this section. The config itself is load-bearing.)*
 
 ### Two findings in that report that deserve more weight than they got
 
