@@ -52,7 +52,9 @@ TIMEOUT_S = 60
 PAUSE_S = 0.25
 BACKOFF_S = 30
 MAX_CONSECUTIVE_FAILURES = 5
-LAUNCH_CODES = {"HCBM": "Bombay", "HBHC": "Telangana", "KLHC": "Kerala", "INSC": "Supreme Court"}
+# The one court name this script prints comes from core/coverage.json (A51); none is typed here.
+_SC_NAME = next(c["name"] for c in json.loads((REPO / "core" / "coverage.json").read_text())["courts"] if c["id"] == "supreme_court")
+LAUNCH_CODES = {"HCBM": "Bombay", "HBHC": "Telangana", "KLHC": "Kerala", "INSC": _SC_NAME}
 GATE_THRESHOLD_PCT = 1.0  # my rule, not the owner's: an English parquet-only share at or above this in a launch court
 SPOT_N = 20
 
@@ -72,7 +74,7 @@ _SC = re.compile(r"^\d{4}_INSC_")
 
 
 def code_of(chunk_id: str) -> str:
-    """The id prefix naming the court (core/court_id.py), 'INSC' for the Supreme Court, '?' when unknown."""
+    """The id prefix naming the court (core/court_id.py), 'INSC' for the national court, '?' when unknown."""
     if _SC.match(chunk_id):
         return "INSC"
     m = _LETTERS.match(chunk_id)
@@ -434,7 +436,7 @@ def write_section(ctx: Ctx, res: dict, spot: list[dict]) -> str:
              f"**{n(t['parquet_only_in_whole_missing_cases'])} of them ({pct(t['parquet_only_in_whole_missing_cases'], t['parquet_only_chunks']):.0f}%) sit in {n(t['whole_missing_cases'])} WHOLE cases that Qdrant holds no chunk of at all** (invisible law); "
              f"{n(t['parquet_only_in_partial_cases'])} are scattered chunks of {n(t['partial_cases'])} cases that are otherwise present (findable but incomplete). "
              f"**{'Whole missing cases dominate.' if t['parquet_only_in_whole_missing_cases'] >= t['parquet_only_in_partial_cases'] else 'Scattered chunks dominate.'}**")
-    L.append(f"- Of the parquet-only chunks, {n(t['parquet_only_english_chunks'])} are English and {n(t['parquet_only_non_english_chunks'])} are not (the dataset card says English only; the Supreme Court's non-English chunks are the known exclusion, section 8). "
+    L.append(f"- Of the parquet-only chunks, {n(t['parquet_only_english_chunks'])} are English and {n(t['parquet_only_non_english_chunks'])} are not (the dataset card says English only; the non-English chunks of {_SC_NAME} are the known exclusion, section 8). "
              f"English parquet-only chunks are **{res['overall_english_pct']:.2f}%** of all English parquet chunks.")
     L.append(f"- The reverse: {n(t['qdrant_only_chunks'])} chunk ids are in Qdrant and not in the parquet.\n")
     L.append("### Per court (all id prefixes of a court summed; Measured)\n")
@@ -447,7 +449,7 @@ def write_section(ctx: Ctx, res: dict, spot: list[dict]) -> str:
     for name, g in res["gate"].items():
         L.append(f"| {name} | {n(g['english_parquet_chunks'])} | {n(g['english_parquet_only'])} | **{g['pct']:.2f}%** | {n(g['whole_missing_english_chunks'])} |")
     L.append("")
-    L.append(f"### Spot-check: {len(spot)} wholly missing English cases read from the parquet (Measured; samples drawn at random, 3 each from Kerala, Bombay and Telangana, 2 Supreme Court, the rest across other courts)\n")
+    L.append(f"### Spot-check: {len(spot)} wholly missing English cases read from the parquet (Measured; samples drawn at random, 3 each from Kerala, Bombay and Telangana, 2 {_SC_NAME}, the rest across other courts)\n")
     cls = collections.Counter(s["class"] for s in spot)
     absent = sum(1 for s in spot if s["in_qdrant_v1"] == 0 and s["in_qdrant_v2"] == 0)
     L.append(f"Classes: {dict(cls)}. **Absence re-confirmed directly in Qdrant (an indexed `case_id` count on both collections): {absent} of {len(spot)} have 0 chunks.**\n")

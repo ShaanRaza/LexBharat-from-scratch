@@ -222,27 +222,31 @@ stays in.
 Public launch happens only if **all** are true at the end of the private beta. If any fails, the
 launch date moves; the owner decides.
 
-### 7.0 Question for the owner that decides the shape of this gate
+### 7.0 Decision that fixes the shape of this gate
 
-**G-T. Does launch wait for tribunals?** Tribunals are not in the dataset (they are not in
-`core/coverage.json` and must not be listed anywhere until the data holds them). Getting them
-depends on Vaquill, who has not replied, or on building extraction from the tribunals' own
-published orders; either way nobody the owner controls can set the date. **This is the owner's
-decision. It has not been made.** Both branches:
+**G-T is settled: launch ships WITHOUT tribunals (owner, 4 Nov 2026, A139).** Tribunals are not in the
+dataset. Getting them depends on Vaquill, who has not replied, or on extraction from the tribunals'
+own published orders that nobody has scoped. Under the alternative nobody the owner controls could
+set a date, which is why it was not chosen. Both branches stay below as the record of why.
 
-- **Branch 1, launch waits for tribunals.** Items 19 to 34 below all apply to tribunals as well:
-  tribunal records need their own court-from-id mapping, their own embedding-model row (a tribunal
-  is refused by the search until registered, A131), their own eval questions (item 25), their own
-  hand check and their own latency and size measurements. Launch has **no date**: it is
-  "tribunal data held and measured" plus a gate pass. The risk is that the date never arrives.
-- **Branch 2, launch ships without tribunals.** The coverage message, coverage page and scope check
-  say so by reading `core/coverage.json` (tribunals appear in its excluded list, never typed
-  elsewhere, A51). The 200-question set keeps its out-of-scope tribunal questions, which must
-  pass as correct refusals. Tribunals move to "After launch" with a data date set when Vaquill
-  answers or extraction is built. Nothing may imply tribunal coverage (marketing, help, pricing).
+- **Branch 1, launch waits for tribunals (not taken).** Items 19 to 34 would have applied to
+  tribunals as well: their own court-from-id mapping, their own embedding-model row (a tribunal is
+  refused by the search until registered, A131), their own eval questions, hand check, latency and
+  size measurements. Launch would have had **no date**: "tribunal data held and measured" plus a
+  gate pass. The risk was that the date never arrives.
+- **Branch 2, launch ships without tribunals (taken).** Tribunals appear in the `excluded` list of
+  `core/coverage.json`, which is the single source (A51/O7); the coverage message, coverage page,
+  scope check and decide prompt read it and every user-facing sentence follows from it. Tribunals
+  are typed nowhere else and no court or instrument name is typed outside that file.
+  `tests/test_coverage_source.py` enforces this and passes. The 200-question set keeps its tribunal
+  questions as **expected refusals that must pass as correct refusals** (item 25). Nothing in
+  marketing, help or pricing may imply tribunal coverage. Tribunals move to "After launch".
 
-Everything in items 1 to 34 is written so that either branch can be applied by adding tribunals
-to, or leaving them out of, the scope of items 19 to 34.
+**Under Branch 2, every item in 19 to 34 is scoped to the courts and instruments that are served.**
+No item requires tribunal data, a tribunal mapping, a tribunal model row or a tribunal measurement,
+and none may be read as implying tribunal coverage. Adding tribunals later is a data change plus
+re-running items 19 to 34 for them; it is not a code change, because `core/coverage.json` is the
+single source. What it would cost is stated where it matters (item 25).
 
 ### 7.1 Trust (from the original)
 
@@ -265,7 +269,7 @@ to, or leaving them out of, the scope of items 19 to 34.
 11. Terms, privacy policy, DPDP notice, refund policy published; counsel has read them.
 12. GST invoices tested in Razorpay test mode and accepted by the accountant.
 13. The prompt-injection test set passes on research chat, uploads and every feature that writes legal text.
-14. A load test at the agreed number passes the speed targets (`CLAUDE.md` section 10), **measured on the real server with the real corpus, per item 27.** Flagged at risk: a single Voyage query embed measured 1,140 ms p50 from a laptop (A131), above the whole 800 ms search-stage target on its own. It may not be reachable from a laptop and may be reachable from the Mumbai server; that is unknown. If it is not reachable on the server either, the item stays and the owner chooses between a different embedding path and a changed target; the target is not edited quietly.
+14. A load test at the agreed number passes the speed targets (`CLAUDE.md` section 10), **measured on the real server with the real corpus, per item 27.** Flagged at risk: a single Voyage query embed measured 1,140 ms p50 from a laptop (A131), above the whole 800 ms search-stage target on its own. **The 800 ms search-stage target includes the query embedding (owner, 4 Nov 2026): the user waits for it like everything else.** On the laptop measurement the target is therefore currently unreachable, and that is the finding, not a reason to redefine the target. It may be reachable from the Mumbai server; that is unknown. If it is not reachable on the server either, the item stays and the owner chooses between a different embedding path and a changed target; the target is not edited quietly.
 15. Core flows pass the keyboard and screen-reader check.
 16. Every Launch-switch feature that is being switched on has passed its own gate (section 4.2). Features that have not stay off.
 17. A user can see every item memory has stored about them on one page, edit it and delete it, and the delete is a real delete, checked in the database and in Qdrant (O12).
@@ -275,9 +279,9 @@ to, or leaving them out of, the scope of items 19 to 34.
 
 **High Courts (all of them, not three)**
 
-19. **The served collection holds every High Court the dataset holds, and `core/coverage.json` records exactly that.** The coverage page, scope check and every user-facing sentence read from it; none is typed (A51). Evidence: point count per court in the launch collection against the source, with the gap explained.
-20. **`court` is derived from the record id on every served High Court point** (A130). `data/add_court_code.py <collection> --apply` has been run on the launch collection (it is **not verified** on a High Court collection yet) and the count of points with no `court_code` is reported. Also required: the rate at which the stored `court` label is wrong, measured on the launch collection (`DATA-GAPS.md` section 15; it is still unmeasured at corpus level), because a wrong label serves one court's law under another's name. The alias table in `core/court_ids.json` is a judgement, not a measurement; the owner or advocate reviews it.
-21. **Kerala.** The 217,766 dead dense vectors are served from the repaired copy (A123, staging collection `kerala_v2_fix`), the duplicate rule is applied (A126, A132: one point per `chunk_id`, a dead copy deleted where a live one exists), and Kerala recall is **re-measured after promotion** with the known-item harness (`DATA-GAPS.md` section 17 is the baseline). Kerala must not be worse than the other courts by more than a margin the owner sets before the run.
+19. **The served collection holds every High Court the dataset holds, and `core/coverage.json` records exactly that. Tribunals are in its excluded list and in no collection (A139).** The coverage page, scope check and every user-facing sentence read from it; none is typed (A51). Evidence: point count per court in the launch collection against the source, with the gap explained.
+20. **`court` is derived from the record id on every served High Court point** (A130); no tribunal mapping is needed or built. `data/add_court_code.py <collection> --apply` has been run on the launch collection (it is **not verified** on a High Court collection yet) and the count of points with no `court_code` is reported. Also required: the rate at which the stored `court` label is wrong, measured on the launch collection (`DATA-GAPS.md` section 15; it is still unmeasured at corpus level), because a wrong label serves one court's law under another's name. The alias table in `core/court_ids.json` is a judgement, not a measurement; the owner or advocate reviews it.
+21. **Kerala.** The 217,766 dead dense vectors are served from the repaired copy (A123, staging collection `kerala_v2_fix`), the duplicate rule is applied (A126, A132: one point per `chunk_id`, a dead copy deleted where a live one exists), and Kerala recall is **re-measured after promotion** with the known-item harness (`DATA-GAPS.md` section 17 is the baseline). **Kerala must be within 5 points of the median served court on hybrid @10 (owner, 4 Nov 2026).** Reasoning, recorded so the number is not misread: the measured Kerala gap was on dense, hybrid absorbed it, and A126 means the repaired vectors are never served, so after promotion Kerala should be at parity. Five points is a "something unexpected happened" tripwire, not a tolerance. Read it with A138: hybrid on the known-item harness is near its ceiling, so also report Kerala dense @10 beside it.
 22. **High Court citations.** The neutral-citation work (A124, A125) is on and verified on **real High Court records**, not synthetic fixtures: `python -m evals.hc_identifiers --records <file>` is run on the launch collection and its yield (neutral citation found, case reference built, rejections by reason) is reported per court. The court-code table (`core/neutral_citation_courts.json`) was written from memory and is **unverified**; it is checked against the corpus. A High Court answer shows either a neutral citation exactly as printed, or a case reference with the owner-approved label (`CASE_REFERENCE_LABEL`), and **never a citation the model wrote**. The API schema and the web client must carry the two new `Passage` fields (they do not yet). The verifier's known residuals are decided, not left: A125 (a) a neutral citation of another case cited in a retrieved judgment's body counts as retrieved, (b) only the colon form is recognised, (c) the existing reporter shapes compare by substring ("AIR 1973 SC 146" accepted when "AIR 1973 SC 1461" was retrieved).
 23. **High Court outcome statistics stay OFF** unless the High Court half of the 100-judgment `disposition` check shows a final-outcome field (`DECISIONS.md` top-5 question 2). The 577 disposition values are not cleaned. Supreme Court statistics keep their own gate (50-judgment check, pass rule agreed before checking).
 
@@ -287,20 +291,20 @@ to, or leaving them out of, the scope of items 19 to 34.
 
 **Evaluation**
 
-25. **The 200-question set is extended for the full corpus and fully labelled.** It was written for the narrow corpus (A101). It gains High Court questions (every served court appears, with a floor the owner and advocate set) and, under G-T Branch 1, tribunal questions; under Branch 2 it keeps tribunal questions as expected refusals. The total may exceed 200. **This grows the advocate's labelling job**; the size of that job is stated to the owner before the advocate is engaged: today 100 answerable rows are stubs with empty `expect_records`, and every new High Court row is another. The set is frozen before any score is quoted. No row's expected answer is read from a pipeline run.
+25. **The 200-question set is extended for the full corpus and fully labelled.** It was written for the narrow corpus (A101). It gains High Court questions: **a floor of 2 per served court, plus 5 extra for each of the 8 largest courts by point count, roughly 90 new rows (owner, 4 Nov 2026). That floor is set by the advocate's budget, not by what would be ideal, and must not be read later as a judgement about how many questions give a good measure of a court.** The total therefore exceeds 200. **This grows the advocate's labelling job**, and its size is stated to the owner before the advocate is engaged: today 100 answerable rows are stubs with empty `expect_records`, and every new High Court row is another. **Tribunal questions** (rows with `expect_scope: needs_tribunal`, currently q107 to q112, written from the `{excluded:trib}` template so no tribunal name is typed) are **expected refusals and must pass as correct refusals** (A139). **When tribunals arrive, those rows flip to expected answers and must be re-labelled by the advocate, and new tribunal rows added; that work is not in this gate's budget and is costed separately then.** The set is frozen before any score is quoted. No row's expected answer is read from a pipeline run.
 26. **The scorer's real-pipeline run (A103) is not accepted as evidence for this item.** It uses fake vendors; a pass there means the code path routes. Item 1 is scored against the real pipeline, real Jev and Gemini decisions, and the real corpus.
 
 **Measurements that do not exist yet, and are required**
 
-27. **Latency on the real server, real corpus, real vendors.** Every `CLAUDE.md` section 10 target is measured at the agreed load: first word, full answer, search stage (search plus re-rank, under 800 ms, stating whether the query embedding is inside that number), each Jev decision, Act lookup. The measured breakdown includes the Voyage query embed, which was 1,140 ms p50 / 1,239 ms p95 on a laptop (A131). Qdrant itself was 4.7 ms p50 for one dense prefetch on 455,755 points; it has not been measured at the launch collection's size on the launch server. Targets are not changed to fit the numbers.
+27. **Latency on the real server, real corpus, real vendors.** Every `CLAUDE.md` section 10 target is measured at the agreed load: first word, full answer, search stage (search plus re-rank, under 800 ms, **end to end including the query embedding**, owner, 4 Nov 2026), each Jev decision, Act lookup. **The report must give the breakdown**: query embed, Qdrant, fusion, re-rank, so a miss can be attributed. The embed was 1,140 ms p50 / 1,239 ms p95 on a laptop (A131). Qdrant itself was 4.7 ms p50 for one dense prefetch on 455,755 points; it has not been measured at the launch collection's size on the launch server. Targets are not changed to fit the numbers, and the 800 ms target is not redefined to exclude the slowest part (it is currently unreachable from a laptop, A131).
 28. **Retrieval quality on the real corpus, per court.** recall@10 and recall@50 for dense, sparse and hybrid (`evals/known_item.py`, A100), reported per court with intervals, **plus** a set of natural-phrasing questions with real citation anchors written by the advocate. The existing numbers are on sentence-style and model-written paraphrase queries, which bracket production and neither is quotable (A128). The advocate set is the measurement that pins production.
-29. **Single query model, confirmed.** The per-court query-model design is dropped (A128), so the launch collection is queried with **one model**. Which one is an open owner question (7.5, G-M). **Partly measured already — see A136, written the same night as this gate and not reflected in its first draft.** The A128 lead (dense @10 +3.5, 95% CI +1.9 to +5.2; hybrid @10 +0.8, 0.0 to +1.5) was post hoc, and the confirmation on **fresh targets** has been run: 250 new targets from the 24-court corpus with the previously measured 250 and their source documents excluded, 1,161 queries. **Dense replicated but smaller (+1.6 @10, +0.3 to +2.9); hybrid did not (-0.1 @10, -0.9 to +0.7). The current decision is therefore `voyage-4`, unchanged (A136).** Do **not** re-run that comparison. **What remains required before the choice is final:** the same comparison over **the launch collection's real mixture of court models** (A136 used an 18,399-chunk sample, not the launch collection) and with **advocate-phrased queries**, because A138 records that the known-item harness sits at its hybrid ceiling (sentence-style hybrid 95.8%, moved by exactly 0 of 715 queries) and so cannot resolve a hybrid effect of a point or two either way. Read A136's hybrid null as "not detectable with that harness", not as "no effect". The chosen model is registered in config for the launch collection and a collection no one measured stays refused (A120).
+29. **Single query model, confirmed.** The per-court query-model design is dropped (A128), so the launch collection is queried with **one model**. **The owner's answer is `voyage-4` (4 Nov 2026), unchanged by the run below.** **Partly measured already — see A136, written the same night as this gate and not reflected in its first draft.** The A128 lead (dense @10 +3.5, 95% CI +1.9 to +5.2; hybrid @10 +0.8, 0.0 to +1.5) was post hoc, and the confirmation on **fresh targets** has been run: 250 new targets from the 24-court corpus with the previously measured 250 and their source documents excluded, 1,161 queries. **Dense replicated but smaller (+1.6 @10, +0.3 to +2.9); hybrid did not (-0.1 @10, -0.9 to +0.7). The current decision is therefore `voyage-4`, unchanged (A136).** Do **not** re-run that comparison. **What remains required, and is the only thing left of G-M:** the same comparison over **the launch collection's real mixture of court models** (A136 used an 18,399-chunk sample, not the launch collection) and with **advocate-phrased queries**, because A138 records that the known-item harness sits at its hybrid ceiling (sentence-style hybrid 95.8%, moved by exactly 0 of 715 queries) and so cannot resolve a hybrid effect of a point or two either way. Read A136's hybrid null as "not detectable with that harness", not as "no effect". The chosen model is registered in config for the launch collection and a collection no one measured stays refused (A120).
 30. **The net effect of every embedding-related choice is measured end to end, not inferred from a per-chunk cost.** A128's 5.4-to-0.56 estimate was wrong for exactly this reason (A128). Any later change to the query side (a model, a registry, fusion over several dense lists) needs an end-to-end number on the launch collection before it ships.
-31. **Server size.** The sizing experiment has reported, the corpus fits the chosen instance with the load test of item 14 passing, and the monthly cost is in `COSTS.md`. The full corpus is about 45 to 55 GB of RAM before quantization (r7g.2xlarge, about $219 a month plus disk, four times the r7g.large floor); the experiment that settles it has not reported.
+31. **Server size.** The sizing experiment (courts and Acts as served; no tribunal data is sized) has reported, the corpus fits the chosen instance with the load test of item 14 passing, and the monthly cost is in `COSTS.md`. The full corpus is about 45 to 55 GB of RAM before quantization (r7g.2xlarge, about $219 a month plus disk, four times the r7g.large floor); the experiment that settles it has not reported.
 
 **Verifier on the full corpus**
 
-32. **Verifier checks 1 to 4 run on High Court and State Act answers.** The invented-citation bait and the exists-but-not-retrieved bait (A101) include High Court and State Act cases. The rule-f and digit-exemption changes (A117, A121) are deployed after the owner has reviewed the diff, and the measured fabricated-name acceptance (1 of 2,361, 0.04%, A122) is re-measured on a High Court title set.
+32. **Verifier checks 1 to 4 run on High Court and State Act answers.** **The A137 strict rule (an unmarked sentence is removed) is built and tested first;** it is decided and not yet built. The invented-citation bait and the exists-but-not-retrieved bait (A101) include High Court and State Act cases, and a question that needs a tribunal decision must refuse as out of scope with the message read from `core/coverage.json`. The rule-f and digit-exemption changes (A117, A121) are deployed after the owner has reviewed the diff, and the measured fabricated-name acceptance (1 of 2,361, 0.04%, A122) is re-measured on a High Court title set.
 
 **Open rows**
 
@@ -313,17 +317,15 @@ This is a snapshot, so a reader can see what the gate looked like on the day it 
 
 | Row | What is open | Owner |
 |---|---|---|
-| A128 | Which single query model, `voyage-4` or `voyage-4-large` (G-M) | Owner, after item 29 |
 | A124 | `CASE_REFERENCE_LABEL` wording (placeholder in config); court-code table verified; API and web carry the fields | Owner (wording); core and web lanes |
+| A137 | **Decided (strict), not built.** An unmarked sentence is removed at pipeline step 9 (`core/verify.py`). The decision is closed; the build is not, and item 32 requires it built and tested before launch | Trust lane |
 | A125 | Residuals (a), (b), (c) in item 22; strengthening the reporter-shape equality check alters an existing check | Owner and trust lane |
 | A117, A121 | Verifier name-matching: NOT DEPLOYED, owner reviews the diff; `_NAME_SIDE` cap answered, not fixed | Owner and trust lane |
 | A108 / A110 | `ACT_HEADER_STATUS_REPLACEMENT`, `ACT_STATUS_REPEALED`, `ACT_STATUS_IN_FORCE` wording (empty until the owner decides; these are statements about the law) | Owner |
 | A133, A126, A132, A123, A129 | Promotion of staged collections into the launch collection (decisions separate from the builds) | Owner |
-| G-T | Tribunals: launch waits or ships without (7.0) | Owner |
 | Top-5 question 2 | `disposition` is final outcome or interlocutory (decides whether SC statistics ship, and rules High Court statistics out unless the HC half passes) | Hand check, advocate |
 | "50-judgment SC pass rule" | How many must match; agree before checking | Owner and advocate |
 | "Server size" | Sizing experiment | Core lane, owner |
-| "What `acts_india` covers", "How the in-force rule treats state Acts" | Both rows still read Undecided in the Open table although A43/O7 and A181 settle them; they are stale rows and must be moved to Settled, not left | Lead |
 | "The Code of Criminal Procedure, 1973" | State-file copy, official text, or leave out | Owner |
 | "Snapshot v2026.08.1" | Upgrade (fills `source_url` on 83.3% of rows) or stay | Owner |
 | "Upload auto-delete period", "Upload size and page limits" | Advocate's opinion; OCR time on real scans | Advocate |
@@ -332,15 +334,24 @@ This is a snapshot, so a reader can see what the gate looked like on the day it 
 | "Naming an advocate advisor publicly", counsel questions | BCI Rule 36 | Counsel |
 | "Needs the owner" list | Placeholder user-facing sentences (`NEEDS-OWNER` in `web/src/lib/copy.ts`), what `cases.title` holds, retention periods (O13), Next.js upgrade, Qdrant hybrid never run on a live server, a real Firebase verifier injected into `create_app` | Owner, platform lane |
 
-### 7.5 New open questions this gate puts to the owner
+**Settled since the first draft of this gate (moved out of the open table on 4 Nov 2026):**
 
-- **G-T.** Launch waits for tribunals or ships without them (7.0). Shortest question; decides the date.
-- **G-M.** Single query model: `voyage-4` or `voyage-4-large` (item 29).
-- **G-W.** The `CASE_REFERENCE_LABEL` wording (item 22). It changes what a user is told about the law.
-- **G-L.** The Kerala margin, and the floor of questions per High Court, in items 21 and 25.
-- **G-S.** Whether the 800 ms search-stage target includes the query embedding, and what happens if the server cannot meet it (item 14).
+| Row | Settled as | Where |
+|---|---|---|
+| G-T, tribunals | **Launch ships without tribunals** (Branch 2, 7.0) | A139 |
+| A128, which single query model | **`voyage-4`**, unchanged by the fresh-target run; the real-mixture, advocate-phrased comparison remains a measurement (item 29), not a question | A136, A128 |
+| A138, known-item harness ceiling | Closed as a finding: read every hybrid null as "not detectable with this harness". Folded into items 21 and 29 | A138 |
+| "What `acts_india` covers", "How the in-force rule treats state Acts" | Settled by A43/O7 and A181. The stale Open rows were moved to Settled in `DECISIONS.md` | A43, A181 |
 
-**Superseded elsewhere in this file:** O6 and the "High Courts: Bombay, Telangana, Kerala, after launch" row in section 4.3 and section 3 row 7's "Open" status describe the MVP. Under the owner's 3 Nov decision all High Courts are in v1, and tribunals are governed by G-T. Those rows should be edited by the owner or the lead; this revision changes only section 7.
+### 7.5 Questions this gate put to the owner, and what is left
+
+- **G-T. Answered:** launch ships without tribunals (A139, 7.0).
+- **G-M. Answered:** `voyage-4` (owner, 4 Nov 2026; A136). Remaining: the real-mixture, advocate-phrased comparison in item 29.
+- **G-L. Answered:** Kerala within 5 points of the median served court on hybrid @10 (item 21); question floor 2 per served court plus 5 for each of the 8 largest, roughly 90 new rows, set by the advocate's budget (item 25).
+- **G-S. Answered:** the 800 ms search-stage target includes the query embedding (items 14, 27).
+- **G-W. Still open.** The `CASE_REFERENCE_LABEL` wording (item 22, section 8). It changes what a user is told about the law, so it stays the owner's; the placeholder stays.
+
+**Superseded elsewhere in this file:** O6 and the "High Courts: Bombay, Telangana, Kerala, after launch" row in section 4.3 and section 3 row 7's "Open" status describe the MVP. Under the owner's 3 Nov decision all High Courts are in v1, and tribunals are excluded at launch (A139). Those rows should be edited by the owner or the lead; this revision changes only section 7.
 
 ## 8. Success metrics added
 
