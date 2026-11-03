@@ -164,6 +164,12 @@ class Settings(BaseSettings):
     ACT_STATUS_REPEALED: str = ""
     ACT_STATUS_IN_FORCE: str = ""
     ACT_STATUS_NOT_CHECKED: str = "In-force status not checked for this Act."
+    # The label shown next to a case reference (core/hc_citation.py, A124): a statement
+    # about what the identifier IS, so NEEDS-OWNER (CLAUDE.md section 8). This is the
+    # placeholder suggested in the brief; the owner approves or replaces it on screen.
+    CASE_REFERENCE_LABEL: str = (
+        "Case reference, built from the record - not a published citation."
+    )
     RATE_LIMIT_IMPROVE_PER_HOUR: int | None = 60
     RATE_LIMIT_FOLLOWUPS_PER_HOUR: int | None = 60
     # Model price per million tokens, in whatever currency the owner reads the spend

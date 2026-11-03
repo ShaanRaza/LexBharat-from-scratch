@@ -20,6 +20,7 @@ from core.contracts import (
     RewrittenQuery,
 )
 from core.dedupe import dedupe_passages
+from core.hc_citation import case_reference, extract_neutral_citation
 from core.settings import Settings
 from core.uploads import search_user_documents
 
@@ -90,12 +91,25 @@ def hit_to_passage(
         line = act_status_line(p, settings) if settings is not None else ""
         if line:
             text = f"{text.rstrip()}\n\n{line}"
+    stored = (p.get("citation") or None) if kind == "judgment" else None
+    neutral = reference = None
+    if kind == "judgment" and not stored:
+        # No stored citation (the dataset stores none for these). A stored string is never
+        # touched. A neutral citation is read only from a chunk that STARTS the
+        # judgment: a middle chunk has no header, and the body cites other cases.
+        court, when = p.get("court"), p.get("decision_date")
+        if cs == 0 and isinstance(ce, int) and ce > 0:  # body = header stripped
+            neutral = extract_neutral_citation(text, court, when).citation
+        if not neutral:
+            reference = case_reference(p.get("case_number"), court, when)
     return Passage(
         record_id=h.record_id,
         text=text,
         kind=kind,
         score=h.score,
-        citation_string=(p.get("citation") or None) if kind == "judgment" else None,
+        citation_string=stored,
+        neutral_citation=neutral,
+        case_reference=reference,
         pdf_url=p.get("pdf_url") or None,
         source_url=p.get("source_url") or None,
         title=p.get("title") or None,

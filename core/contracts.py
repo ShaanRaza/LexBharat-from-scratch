@@ -109,6 +109,12 @@ class Passage:
     source_id: str = ""
     score: float = 0.0
     citation_string: str | None = None  # exactly as stored; never retyped
+    # Two DERIVED identifiers for judgments with no stored citation
+    # (core/hc_citation.py, A124). Kept apart from citation_string and from each other:
+    # the verifier and the UI must tell a recorded citation from an extracted one from
+    # a built label.
+    neutral_citation: str | None = None  # published; from the judgment's own header
+    case_reference: str | None = None  # a built description; NOT a citation
     pdf_url: str | None = None
     source_url: str | None = None
     title: str | None = None
