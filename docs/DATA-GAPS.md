@@ -860,11 +860,60 @@ Verification, all four requested checks:
 **The success criterion was "reach the level of healthy chunks". On dense recall this run did not
 clearly reach it:** 34% against 43% at 10 and 46% against 54% at 50, from a start of zero. Hybrid
 is within 2 points at 10 and level at 50. The earlier 20-target scratch proof had them at 41%
-against 37%. The gap may be sampling noise (200 targets and 150 controls, roughly 3 to 4 points
-of error each) but that is not shown, and the cause is unmeasured. The vectors themselves are
-right (check 2 reproduces them exactly), so this is about how well the text retrieves, not about
-a bad write.
+against 37%. The vectors themselves are right (check 2 reproduces them exactly), so this is
+not a bad write. Whether the gap is real is answered in the next subsection: it is.
 
 **Not done, needs explicit approval:** promoting the fixed vectors into `legal_corpus_v2` (a write
 to an original), and the 10,112 Supreme Court chunks (`voyage-4-large` into `kanoon_v1`). The
 scratch collection `kerala_recall_eval` is still on the copy instance.
+
+### Check 4 again with matched controls: the dense gap survives
+
+**3 Nov 2026.** Section 14 suggested the dead set over-represents case years 2019 and 2022, so
+repaired chunks versus random healthy ones might compare two different content populations. Re-run
+locally (no Voyage calls; the 146 existing controls re-weighted to the targets' mix, 2,000-draw
+bootstrap over chunks), `~/qdrant-kanoon/kerala_fix/recall_before_after.json` plus
+`kfix_matched.py`. Gap = repaired targets minus healthy controls, after the fix.
+
+| Controls matched on | Dense @10 | Dense @50 | Hybrid @10 | Hybrid @50 |
+|---|---|---|---|---|
+| Nothing (as reported) | -9.4 | -8.2 | -2.6 | +0.1 |
+| Filing year (case id) | -13.6 [-22.8, -3.0] | -11.8 | -6.2 | -2.1 |
+| Decision year (payload) | -12.8 [-22.5, -3.5] | -12.5 | -8.1 | -2.9 |
+| Case length (chunks per case) | -10.9 [-19.3, -2.6] | -9.8 | -6.3 | -2.0 |
+| Case length x 2019-or-not | -10.6 [-19.3, -1.6] | -10.1 | -5.7 | -1.4 |
+| Chunk length (characters) | -8.1 [-16.9, +0.6] | -7.1 | -2.2 | +0.2 |
+
+Points of recall; brackets are 95% intervals for the @10 gap. **Matching on year does not close the
+gap, it widens it; no matching closes it.** Only chunk length brings the interval up to zero, and
+the point estimate is still -8. Hybrid is within noise at @50 under every match and short of
+healthy by 2 to 8 points at @10.
+
+What the data says about the premise:
+
+- **The year skew is real but is mostly 2019 and mild elsewhere.** Over the full 217,766 dead
+  chunks, filing year 2019 is 20.8% of them against 11.9% of the 100k Kerala slice. 2022 is 10.7%
+  against 9.3%. 2018 and 2023 are under-represented (3.5% against 7.5%, 5.3% against 11.0%).
+- **"Healthy chunks from the same cases" cannot exist.** Dead chunks come in whole cases: of the
+  91,275 cases with a dead chunk, 99.9% are dead in every chunk, and only 18 have two or more
+  healthy chunks. The defect follows the document, not the chunk, which also fits section 12's
+  by-document model mixing. Year was the available fallback.
+- **The repaired targets sit in shorter cases:** 90 of 198 are in cases of 1 or 2 chunks, against
+  50 of 146 controls. Matching on that does not close the gap.
+- **A bias that favours the targets, untested in size:** in the eval corpus, the sibling chunks of
+  a repaired target still carry their dead vectors, so they cannot compete in dense search, while a
+  healthy control's siblings are live and do. About half of each group has any sibling in the
+  corpus (52% targets, 46% controls), so the effect is partial. If anything, a corpus where every
+  dead vector is repaired should do **worse** than 34% for these chunks, not better.
+
+**Conclusion: the repaired chunks do not reach healthy dense recall, and neither year nor case
+length nor chunk length explains why.** The cause is unknown. What is known: the vectors are exactly
+what `voyage-4` produces for the stored text (check 2), the sparse and payload are untouched, and
+hybrid search, which is what the product uses, is within a few points of healthy. Candidate causes
+not yet tested: the dead cases being unusual in kind (many are short orders, which are templated, so
+near-duplicates crowd each other in dense search), or the text of a dead case differing from the
+text that was embedded when the collection was built. A fresh matched draw (healthy chunks chosen
+by case length and year, about 500 new query embeddings, a fraction of a cent) would tighten the
+intervals, and could move the point estimates; nothing here predicts which way. **Do not promote into `legal_corpus_v2` or
+serve Kerala on the strength of "at parity"; it is not.**
+
