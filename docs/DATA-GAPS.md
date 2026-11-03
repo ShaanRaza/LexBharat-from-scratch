@@ -822,3 +822,49 @@ Two consequences beyond this job:
   their old vectors (so the dense vector genuinely changed), and all 300 had **byte-identical
   payload and sparse vectors**. That is the check that proves the write touched only what it
   should.
+
+### The run finished: counts, spend and the four verifications
+
+**3 Nov 2026.** All 217,766 dead Kerala vectors are re-embedded into `kerala_v2_fix` with
+`voyage-4` (read from `VOYAGE_EMBED_MODELS["kerala_v2_fix"]`; overrides refused). Decision A123.
+
+| | |
+|---|---|
+| Written | 217,766 of 217,766, none skipped; the collection holds exactly 217,766 points |
+| Cap stop | the first process stopped at the old 250M cap after 199,400 chunks (91.6%) and was resumed from its checkpoint (`done_batches.log`, one fsynced line per batch of 100) under the 300M cap |
+| Tokens | **272.66M** for the whole task (probes, estimate, pre-flight, run, verification); about **$16.36** at the $0.06 per million list price |
+| Time | 36.1 min, then 6.2 min after the resume; about 4.7M tokens a minute |
+| Original reads | 2,180 read-only retrieves, slowest 0.54 s, none failed |
+| Old vs new vector | cosine max 0.133, mean -0.002: all 217,766 old vectors were unrelated to their text |
+| Backup | old dense vectors in `~/qdrant-kanoon/kerala_fix/old_dense.f32` (217,766 x 1024), no all-zero row |
+| Byte-identical | 2,000-point spot-check: 0 payload mismatches, 0 sparse mismatches, 0 points still holding the old dense vector |
+
+Verification, all four requested checks:
+
+1. **Detector re-score** (3,000 rewritten chunks): mean **+0.440**, min +0.161, none below 0.10.
+   The old vectors of the same chunks scored +0.003 (100% below 0.10); the live Kerala population
+   is +0.455.
+2. **Re-embed 20 under `voyage-4`** against what was written: minimum 0.99998.
+3. **The same 20 under `voyage-4-large`** (negative control): 0.931 to 0.959, mean 0.947. They do
+   not match, as expected.
+4. **Dense recall** (scratch corpus of 100,330 points, sentence queries):
+
+| | recall@10 | recall@50 | mean rank | queries |
+|---|---|---|---|---|
+| Dead, before | 0% | 0% | 51.0 | 505 |
+| Dead, after | **34%** | **46%** | 31.4 | 505 |
+| Healthy controls | 43% | 54% | 27.3 | 344 |
+| Hybrid, dead, before / after | 73% / 76% | 88% / 89% | 12.2 / 10.9 | 505 |
+| Hybrid, healthy | 78% | 88% | 9.4 | 344 |
+
+**The success criterion was "reach the level of healthy chunks". On dense recall this run did not
+clearly reach it:** 34% against 43% at 10 and 46% against 54% at 50, from a start of zero. Hybrid
+is within 2 points at 10 and level at 50. The earlier 20-target scratch proof had them at 41%
+against 37%. The gap may be sampling noise (200 targets and 150 controls, roughly 3 to 4 points
+of error each) but that is not shown, and the cause is unmeasured. The vectors themselves are
+right (check 2 reproduces them exactly), so this is about how well the text retrieves, not about
+a bad write.
+
+**Not done, needs explicit approval:** promoting the fixed vectors into `legal_corpus_v2` (a write
+to an original), and the 10,112 Supreme Court chunks (`voyage-4-large` into `kanoon_v1`). The
+scratch collection `kerala_recall_eval` is still on the copy instance.

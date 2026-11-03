@@ -57,9 +57,15 @@ class Settings(BaseSettings):
     # 2026 by re-embedding stored text: kanoon_v1 is voyage-4-large in 30 of 30 sampled
     # points. The original corpora are NOT single-model (voyage-4, voyage-4-large and
     # voyage-4-lite all occur inside legal_corpus_v1, legal_corpus_v2 and acts_india,
-    # by document), so they are deliberately absent. Override with a JSON object in
+    # by document), so they are deliberately absent. `kerala_v2_fix` is the staging
+    # collection that holds ONLY the re-embedded Kerala chunks whose stored vector was
+    # dead (data/dead_vectors/reembed_kerala.py); every vector in it is voyage-4, the
+    # model of 368 of 450 sampled Kerala chunks. Override with a JSON object in
     # VOYAGE_EMBED_MODELS.
-    VOYAGE_EMBED_MODELS: dict[str, str] = {"kanoon_v1": "voyage-4-large"}
+    VOYAGE_EMBED_MODELS: dict[str, str] = {
+        "kanoon_v1": "voyage-4-large",
+        "kerala_v2_fix": "voyage-4",
+    }
     VOYAGE_RERANK_MODEL: str = "rerank-2.5-lite"
 
     # --- Jev (TypeSafe AI) ---

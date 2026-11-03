@@ -68,6 +68,7 @@ def test_embedding_model_is_per_collection_and_unmeasured_collections_are_refuse
     vectors (measured 2 Nov 2026). A collection nobody measured is refused."""
     s = _fresh()
     assert s.embed_model_for("kanoon_v1") == "voyage-4-large"
+    assert s.embed_model_for("kerala_v2_fix") == "voyage-4"
     for name in (
         "legal_corpus_v1",
         "legal_corpus_v2",
