@@ -19,7 +19,37 @@ verified against the dataset**.
 The trust promise is the product. An answer with a fabricated citation is worse than no
 answer. Everything below exists to protect that.
 
-### v1 scope — widened by the owner on 2 Nov 2026
+### v1 scope — widened AGAIN by the owner on 3 Nov 2026: the full product
+
+**Owner decision, 3 Nov 2026 (A124): v1 is no longer an MVP.** It is the full product with every
+data source the dataset holds, ready to ship. What `core/coverage.json` records as held is still
+the single source and still never restated elsewhere (O7, A51) — but the intent behind it changed:
+it should now record everything measured as usable, not a conservative launch subset.
+
+**What this moved from "later" to "before launch"**, and what each now requires:
+
+- **All High Courts**, not three. Their vectors already exist, so there is no embedding cost — but
+  three things that were deferrable are now gate items: the **Kerala recall gap** (`DATA-GAPS.md`
+  §17) now ships rather than sitting unserved; the **per-court embedding-model config** (§13) is
+  required, not optional; and **how often `court` is simply wrong** (§15) is load-bearing, because
+  a bad label now serves one court's law under another's name. It is still unmeasured.
+- **State Acts and regulators.** Their BM25 sparse vectors must be repaired on the way into the
+  serving collection — ~504,600 points, about half of them (§9). That step is no longer optional.
+- **Server size.** The launch corpus fits an r7g.large at ~$55/month. The full corpus is ~45–55 GB
+  of RAM, so r7g.2xlarge at ~$219/month plus disk (`COSTS.md` §8). Four times the monthly floor,
+  and the sizing experiment has still not reported.
+- **The 200-question test set** was written for the narrow corpus. Full scope needs High Court and
+  tribunal questions too, which grows the advocate's labelling job (A101, A103).
+- **The launch gate** (`PRD-v2.md` §7) was written for the MVP and needs rewriting against this.
+
+**The one thing scope alone cannot deliver: tribunals.** They are not in the dataset. Acquiring
+them depends on Vaquill, who has not replied, or on building extraction from the tribunals' own
+published orders. That is an external dependency the owner does not control, so "everything" has a
+date nobody can set. Decide explicitly whether launch waits on tribunals or ships without them.
+
+---
+
+### Previous v1 scope — widened by the owner on 2 Nov 2026 (superseded by the above)
 
 The owner widened v1 to a **production-ready product**. The full list, with the gate each
 feature must pass, is [`docs/PRD-v2.md`](docs/PRD-v2.md) section 4; the stack for it is
