@@ -546,6 +546,78 @@ the off-model share of Bombay v1 below about 3.6% at 95%, so the corpus could ho
 chunks, and the 20 target chunks were chosen as `voyage-4`-confirmed. Hybrid's numbers here therefore contain
 at most a few percent of whatever mixing costs, not 12 to 18%.
 
+### The question-style retest: hybrid does NOT fully absorb the penalty, and the two tests bracket the truth
+
+**Measured** 3 Nov 2026 (`kfix_q_*.py`, `recall_question.json`, `question_vs_sentence_summary.json`), same
+corpus (`kerala_recall_eval3`), same 42 off-model targets and 146 `voyage-4` controls, same stored-against-fresh
+`voyage-4` swap of the 43 off-model vectors; only the queries change. `voyage-4` / `query` throughout.
+
+**The two query styles are the two ends of a bracket, neither realistic.** *Sentence-style* queries are
+sentences lifted from the chunk: every high-IDF token (names, section numbers, quoted wording) is present, so
+sparse search does the absorbing. That is the **optimistic bound** on hybrid. *Paraphrase-style* queries are
+two questions per target written in other words by a `claude-haiku` subagent that did not know which targets
+were off-model, with **no digits, no capitalised names and no 4-word run from the chunk** (a validator of
+mine, run after writing). That strips exactly the anchors BM25 lives on: the **pessimistic bound**. A real
+lawyer's question ("limitation period for a Section 138 NI Act complaint?") has natural phrasing *and* an anchor,
+so it sits between. **Label for the paraphrase arm: a lower bound on hybrid recall, which makes its cost figure
+the HIGH end of the range, not the hybrid cost.** (Read "lower bound" on recall, not on cost.)
+
+| Recall (percent) | Sentence: `voyage-4` controls | Sentence: off-model stored to fresh | Fresh minus stored (95% CI) | Gained / lost | Paraphrase: controls | Paraphrase: off-model stored to fresh | Fresh minus stored (95% CI) | Gained / lost |
+|---|---:|---|---|---|---:|---|---|---|
+| Dense @10 | 44.2 | 36.0 to 42.3 | +6.3 (+1.8, +12.5) | 7 / 0 | 30.6 | 22.2 to 28.4 | +6.2 (-1.2, +14.3) | 7 / 2 |
+| Dense @50 | 56.7 | 45.0 to 53.2 | +8.1 (+3.4, +14.0) | 9 / 0 | 44.1 | 40.7 to 45.7 | +4.9 (+1.2, +9.9) | 4 / 0 |
+| Sparse @10 | 84.0 | 91.9 to 91.9 | 0 | 0 / 0 | 19.2 | 16.0 to 16.0 | 0 | 0 / 0 |
+| Sparse @50 | 89.2 | 96.4 to 96.4 | 0 | 0 / 0 | 26.0 | 30.9 to 30.9 | 0 | 0 / 0 |
+| **Hybrid @10** | 78.8 | 83.8 to 85.6 | **+1.8** (0.0, +4.5) | 2 / 0 | 29.2 | 23.5 to 30.9 | **+7.4** (+2.5, +13.4) | **6 / 0** |
+| **Hybrid @50** | 88.4 | 95.5 to 95.5 | **0.0** (0.0, 0.0) | 0 / 0 | 40.2 | 38.3 to 40.7 | **+2.5** (0.0, +6.2) | 2 / 0 |
+
+Queries and targets: sentence 111 queries on 42 targets (controls 344 on 146); paraphrase 81 on 42 (281 on
+146). Intervals are 95% cluster bootstraps over targets of the fresh-minus-stored difference. "Cost" is that
+difference. In the paraphrase arm the 6 hybrid @10 gains had no losses; an exact-binomial 95% upper bound on the
+gained share, treating queries as independent, is 15.4 (the sentence arm's equivalent is 6.4, which section 13
+above quoted; the cluster bootstrap is the appropriate one and is used here).
+
+**The three invalidation checks.** (1) *Absolute recall on both arms:* neither arm sits at a floor. Paraphrase
+hybrid is 29% (@10) and 40% (@50) for controls, dense 31% and 44%; sparse collapses from 84% to 19% at @10,
+which is the direct evidence that the anchors are gone. After the swap the off-model targets reach the
+controls' level (hybrid @10 30.9 against 29.2, dense @10 28.4 against 30.6), so the swap isolates the model.
+Absolute recall is much lower under paraphrase because a question about a boilerplate chunk in a 100,000-chunk
+corpus has many acceptable answers; that leaves headroom, not a failed test. (2) *Validator and survivors:* 376
+questions written, **14 rejected (3.7%: 13 shared 4-word runs, 1 reused name)**; every target kept at least
+one valid question: off-model 42 of 42 (39 with two, 3 with one, 81 questions), controls 146 of 146 (135 with
+two, 11 with one, 281 questions). No rewrite round was needed. Words of 5+ letters that also occur in the
+chunk: 34 to 37% of question words against 100% for sentence queries; digits in 0% of questions against 65%.
+(3) *Sample questions* (off-model targets): "When does a claimed exemption from private forest vesting law
+fail because the claimant obtained the tribunal's decision by fraud?"; "Does the general limitation statute
+apply to accident compensation applications, or has the special accident law excluded it?"; "Can an accused
+who faces several cases registered at one police station obtain bail in each case on common grounds?"
+Natural, specific to the subject, and free of anchors.
+
+**Which case this is: a penalty appears. It is not the production number.** Under the optimistic query style
+hybrid cost 1.8 points at @10 and 0 at @50; under the pessimistic style it costs **7.4 points at @10 (95%
+CI +2.5 to +13.4) and 2.5 at @50 (0.0 to +6.2)**. Neither endpoint is realistic, so **the truth sits between
+them and neither arm may be quoted as the hybrid cost.** This does **not** support the earlier statement that
+hybrid absorbs the penalty, and it does not close A128 on "accept". Pinning the number down needs a query set
+that mixes natural phrasing with real citation anchors, which is advocate work, not generation work, and is
+already on the owner's list. Dense alone loses 5 to 8 points in both styles.
+
+**Corpus-wide Estimates** (share of chunks mismatched times the per-chunk hybrid cost at @10; upper bounds use
+the bootstrap upper limits 4.5 and 13.4; shares are the sample-weighted 73% and 7.6% from the court table and
+the volume-weighted about 54% and 8%):
+
+| Mismatched share | Optimistic end (sentence) | Pessimistic end (paraphrase) |
+|---|---|---|
+| One `voyage-4` query model: 73% | 1.3 points (upper 3.3) | 5.4 points (upper 9.8) |
+| One `voyage-4` query model: about 54% | 1.0 (upper 2.4) | 4.0 (upper 7.2) |
+| Per-court majority query model: 7.6% | 0.14 (upper 0.34) | 0.56 (upper 1.0) |
+| Per-court majority query model: about 8% | 0.14 (upper 0.36) | 0.59 (upper 1.1) |
+
+At @50 the same arithmetic gives 0 at the optimistic end and about 1.8 points (upper 4.5) for a single query
+model, 0.19 (upper 0.47) for a per-court config, at the pessimistic end. These are share times a per-chunk
+cost measured on 42 chunks (9 of them identified as lite or large) with `voyage-4` queries: Estimates, not
+measurements. The per-court config cuts the exposure by roughly a factor of ten at either end. Nothing here
+proposes or prices a re-embed.
+
 ### Is the model a free key? The sibling test: no payload field, no id, and duplicates only in some courts
 
 **Measured** 3 Nov 2026 (`kfix_sib_*.py`, `kfix_pair_courts.py`; about Rs 0.32 in Voyage tokens plus read-only
@@ -668,6 +740,8 @@ changed, from the stored off-model one to a fresh `voyage-4` document vector:
 Exact (non-approximate) dense search gives the same picture (36.0% to 41.4% at 10, 45.9% to 52.3% at 50).
 The other groups did not move (the swap touches only those 43 points).
 
+**(Sentence-style queries only. The paraphrase-style retest in "The question-style retest" below shows a hybrid cost of 7.4 points at @10, so read the next paragraph's hybrid figures as the optimistic end of a bracket.)**
+
 **Outcome, stated as measured: neither of the two clean cases.** There **is** a dense penalty for an
 off-model chunk, **about 6 points at @10 and 8 at @50**, caused by the model and not by the population
 (every changed query moved in one direction). **Hybrid, which is what ships, absorbs nearly all of it:**
@@ -702,9 +776,9 @@ Sikkim, Jharkhand, Jammu and Kashmir, Karnataka, Rajasthan), and **1,543 of the 
 in court groups with no `voyage-4` chunk** (see the table below). Under one `voyage-4` query model that mismatch
 reaches most of the corpus; a per-court majority query model cuts it to **7.6%** (about 8% volume-weighted). That
 is the whole job the config does, and at those shares it matters. The dense deficit it avoids is 6 to 8 points
-per mismatched chunk (above). Whether *hybrid* also depends on it is what the question-style retest is for; the
-sentence-style numbers (hybrid cost 1.8 points at @10, upper bound 6.4) are the **best case**, because keyword
-search is doing the absorbing. The decision, and whether any re-embedding is worth it, is the owner's; this
+per mismatched chunk (above). Whether *hybrid* also depends on it was tested ("The question-style retest", below): it does, at
+the pessimistic end of the bracket (7.4 points at @10); the sentence-style numbers (1.8 points) are the **best
+case**, because keyword search is doing the absorbing. The decision, and whether any re-embedding is worth it, is the owner's; this
 section does not propose one.
 
 ### Off-model share by court, and why the dead-vector scan could not have seen it
