@@ -607,14 +607,19 @@ and inside Kerala, cross-validated by case, 91.6% accuracy against an 88.4% base
 finds 21 of the 43 off-model chunks (precision 21 of 30). Not usable as a label. A
 better-tuned model could do better; that was not tried.
 
-**Verdict: no free key exists in the payload, the id, or (so far) the vector.** Where duplicates exist (Kerala,
-Orissa, Madhya Pradesh) they flag *that* two models are present, not which copy is which. Labelling every point
-by model therefore costs one embedding per point, the same as the identification that was done for the sample,
-and the option of model-filtered prefetches from a free label does not exist on this evidence. Nothing here
-prices or proposes a re-embed. **One consequence to carry into A126:** "keep the healthy copy" is determinate
-for the 217,688 Kerala groups that contain a dead vector (the detector says which), but for the 159,942 groups
-with two live copies (211 of 211 sampled are different-model pairs) the rule leaves open which model to keep,
-and nothing free says which is which.
+**Verdict: no free per-point key exists in the payload, the id, or (so far) the vector. That kills the
+per-BATCH refinement, not the per-COURT config.** Where duplicates exist (Kerala, Orissa, Madhya Pradesh)
+they flag *that* two models are present, not which copy is which, so labelling every point by model costs one
+embedding per point, the same as re-embedding it. A **per-batch refinement of the residual 7.6%** (the share
+still outside a court's majority model) is therefore dead. **The per-court config is untouched and stays
+free:** `court` derives from the record id (`CLAUDE.md` section 6; the id prefix agrees with the court in every
+parquet row, section 18), and each court's majority model comes from the 46-group sample above. Model-filtered
+dense prefetches **by court** need no per-point label, so the step from 73% to 7.6% mismatch costs no
+embedding. (Its latency cost inside the <800 ms target is unmeasured.) Nothing here prices or proposes a
+re-embed. **Consequence for A126, now amended:** "keep the healthy copy" applies only to the 217,688 Kerala
+groups that contain a dead vector, where the detector says which copy is dead. For the 159,942 groups with two
+live copies (211 of 211 sampled are different-model pairs) nothing free says which copy is which, so both are
+kept, which is the decision recorded in A126 as amended.
 
 ### Does an off-`voyage-4` chunk retrieve worse? Dense yes, by about 6 to 8 points; hybrid by almost nothing
 
