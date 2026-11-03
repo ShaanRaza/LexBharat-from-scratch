@@ -1,7 +1,7 @@
 """Identifiers for judgments that have no stored citation string (A124).
 
-The dataset stores a citation string for Supreme Court judgments and for no High Court
-judgment (CLAUDE.md section 6). Two things can stand in for it. They are KEPT APART
+The dataset stores a citation string for most judgments and for none of the regional
+ones (CLAUDE.md section 6). Two things can stand in for it. They are KEPT APART
 from `citation_string` and from each other, because they are different kinds of claim:
 
   neutral citation  a PUBLISHED citation the court itself printed on the judgment, such

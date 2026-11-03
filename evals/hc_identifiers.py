@@ -6,7 +6,7 @@
 INPUT: records with `full_text` (or `text`), `court`, `decision_date`, `case_number` and
 optionally `citation`. A record that HAS a stored citation is not eligible (the stored
 string is never replaced); `--ignore-stored` counts it anyway, which is the only way to
-run the practice fixtures, because they hold Supreme Court judgments only and none has
+run the practice fixtures, because they hold judgments that all carry a stored citation and none has
 an empty citation. That run proves the counting, not the coverage.
 
 OUTPUT: records, how many had a candidate in the header, how many passed all three
@@ -69,7 +69,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         recs, src = read_records(a.records), str(a.records)
     else:
         recs = read_records(PRACTICE / "judgments.jsonl.gz")
-        src, a.ignore_stored = "practice fixtures (Supreme Court only)", True
+        src, a.ignore_stored = "practice fixtures (all with a stored citation)", True
     m = measure(recs, a.ignore_stored)
     print(json.dumps({"source": src, **m}, indent=2))
     return 0
