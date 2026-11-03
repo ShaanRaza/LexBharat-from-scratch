@@ -487,6 +487,40 @@ This **supersedes section 12's framing** of the cost. The choice is not $1,900 o
 - **A per-court-majority config matches about 92% of all 31.0M High Court points** — 98% of v1,
   84% of v2. The remaining 8% would be mismatched.
 
+### Update, 3 Nov 2026: one court holds three models, and the 18% outlier is identified
+
+**Measured.** In a random sample of 50 healthy Kerala v2 chunks (section 17, adapter test), 9 did not
+reproduce under `voyage-4` (cosine 0.937 to 0.959). Those same 9 re-embedded under each `voyage-4`-family
+model with `input_type: "document"`, 1024 dimensions, the stored text verbatim (35,316 tokens, about Rs 0.2;
+`kfix_which_model.py`, `kerala_fix/which_model.json`), cosine to Vaquill's stored vector:
+
+| Model | Chunks reproduced at 0.998 or more | Range over the 9 chunks |
+|---|---:|---|
+| `voyage-4` | 0 | 0.938 to 0.959 |
+| `voyage-4-large` | **4** (0.9992 to 0.9995) | 0.908 to 0.9995 |
+| `voyage-4-lite` | **5** (0.9999 to 1.0000) | 0.904 to 1.0000 |
+
+**Every one of the 9 is reproduced by exactly one model, and the other two miss by 0.04 to 0.10.** So none is
+unexplained: Kerala v2's healthy chunks are about **82% `voyage-4`, 10% `voyage-4-lite`, 8%
+`voyage-4-large`** (41, 5 and 4 of 50; the 41 are those reproducing under `voyage-4` at 0.998 or more). The
+earlier 371-chunk sample agrees on the size of the non-`voyage-4` share: 43 of 371 (11.6%, interval about
+9% to 15%) were off `voyage-4`, none between 0.90 and 0.998 apart from that group; its split between lite
+and large was not measured.
+
+**What this says about the config.** A court is not one model. A config keyed on court, even
+"majority model per court", leaves 12 to 18% of a single healthy Kerala sample on the wrong model, and
+Kerala is the court the per-court design assumed was single-model (section 12: "v2 High Court Kerala is
+`voyage-4`"). Section 12 already found that the model follows the document or ingestion batch, not the
+court; this is the first case in which the other models were named. **The config must key on something finer
+than the court.** What that is is **not identified**. Free facts from the 371 local chunks (no case has two
+sampled chunks, so a per-document pattern could not be tested): the off-`voyage-4` chunks come from shorter
+cases (mean 28 chunks per case against 61) and earlier in the case (mean chunk index 9 against 34); there
+is no clear year pattern. Both are consistent with ingestion batches and neither is a key. **Not done, and
+what would find it:** fetch sibling chunks of the 9 outlier cases and see whether siblings share the
+outlier's model (that tests per-document); about Rs 0.5. Without a key, the options in section 13's cost table
+stand, and hybrid, which the retrieval test below shows loses little to a mismatched query model, remains the
+mitigation. That test used a single-model corpus; a mixed corpus is still untested.
+
 ### Does the mismatch hurt retrieval? Barely, for hybrid
 
 20 `voyage-4` chunks from Bombay v1, 55 queries from their own sentences, against a local copy of
@@ -1228,7 +1262,18 @@ the service keeps that one (A126). For chunks we would embed that have no twin (
 vector will match what the corpus would have held; it does not prove those chunks will recall at the
 healthy rate, because the gap is a property of the population and was not explained.
 **Limits:** one court, one model (`voyage-4`) in this run; the SC path (`voyage-4-large`) rests on the
-2 Nov pre-flight and was not re-run; 50 chunks; the low group's model is inferred.
+2 Nov pre-flight and was not re-run; 50 chunks. (The low group's model was inferred when this was first
+written; it is now measured, see section 13: 5 `voyage-4-lite`, 4 `voyage-4-large`.)
+
+**Standing note: the gap is a property of which chunks the dead batch held, not of their vectors.** The
+repaired vector is what the same call yields for a healthy chunk, so the vector is not the variable.
+Ten hypotheses are measured and ruled out, no user impact has been shown, and Kerala is protected by A126.
+**This work stops here.** It is a known unknown and nobody should spend further effort on it as it stands.
+
+**The one condition that reopens it:** the retrieval eval on the Supreme Court chunks that have no twin
+(the 10,112 to be embedded). If those show the same penalty (a freshly embedded, twinless chunk trailing a
+healthy one by about 10 points at dense @10), the cause is not Kerala-specific and it is reopened. Until that
+eval runs, do not chase it.
 
 ## 18. Court labels, `act_status` and duplicate chunk ids: measured (interim, the Qdrant scan stopped twice at the 20-second limit)
 
