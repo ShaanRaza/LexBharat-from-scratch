@@ -515,9 +515,7 @@ court; this is the first case in which the other models were named. **The config
 than the court.** What that is is **not identified**. Free facts from the 371 local chunks (no case has two
 sampled chunks, so a per-document pattern could not be tested): the off-`voyage-4` chunks come from shorter
 cases (mean 28 chunks per case against 61) and earlier in the case (mean chunk index 9 against 34); there
-is no clear year pattern. Both are consistent with ingestion batches and neither is a key. **Not done, and
-what would find it:** fetch sibling chunks of the 9 outlier cases and see whether siblings share the
-outlier's model (that tests per-document); about Rs 0.5. Without a key, the options in section 13's cost table
+is no clear year pattern. Both are consistent with ingestion batches and neither is a key. **Done 3 Nov (see "Is the model a free key?" below):** the siblings share a model within a case copy, doubled cases hold two copies on different models, and no payload field identifies the model. Without a key, the options in section 13's cost table
 stand, and hybrid, which the retrieval test below shows loses little to a mismatched query model, remains the
 mitigation. That test used a single-model corpus; a mixed corpus is still untested.
 
@@ -547,6 +545,76 @@ Bombay v1 chunks (50 per label spelling), all of which reproduced under `voyage-
 the off-model share of Bombay v1 below about 3.6% at 95%, so the corpus could hold a few percent off-model
 chunks, and the 20 target chunks were chosen as `voyage-4`-confirmed. Hybrid's numbers here therefore contain
 at most a few percent of whatever mixing costs, not 12 to 18%.
+
+### Is the model a free key? The sibling test: no payload field, no id, and duplicates only in some courts
+
+**Measured** 3 Nov 2026 (`kfix_sib_*.py`, `kfix_pair_courts.py`; about Rs 0.32 in Voyage tokens plus read-only
+fetches from the original; nothing built or written). The question: is the embedding model a per-case or
+per-batch property that can be read from data already held, so that a per-court config could become a
+per-batch one at zero cost?
+
+**1. Siblings.** For each of the 9 outlier cases and 5 `voyage-4` control cases, up to 3 other chunks were
+fetched and their model identified (`voyage-4` first, then lite and large). 22 outlier-case siblings: 8
+`voyage-4`, 7 lite, 6 large, 1 dead; 8 of 8 control-case siblings `voyage-4`. **Two outlier cases are
+uniform** (`KLHC010013312018` and `KLHC010003072024`: 3 of 3 siblings `voyage-4-large`, and the case holds as
+many chunks as its `total_chunks` says). **Six of the nine hold twice as many chunks as `total_chunks`**
+(648 against 324, 384 against 192, 34 against 17, 10 against 5, 2 against 1 twice), the whole case loaded
+twice, and their siblings are a mix of two models (e.g. `KLHC010524352016`: chunk 1 appears once as
+`voyage-4` and once as lite; `KLHC010052842023`: chunk 0 once `voyage-4`, once dead). None of the five
+control cases is doubled. No case showed three models. So the model is uniform within a case *copy*, and a
+doubled case holds two copies embedded by different models. 9 outlier cases, so this is evidence, not proof.
+
+**2. Duplicates are different-model pairs in some courts and identical in others.** Both copies' vectors
+compared (cosine 0.99 or more: one model; 0.90 to 0.99: two models; under 0.5: one dead):
+
+| Court (v2) | Pairs compared | Same model | Different models | One dead |
+|---|---:|---:|---:|---:|
+| Kerala, 100k slice | 509 | 0 | **211** | **298** |
+| Kerala, 200k-point sample | 12 | 0 | 3 | 9 |
+| Orissa | 11 | 0 | **11** | 0 |
+| Madhya Pradesh | 10 | 0 | **10** | 0 |
+| Karnataka | 12 | 8 | 4 | 0 |
+| Jharkhand | 12 | 10 | 2 | 0 |
+| Himachal Pradesh | 12 | 11 | 1 | 0 |
+| Punjab and Haryana, Rajasthan, Jammu and Kashmir | 12 each | **12 each** | 0 | 0 |
+| Supreme Court, Andhra Pradesh | 3, 2 | all | 0 | 0 |
+
+(Up to 12 groups per court from the duplicates of section 18; the Kerala slice is all 509 in-slice pairs.)
+**In Kerala, Orissa and Madhya Pradesh a duplicate is the same text embedded by two different models**, which
+is the mechanism behind the mixing there (those are the courts with 17%, 42% and 46% outside the majority model
+in the table above). In Punjab and Haryana, Rajasthan and Jammu and Kashmir the duplicates are identical
+vectors, so duplication does **not** explain the mixing there (J&K is 38% outside its majority model with 12 of
+12 duplicate pairs identical). The mixing has more than one cause.
+
+**3. Is duplication a key?** In the 371 healthy Kerala sample chunks, 77% of the off-model chunks (33 of 43)
+sit in a duplicate group against 13% of the `voyage-4` ones (42 of 328); 10 of the 43 are single copies.
+Among single copies 96.6% are `voyage-4` (286 of 296). That is a free, partial signal for Kerala, but it needs
+a scan of every `chunk_id`, it is not established for other courts, and **inside a duplicate group it does not
+say which copy is which**: both copies have identical payloads (697 of 697 groups, section 18), and the point
+id is not derivable from the chunk id (no standard hash of `chunk_id`, md5, sha1, sha256, sha512, blake2b,
+uuid3, uuid5 or crc, reproduces any of 200 sampled ids).
+
+**4. No payload field separates the models.** Of the 371 labelled chunks, every one has the same field set apart
+from the optional `judges` and `treatment_mentions` (the signatures split 35 off / 279 `voyage-4`, 7 / 44, 1 / 4
+with no pattern), the same `pdf_url` host, the same establishment digits in the case id, and no categorical field
+separates them (best single test p = 0.03 across about 40 tests, not significant after correction). Numeric
+fields give weak and inconsistent signals (AUC 0.40 to 0.53; the off-model chunks sit slightly earlier in
+shorter cases, as in section 13 above). There is no `source_url`, source-file or batch field in the payload.
+
+**5. The vector itself is not a reliable key either, in a first and crude test.** A linear classifier on the
+stored vector reaches 97% in random folds but only 74% when a whole court is held out (it learns court content),
+and inside Kerala, cross-validated by case, 91.6% accuracy against an 88.4% base rate with an AUC of 0.87: it
+finds 21 of the 43 off-model chunks (precision 21 of 30). Not usable as a label. A
+better-tuned model could do better; that was not tried.
+
+**Verdict: no free key exists in the payload, the id, or (so far) the vector.** Where duplicates exist (Kerala,
+Orissa, Madhya Pradesh) they flag *that* two models are present, not which copy is which. Labelling every point
+by model therefore costs one embedding per point, the same as the identification that was done for the sample,
+and the option of model-filtered prefetches from a free label does not exist on this evidence. Nothing here
+prices or proposes a re-embed. **One consequence to carry into A126:** "keep the healthy copy" is determinate
+for the 217,688 Kerala groups that contain a dead vector (the detector says which), but for the 159,942 groups
+with two live copies (211 of 211 sampled are different-model pairs) the rule leaves open which model to keep,
+and nothing free says which is which.
 
 ### Does an off-`voyage-4` chunk retrieve worse? Dense yes, by about 6 to 8 points; hybrid by almost nothing
 
