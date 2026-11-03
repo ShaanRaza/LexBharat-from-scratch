@@ -94,7 +94,7 @@ def hit_to_passage(
     stored = (p.get("citation") or None) if kind == "judgment" else None
     neutral = reference = None
     if kind == "judgment" and not stored:
-        # No stored citation (the dataset stores none for these). A stored string is never
+        # No stored citation (the dataset has none here). A stored string is never
         # touched. A neutral citation is read only from a chunk that STARTS the
         # judgment: a middle chunk has no header, and the body cites other cases.
         court, when = p.get("court"), p.get("decision_date")
