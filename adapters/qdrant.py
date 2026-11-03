@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 from typing import Any, Literal, Protocol
 
 from adapters.guard import refuse_in_production
-from core import coverage
+from core import court_id, coverage
 from core.settings import Settings
 
 
@@ -27,6 +27,8 @@ class VectorStoreUnavailable(Exception):
 # the local copy, see docs/DATASET.md).
 DENSE_VECTOR = "dense"
 SPARSE_VECTOR = "sparse"
+# The court the record ID names, written beside the `court` label (data/add_court_code.py).
+COURT_CODE = "court_code"
 
 # English judgments are selected by the court payload field (value from the coverage
 # source). `language_code` is mostly missing and uses uppercase "EN" (Measured), so
@@ -174,14 +176,29 @@ class QdrantStore:
 
     @staticmethod
     def _filter(must: Mapping[str, Any]):
+        """An exact payload filter. A `court` label also matches on the court the record
+        ID names (`court_code`, written beside the label by data/add_court_code.py): 0.58%
+        of judgments carry no label and 0.21% a spelling variant, and a label-only filter
+        silently drops them (CLAUDE.md section 6). The label stays in the filter, so a
+        collection with no `court_code` yet behaves exactly as before."""
         from qdrant_client import models
 
-        return models.Filter(
-            must=[
-                models.FieldCondition(key=k, match=models.MatchValue(value=v))
-                for k, v in must.items()
-            ]
-        )
+        conds: list[Any] = []
+        for k, v in must.items():
+            cond = models.FieldCondition(key=k, match=models.MatchValue(value=v))
+            if k == "court":
+                c = court_id.court_for_label(v)
+                if c is not None:  # an unknown or ambiguous label gets no extra branch
+                    cond = models.Filter(
+                        should=[
+                            cond,
+                            models.FieldCondition(
+                                key=COURT_CODE, match=models.MatchAny(any=list(c.codes))
+                            ),
+                        ]
+                    )
+            conds.append(cond)
+        return models.Filter(must=conds)
 
     @staticmethod
     def _hit(p) -> Hit:

@@ -1,0 +1,500 @@
+{
+ "_note": "IDENTIFICATION, not coverage: which court an id prefix means, from the snapshot's own data. What the product covers is core/coverage.json and only that. Built by data/build_court_ids.py from data/court_prefix_counts.csv; do not edit by hand.",
+ "snapshot": "v2026.08",
+ "measured": "2026-11-03",
+ "supreme_court_id_pattern": "^\\d{4}_INSC_\\d+_\\d+$",
+ "generic_labels": [
+  "High Court",
+  "Court"
+ ],
+ "totals": {
+  "rows": 32572660,
+  "usual": 32315460,
+  "alias": 67598,
+  "missing": 189320,
+  "other_court": 282
+ },
+ "courts": {
+  "allahabad": {
+   "label": "Allahabad High Court",
+   "aliases": [
+    "High Court of Allahabad"
+   ],
+   "prefixes": {
+    "UPHC": 2007927
+   },
+   "rows": 2007927,
+   "label_rows": {
+    "usual": 2005273,
+    "alias": 1910,
+    "missing": 744,
+    "other_court": 0
+   },
+   "other_court_labels": {}
+  },
+  "andhra-pradesh": {
+   "label": "High Court of Andhra Pradesh",
+   "aliases": [
+    "High Court of Amaravati",
+    "High Court of Andhra",
+    "High Court of Hyderabad"
+   ],
+   "prefixes": {
+    "APHC": 661353
+   },
+   "rows": 661353,
+   "label_rows": {
+    "usual": 641156,
+    "alias": 146,
+    "missing": 20044,
+    "other_court": 7
+   },
+   "other_court_labels": {
+    "High Court of Allahabad": 3,
+    "High Court of Telangana": 3,
+    "High Court of Delhi": 1
+   }
+  },
+  "bombay": {
+   "label": "Bombay High Court",
+   "aliases": [
+    "High Court of Bombay",
+    "High Court of Mumbai",
+    "High Court",
+    "High Court of Nagpur",
+    "High Court of Aurangabad"
+   ],
+   "prefixes": {
+    "HCBM": 2788384
+   },
+   "rows": 2788384,
+   "label_rows": {
+    "usual": 2768060,
+    "alias": 16052,
+    "missing": 4272,
+    "other_court": 0
+   },
+   "other_court_labels": {}
+  },
+  "calcutta": {
+   "label": "Calcutta High Court",
+   "aliases": [
+    "High Court of Calcutta"
+   ],
+   "prefixes": {
+    "WBCHCA": 431557,
+    "WBCHCJ": 24582,
+    "WBCHCO": 71406,
+    "WBCHCP": 7908
+   },
+   "rows": 535453,
+   "label_rows": {
+    "usual": 524661,
+    "alias": 3653,
+    "missing": 7119,
+    "other_court": 20
+   },
+   "other_court_labels": {
+    "High Court of Delhi": 17,
+    "High Court of Bombay": 3
+   }
+  },
+  "chhattisgarh": {
+   "label": "High Court Of Chhattisgarh",
+   "aliases": [
+    "High Court of Chhattisgarh"
+   ],
+   "prefixes": {
+    "CGHC": 1744438
+   },
+   "rows": 1744438,
+   "label_rows": {
+    "usual": 1730387,
+    "alias": 6,
+    "missing": 14043,
+    "other_court": 2
+   },
+   "other_court_labels": {
+    "High Court of Jabalpur": 2
+   }
+  },
+  "delhi": {
+   "label": "High Court of Delhi",
+   "aliases": [],
+   "prefixes": {
+    "DLHC": 1064459
+   },
+   "rows": 1064459,
+   "label_rows": {
+    "usual": 1033011,
+    "alias": 0,
+    "missing": 31354,
+    "other_court": 94
+   },
+   "other_court_labels": {
+    "High Court of Patna": 71,
+    "High Court of Chandigarh": 9,
+    "High Court of Madras": 6,
+    "High Court of Aurangabad": 3,
+    "High Court of Karnataka": 3,
+    "High Court of Allahabad": 1,
+    "High Court of Bombay": 1
+   }
+  },
+  "gauhati": {
+   "label": "Gauhati High Court",
+   "aliases": [
+    "High Court of Gauhati",
+    "High Court of Guwahati"
+   ],
+   "prefixes": {
+    "GAHC": 663094
+   },
+   "rows": 663094,
+   "label_rows": {
+    "usual": 654860,
+    "alias": 6278,
+    "missing": 1955,
+    "other_court": 1
+   },
+   "other_court_labels": {
+    "High Court of Rajasthan": 1
+   }
+  },
+  "gujarat": {
+   "label": "High Court of Gujarat",
+   "aliases": [],
+   "prefixes": {
+    "GJHC": 1400249
+   },
+   "rows": 1400249,
+   "label_rows": {
+    "usual": 1395164,
+    "alias": 0,
+    "missing": 5084,
+    "other_court": 1
+   },
+   "other_court_labels": {
+    "High Court of Patna": 1
+   }
+  },
+  "himachal-pradesh": {
+   "label": "High Court of Himachal Pradesh",
+   "aliases": [],
+   "prefixes": {
+    "HPHC": 619919
+   },
+   "rows": 619919,
+   "label_rows": {
+    "usual": 594720,
+    "alias": 0,
+    "missing": 25190,
+    "other_court": 9
+   },
+   "other_court_labels": {
+    "High Court of Calcutta": 6,
+    "High Court of Delhi": 3
+   }
+  },
+  "jammu-and-kashmir": {
+   "label": "High Court of Jammu and Kashmir",
+   "aliases": [
+    "High Court of Kashmir",
+    "High Court of Srinagar"
+   ],
+   "prefixes": {
+    "JKHC": 181221
+   },
+   "rows": 181221,
+   "label_rows": {
+    "usual": 176679,
+    "alias": 5,
+    "missing": 4525,
+    "other_court": 12
+   },
+   "other_court_labels": {
+    "High Court of Rajasthan": 6,
+    "High Court of Bombay": 6
+   }
+  },
+  "jharkhand": {
+   "label": "High Court of Jharkhand",
+   "aliases": [],
+   "prefixes": {
+    "JHHC": 777734
+   },
+   "rows": 777734,
+   "label_rows": {
+    "usual": 768124,
+    "alias": 0,
+    "missing": 9593,
+    "other_court": 17
+   },
+   "other_court_labels": {
+    "High Court of Patna": 17
+   }
+  },
+  "karnataka": {
+   "label": "High Court of Karnataka",
+   "aliases": [],
+   "prefixes": {
+    "KAHC": 1471128
+   },
+   "rows": 1471128,
+   "label_rows": {
+    "usual": 1453935,
+    "alias": 0,
+    "missing": 17193,
+    "other_court": 0
+   },
+   "other_court_labels": {}
+  },
+  "kerala": {
+   "label": "High Court of Kerala",
+   "aliases": [],
+   "prefixes": {
+    "KLHC": 2777738
+   },
+   "rows": 2777738,
+   "label_rows": {
+    "usual": 2776879,
+    "alias": 0,
+    "missing": 859,
+    "other_court": 0
+   },
+   "other_court_labels": {}
+  },
+  "madhya-pradesh": {
+   "label": "High Court of Madhya Pradesh",
+   "aliases": [
+    "High Court of Madhya"
+   ],
+   "prefixes": {
+    "MPHC": 970908
+   },
+   "rows": 970908,
+   "label_rows": {
+    "usual": 970471,
+    "alias": 1,
+    "missing": 436,
+    "other_court": 0
+   },
+   "other_court_labels": {}
+  },
+  "madras": {
+   "label": "Madras High Court",
+   "aliases": [
+    "High Court of Madras",
+    "High Court of Chennai"
+   ],
+   "prefixes": {
+    "HCMA": 1680012,
+    "HCMD": 930584
+   },
+   "rows": 2610596,
+   "label_rows": {
+    "usual": 2598780,
+    "alias": 8168,
+    "missing": 3633,
+    "other_court": 15
+   },
+   "other_court_labels": {
+    "High Court of Bombay": 14,
+    "High Court of Delhi": 1
+   }
+  },
+  "manipur": {
+   "label": "High Court of Manipur",
+   "aliases": [],
+   "prefixes": {
+    "MNHC": 39507
+   },
+   "rows": 39507,
+   "label_rows": {
+    "usual": 38835,
+    "alias": 0,
+    "missing": 672,
+    "other_court": 0
+   },
+   "other_court_labels": {}
+  },
+  "meghalaya": {
+   "label": "High Court of Meghalaya",
+   "aliases": [],
+   "prefixes": {
+    "MLHC": 25558
+   },
+   "rows": 25558,
+   "label_rows": {
+    "usual": 25544,
+    "alias": 0,
+    "missing": 14,
+    "other_court": 0
+   },
+   "other_court_labels": {}
+  },
+  "orissa": {
+   "label": "Orissa High Court",
+   "aliases": [
+    "High Court of Orissa"
+   ],
+   "prefixes": {
+    "ODHC": 872833
+   },
+   "rows": 872833,
+   "label_rows": {
+    "usual": 853943,
+    "alias": 616,
+    "missing": 18233,
+    "other_court": 41
+   },
+   "other_court_labels": {
+    "High Court of Patna": 24,
+    "High Court of Bombay": 6,
+    "High Court of Gauhati": 4,
+    "High Court of Jharkhand": 3,
+    "High Court of Haryana": 2,
+    "High Court of Gujarat": 2
+   }
+  },
+  "patna": {
+   "label": "Patna High Court",
+   "aliases": [
+    "High Court of Patna"
+   ],
+   "prefixes": {
+    "BRHC": 2562269
+   },
+   "rows": 2562269,
+   "label_rows": {
+    "usual": 2540233,
+    "alias": 21837,
+    "missing": 199,
+    "other_court": 0
+   },
+   "other_court_labels": {}
+  },
+  "punjab-and-haryana": {
+   "label": "High Court of Punjab and Haryana",
+   "aliases": [
+    "High Court of Haryana",
+    "High Court of Chandigarh"
+   ],
+   "prefixes": {
+    "PHHC": 1845344
+   },
+   "rows": 1845344,
+   "label_rows": {
+    "usual": 1839900,
+    "alias": 206,
+    "missing": 5238,
+    "other_court": 0
+   },
+   "other_court_labels": {}
+  },
+  "rajasthan": {
+   "label": "High Court Of Rajasthan",
+   "aliases": [
+    "High Court of Rajasthan"
+   ],
+   "prefixes": {
+    "RJHC": 2676195
+   },
+   "rows": 2676195,
+   "label_rows": {
+    "usual": 2667404,
+    "alias": 8426,
+    "missing": 365,
+    "other_court": 0
+   },
+   "other_court_labels": {}
+  },
+  "sikkim": {
+   "label": "High Court of Sikkim",
+   "aliases": [],
+   "prefixes": {
+    "SKHC": 11389
+   },
+   "rows": 11389,
+   "label_rows": {
+    "usual": 11251,
+    "alias": 0,
+    "missing": 138,
+    "other_court": 0
+   },
+   "other_court_labels": {}
+  },
+  "supreme-court": {
+   "label": "Supreme Court of India",
+   "aliases": [],
+   "prefixes": {
+    "INSC": 1113313
+   },
+   "rows": 1113313,
+   "label_rows": {
+    "usual": 1113313,
+    "alias": 0,
+    "missing": 0,
+    "other_court": 0
+   },
+   "other_court_labels": {}
+  },
+  "telangana": {
+   "label": "High Court  for State of Telangana",
+   "aliases": [
+    "High Court of Telangana",
+    "High Court of Hyderabad"
+   ],
+   "prefixes": {
+    "HBHC": 2732387
+   },
+   "rows": 2732387,
+   "label_rows": {
+    "usual": 2718977,
+    "alias": 294,
+    "missing": 13116,
+    "other_court": 0
+   },
+   "other_court_labels": {}
+  },
+  "tripura": {
+   "label": "High Court of Tripura",
+   "aliases": [],
+   "prefixes": {
+    "TRHC": 112120
+   },
+   "rows": 112120,
+   "label_rows": {
+    "usual": 110912,
+    "alias": 0,
+    "missing": 1205,
+    "other_court": 3
+   },
+   "other_court_labels": {
+    "High Court of Gauhati": 2,
+    "High Court of Guwahati": 1
+   }
+  },
+  "uttarakhand": {
+   "label": "High Court of Uttarakhand",
+   "aliases": [],
+   "prefixes": {
+    "UKHC": 307144
+   },
+   "rows": 307144,
+   "label_rows": {
+    "usual": 302988,
+    "alias": 0,
+    "missing": 4096,
+    "other_court": 60
+   },
+   "other_court_labels": {
+    "High Court of Allahabad": 48,
+    "High Court of Kerala": 9,
+    "High Court of Patna": 1,
+    "High Court of Rajasthan": 1,
+    "High Court of Sikkim": 1
+   }
+  }
+ }
+}

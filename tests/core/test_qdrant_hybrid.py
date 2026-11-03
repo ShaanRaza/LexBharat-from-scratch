@@ -49,7 +49,14 @@ def _store(client, calls=None):
 
 
 def _fields(flt):
-    return {c.key: c.match.value for c in flt.must}
+    """The label conditions of a filter. A `court` label is a nested OR: the label, or the
+    court the record id names (court_code); this reads the label side."""
+    out = {}
+    for c in flt.must:
+        if getattr(c, "should", None):
+            c = next(x for x in c.should if x.key == "court")
+        out[c.key] = c.match.value
+    return out
 
 
 async def test_hybrid_is_one_call_dense_plus_sparse_merged_by_rrf():
@@ -161,3 +168,44 @@ async def test_sample_chunks_is_a_random_read_and_never_the_uploads_collection()
     assert [h.record_id for h in hits] == ["c1", "c2"]
     with pytest.raises(PermissionError):
         await store.sample_chunks(store._s.QDRANT_UPLOADS_COLLECTION, {}, 5)
+
+
+# --- A court label also matches the court the record ID names (CLAUDE.md section 6) -----
+def _court_branch(flt):
+    (cond,) = [c for c in flt.must if getattr(c, "should", None)]
+    label = next(x for x in cond.should if x.key == "court")
+    code = next(x for x in cond.should if x.key == "court_code")
+    return label.match.value, list(code.match.any)
+
+
+async def test_a_court_label_filter_also_matches_the_court_the_id_names():
+    c = FakeClient()
+    await _store(c).search("kanoon_v1", [0.1], "bail", english_supreme_court(), 50)
+    (_, kw) = c.queries[0]
+    for p in kw["prefetch"]:  # both halves carry it
+        label, codes = _court_branch(p.filter)
+        assert label == court_payload("supreme_court")["court"] and codes == ["INSC"]
+
+
+async def test_a_court_with_several_id_prefixes_matches_all_of_them():
+    c = FakeClient()
+    await _store(c).search("legal_corpus_v1", [0.1], "x", {"court": "Calcutta High Court"}, 10)
+    (_, kw) = c.queries[0]
+    label, codes = _court_branch(kw["prefetch"][0].filter)
+    assert label == "Calcutta High Court" and sorted(codes) == ["WBCHCA", "WBCHCJ", "WBCHCO", "WBCHCP"]
+
+
+@pytest.mark.parametrize("label", ["High Court of Hyderabad", "High Court", "Some Tribunal", ""])
+async def test_an_unknown_generic_or_shared_label_gets_no_code_branch(label):
+    """Nothing is guessed: a label that names no one court keeps the plain label filter."""
+    c = FakeClient()
+    await _store(c).search("legal_corpus_v1", [0.1], "x", {"court": label}, 10)
+    (_, kw) = c.queries[0]
+    assert all(not getattr(x, "should", None) for x in kw["prefetch"][0].filter.must)
+
+
+async def test_other_filters_are_unchanged_by_the_court_branch():
+    c = FakeClient()
+    await _store(c).search("kanoon_v1", [0.1], "x", {"jurisdiction": "central"}, 10)
+    (_, kw) = c.queries[0]
+    assert _fields(kw["prefetch"][0].filter) == {"jurisdiction": "central"}
