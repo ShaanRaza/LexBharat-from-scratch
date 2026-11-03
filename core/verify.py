@@ -48,6 +48,7 @@ from core.contracts import (
     VerifiedAnswer,
     register_seal_checker,
 )
+from core.hc_citation import NEUTRAL as _NEUTRAL_PUBLISHED
 from core.settings import get_settings
 
 # Wording belongs to docs/UX-COPY.md (note: an authority could not be verified).
@@ -118,6 +119,9 @@ _STRAY_QUOTE = re.compile(rf"[{_DQ}‹›「」『』‚‛]")
 # letters are gone (A.I.R. -> AIR), invisible characters are stripped, look-alike
 # letters are folded to Latin and whitespace (line breaks included) is one space. The
 # answer text itself is never changed by this.
+_NEUTRAL_SHAPE = re.compile(
+    _NEUTRAL_PUBLISHED.pattern, _NEUTRAL_PUBLISHED.flags | re.IGNORECASE
+)
 _CITATION_SHAPES = (
     # AIR 1973 SC 1461 / AIR 1965 Guj. 23 / AIR 1940 Madras 29 / AIR1973SC1461: the
     # court part is any short word or the spelled-out form, so the many court
@@ -137,6 +141,12 @@ _CITATION_SHAPES = (
         re.IGNORECASE,
     ),
     re.compile(r"\bMANU\s*/\s*[A-Z]{2,4}\s*/\s*\d+\s*/\s*\d{4}", re.IGNORECASE),
+    # 2023:DHC:4567 and variants (A125). The pattern is IMPORTED from
+    # core/hc_citation.py, the module that extracts these, so the two cannot drift
+    # apart; only the case is relaxed, because a recalled one may be in lower case.
+    # Matched on a copy with the spaces around ":" closed (see _unretrieved_authority)
+    # and compared by EQUALITY, not substring ("2023:DHC:456" sits in "2023:DHC:4567").
+    _NEUTRAL_SHAPE,
     # (A case NAME "X v. Y" is not tested here: _unretrieved_authority checks it below
     # with the whole name, A117. This tuple is reporter citations and "In re".)
     re.compile(r"\bIn re\s+[A-Z][\w.&'\-]*(?:\s+[A-Z][\w.&'\-]*){0,5}"),
@@ -507,19 +517,42 @@ def _name_was_retrieved(
     return any(_in_order(name, c) for c in candidates)
 
 
+def _neutral_key(m: re.Match[str]) -> str:
+    """year:code:number, upper-cased; the optional bench suffix (-DB) is ignored."""
+    return f"{m.group(1)}:{m.group(2)}:{m.group(3)}".upper()
+
+
+def _tight_colons(text: str) -> str:
+    return re.sub(r"\s*:\s*", ":", text)
+
+
 def _unretrieved_authority(sentence: str, passages: Sequence[Passage]) -> bool:
     """True if the sentence names a case/citation that is in none of the passages."""
-    haystack = " ".join(
-        [normalise(p.text) for p in passages]
-        + [normalise(p.citation_string or "") for p in passages]
-    )
-    squashed = _squash(
-        " ".join(p.text + " " + (p.citation_string or "") for p in passages)
-    )
+    # What the passages hold. The DERIVED identifiers are in it too (A125): a
+    # passage's header is stripped from its text, so a genuine neutral citation lives
+    # only in `neutral_citation` and would otherwise be removed as unretrieved.
+    # `case_reference` is a label built from fields, not a citation: it is here so it
+    # can be repeated, and has no shape of its own because it cannot be recalled.
+    fields = [
+        f
+        for p in passages
+        for f in (p.text, p.citation_string, p.neutral_citation, p.case_reference)
+    ]
+    held = [f for f in fields if f]
+    haystack = " ".join(normalise(f) for f in held)
+    squashed = _squash(" ".join(held))
+    neutral_held = {
+        _neutral_key(m) for f in held for m in _NEUTRAL_SHAPE.finditer(_tight_colons(f))
+    }
     names = " ".join(_norm_case_name(p.title or "") for p in passages)
     body = _norm_case_name(haystack)
     plain = _detect_form(_MARKER.sub("", sentence))
     for shape in _CITATION_SHAPES:
+        if shape is _NEUTRAL_SHAPE:
+            for m in shape.finditer(_tight_colons(plain)):
+                if _neutral_key(m) not in neutral_held:
+                    return True
+            continue
         for m in shape.finditer(plain):
             found = m.group(0)
             if normalise(found) in haystack:
