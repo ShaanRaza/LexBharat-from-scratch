@@ -618,6 +618,58 @@ cost measured on 42 chunks (9 of them identified as lite or large) with `voyage-
 measurements. The per-court config cuts the exposure by roughly a factor of ten at either end. Nothing here
 proposes or prices a re-embed.
 
+### Two qualifications on the question-style number, and what a six-court re-embed would involve
+
+**Qualification 1: the pessimistic end likely overstates production. This is reasoning, not measurement.**
+Controls reach 29% hybrid @10 under paraphrase against about 85% sentence-style. A 7.4-point gain is large on
+a 29% base and small on an 85% base, so the headroom a fixed model penalty can take back scales with base
+recall, and real queries that carry anchors (a section number, a case name) have less of it. Nothing measured
+here puts a number on that; it is why the paraphrase arm is the high end of the range and not the cost.
+
+**Qualification 2: the 7.6% residual is concentrated, and 7.6% is not the number a user faces.** Outside the
+court's majority model (v2 groups, 37 to 73 sampled chunks each): Madhya Pradesh 46%, Orissa 42%, Manipur
+42%, Jammu and Kashmir 38%, Meghalaya 34%; **everything else 0 to 4%, apart from Uttarakhand** (below). A user
+asking a Madhya Pradesh question faces 46%, which at the two ends of the bracket is a hybrid @10 exposure of
+about **0.8 to 3.4 points** (share times per-chunk cost; Estimates). Orissa 0.8 to 3.1, Manipur 0.8 to 3.1,
+J&K 0.7 to 2.8, Meghalaya 0.6 to 2.5.
+
+**Correction: Uttarakhand's 30% is a v2 group of 1,023 points.** Exact counts by `court` (read-only facets,
+`court_facets.json`): Uttarakhand holds **261,025 points in v1, uniformly lite (52 of 52 sampled)**, and
+1,023 in v2, where the 30% (11 of 37) was measured. Court-wide that is about **304 outside-majority chunks
+of 262,048, 0.1%**, not 30%. The other five courts exist only in v2 (0 in v1), so their shares stand.
+
+**Pricing a targeted re-embed of the six courts (arithmetic only; no embedding call).** Rate: the Kerala
+re-embed, $16.36 over 217,766 chunks = $0.0000751 a chunk (`voyage-4`, about 1,246 tokens a chunk; the sample
+that gives the shares used short chunks, so real chunks may be longer). Counts are **Qdrant points**, exact
+by `court` label, because that is what a re-embed touches; the parquet has other counts (Madhya Pradesh 970,908
+rows against 766,920 points, Orissa 872,833 against 501,386, J&K 181,221 against 240,966).
+
+| Court (v2 group) | Qdrant points | Outside majority | Off-majority chunks (95% range) | At the Kerala rate |
+|---|---:|---:|---:|---:|
+| Madhya Pradesh | 766,920 | 23 of 50 | 352,783 (252,849 to 457,095) | $27 |
+| Orissa | 501,386 | 31 of 73 | 212,917 (159,361 to 270,251) | $16 |
+| Jammu and Kashmir | 240,966 | 22 of 58 | 91,401 (64,010 to 122,405) | $7 |
+| Manipur | 31,643 | 21 of 50 | 13,290 (9,295 to 17,646) | $1 |
+| Meghalaya | 22,209 | 17 of 50 | 7,551 (4,983 to 10,626) | $1 |
+| Uttarakhand (v2 group only) | 1,023 | 11 of 37 | 304 (179 to 468) | $0 |
+| **Total** | **1,564,147** | | **678,247 (490,677 to 878,491)** | **$51 ($37 to $66)** |
+
+The off-majority chunks are **2.2% of Qdrant's 31.42M v1 and v2 points** (1.6 to 2.8%; 2.1% of the parquet's
+32.57M rows) and about **27% of the corpus-wide residual** (taken as about 8% of 31.1M High Court points). The
+six courts hold 5.0% of the corpus. At the price of each court's *majority* model (lite is a third of the
+`voyage-4` rate, large twice it) the total is $46.
+
+**But $51 is not what a targeted re-embed costs, because the minority chunks cannot be found for free.** The
+sibling test above shows no key to a point's model, so picking out the 678,247 means embedding them, which is
+the work itself. The cheapest way to reach them is to re-embed **every point in the six groups to the court's
+majority model**: **1,564,147 points, about $118 at the Kerala rate (Rs 9,988), $109 at majority-model prices**
+(`voyage-4` for Madhya Pradesh and Meghalaya, lite for Orissa and Manipur, large for J&K), **13 to 18 times
+below option (c)** ($1,500 to $2,100). Points that already match are rewritten unchanged. Duplicated chunks
+(Orissa about 8% and Madhya Pradesh about 5% in the sample estimate) already have a matching twin, and J&K's
+duplicates are identical copies that A126 would collapse; both effects lower the real count, and neither was
+measured here. What it would buy is the exposure above for users of those five courts and about 27% of the
+corpus-wide residual. Whether that is worth $109 to $118 is the owner's call; this section does not propose it.
+
 ### Is the model a free key? The sibling test: no payload field, no id, and duplicates only in some courts
 
 **Measured** 3 Nov 2026 (`kfix_sib_*.py`, `kfix_pair_courts.py`; about Rs 0.32 in Voyage tokens plus read-only
@@ -852,7 +904,7 @@ parquet row, section 18). Intervals are Wilson 95%.*
 
 **Summary.** Not `voyage-4`: 73% of the sampled chunks overall (v1 55%, v2 87%). Outside the court's own
 majority model: 7.6% overall (**v1 1%, 2 of 18 groups; v2 12%, 13 of 28 groups, 11 of them at 10% or
-more**: Madhya Pradesh 46%, Orissa 42%, Manipur 42%, Jammu & Kashmir 38%, Meghalaya 34%, Uttarakhand 30%,
+more**: Madhya Pradesh 46%, Orissa 42%, Manipur 42%, Jammu & Kashmir 38%, Meghalaya 34%, Uttarakhand 30% (a 1,023-point v2 group; its 261,025 v1 points are uniformly lite, so court-wide it is 0.1%),
 Himachal Pradesh 27%, Delhi v1 27%, Allahabad v2 19%, Jharkhand 19%, Kerala 17%, Punjab and Haryana 14%).
 These are sample shares of 50-ish chunks per group, **not volume-weighted**; the volume-weighted estimate
 stays the one above (about 92% of all High Court points matched by a per-court majority, 98% of v1, 84% of v2).
