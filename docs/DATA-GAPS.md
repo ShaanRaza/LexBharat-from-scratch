@@ -677,6 +677,18 @@ duplicates are identical copies that A126 would collapse; both effects lower the
 measured here. What it would buy is the exposure above for users of those five courts and about 27% of the
 corpus-wide residual. Whether that is worth $109 to $118 is the owner's call; this section does not propose it.
 
+### Measured end to end, 4 Nov 2026: the per-court config does not show a net gain
+
+The exposure figures above (5.4 points under one query model, 0.56 under a per-court config) are shares times a per-chunk
+cost; the end-to-end eval of A128 (DECISIONS A128, "REOPENED") measured the net effect on 18,399 chunks of 24 courts, 1,185
+queries, through the shipped code. **A per-court config fused by RRF against one `voyage-4` vector: hybrid @10 -0.7 (95%
+CI -1.9 to +0.4) equal weight, +1.4 (-0.4 to +3.2) weighted by court size; dense @10 -4.0 (-6.3 to -1.6) and +2.2
+(-0.9 to +5.2).** The gain exists for courts embedded by `voyage-4-large` (hybrid @10 +3.8) and not for `voyage-4-lite`
+courts (-2.5): matching a lite chunk's model does not help, even with no fusion (-1.9 dense @10 with a court filter). The
+single-model `voyage-4-large` vector was better than `voyage-4` (post hoc). So the 7.6% residual and the 73% mismatch
+figures above describe how many chunks sit off the query's model, not how much recall that costs: for lite-model
+chunks, the measured cost of mismatch is about zero.
+
 ### Is the model a free key? The sibling test: no payload field, no id, and duplicates only in some courts
 
 **Measured** 3 Nov 2026 (`kfix_sib_*.py`, `kfix_pair_courts.py`; about Rs 0.32 in Voyage tokens plus read-only
