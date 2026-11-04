@@ -223,13 +223,23 @@ as stored, labelled "as recorded in the dataset".
   marked "no training". Never a free tier that may train on user data.
 - Langfuse logs must be **masked** (upload text, emails, phone numbers → placeholders) and
   Sentry reports **scrubbed** (request bodies, tokens, emails, document text removed).
-  **NEITHER IS BUILT (measured 4 Nov 2026, finding F10).** No file in `api/ core/ adapters/
-  workers/` imports `sentry_sdk` or `langfuse` or sets a litellm callback; `core/settings.py`
-  holds four unused keys and nothing else. This is safe only because neither vendor is wired.
-  **Write the masking and scrubbing before either goes live**, then prove it with a hostile
-  document that puts one known string into the question, a passage, the answer and an
-  exception message. Two tripwire tests in `tests/security/` now fail if either vendor is
-  wired first. Read this line as a requirement, not as a description of what exists.
+  **BUILT AND PROVEN, NOT WIRED (A182, 5 Nov 2026).** `core/redact.py` holds the mask and
+  `adapters/telemetry.py` is the only file allowed to name either vendor. Langfuse: an upload
+  or matter-fact run has all its text withheld, other runs have emails, phone numbers and
+  tokens masked, and a run that never declares itself is withheld. Sentry: events are rebuilt
+  from an allow-list, dropping exception messages, request bodies, headers, breadcrumbs, log
+  messages, frame variables and the user's email. **Proven** against the real SDKs with a
+  hostile upload putting one known string into the question, a passage, the answer and an
+  exception message: it reaches neither payload, a control shows the capture sees it with
+  scrubbing off, and 12 mutants were caught.
+  **Nothing is sent anywhere yet, and that is deliberate.** The two call sites (the app
+  factory and the dependency builder) do not exist, `sentry-sdk` and `langfuse` are dev-only
+  dependencies, and the tripwire tests in `tests/security/` still fail if a vendor is wired.
+  **Before either goes live:** add the call sites, promote the two packages to runtime
+  dependencies in that same change, and re-run the hostile-document proof — it was measured
+  against `sentry-sdk` 2.73.0 and `langfuse` 5.1.0, so a version bump re-runs it.
+  **Known gap:** a follow-up turn carries no flag saying it came from an upload chat, so it
+  is withheld only if it still sends `document_ids`. Close that before wiring.
 - Delete means **hard delete**: file from S3, extracted text from PostgreSQL, all vectors
   from Qdrant by `document_id`, in one job, logged, with a nightly leftover check.
 
