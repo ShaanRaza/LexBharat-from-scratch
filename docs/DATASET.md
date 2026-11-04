@@ -69,7 +69,7 @@ quantization well under the earlier 4–5 GB estimate (Needs verification by loa
 | `disposition` | 98.8% | **577 different values** — a High Court problem. The SC concentrates in ~10 |
 | `judges` | 32.7% | Sampled values were extraction garbage ("another", "apply for bail") |
 | `petitioner` / `respondent` | 99.9% | Often counsel names or sentence fragments, not party names |
-| `section_number`, legislation | 98.5% | No problem — section lookup works directly |
+| `section_number`, legislation | 98.5% filled | **Filled, but NOT reliable as a filter key** — see `section_number` below. (This row used to say "section lookup works directly"; that was wrong.) |
 | `in_force`, legislation | 100% | No problem **as a field** — but see `act_status` below |
 
 **Consequence: never display judges or party names.** A tool sold on trust cannot show
@@ -95,6 +95,17 @@ across `acts_india`, and `tests/fixtures/practice/README.md` says every state Ac
 dataset reads `in_force`, which "looks like a default, not a check" (Measured). If so, the
 "in force" label on state Acts and regulators rests on a default. Count with
 `python -m core.act_status <acts file>` before relying on it. **Not run.**
+
+### The `section_number` trap
+
+`section_number` is filled (98.5%) but it is **not the address of a section's text**, and a lookup that filters on it will miss text that is present. **Do not trust `section_number` as a filter key.** Measured 5 Nov 2026 on all 74,484 Central Act points in `kanoon_v1` (`scan/section_coverage.py`, `docs/SECTION-COVERAGE.md`, DATA-GAPS sections 24 and 26):
+
+* **A section is appended into the previous section's chunk and carries the previous number.** An amended or substituted section (`[34. Acts done by several persons ...]`) is stored inside the chunk of the section before it. Found for IPC 34 (inside the chunk labelled 33), NDPS 37 (inside 36C) and Registration Act 49 (inside 48). A filter on `section_number == 34` finds nothing, though section 34's text is in the data. Across the Acts in force, 9,584 section numbers have no chunk labelled with them; for 1,733 of those the text is inside the chunk before (hand-checked: 13 of 16 random credits were the real section).
+* **One number, many provisions.** Order rules and Schedule rows are filed as sections: in the CPC the chunks labelled `Section 9:` and `Section 11:` are Order rules, and the text of Sections 9 and 11 themselves is not in the data; in the Limitation Act the Schedule's articles are labelled `Section 121:`. 134 Acts in force file 3 or more different provisions under one number.
+* **Odd labels.** A year filed as a section number (`Section 1941`), 16 Acts in force stored as unlabelled blocks with no `section_number` at all (the Arms Act, the Protection of Human Rights Act), and 45 stubs of 1 to 3 sections.
+* **What it did to the 100-question run.** Of the questions that name a section, 36 kept at least one Act-section passage, and in 35 the asked section's text was in a kept passage. **By label alone, 16 of 65 kept passages differed from the asked section** (all in 4 questions): in 3 of those 4 the text was right (IPC 34 labelled 33; Contract Act 73 and IT Act 43 both labelled `s001`) and the label was the data's error; in the 4th (HSA 6) the text was wrong too. The gate was not confidently wrong about neighbouring sections; the label was.
+
+**Consequence for the code.** The exact filter on (`act_id`, `section_number`) is the first layer of step 5 but never the only path: it falls back to the Act alone and then to the ordinary search (DECISIONS A144), and a section the user did not name is never a filter (`core/decide.py`). Do not build anything that serves "section N" by `section_number` alone, or that says a section is absent because no chunk carries its label. A completeness check has to look in the text as well (`scan/section_coverage.py` does).
 
 ## Coverage is shallower than the court list suggests
 

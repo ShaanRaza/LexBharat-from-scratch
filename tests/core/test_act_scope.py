@@ -402,3 +402,113 @@ def test_a_year_is_a_judgment_year_when_nothing_ties_it_to_an_act():
 
 def test_passage_type_is_unchanged():
     assert Passage("r", "t").kind == "judgment"
+
+
+# ----------------------------------------------------------------------------------------
+# Decide: a section the user did not name never becomes a filter
+# ----------------------------------------------------------------------------------------
+INVENTED = [  # (the user's question as rewritten, the section the decider guessed)
+    ("doctrine of res judicata", "11"),
+    ("requirements for granting a temporary injunction", "39"),
+    ("When can a court condone delay in filing an appeal?", "5"),
+    ("Can an unregistered document be used as evidence of a sale?", "49"),
+    ("What is the standard for granting bail in a case of murder?", "439"),
+    ("restrictions that can be placed on freedom of speech", "19(2)"),
+]
+NAMED = [  # the section is written in the query
+    ("What does Section 438 of the Code of Criminal Procedure say?", "438"),
+    ("Section 65B Indian Evidence Act electronic evidence certificate", "65B"),
+    ("section 156(3) CrPC magistrate order", "156(3)"),
+    ("s. 7A Code of Civil Procedure rejection of plaint", "7A"),
+    ("anticipatory bail under Section 138 of the Negotiable Instruments Act", "138"),
+]
+
+
+@pytest.mark.parametrize("query,section", INVENTED)
+async def test_a_section_the_user_did_not_name_is_dropped(
+    settings, store, query, section
+):
+    class Guess(FakeDecisions):
+        async def decide(self, q, *, uploads=False):
+            f = Filters(act="Code of Civil Procedure, 1908", section=section)
+            return Decision("in_scope", f, "normal", (), False)
+
+    deps = make_deps(settings, store, gate, verify, decisions=Guess())
+    d = await decide(RewrittenQuery(query), deps)
+    assert d.filters.section is None
+    assert (
+        d.filters.act == "Code of Civil Procedure, 1908"
+    )  # only the guessed section goes
+
+
+@pytest.mark.parametrize("query,section", NAMED)
+async def test_a_section_the_user_named_is_kept(settings, store, query, section):
+    class Named(FakeDecisions):
+        async def decide(self, q, *, uploads=False):
+            return Decision("in_scope", Filters(section=section), "normal", (), False)
+
+    deps = make_deps(settings, store, gate, verify, decisions=Named())
+    d = await decide(RewrittenQuery(query), deps)
+    assert d.filters.section == section
+
+
+async def test_a_section_the_rewrite_invented_is_dropped_too(settings, store):
+    """The decider names none; the rewrite step (model or regex) supplies one that the
+    query text does not contain. Whoever supplied it, it goes."""
+    deps = make_deps(settings, store, gate, verify, decisions=FakeDecisions())
+    d = await decide(RewrittenQuery("doctrine of res judicata", section="11"), deps)
+    assert d.filters.section is None
+
+
+async def test_a_section_named_in_an_earlier_turn_survives_through_the_rewrite(
+    settings, store
+):
+    """Follow-up 'and what is the penalty?': the rewrite makes the query standalone, so
+    it carries 'section 138' and the section is kept."""
+    deps = make_deps(settings, store, gate, verify, decisions=FakeDecisions())
+    d = await decide(
+        RewrittenQuery(
+            "penalty under section 138 Negotiable Instruments Act", section="138"
+        ),
+        deps,
+    )
+    assert d.filters.section == "138"
+
+
+async def test_a_number_that_is_only_part_of_another_number_does_not_count(
+    settings, store
+):
+    deps = make_deps(settings, store, gate, verify, decisions=FakeDecisions())
+    d = await decide(RewrittenQuery("provisions on 1138 cheques", section="138"), deps)
+    assert d.filters.section is None
+    d = await decide(RewrittenQuery("fine of 4.38 lakh", section="438"), deps)
+    assert d.filters.section is None
+
+
+async def test_an_invented_section_no_longer_strips_judgments_from_the_search(
+    settings,
+):
+    """End to end on the fake store: with the guess dropped the search is the ordinary
+    one, so judgments are among the passages again."""
+    s = FakeVectorStore(settings)
+    s.add_law(
+        "act-s11",
+        "res judicata matter directly in issue",
+        act_id=CPC,
+        section_number="11",
+        kind="act_section",
+    )
+    s.add_law("j1", "the doctrine of res judicata bars a second suit", kind="judgment")
+
+    class Guess(FakeDecisions):
+        async def decide(self, q, *, uploads=False):
+            f = Filters(act="Code of Civil Procedure, 1908", section="11")
+            return Decision("in_scope", f, "normal", (), False)
+
+    deps = make_deps(settings, s, gate, verify, decisions=Guess())
+    rq = RewrittenQuery("doctrine of res judicata")
+    dec = await decide(rq, deps)
+    found = await search(
+        PipelineRequest(user_id="u", message=rq.query), rq, dec, [0.0], deps
+    )
+    assert any(p.kind == "judgment" for p in found.passages)

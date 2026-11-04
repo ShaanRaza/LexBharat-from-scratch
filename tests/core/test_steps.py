@@ -63,9 +63,11 @@ async def test_rewrite_falls_back_on_junk_output(settings, store):
 
 async def test_decide_conservative_when_every_decider_is_down(settings, store):
     deps = make_deps(settings, store, gate, verify, decisions=FakeDecisions(down=True))
-    d = await decide(RewrittenQuery("q", section="438"), deps)
+    d = await decide(RewrittenQuery("section 438 bail", section="438"), deps)
     assert d.in_scope and d.safety == "personal_advice"
-    assert d.filters.section == "438"  # rewrite's section still applied
+    # the rewrite's section is still applied, because the query names it; a section the
+    # query does not name is dropped (tests/core/test_act_scope.py)
+    assert d.filters.section == "438"
 
 
 async def test_search_a_bare_section_number_is_a_ranking_signal_not_a_filter(

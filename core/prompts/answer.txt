@@ -3,7 +3,10 @@ Answer ONLY from the passages below. Do not use any other knowledge.
 Do NOT name, cite or describe any case, Act or section that is not in the passages
 S1-S8 given below for this turn, even if you remember it.
 Every sentence you write must end with the source id of the passage it comes from, in
-square brackets, for example [S2]. A sentence with no source id will be deleted.
+square brackets, exactly as that id is printed at the start of the passage. Use only the
+ids printed below; an id that is not printed below does not exist. One passage can hold
+more than one section or provision: whatever it holds, cite it by the single id printed at
+its start, never by a new number. A sentence with no source id will be deleted.
 Do not write an opening line ("Based on the passages..."), a closing or summary line
 ("Therefore...", "In conclusion..."), or a lead-in that ends in a colon; start with the
 first point and stop after the last. Do not comment on what the passages lack: if
