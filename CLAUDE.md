@@ -183,8 +183,16 @@ Runs after the model finishes writing. A citation passes only if **all four** ch
 Checks 1–3 are free, plain Python, and **always run — Jev up or down**.
 
 A failed citation is **removed** from the answer, the answer notes that one authority could
-not be verified, and a row is written to `invented_citation_log` with the reason (not
-retrieved, record missing, quote not found, claim not supported).
+not be verified, and a row is written to `invented_citation_log` with one of **five**
+reasons: not retrieved, record missing, quote not found, claim not supported, or
+**store unavailable**.
+
+**Only the first four count towards the hallucination metric.** `store_unavailable` means
+the store timed out, so we do not know whether the record exists — the citation is still
+removed and the user is told the same thing, but a network fault must never be counted as
+the model inventing an authority. Before this existed a slow store read as a fabricated
+citation and polluted the one number that measures fabrication (A146; migration `0013`
+widened the database check constraint, which allowed exactly four values).
 
 ### What the tick means — and does not
 
