@@ -60,10 +60,14 @@ def test_a_window_overlapping_another_client_is_contended():
     foreign = T.LoadSample(
         105.0, 40.0, 3.0, (5313,)
     )  # another session's process on the port
-    own_load = T.LoadSample(110.0, 400.0, 5.0, ())  # our own hybrid query: 400% CPU, nobody else on the port
+    own_load = T.LoadSample(
+        110.0, 400.0, 5.0, ()
+    )  # our own hybrid query: 400% CPU, nobody else on the port
     samples = [quiet, foreign, own_load]
     assert T.is_contended(foreign) and not T.is_contended(quiet)
-    assert not T.is_contended(own_load)  # high server CPU with no other client is our own query
+    assert not T.is_contended(
+        own_load
+    )  # high server CPU with no other client is our own query
     assert T.contended_between(samples, 99.0, 101.0) == []  # a quiet window
     assert T.contended_between(samples, 104.0, 106.0) == [foreign]
     assert T.contended_between(samples, 109.0, 111.0) == []
