@@ -2267,25 +2267,28 @@ The owner audit's 4,068 ids split into 2,739 served and 1,329 unserved (DECISION
 
 ### 23.2 Coverage by year (Measured; full table `scan/sc/coverage_by_year.csv`)
 
-Years are taken from the case id (`YYYY_INSC_n`). Three counts: the Open India Law source parquet, what `kanoon_v1` serves, and a third-party public bucket (`s3://indian-supreme-court-judgments`, CC BY 4.0, "downloaded from ecourts", listed with `--no-sign-request`, **listing only, no file downloaded**).
+**Correction, 4 Nov 2026:** the first version of this section read the public bucket's per-year file counts as distinct judgments and reported 7,639 "extras". That was wrong. The bucket files each judgment under the year of its SCR volume, so about 5,200 judgments appear under two adjacent years (1962's listing holds 302 judgments whose ids say 1961). Counted by neutral id the picture is different, below.
 
-| Years | Source cases | Served | Bucket English PDFs | Bucket minus served |
+Years are taken from the case id (`YYYY_INSC_n`). Three counts: the Open India Law source parquet; what `kanoon_v1` serves; and a public third-party bucket (`s3://indian-supreme-court-judgments`, CC BY 4.0, from `scr.sci.gov.in`), read from its 77 per-year metadata files (49 MB, the only files downloaded from it) and counted by distinct neutral id.
+
+| Years | Source | Served | Bucket distinct ids | Bucket ids not in source |
 |---|---|---|---|---|
-| 1950-1969 | 4,150 | 4,150 | 6,592 | +2,442 |
-| 1970-1989 | 5,628 | 5,628 | 8,346 | +2,718 |
-| 1990-2007 | 12,676 | 12,672 | 12,772 | +100 |
-| 2008 | 1,126 | 1,126 | 1,508 | +382 |
-| **2009** | **1,322** | **13** | **1,326** | **+1,313** |
-| 2010-2024 | 11,674 | 11,659 | 11,886 | +227 |
-| 2025 | 438 | 440 | 897 | +457 |
-| Total | 37,014 | 35,688 | 43,327 | +7,639 |
+| 1950-2005 | 20,155 | 20,151 | 20,157 | 2 |
+| 2006 | 978 | 978 | 1,029 | 51 |
+| 2007 | 1,321 | 1,321 | 1,321 | 0 |
+| 2008 | 1,126 | 1,126 | 1,507 | 381 |
+| **2009** | **1,322** | **13** | **1,322** | 0 |
+| 2010-2024 | 11,674 | 11,659 | 11,675 | 1 |
+| 2025 | 438 | 440 | 893 | 455 |
+| 2026 | 0 | 0 | 235 | 235 |
+| Total | 37,014 | 35,688 | 38,139 | 1,125 |
 
-- **Source minus served is 1,326 net (1,329 unserved, 3 served ids not in the source). 2009 is 1,309 of the 1,329.** Every other year is at most 9 (2013), so 2009 is the only hole in what the source holds. All 1,329 have no English text in the source (Hindi, Punjabi and other scripts only).
-- **The source itself looks short against the bucket**, in two bands: 1950-1989 (bucket 5,160 above served over 40 years, e.g. 1962: 698 against 394) and 2008, 2009, 2025. For 2009 the bucket lists 1,326 English PDFs where the source has English text for 13 cases, so the 2009 judgments exist in English publicly.
-- **What these counts are not.** The bucket may count things the source does not (orders, duplicates, judgments never given a neutral id). The source keys on `case_id`, the bucket on year of judgment; 5,178 source cases have a different `year` field from their id year. **Not reconciled; whether the bucket's extra records are distinct reported judgments is not verified.** It is a third-party copy of eCourts, not the court's own index; the court's index sits behind a CAPTCHA, which was not attempted. So: **the gap against the court's own index is not measured.** The bucket says "at least about 6,300 more than the source" only if its records are distinct judgments.
-- **Do not use INSC numbering gaps as a completeness test.** The source numbers run to 4,354 in 2024 against 743 held (bucket: 782). Numbers are issued to more than the judgments any copy holds.
-- **Marketing consequence:** "complete Supreme Court coverage" is not supported. Defensible today: 35,688 judgments served, 1950 to 6 Nov 2025, with the 2009 English texts missing.
-- Closing 2009 from the bucket would mean downloading PDFs and extracting text (about 1,326 judgments), then embedding them. Embedding is a paid step: not done, **cost not yet priced**; needs the owner's approval first.
+- **Source minus served is 1,326 net (1,329 unserved, 3 served ids not in the source). 2009 is 1,309 of the 1,329.** Every other year is at most 9 (2013). All 1,329 have no English text in the source (Hindi, Punjabi and other scripts only).
+- **Against the bucket, the source holds every id the bucket lists except 1,125** (2025: 455, 2008: 381, 2026: 235, 2006: 51, and three singles in 1998, 2004 and 2022), **plus 138 distinct SCR-cited judgments the bucket lists with no neutral id** (162 rows; mostly filed under 1958-59, 1997 and 2024). The source is not short in 1950-2005 or 2007; the bucket holds every one of its 37,014 ids. Of the 1,125, none matches a source citation under another id.
+- **The earlier "7,639 extras" are:** 5,277 rows that repeat an id already counted in another year's listing, 162 rows without an id, and the 1,125 ids above (43,578 rows in all).
+- **What the bucket is.** It lists the court's Digital SCR (`scr.sci.gov.in`), the *reported* judgments, each with an SCR citation and a neutral citation. It is therefore **not the court's full judgment index**. Neutral ids are issued to more judgments than are reported (the source numbers run to 4,354 in 2024 against 743 held and 782 in the bucket), which is **consistent with** "reported vs all"; I have not verified it. Do not use id gaps as a completeness test.
+- **The gap against the court's own full index is still not measured** (CAPTCHA, not attempted). Against the reported-judgment list the bucket gives, the served collection lacks 1,309 (2009, text) + 1,125 + 138 = about 2,570 judgments, plus every 2026 judgment.
+- **Marketing consequence:** "complete Supreme Court coverage" is not supported. Defensible today: 35,688 judgments served, 1950 to 6 Nov 2025, with the 2009 English texts and about 1,260 later reported judgments missing.
 
 ### 23.3 Staleness (Measured)
 
@@ -2340,6 +2343,42 @@ Present on 8.7% of SC points (32,991). The source parquet has **no such column**
 
 Margin letters are the printed column marks A to H sitting inside sentences ("held her C guilty of contempt", "name of the H accused"): a quote without the letter fails. Glued words in recent years ("theRegistry", "anDindependent"). This is an **exposure, an upper bound** on quotes that could fail for OCR reasons: it assumes the quoter types the clean printed words and the quote spans 12 words; shorter quotes meet less. The real failure rate needs a quote set from a clean copy; **not measured**. Lane B's separate finding stands: check 3 does nothing on paraphrase. Not touched.
 
+**OPEN OWNER ITEM.** Should check 3's comparison normalise OCR artefacts (margin letters A-H between words, glued words, `l` for `1`)? Today `normalise` (`core/verify.py:236`) tidies spaces and punctuation but keeps every letter, so up to 3.5% to 9.4% of 12-word stretches (by era; margin letters 1.4% to 7.8%) can fail an honest quote. Lane B separately measured (relayed to me by the owner; not re-measured here) that check 3 does nothing at all on paraphrased sentences, so the two problems pull opposite ways: the check is too strict on faithful quotes of OCR-damaged text and silent on paraphrase. The owner decides; the SC lane has not changed the verifier.
+
 ### 23.7 Official listing check for the court's index (Checked)
 
 No RSS feed or API for judgments was found on sci.gov.in; the court's listing sits behind a CAPTCHA. The Supreme Court publishes an annual report whose tables were not opened. The public bucket above names `scr.sci.gov.in` as its source and asks users to avoid high-concurrency scraping. Per-year metadata (`metadata/parquet/year=YYYY/metadata.parquet`) would give id-level lists for (a) judgments on that index we hold nowhere and (b) held judgments not on it; **not downloaded** pending approval.
+
+### 23.8 Pricing the gap from the bucket (Estimate from Measured parts; nothing ingested)
+
+Method: the bucket's PDF file names carry volume and page range (`2009_10_1006_1012_EN.pdf` is 7 SCR pages), so page counts come from the listing. I downloaded **8 sample PDFs of 2009 (3.5 MB total, chosen across the size range)** to measure text per page: all 8 have a text layer (extracted with `pdftotext`, no OCR), 95 pages, 216,625 characters, **2,280 characters per page** (range 1,973 to 2,385). A served SC chunk averages 3,275 new characters and 908 billed tokens (3,000 sampled chunks, tokenizer count). Rate: voyage-4 $0.06 per million tokens, Batch 33% off, so $0.0402 (vendor pricing fetched 4 Nov, via `data/voyage_token_count.py`); INR at the repo's assumed Rs 85 per USD. Free-token allowance not assumed.
+
+| Job | PDFs / records | Size | SCR pages | Characters | Chunks | Tokens | voyage-4 batch |
+|---|---|---|---|---|---|---|---|
+| 2009 English | 1,326 | 652.6 MiB | 19,157 | 43.7 M | about 13,300 | about 12.1 M | $0.49 (Rs 41) |
+| Bucket-only reported judgments (1,125 ids, 138 no-id) | 1,263 | not listed | 24,335 (1,225 with a page range) | 55.5 M | about 16,900 | about 15.4 M | $0.62 (Rs 53) |
+| Both | about 2,590 | | about 43,500 | 99 M | about 30,300 | about 27.5 M | **$1.11 (Rs 94)** |
+
+Range plus or minus 20% (the sample PDFs yield 10% fewer tokens per character than served text, so this leans high). **Embedding is not the cost; reading is.** Open: PDFs carry the printed margin letters and page headers (DATA-GAPS 23.6), so the same noise enters unless cleaned; chunking and sparse vectors must match the served collection; and text read from PDFs has not been compared with the source's text for the same case. **Not ingested, not embedded, no spend. Waiting for owner approval (cost gate).**
+
+### 23.9 Is the bucket a refresh source? (Checked)
+
+- **Maintained:** the 2026 listing (235 distinct judgments, decisions to **6 Oct 2026**, scraped 17 Oct 2026) was last modified 18 Oct 2026; all other years' metadata 11 Apr 2026; 2009 PDFs 4 Jun 2026; 2009 archive 15 Jan 2026. So updates occur, at intervals of two to five months in what I saw; the registry says "Bi-monthly" and I did not confirm that. Run by Dattam Labs (a private company, contact on the registry page). Judgments after 6 Nov 2025 exist only there among our candidate sources.
+- **Terms:** CC BY 4.0 on the dataset. The registry page states no conditions from the court or eCourts; its README asks users to avoid high-concurrency scraping and to prefer the tar and parquet files. The court's own terms for reuse of judgments were **not found** (`digiscr.sci.gov.in` is decommissioned; the portal moved to `scr.sci.gov.in`).
+- **Fit:** it carries a neutral id, SCR citation, decision date, disposal nature, judge and a PDF with a text layer per judgment: enough to key to our ids. Cover-only: reported judgments, English plus regional PDFs. Risks: a third party, not the court; no change log; PDF text, not the source's text. **A candidate ingestion source for refresh; not a decision.** Nothing was ingested.
+
+### 23.10 Case-level citation coverage (Measured; `scan/sc/measure_refs.py`, `inbound`)
+
+A cited case needs only one reference in SCR or neutral form to be linked. Counting distinct citing judgments per cited judgment (self-citations and running headers removed), over the 35,688 served cases:
+
+- **17,418 (48.8%) have at least one resolvable inbound citation; 18,270 (51.2%) have none.** Total links: 72,101 (citing judgment, cited judgment) pairs.
+- Inbound count per case: median 0, mean 2.0, 75th percentile 2, 90th 5, 99th 22, maximum 174 (`1978_INSC_16`; then 136, 125, 106, 105). Cases with exactly 0: 18,270; 1: 6,426; 2: 3,339; 3-5: 4,297; 6-10: 2,004; 11-50: 1,291; 51-200: 61; none above 200. The top 1% of cases hold 18.8% of links.
+- **By the cited case's decade it is lopsided:** 1950-69: 73.0% have an inbound link; 1970-89: 57.4%; 1990-2009: 46.4%; 2010-19: 48.4%; **2020-25: 23.0%**. The cases a recent court is most likely to overrule are old; they are the best covered. But a *recent* judgment that overrules is the citing side, and recent judgments cite mostly in SCC form (50.0% SCC, 34.7% SCR), so its reference to the older case resolves only if the SCR form is also printed.
+- **Reading it:** a case with 0 resolved inbound links is **not** a case with no citing judgment; it means none was written in SCR form. The count is a floor. Nothing in a citator built on it may read "not cited" or "no adverse treatment found" as clearance.
+
+### 23.11 Is there an SCC-to-SCR concordance outside our data? (Checked; nothing accessed)
+
+- **Official table:** the Supreme Court's Judges Library publishes an Equivalent Citation Table (four PDF volumes at `main.sci.gov.in/pdf/ECT/journal1.pdf` to `journal4.pdf`, 1950 to date, each volume ordered by a different reporter: AIR, SCR, SCC, JT, SCALE), per a third-party article of 15 May 2022. **I could not open it:** `main.sci.gov.in` does not resolve from here and `www.sci.gov.in` returns 403 to an automated request, so I stopped (not scraped). Licence/reuse terms **not found**; format is PDF, not machine-readable, and whether it is current or complete is **not verified**.
+- **Bucket:** carries SCR and neutral citation only, no SCC.
+- **Other:** third-party web tables (no licence stated); a journal-publisher table (SCC Online) is commercial. No open, licensed, machine-readable SCC-to-SCR dataset was found.
+- **Owner action:** to use the official table someone must fetch the four PDFs by hand and confirm the court's reuse terms. Until then SCC cannot be linked authoritatively.

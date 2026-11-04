@@ -241,6 +241,7 @@ def _new_res() -> dict:
         "scr_by_era": collections.defaultdict(collections.Counter),
         "unresolved_examples": collections.defaultdict(list),
         "names": collections.Counter(),
+        "inbound": collections.Counter(),  # target case_id -> number of distinct citing cases
         "timed_out": collections.Counter(),  # case_id -> 1 when the 60 s alarm fired
     }
 
@@ -300,6 +301,7 @@ def _shard(cases: list[str]):
         )
         seen: set[tuple] = set()
         resolved_scr_positions: list[tuple[int, str]] = []
+        cites_out: set[str] = set()
         for r in refs:
             res["mentions"][r.kind] += 1
             res["kind_by_era"][era][r.kind] += 1
@@ -325,6 +327,7 @@ def _shard(cases: list[str]):
                 tgt = _lookup(r.key, by_key, by_ysp)[0]
                 if tgt and tgt != cid and not res["_last_artifact"]:
                     resolved_scr_positions.append((r.start, tgt))
+                    cites_out.add(tgt)
             elif r.kind == "neutral":
                 _, y, num = r.key
                 tgt = neutral_case_id(y, num)
@@ -332,9 +335,12 @@ def _shard(cases: list[str]):
                     res["neutral"]["self"] += 1
                 elif tgt in served:
                     res["neutral"]["resolved"] += 1
+                    cites_out.add(tgt)
                 else:
                     res["neutral"]["unresolved"] += 1
                     _example(res, "neutral_unresolved", r.raw, cid)
+        for t in cites_out:
+            res["inbound"][t] += 1
         # parallel citations: an SCC/AIR printed within 90 characters of a resolved SCR
         for r in refs:
             if r.kind not in ("scc", "air"):
