@@ -8,7 +8,7 @@ mechanically verified against the dataset**.
 > recommends "Praman". `PRODUCT_NAME` is a single config value, so the final brand is a
 > config change, not a code change. Never hard-code it.
 
-<!-- coverage:begin -->**Coverage (measured 2026-11-04):** LexBharat covers Supreme Court and High Court judgments and the Acts and regulations listed on our coverage page. It does not include district courts, tribunals, or anything after the data-as-of date. (NEEDS-OWNER: wording not approved) Generated from `core/coverage.json`; do not edit by hand.<!-- coverage:end -->
+<!-- coverage:begin -->**Coverage (measured 2026-11-04):** LexBharat covers Supreme Court and High Court judgments and the Central Acts listed on our coverage page. It does not include district courts, tribunals, or anything after the data-as-of date. (NEEDS-OWNER: wording not approved) Generated from `core/coverage.json`; do not edit by hand.<!-- coverage:end -->
 Data is a frozen snapshot, **v2026.08** — every result shows its data-as-of date.
 
 KanoonBuddy gives legal information, **not legal advice**.

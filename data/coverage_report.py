@@ -32,12 +32,12 @@ SC_KEY, SC_ID = "supreme-court", "supreme_court"
 # court_ids.json that is not here would be listed in the file without being searchable.
 COURTS_IN_QDRANT = 26
 
-# The `jurisdiction` payload values of the Act collections (acts_india, kanoon_v1,
-# acts_noncentral_v1): central 1,568 Acts; state and regulatory per DATA-GAPS section 20 / A133.
+# Instruments are what the SERVED collection holds, not what is staged. `kanoon_v1` holds the
+# Supreme Court and 74,484 Central Act points (1,568 Acts, DATA-GAPS section 20); the 1,024,068
+# State and regulatory points sit in the staging collection `acts_noncentral_v1` and have never
+# been promoted (A133), so they are NOT listed. Add them here only when they are promoted.
 INSTRUMENTS = [
     ("central_acts", "Central Acts", "central"),
-    ("state_acts", "State Acts", "state"),
-    ("regulations", "regulations", "regulatory"),
 ]
 
 # Scope, not measurement: what is out. High Courts are IN (owner, 3 Nov 2026). Tribunals are out
@@ -56,23 +56,21 @@ GENERATED_BY = (
 
 NOTE = (
     "Written by data/coverage_report.py; do not widen it by hand. This is the ONLY place a "
-    "coverage category may be written (tests/test_coverage_source.py). It states the LAUNCH "
-    "scope (owner, 3 Nov 2026: every High Court is in v1) over what the corpus holds. The "
-    "served collection `kanoon_v1` does NOT yet hold it: on 4 Nov 2026 it serves the Supreme "
-    "Court and Central Acts only (455,755 points); the High Courts, State Acts and "
-    "regulations are in legal_corpus_v1/v2, acts_india and acts_noncentral_v1, and reach "
-    "users only when the launch collection is built (PRD-v2 section 7, items 19 and 24). "
+    "coverage category may be written (tests/test_coverage_source.py). INSTRUMENTS are what "
+    "the served collection holds: Central Acts only. State Acts and regulations (1,024,068 "
+    "points) are staged in acts_noncentral_v1, never promoted (A133), and are not listed. "
+    "So the five statutes the Act inventory found absent (CrPC 1973, Consumer Protection "
+    "1986, Payment of Gratuity 1972, Employees' Compensation 1923, the Constitution) are NOT "
+    "held: their text lives only in the staging collection. The Indian Trusts Act 1882 is not "
+    "in the dataset at all. COURTS follow the owner's launch scope (every High Court in v1, "
+    "3 Nov 2026) over the original collections legal_corpus_v1/v2, and the served "
+    "`kanoon_v1` does NOT yet hold them (it serves the Supreme Court only: 381,271 points, "
+    "measured 4 Nov 2026) until the launch collection is built (PRD-v2 section 7, item 19). "
     "Held means in the corpus, not complete: 2,865,144 whole cases (18.26%) have no chunk in "
-    "Qdrant (A141, open), and there is no length exclusion (owner). The five statutes the "
-    "Act inventory found absent from the served collection (CrPC 1973, Consumer Protection "
-    "1986, Payment of Gratuity 1972, Employees' Compensation 1923, the Constitution) count as "
-    "held: their text is in the dataset and staged in acts_noncentral_v1, filed under State "
-    "Acts, and they are searchable once A133 is promoted; CrPC is 14 state-tagged copies, so "
-    "which copy is served is a separate decision. The Indian Trusts Act 1882 is not in the "
-    "dataset at all. OWNER ITEM, not resolved here: the sentence ends 'anything after the "
-    "data-as-of date', and the snapshot is labelled v2026.08 while the latest Supreme Court "
-    "judgment held is dated 6 November 2025 (reported by the SC lane), so that date may be "
-    "months after the content it describes."
+    "Qdrant (A141, open), and there is no length exclusion (owner). OWNER ITEM, not resolved "
+    "here: the sentence ends 'anything after the data-as-of date', and the snapshot is "
+    "labelled v2026.08 while the latest Supreme Court judgment held is dated 6 November 2025 "
+    "(reported by the SC lane), so that date may be months after the content it describes."
 )
 
 
@@ -116,7 +114,7 @@ def build(measured_at: str) -> dict:
         "sentence_approved": cur["sentence_approved"],
         "sentence_template": cur["sentence_template"],
         "courts_phrase": "Supreme Court and High Court judgments",
-        "instruments_phrase": "the Acts and regulations listed on our coverage page",
+        "instruments_phrase": "the Central Acts listed on our coverage page",
         "not_in_dataset_message": cur["not_in_dataset_message"],
         "courts": courts,
         "instruments": [
