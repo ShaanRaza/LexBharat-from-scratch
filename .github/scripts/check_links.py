@@ -7,12 +7,14 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 LINK = re.compile(r"\[[^\]]+\]\(([^)#]+?)(?:#[^)]*)?\)")
+# Text in a code fence or an inline code span is an example, not a link.
+CODE = re.compile(r"```.*?```|`[^`\n]*`", re.S)
 
 bad = []
 for md in sorted(ROOT.rglob("*.md")):
     if ".git/" in str(md):
         continue
-    for m in LINK.finditer(md.read_text(encoding="utf-8")):
+    for m in LINK.finditer(CODE.sub("", md.read_text(encoding="utf-8"))):
         link = m.group(1).strip()
         if link.startswith(("http://", "https://", "mailto:")):
             continue
