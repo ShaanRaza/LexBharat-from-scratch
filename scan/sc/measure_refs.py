@@ -23,6 +23,8 @@ from __future__ import annotations
 import bisect
 import collections
 import json
+import os
+import pickle
 import re
 import signal
 import sqlite3
@@ -141,6 +143,7 @@ def main(db_path: str, out: str, limit: str | None = None) -> None:
         starts=starts,
         vol_any=by_vol_nopage,
         own_key=own_key,
+        maps=_load_pair_maps(),
     )
     import multiprocessing as mp
 
@@ -219,6 +222,30 @@ def main(db_path: str, out: str, limit: str | None = None) -> None:
 G: dict = {}
 
 
+def _load_pair_maps() -> dict[str, dict[tuple, str]]:
+    """Optional: PAIRMAP=<pickle from scan/sc/pair_map.py>. Three rules for trusting a headnote pair:
+    any1 = one target only; min2 / min3 = the winning target is printed by 2 / 3 or more independent
+    cases and by at least twice as many as any other target. SCC keys, and AIR keys of the Supreme Court."""
+    path = os.environ.get("PAIRMAP")
+    if not path:
+        return {}
+    pm = pickle.loads(Path(path).read_bytes())  # noqa: S301  (our own scratch file)
+    maps: dict[str, dict[tuple, str]] = {"any1": {}, "min2": {}, "min3": {}}
+    for kind in ("scc", "air"):
+        for key, tg in pm[kind].items():
+            if kind == "air" and key[2] != "SC":
+                continue
+            n = sorted(((len(set(c)), t) for t, c in tg.items()), reverse=True)
+            (top, tgt) = n[0]
+            runner = n[1][0] if len(n) > 1 else 0
+            if len(n) == 1:
+                maps["any1"][key] = tgt
+            for name, floor in (("min2", 2), ("min3", 3)):
+                if top >= floor and top >= 2 * runner:
+                    maps[name][key] = tgt
+    return maps
+
+
 class _CaseTimeout(Exception):
     pass
 
@@ -241,7 +268,11 @@ def _new_res() -> dict:
         "scr_by_era": collections.defaultdict(collections.Counter),
         "unresolved_examples": collections.defaultdict(list),
         "names": collections.Counter(),
-        "inbound": collections.Counter(),  # target case_id -> number of distinct citing cases
+        "inbound": collections.Counter(),
+        "inbound_any1": collections.Counter(),
+        "inbound_min2": collections.Counter(),
+        "inbound_min3": collections.Counter(),
+        "map_hits": collections.Counter(),  # target case_id -> number of distinct citing cases
         "timed_out": collections.Counter(),  # case_id -> 1 when the 60 s alarm fired
     }
 
@@ -341,6 +372,24 @@ def _shard(cases: list[str]):
                     _example(res, "neutral_unresolved", r.raw, cid)
         for t in cites_out:
             res["inbound"][t] += 1
+        maps = g["maps"]
+        for name, mp_ in maps.items():
+            extra = set(cites_out)
+            for r in refs:
+                if r.kind not in ("scc", "air"):
+                    continue
+                tgt = mp_.get(r.key)
+                if tgt and tgt != cid:
+                    extra.add(tgt)
+                    near = any(
+                        abs(p - r.start) <= 90 for p, _t in resolved_scr_positions
+                    )
+                    res["map_hits"][
+                        f"{name}_{r.kind}"
+                        + ("_standalone" if not near else "_near_scr")
+                    ] += 1
+            for t in extra:
+                res["inbound_" + name][t] += 1
         # parallel citations: an SCC/AIR printed within 90 characters of a resolved SCR
         for r in refs:
             if r.kind not in ("scc", "air"):

@@ -2422,3 +2422,32 @@ The Court's reporter prints, after the headnote, a table with one row per cited 
 - **SCC to SCR from the Court's own report:** of 28,184 distinct SCC citations in the served text, **11,328 (40.2%) appear in at least one pair; 10,127 (35.9%) map to one SCR record we hold; 130 conflict; 870 pair with an SCR not held.** AIR: of 13,804, 2,572 (18.6%) paired, 1,545 (11.2%) to one held record. This is far cleaner than the 90-character adjacency in 23.4 (58.6% conflicting), because the colon makes the pairing positional.
 - **Spot checks (2):** Maneka Gandhi `(1978) 1 SCC 248` pairs with `[1978] 2 SCR 621` in 23+ places (correct). Kesavananda `(1973) 4 SCC 225` appears once, paired with `[1973] 2 SCR 1089`, which is not the Judges Library entry I saw cited elsewhere (`[1973] Suppl. SCR 1`): **a pair seen once may be wrong; use only repeated or cross-checked pairs.**
 - **Not measured:** the share of SCC *mentions* (rather than distinct citations) that the pairs would cover; whether a pair's SCR side is the same judgment as its name; the 2020s coverage in the original PDFs. Nothing was built.
+
+### 23.14 The headnote SCC-to-SCR map: how many pairs repeat, whether it is right, and what it does to coverage (Measured; `scan/sc/pair_map.py`; nothing built)
+
+**Correction to 23.13.** The Kesavananda "contradiction" was the outlier. With every printing counted: `(1973) 4 SCC 225` is paired with `1973_INSC_91` by 3 cases and with `1972_INSC_292` by 1; the first is the right one.
+
+**1. Repetition.** Pairs whose SCR side is a held record, with the case's own pair removed, counting distinct printing cases. SCC: 10,458 keys; 10,328 point to one target and 130 to two or more. Of the 10,328: **4,965 are printed by 2 or more independent cases, 2,837 by 3 or more, 1,173 by 5 or more.** Of the 130 conflicting keys, 98 have a clear winner (at least 2 cases and twice the runner-up). AIR (Supreme Court only): 1,737 single-target keys; 325 in 2 or more cases; 91 in 3 or more.
+
+**2. Ground truth: the Judges Library table of 64 landmark cases** (`2024061128.pdf`, 42,745 bytes, fetched once; the one file downloaded). Four rows cannot be tested (row 19 gives no SCR; row 54 gives SCC OnLine only; rows 59 and 64 give SCALE only); five rows wrap across lines and I transcribed their SCC cell by hand from the printed text (6, 7, 18, 24, 49; row 49 prints `SCC-396`, read as 396). Of the 60 testable, the SCR record is held for 57.
+
+| Rule applied to the map | Right | Wrong | Not covered |
+|---|---|---|---|
+| Winner is the only target, or at least twice the runner-up (any count) | 54 | **0** | 6 |
+| Winner printed by 2 or more cases and twice the runner-up | 47 | **0** | 13 |
+| Winner printed by 3 or more cases and twice the runner-up | 39 | **0** | 21 |
+
+By raw entry: 48 keys single-target and right; 6 keys carry a wrong second target, **every one of the six wrong targets printed exactly once** (the right target printed 3, 91, 27, 32, 2 and 6 times; the sixth, Kesavananda, 3); 6 absent. So **the repetition (or majority) rule is supported by this evidence: it removed every wrong pair.** What the table cannot show is whether a *lone* single-occurrence pair with no rival is safe: 7 such keys are in the table and all 7 are right, a sample too small to rely on (zero wrong in 7 allows a true error rate up to about 35%). The usable map is therefore the "2 or more cases and twice the runner-up" set, about 5,060 SCC keys (4,965 + 98), unless the owner accepts lone pairs. This tests whether a *key* maps to the right case, on clean landmark keys; it does not test OCR-damaged keys in running text. A proxy: of 3,937 resolved standalone SCC mentions in a 2,500-case sample, **81.1% have a distinctive word of the target's title within 200 characters before** (the rest are mostly footnote lists with no name; the ones I read were right). A lower bound on correctness, not an estimate of it.
+
+**3. Coverage with the map applied (35,688 cases).**
+
+| Map rule | Cases with at least one inbound link | Links (citing case, cited case) | Mean per case | Mentions resolved |
+|---|---|---|---|---|
+| none (23.10) | 17,418 (48.8%) | 72,101 | 2.02 | 103,762 of 339,656 (30.5%) |
+| 3 or more cases | 17,418 (48.8%) | 87,335 (+21%) | 2.45 | about 144,400 (42.5%) |
+| **2 or more cases** | **17,418 (48.8%)** | **92,607 (+28%)** | 2.59 | about 157,300 (46.3%) |
+| any (majority) | 17,419 (48.8%) | 100,354 (+39%) | 2.81 | about 174,700 (51.4%) |
+
+**The case-level figure does not move: 48.8% to 48.8%, by construction, under every rule.** A pair is only in the map because some case printed that case's SCR citation next to its SCC citation, so every case in the map already has an inbound link, from the case that printed the pair. The map can only add links to cases already linked; it cannot reach a case that has been cited only in SCC form with no pair printed anywhere. By era the case-level coverage is unchanged (1950-69 73.0%, 1970-89 57.4%, 1990-2009 46.4%, 2010-19 48.4%, **2020-25 23.0%**). What the map does raise is **link density**, and the mentions that resolve: 46.3% instead of 30.5% at the "2 or more" rule (standalone SCC mentions 50,478 and AIR 3,043 newly linked). For a citator the link count per case is the better measure of whether a later overruling could be found, and the per-case recall of true inbound citations is **not measured** (the true inbound set is unknown).
+
+**Owner item (parked, open): extract the "Case Law Reference" table from the bucket's PDFs.** About 6,100 PDFs (the cases whose stored text carries the heading), about 3.2 GB (Estimate, at 0.52 MB per PDF), no embedding cost, one PDF at a time per the registry's request; plus a parser for the table (the PDFs print it cleanly, e.g. 2018_INSC_517 has six rows). It would add the editor's word per cited case (Phase 2 material) and rows the headnote omits. Parked in favour of the headnote route, which is free and already in our text; reopen if the headnote route under-delivers.
