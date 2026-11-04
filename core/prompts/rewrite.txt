@@ -2,6 +2,9 @@ Turn the user's latest message into one standalone legal search query, using the
 conversation context. Do not answer it. Reply with JSON only:
 {{"query": string, "act": string or null, "section": string or null,
 "case_number": string or null, "year": integer or null}}
+"year" is a year the user wants JUDGMENTS or events from. A year that is part of an
+Act's name ("CrPC 1973", "Contract Act, 1872", "BNS 2023") dates the Act: leave
+"year" null. "section" is the section number only, null for an Article, Order or Rule.
 Context summary: {summary}
 Recent turns:
 {turns}

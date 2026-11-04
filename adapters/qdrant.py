@@ -120,8 +120,9 @@ class VectorStore(Protocol):
     ) -> list[Hit]:
         """Law collection only. vector=None means keyword-only (Voyage down). A
         QueryVectors is a per-court search: one dense prefetch per model group, in the
-        same single call. `must` is an exact payload filter; a non-empty must on
-        section/case number is the exact-lookup path. `mode` is for the
+        same single call. `must` is an exact payload filter (a value that is a list
+        matches any of its members); a non-empty must on section/case number is the
+        exact-lookup path. `mode` is for the
         retrieval-quality measurement (evals/known_item.py): the pipeline always uses
         "hybrid"."""
         ...
@@ -193,7 +194,7 @@ class QdrantStore:
             self._client = AsyncQdrantClient(
                 url=self._s.QDRANT_URL,
                 api_key=self._s.QDRANT_API_KEY.get_secret_value() or None,
-                timeout=5,
+                timeout=self._s.QDRANT_TIMEOUT_S,
             )
         return self._client
 
@@ -209,7 +210,10 @@ class QdrantStore:
 
         conds: list[Any] = []
         for k, v in must.items():
-            cond = models.FieldCondition(key=k, match=models.MatchValue(value=v))
+            if isinstance(v, list | tuple | set | frozenset):  # any of several values
+                cond = models.FieldCondition(key=k, match=models.MatchAny(any=list(v)))
+            else:
+                cond = models.FieldCondition(key=k, match=models.MatchValue(value=v))
             if k == "court":
                 c = court_id.court_for_label(v)
                 if c is not None:  # an unknown or ambiguous label gets no extra branch
@@ -489,6 +493,18 @@ class QdrantStore:
         return RecordText(h.record_id, h.text, h.payload)
 
 
+def _payload_matches(payload: Mapping[str, Any], must: Mapping[str, Any]) -> bool:
+    """The fake's filter: equality, or membership when the value is a list."""
+    for k, v in must.items():
+        have = payload.get(k)
+        if isinstance(v, list | tuple | set | frozenset):
+            if have not in v:
+                return False
+        elif have != v:
+            return False
+    return True
+
+
 class FakeVectorStore:
     """In-memory store. Keyword-overlap scoring; ignores the vector. `down=True`
     simulates an outage. Records are dicts with payload fields."""
@@ -549,18 +565,14 @@ class FakeVectorStore:
             raise PermissionError("uploads are reachable only via search_uploads")
         if mode == "dense" and vector is None:
             raise ValueError("dense-only search needs a query vector")
-        pool = [
-            h for h in self.law if all(h.payload.get(k) == v for k, v in must.items())
-        ]
+        pool = [h for h in self.law if _payload_matches(h.payload, must)]
         return self._rank(pool, text, limit)
 
     async def sample_chunks(self, collection, must, n):
         self._check()
         if collection == self._s.QDRANT_UPLOADS_COLLECTION:
             raise PermissionError("uploads are not sampled")
-        pool = [
-            h for h in self.law if all(h.payload.get(k) == v for k, v in must.items())
-        ]
+        pool = [h for h in self.law if _payload_matches(h.payload, must)]
         return random.Random(0).sample(pool, min(n, len(pool)))  # noqa: S311 - a test sample
 
     async def search_uploads(self, user_id, vector, text, document_ids, limit):

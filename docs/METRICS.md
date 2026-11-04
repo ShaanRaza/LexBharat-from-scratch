@@ -104,3 +104,64 @@ Revenue a paying user brings, before model, hosting and payment costs:
 
 Scale a paid channel only when its measured acquisition cost is well below the gross profit
 a user brings before churning.
+
+<!-- latency:begin -->
+## Latency against the CLAUDE.md section 10 targets (measured 4 Nov 2026)
+
+**Conditions.** Measured 4 Nov 2026, 100 questions run one at a time by `evals/performance/measure.py` (timings captured in the runner; Langfuse is not involved). **Instance check before starting:** six samples, Qdrant on port 7333 at 0.0% CPU, no other client on the port, machine load 4.6 to 5.2. **During the run (2,165 samples, every 2 s):** no other client was ever on the port (0 contended questions, nothing re-run), Qdrant CPU peaked at 400% (our own hybrid queries; it is not used as a contention signal, see `evals/performance/timing.py`), machine load peaked at 8.5 on 10 cores. Another session's `scan/sc/measure_refs.py` was using about one core throughout; it holds no connection to the Qdrant port. **Setup, which flatters some numbers and not others:** Qdrant is the local copy (`kanoon_v1`, 455,755 points, on this machine, so no network hop); `act_id` is payload-indexed, `chunk_id` and `case_number` are not; Jev is off, so Gemini makes every decision (`gemini-3.5-flash-lite` for rewrite, scope and gate); the cache and the store are in-memory stand-ins, so steps 4 and 11 carry no Redis or Postgres hop; step 10 (Show) streams after step 11 as the API bridge runs it, so first word equals the end of step 11 plus the first word of Show (about 0 ms here). The rate limiter was off (0 rate-limit hits, 29 s of back-off in all, 1 non-rate-limit model error, handled by the fallback). **Cost:** 1,555 Gemini calls (1,226,968 tokens in, 51,087 out), 100 Voyage embeddings and 99 re-ranks; the repo records no Gemini or Voyage prices (`AI_PRICE_*` unset), so the cost is stated in calls and tokens, not dollars. **Outcomes:** 89 answered, 10 `not_found`, 1 out of scope; the two answer targets are measured on the 89 answered. Nothing was optimised.
+
+A target PASSES when its p95 is under it. p50 and p95 are percentiles of the recorded times, never averages.
+
+| Measure | Target | p50 | p95 | n | Result |
+|---|---|---:|---:|---:|---|
+| First word of a research answer | under 3 s | 38.7 s | 117.4 s | 89 | **FAIL** |
+| Full research answer | under 20 s | 38.7 s | 117.4 s | 89 | **FAIL** |
+| Search stage (search + re-rank) | under 800 ms | 799 ms | 2,110 ms | 99 | **FAIL** |
+| Each Gemini decision: scope decision | under 800 ms | 1,224 ms | 1,626 ms | 100 | **FAIL** |
+| Each Gemini decision: gate rating (one passage) | under 800 ms | 1,229 ms | 1,622 ms | 691 | **FAIL** |
+| Each Gemini decision: claim check (verifier check 4) | under 800 ms | 992 ms | 1,619 ms | 574 | **FAIL** |
+| Act / section lookup (search step, exact or Act-scoped) | under 500 ms | 9 ms | 38 ms | 57 | PASS |
+
+### Per step (the 11 pipeline steps)
+
+| Step | p50 | p95 | n | Median spent inside vendor calls |
+|---|---:|---:|---:|---|
+| 1 Remember | 0 ms | 0 ms | 100 | none (our own code) |
+| 2 Rewrite | 1.2 s | 1.9 s | 100 | gemini 1.2 s |
+| 3 Decide (scope check, in parallel with the query embedding) | 1.2 s | 1.7 s | 100 | decision 1.2 s, gemini 1.2 s, voyage 1.0 s |
+| 4 Cache (in-memory stand-in) | 0 ms | 0 ms | 99 | none (our own code) |
+| 5 Search | 25 ms | 155 ms | 99 | qdrant 24 ms |
+| 6 Re-rank | 723 ms | 1.9 s | 99 | voyage 723 ms |
+| 7 Gate | 1.5 s | 1.8 s | 99 | decision 1.5 s, gemini 1.5 s |
+| 8 Answer | 1.8 s | 3.2 s | 90 | gemini 1.8 s |
+| 9 Verify | 31.8 s | 109.2 s | 90 | qdrant 26.9 s, decision 5.3 s, gemini 5.3 s |
+| 10 Show (after step 11, as the API bridge runs it) | 0 ms | 0 ms | 100 | none (our own code) |
+| 11 Save (in-memory stand-in) | 0 ms | 0 ms | 100 | none (our own code) |
+
+### Where the time goes, for each failure
+
+- **First word of a research answer** (p95 117.4 s against 3.0 s): 9 Verify p50 31.8 s (median inside: qdrant 26.9 s, decision 5.3 s, gemini 5.3 s); 8 Answer p50 1.8 s (median inside: gemini 1.8 s); 7 Gate p50 1.5 s (median inside: decision 1.5 s, gemini 1.5 s); with step 9 taken out the same questions would be p50 7.0 s, p95 9.0 s.
+- **Full research answer** (p95 117.4 s against 20.0 s): 9 Verify p50 31.8 s (median inside: qdrant 26.9 s, decision 5.3 s, gemini 5.3 s); 8 Answer p50 1.8 s (median inside: gemini 1.8 s); 7 Gate p50 1.5 s (median inside: decision 1.5 s, gemini 1.5 s); with step 9 taken out the same questions would be p50 7.0 s, p95 9.0 s.
+- **Search stage (search + re-rank)** (p95 2.1 s against 800 ms): search (Qdrant) p50 25 ms, p95 155 ms; re-rank (Voyage) p50 723 ms, p95 1.9 s.
+- **Each Gemini decision: scope decision** (p95 1.6 s against 800 ms): the whole decision p50 1.2 s, p95 1.6 s, of which the Gemini API call p50 1.2 s, p95 1.6 s (our own code adds the difference).
+- **Each Gemini decision: gate rating (one passage)** (p95 1.6 s against 800 ms): the whole decision p50 1.2 s, p95 1.6 s, of which the Gemini API call p50 1.2 s, p95 1.6 s (our own code adds the difference).
+- **Each Gemini decision: claim check (verifier check 4)** (p95 1.6 s against 800 ms): the whole call p50 992 ms, p95 1.6 s; claim_support is not timed separately inside the API call, so the call time is the Gemini round trip plus our parsing.
+
+### Other measured calls (for reading the table, not targets)
+
+| Call | p50 | p95 | n |
+|---|---:|---:|---:|
+| decision:claim_support | 992 ms | 1.6 s | 574 |
+| decision:decide | 1.2 s | 1.6 s | 100 |
+| decision:rate_passage | 1.2 s | 1.6 s | 691 |
+| gemini:decide | 1.2 s | 1.6 s | 100 |
+| gemini:rate_passage | 1.2 s | 1.6 s | 691 |
+| gemini:rewrite | 1.2 s | 1.9 s | 100 |
+| gemini:text | 1.0 s | 2.1 s | 665 |
+| qdrant:exact | 8 ms | 35 ms | 80 |
+| qdrant:get_record | 5.4 s | 5.8 s | 574 |
+| qdrant:hybrid | 111 ms | 172 ms | 55 |
+| voyage:embed | 1.1 s | 1.4 s | 100 |
+| voyage:rerank | 723 ms | 1.9 s | 99 |
+
+<!-- latency:end -->

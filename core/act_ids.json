@@ -1,0 +1,9414 @@
+{
+"_note": "Built by data/build_act_ids.py from the served collection; lists what is stored, not what the product covers.",
+"collection": "kanoon_v1",
+"acts": [
+[
+"IND_REP_1000_1873",
+"The Indian Oaths Act, 1873, 10 of 1873 (Rep., Act 44 of 1969)",
+"1873",
+"repealed"
+],
+[
+"IND_REP_1002_1873",
+"The Repealing Act, 1873, 12 of 1873 (Rep., Act 16 of 1874)",
+"1873",
+"repealed"
+],
+[
+"IND_REP_1003_1873",
+"The Burma Timber Act 1873, 13 of 1873, (Rep., Act 19 of 1881)",
+"1873",
+"repealed"
+],
+[
+"IND_REP_1011_1874",
+"Quieting Titles, Agra Act 1874, 1 of 1874 (Rep., Act 12 of 1891)",
+"1874",
+"repealed"
+],
+[
+"IND_REP_1014_1874",
+"Appeals Kullu Act 1874, 5 of 1874 (Rep., Act 17 of 1877)",
+"1874",
+"repealed"
+],
+[
+"IND_REP_1018_1874",
+"The European Vagrancy Act 1874, 9 of 1874, (Rep., Act 17 of 1949)",
+"1874",
+"repealed"
+],
+[
+"IND_REP_1019_1874",
+"The Salt Act 1875, 10 of 1874, (Rep., Act 18 of 1877)",
+"1874",
+"repealed"
+],
+[
+"IND_REP_1021_1874",
+"The Sylhet Act 1874, 12 of 1874, (Rep., Act 7 of 1905)",
+"1874",
+"repealed"
+],
+[
+"IND_REP_1023_1874",
+"The Repealing Act, 1874, 16 of 1874, (Rep., Act 12 of 1876)",
+"1874",
+"repealed"
+],
+[
+"IND_REP_1024_1875",
+"The Distress Act 1875, 1 of 1875 (Rep., Act 15 of 1876)",
+"1875",
+"repealed"
+],
+[
+"IND_REP_1025_1875",
+"The Indian Law Reports Act 1875, 2 of 1875 (Rep., Act 18 of 1875)",
+"1875",
+"repealed"
+],
+[
+"IND_REP_1028_1875",
+"The Unattested Sepoys Act 1875, 5 of 1875, (Rep., Act 8 of 1911)",
+"1875",
+"repealed"
+],
+[
+"IND_REP_102_1839",
+"The Dower Act, 1839, 29 of 1839 (Rep., Act 48 of 1857)",
+"1839",
+"repealed"
+],
+[
+"IND_REP_1030_1875",
+"The Burma Fisheries Act 1875, 7 of 1875, (Rep., Bur. Act 3 of 1905)",
+"1875",
+"repealed"
+],
+[
+"IND_REP_1031_1875",
+"The Inland Customs Act 1875, 8 of 1875, (Rep., Act 12 of 1882)",
+"1875",
+"repealed"
+],
+[
+"IND_REP_1033_1875",
+"The Madras Salt Act 1875, 11 of 1875, (Rep., Act 18 of 1877)",
+"1875",
+"repealed"
+],
+[
+"IND_REP_1034_1875",
+"The Indian Ports Act 1875, 12 of 1875, (Rep., Act 10 of 1889)",
+"1875",
+"repealed"
+],
+[
+"IND_REP_1035_1875",
+"The Probate Act 1875, 13 of 1875, (Rep., Act 1 of 1938)",
+"1875",
+"repealed"
+],
+[
+"IND_REP_1038_1875",
+"The Indian Tariff Act 1875, 16 of 1875, (Rep., Act 11 of 1882)",
+"1875",
+"repealed"
+],
+[
+"IND_REP_1039_1875",
+"The Burma Courts Act 1875, 17 of 1875, (Rep., Act 11 of 1889)",
+"1875",
+"repealed"
+],
+[
+"IND_REP_103_1839",
+"Injuries to Coin Act, 1839, 31 of 1839 (Rep., Act 8 of 1868)",
+"1839",
+"repealed"
+],
+[
+"IND_REP_1041_1875",
+"Punjab Chief Court Act 1875, 19 of 1875, (Rep., Act 17 of 1877)",
+"1875",
+"repealed"
+],
+[
+"IND_REP_1044_1876",
+"The Indian Telegraph Act 1876, 1 of 1876 (Rep., Act 13 of 1885)",
+"1876",
+"repealed"
+],
+[
+"IND_REP_1047_1876",
+"Revenue Agents, Bengal Act 1876, 4 of 1876 (Rep., Act 18 of 1879)",
+"1876",
+"repealed"
+],
+[
+"IND_REP_1048_1876",
+"The Reformatory Schools Act 1876, 5 of 1876, (Rep., Act 8 of 1897)",
+"1876",
+"repealed"
+],
+[
+"IND_REP_104_1839",
+"The Interest Act, 1839, 32 of 1839 (Rep., Act 14 of 1978)",
+"1839",
+"repealed"
+],
+[
+"IND_REP_1050_1876",
+"The Native Coinage Act 1876, 9 of 1876, (Rep., Act 36 of 1957)",
+"1876",
+"repealed"
+],
+[
+"IND_REP_1051_1876",
+"The Presidency Banks Act 1876, 11 of 1876, (Rep., Act 47 of 1920)",
+"1876",
+"repealed"
+],
+[
+"IND_REP_1052_1876",
+"The Repealing Act, 1876, 12 of 1876 (Rep., Act 12 of 1891)",
+"1876",
+"repealed"
+],
+[
+"IND_REP_1058_1876",
+"The Bhaunagar Act 1876, 20 of 1876, (Rep., Act 42 of 1953)",
+"1876",
+"repealed"
+],
+[
+"IND_REP_105_1840",
+"Faujdari Adalat, Madras Act, 1840, 1 of 1840 (Rep., Act 17 of 1862)",
+"1840",
+"repealed"
+],
+[
+"IND_REP_1060_1876",
+"The Indian Museum Act 1876, 22 of 1876, (Rep., Act 10 of 1910)",
+"1876",
+"repealed"
+],
+[
+"IND_REP_1062_1877",
+"The Specifc Relief Act, 1877, 1 of 1877 (Rep., Act 47 of 1963)",
+"1877",
+"repealed"
+],
+[
+"IND_REP_1063_1877",
+"The Porbates, & c. Act 1877, 2 of 1877 (Rep., Act 8 of 1903)",
+"1877",
+"repealed"
+],
+[
+"IND_REP_106_1840",
+"Bank of Bombay Act, 1840, 3 of 1840 (Rep., Bom. Act 10 of 1863)",
+"1840",
+"repealed"
+],
+[
+"IND_REP_1072_1877",
+"The Military Lunatics Act 1877, 11 of 1877, (Rep., Act 4 of 1912 )",
+"1877",
+"repealed"
+],
+[
+"IND_REP_1075_1877",
+"The Indian Limitation Act 1877, 15 of 1877, (Rep., Act 9 of 1908)",
+"1877",
+"repealed"
+],
+[
+"IND_REP_1078_1877",
+"The Salt Act 1877, 18 of 1877, (Rep., Act 12 of 1882)",
+"1877",
+"repealed"
+],
+[
+"IND_REP_107_1840",
+"Affrays, Bengal Act, 1840, 4 of 1840 (Rep., Act 17 of 1862)",
+"1840",
+"repealed"
+],
+[
+"IND_REP_1080_1878",
+"The Opium Act, 1878, 1 of 1878 (Rep., Act 61 of 1985)",
+"1878",
+"repealed"
+],
+[
+"IND_REP_1083_1878",
+"The Oudh Local Rates Act 1878, 4 of 1878 (Rep., Act 5 of 1894)",
+"1878",
+"repealed"
+],
+[
+"IND_REP_1085_1878",
+"The Indian Forest Act 1878, 7 of 1878, (Rep., Act 16 of 1927)",
+"1878",
+"repealed"
+],
+[
+"IND_REP_1089_1878",
+"The Indian Arms Act, 1878, 11 of 1878 (Rep., Pun Act 15 of 1961)",
+"1878",
+"repealed"
+],
+[
+"IND_REP_108_1840",
+"Oaths Act, 1840, 5 of 1840 (Rep., Act 10 of 1873)",
+"1840",
+"repealed"
+],
+[
+"IND_REP_1096_1879",
+"The Stamp Act 1879, 1 of 1879 (Rep., Act 2 of 1899)",
+"1879",
+"repealed"
+],
+[
+"IND_REP_1098_1879",
+"Destruction of Records Act 1879, 3 of 1879 (Rep., Act 5 of 1917)",
+"1879",
+"repealed"
+],
+[
+"IND_REP_1099_1879",
+"The Indian Railways Act 1879, 4 of 1879, (Rep., Act 9 of 1890)",
+"1879",
+"repealed"
+],
+[
+"IND_REP_109_1840",
+"Bills of Exchange Act, 1840, 6 of 1840 (Rep., Act 26 of 1881)",
+"1840",
+"repealed"
+],
+[
+"IND_REP_1100_1879",
+"The Presidency Banks Act, 1879, 5 of 1879, (Rep., Act 47 of 1920)",
+"1879",
+"repealed"
+],
+[
+"IND_REP_1108_1879",
+"The Oudh Civil Courts Act 1879, 13 of 1879, (Rep., Act 4 of 1925)",
+"1879",
+"repealed"
+],
+[
+"IND_REP_1111_1879",
+"The Transport of Salt Act 1879, 16 of 1879, (Rep., Act 1 of 1944)",
+"1879",
+"repealed"
+],
+[
+"IND_REP_1116_1880",
+"The Cantonments Act 1880, 3 of 1880 (Rep., Act 13 of 1889 )",
+"1880",
+"repealed"
+],
+[
+"IND_REP_1117_1880",
+"The Portuguese Treaty Act 1880, 4 of 1880, (Rep., Act 1 of 1903)",
+"1880",
+"repealed"
+],
+[
+"IND_REP_1118_1880",
+"The Burma Boundaries Act 1880, 5 of 1880, (Rep., Act 42 of 1953)",
+"1880",
+"repealed"
+],
+[
+"IND_REP_1122_1880",
+"The Bombay Civil Courts Act 1880, 9 of 1880, (Rep., Act 1 of 1838)",
+"1880",
+"repealed"
+],
+[
+"IND_REP_1123_1880",
+"Multan District Act 1880, 10 of 1880, (Rep., Act 13 of 1883 )",
+"1880",
+"repealed"
+],
+[
+"IND_REP_1124_1880",
+"The Burma Courts Act 1880, 11 of 1880, (Rep., Act 11 of 1889)",
+"1880",
+"repealed"
+],
+[
+"IND_REP_1125_1880",
+"The Vaccination Act 1880, 13 of 1880, (Rep., Act 12 of 1891)",
+"1880",
+"repealed"
+],
+[
+"IND_REP_1126_1880",
+"The Indian Census Act 1880, 14 of 1880, (Rep., Act 16 of 2001)",
+"1880",
+"repealed"
+],
+[
+"IND_REP_1131_1881",
+"The Indian Securities Act 1881, 3 of 1881, (Rep., Act 13 of 1886)",
+"1881",
+"repealed"
+],
+[
+"IND_REP_1134_1881",
+"The District Delegates Act 1881, 6 of 1881, (Rep., Act 39 of 1925)",
+"1881",
+"repealed"
+],
+[
+"IND_REP_1135_1881",
+"The Petroleum Act 1881, 8 of 1881, (Rep., Act 12 of 1886)",
+"1881",
+"repealed"
+],
+[
+"IND_REP_1137_1881",
+"Coroners Act 1881, 10 of 1881, (Rep., Act 1 of 1938)",
+"1881",
+"repealed"
+],
+[
+"IND_REP_113_1840",
+"Temple of Juggernath Act, 1840, 10 of 1840 (Rep., Act 12 of 1891)",
+"1840",
+"repealed"
+],
+[
+"IND_REP_1140_1881",
+"Fort William Act 1881, 13 of 1881, (Rep., Act 4 of 2018)",
+"1881",
+"repealed"
+],
+[
+"IND_REP_1142_1881",
+"The Indian Factories Act 1881, 15 of 1881, (Rep., Act 12 of 1911)",
+"1881",
+"repealed"
+],
+[
+"IND_REP_1145_1881",
+"The Burma Forests Act 1881, 19 of 1881, (Rep., Bur. Act 4 of 1902)",
+"1881",
+"repealed"
+],
+[
+"IND_REP_1148_1881",
+"The Excise Act 1881, 22 of 1881, (Rep., Act 12 of 1896)",
+"1881",
+"repealed"
+],
+[
+"IND_REP_1151_1881",
+"The Banki Laws Act 1881, 25 of 1881, (Rep., Act 42 of 1953)",
+"1881",
+"repealed"
+],
+[
+"IND_REP_1152_1882",
+"The Inland Emigration Act 1882, 1 of 1882, (Rep., Act 6 of 1901)",
+"1882",
+"repealed"
+],
+[
+"IND_REP_1154_1882",
+"The Indian Companies Act 1882, 6 of 1882, (Rep., Act 1 of 1956)",
+"1882",
+"repealed"
+],
+[
+"IND_REP_1158_1882",
+"The Indian Tariff Act 1882, 11 of 1882, (Rep., Act 8 of 1894)",
+"1882",
+"repealed"
+],
+[
+"IND_REP_1159_1882",
+"The Indian Salt Act 1882, 12 of 1882, (Rep., Act 1 of 1944)",
+"1882",
+"repealed"
+],
+[
+"IND_REP_1163_1882",
+"The Indian Ports Act 1882, 17 of 1882 (Rep., Act 10 of 1889)",
+"1882",
+"repealed"
+],
+[
+"IND_REP_116_1840",
+"Factors Act, 1840, 13 of 1840 (Rep., Act 9 of 1872)",
+"1840",
+"repealed"
+],
+[
+"IND_REP_1170_1883",
+"Nazim of Bengal Act 1883, 3 of 1883, (Rep., Act 12 of 1891)",
+"1883",
+"repealed"
+],
+[
+"IND_REP_1171_1883",
+"The Indian Railways Act 1883, 4 of 1883, (Rep., Act 9 of 1890)",
+"1883",
+"repealed"
+],
+[
+"IND_REP_117_1840",
+"Extending 9 Geo. 4, C. 14, Act, 1840, 14 of 1840 (Rep., Act 9 of 1872)",
+"1840",
+"repealed"
+],
+[
+"IND_REP_1185_1883",
+"The Indian Emigration Act, 1883, 21 of 1883, (Rep., Act 17 of 1908)",
+"1883",
+"repealed"
+],
+[
+"IND_REP_1194_1884",
+"The Legal Practitioners Act 1884, 9 of 1884, (Rep., Act 1 of 1938)",
+"1884",
+"repealed"
+],
+[
+"IND_REP_1195_1884",
+"The Burma Courts Act, 1884, 10 of 1884, (Rep., Act 11 of 1899)",
+"1884",
+"repealed"
+],
+[
+"IND_REP_1197_1884",
+"The Punjab Municipal Act 1884, 13 of 1884 (Rep., Act 20 of 1891)",
+"1884",
+"repealed"
+],
+[
+"IND_REP_119_1840",
+"Transported Convicts Act, 1840, 16 of 1840 (Rep., Act 5 of 1871)",
+"1840",
+"repealed"
+],
+[
+"IND_REP_11_1835",
+"Salt Chaukis, Bengal Act, 1835, 9 of 1835 (Rep., Act 12 of 1876)",
+"1835",
+"repealed"
+],
+[
+"IND_REP_1200_1884",
+"The Burma Gaming Act 1884, 16 of 1884, (Rep., Bur. Act 1 of 1899)",
+"1884",
+"repealed"
+],
+[
+"IND_REP_1201_1884",
+"The Burma Municipal Act, 1884, 17 of 1884, (Rep., Act 13 of 1898)",
+"1884",
+"repealed"
+],
+[
+"IND_REP_1202_1884",
+"The Punjab Courts Act, 1884, 18 of 1884, (Rep., Act 6 of 1918)",
+"1884",
+"repealed"
+],
+[
+"IND_REP_1204_1884",
+"Salt (Amending Act 12 of 1882), 20 of 1884, (Rep., Act 12 of 1891)",
+"1884",
+"repealed"
+],
+[
+"IND_REP_1205_1884",
+"Indain Emigration Act, 1884, 21 of 1884, (Rep., Act 21 of 1891)",
+"1884",
+"repealed"
+],
+[
+"IND_REP_120_1840",
+"Salt Laws, Madras Act, 1840, 17 of 1840 (Rep., Act 4 of 1889)",
+"1840",
+"repealed"
+],
+[
+"IND_REP_1212_1885",
+"The Panch Mahals Laws Act, 1885, 7 of 1885, (Rep., Act 42 of 1953)",
+"1885",
+"repealed"
+],
+[
+"IND_REP_1216_1885",
+"The Sea Passengers Act, 1885, 12 of 1885, (Rep., Act 20 of 1937)",
+"1885",
+"repealed"
+],
+[
+"IND_REP_1217_1885",
+"The Indian Telegraph Act, 1885, 13 of 1885, (Rep., Act 44 of 2023)",
+"1885",
+"repealed"
+],
+[
+"IND_REP_1218_1885",
+"The Burma Courts Act, 1885, 14 of 1885, (Rep., Act 11 of 1889)",
+"1885",
+"repealed"
+],
+[
+"IND_REP_1223_1885",
+"The Indian Securities Act, 1885, 19 of 1885, (Rep., Act 13 of 1886)",
+"1885",
+"repealed"
+],
+[
+"IND_REP_1224_1885",
+"Bengal Tenancy Act, 1885, 20 of 1885, (Rep., Act 12 of 1891)",
+"1885",
+"repealed"
+],
+[
+"IND_REP_1226_1886",
+"The Indian Income Tax Act, 1886, 2 of 1886, (Rep., Act 7 of 1918)",
+"1886",
+"repealed"
+],
+[
+"IND_REP_122_1840",
+"Appeals by Paupers Act, 1840, 19 of 1840 (Rep., Act 16 of 1874)",
+"1840",
+"repealed"
+],
+[
+"IND_REP_1233_1886",
+"The Indian Tramways Act, 1886, 11 of 1886 (Rep., Act 37 of 2025)",
+"1886",
+"repealed"
+],
+[
+"IND_REP_1234_1886",
+"The Petroleum Act, 1886, 12 of 1886, (Rep., Act 8 of 1899)",
+"1886",
+"repealed"
+],
+[
+"IND_REP_1235_1886",
+"The Indian Securities Act, 1886, 13 of 1886, (Rep., Act 10 of 1920)",
+"1886",
+"repealed"
+],
+[
+"IND_REP_1239_1886",
+"The Jhansi and Morar Act, 1886, 17 of 1886, (Rep., Act 42 of 1953)",
+"1886",
+"repealed"
+],
+[
+"IND_REP_1242_1886",
+"The Upper Burma Laws Act, 1886, 20 of 1886, (Rep., Act 13 of 1898)",
+"1886",
+"repealed"
+],
+[
+"IND_REP_1243_1886",
+"The Oudh Wasikas Act, 1886, 21 of 1886, (Rep., Act 4 of 2018)",
+"1886",
+"repealed"
+],
+[
+"IND_REP_1247_1887",
+"The General Clauses Act, 1887, 1 of 1887, (Rep., Act 10 of 1897)",
+"1887",
+"repealed"
+],
+[
+"IND_REP_1250_1887",
+"The Indian Meseum Act, 1887, 4 of 1887, (Rep., Act 10 of 1910)",
+"1887",
+"repealed"
+],
+[
+"IND_REP_1256_1887",
+"The Electricity Act, 1887, 13 of 1887, (Rep., Act 3 of 1903)",
+"1887",
+"repealed"
+],
+[
+"IND_REP_1257_1887",
+"The Indian Marine Act, 1887, 14 of 1887, (Rep., Act 34 of 1934)",
+"1887",
+"repealed"
+],
+[
+"IND_REP_1264_1888",
+"The Police Act, 1888, 3 of 1888, (Rep., Act 4 of 2018)",
+"1888",
+"repealed"
+],
+[
+"IND_REP_1266_1888",
+"The Debtors Act, 1888, 6 of 1888, (Rep., Act 10 of 1914)",
+"1888",
+"repealed"
+],
+[
+"IND_REP_1268_1888",
+"The Indian Tolls Act, 1888, 8 of 1888, (Rep., Act 4 of 2018)",
+"1888",
+"repealed"
+],
+[
+"IND_REP_1272_1888",
+"The Punjab Courts Act, 1888, 13 of 1888, (Rep., Pun. Act 6 of 1918)",
+"1888",
+"repealed"
+],
+[
+"IND_REP_1273_1888",
+"The Shan States Act, 1888, 15 of 1888, (Rep., Act 13 of 1898)",
+"1888",
+"repealed"
+],
+[
+"IND_REP_1280_1889",
+"The Coroners (Madras) Act, 1889, 5 of 1889, (Rep., Act 1 of 1938)",
+"1889",
+"repealed"
+],
+[
+"IND_REP_1286_1889",
+"The Lower Burma Courts Act, 1889, 11 of 1889, (Rep., Act 6 of 1900)",
+"1889",
+"repealed"
+],
+[
+"IND_REP_1288_1889",
+"The Cantonments Act, 1889, 13 of 1889, (Rep., Act 15 of 1910)",
+"1889",
+"repealed"
+],
+[
+"IND_REP_128_1840",
+"Abkari, Bengal Act, 1840, 25 of 1840 (Rep., Act 21 of 1856)",
+"1840",
+"repealed"
+],
+[
+"IND_REP_1298_1890",
+"The Forest Act, 1890, 5 of 1890, (Rep., Act 16 of 1927)",
+"1890",
+"repealed"
+],
+[
+"IND_REP_1300_1890",
+"The Indian Railways Act, 1890, 9 of 1890 (Rep., Act 24 of 1989)",
+"1890",
+"repealed"
+],
+[
+"IND_REP_1307_1890",
+"The Indian Census Act 1890, 17 of 1890 (Rep., Act 1 of 1903)",
+"1890",
+"repealed"
+],
+[
+"IND_REP_130_1841",
+"Ganja and Bhang, Bombay Act, 1841, 2 of 1841 (Rep., Act 34 of 1857)",
+"1841",
+"repealed"
+],
+[
+"IND_REP_1314_1891",
+"The Indian Ports Act, 1891, 5 of 1891, (Rep., Act 15 of 1908)",
+"1891",
+"repealed"
+],
+[
+"IND_REP_1319_1891",
+"The Indian Factories Act, 1891, 11 of 1891, (Rep., Act 12 of 1911)",
+"1891",
+"repealed"
+],
+[
+"IND_REP_1320_1891",
+"The Amending Act, 1891, 12 of 1891, (Rep., Act 1 of 1938)",
+"1891",
+"repealed"
+],
+[
+"IND_REP_1334_1892",
+"The Lansdown Bridge Act, 1892, 8 of 1892, (Rep., Act 42 of 1953)",
+"1892",
+"repealed"
+],
+[
+"IND_REP_1339_1893",
+"The Inland Emigration Act, 1893, 7 of 1893, (Rep., Act 6 of 1901)",
+"1893",
+"repealed"
+],
+[
+"IND_REP_1346_1894",
+"The Amendmending Act, 1894, 4 of 1894, (Rep., Act 1 of 1938)",
+"1894",
+"repealed"
+],
+[
+"IND_REP_134_1841",
+"Import of Rum, Bengal Act, 1841, 6 of 1841 (Rep., Act 6 of 1863)",
+"1841",
+"repealed"
+],
+[
+"IND_REP_1350_1894",
+"The Indian Tariff Act 1894, 8 of 1894 (Rep., Act 32 of 1934)",
+"1894",
+"repealed"
+],
+[
+"IND_REP_1354_1894",
+"The Amending (Army) Act, 1894, 13 of 1894, (Rep., Act 1 of 1938)",
+"1894",
+"repealed"
+],
+[
+"IND_REP_1357_1894",
+"The Cotton Duties Act 1894, 17 of 1894 (Rep., Act 2 of 1938)",
+"1894",
+"repealed"
+],
+[
+"IND_REP_135_1841",
+"Evidence Act, 1841, 7 of 1841 (Rep., Act 16 of 1874)",
+"1841",
+"repealed"
+],
+[
+"IND_REP_1365_1895",
+"The Extradition (India) Act 1895, 9 of 1895 (Rep., Act 15 of 1903)",
+"1895",
+"repealed"
+],
+[
+"IND_REP_1368_1895",
+"The Government Grant Acts, 1895, 15 of 1895, (Rep., Act 4 of 2018)",
+"1895",
+"repealed"
+],
+[
+"IND_REP_1369_1895",
+"The Amending Act, 1895, 16 of 1895, (Rep., Act 1 of 1938)",
+"1895",
+"repealed"
+],
+[
+"IND_REP_136_1841",
+"Interpleader Act, 1841, 8 of 1841 (Rep., Act 10 of 1877)",
+"1841",
+"repealed"
+],
+[
+"IND_REP_1377_1895",
+"The Pilgrim Ships Act 1895, 14 of 1895, (Rep., Act 21 of 1923)",
+"1895",
+"repealed"
+],
+[
+"IND_REP_1379_1896",
+"The Cotton Duties Act 1895, 2 of 1896 (Rep., Act 19 of 1926)",
+"1896",
+"repealed"
+],
+[
+"IND_REP_137_1841",
+"Abkaree, Bengal Act, 1841, 9 of 1841 (Rep., Act 21 of 1856)",
+"1841",
+"repealed"
+],
+[
+"IND_REP_1400_1897",
+"The Indian Fisheries Act, 1897, 4 of 1897, (Rep., Act 17 of 2015)",
+"1897",
+"repealed"
+],
+[
+"IND_REP_1401_1897",
+"Repealing and Amending Act 1897, 5 of 1897 (Rep., Act 2 of 2018)",
+"1897",
+"repealed"
+],
+[
+"IND_REP_1404_1897",
+"The Reformatory Schools Act, 1897, 8 of 1897, (Rep., Act 4 of 2018)",
+"1897",
+"repealed"
+],
+[
+"IND_REP_1405_1897",
+"The Provident Funds Act 1897, 9 of 1897 (Rep., Act 19 of 1925)",
+"1897",
+"repealed"
+],
+[
+"IND_REP_1406_1897",
+"The Bhopal Coinage Act, 1897, 11 of 1897, (Rep., Act1 of 1903)",
+"1897",
+"repealed"
+],
+[
+"IND_REP_1410_1897",
+"The Cantonments Act, 1897, 15 of 1897, (Rep., Act 15 of 1910)",
+"1897",
+"repealed"
+],
+[
+"IND_REP_1414_1898",
+"The Lepers Act 1898, 3 of 1898 (Rep., Act 23 of 2016)",
+"1898",
+"repealed"
+],
+[
+"IND_REP_1417_1898",
+"The Indian Post Office Act, 1898, 6 of 1898 (Rep., Act 43 of 2023)",
+"1898",
+"repealed"
+],
+[
+"IND_REP_1418_1898",
+"The Petroleum Act, 1898, 7 of 1898, (Rep., Act 8 of 1899)",
+"1898",
+"repealed"
+],
+[
+"IND_REP_1425_1899",
+"The Indian Evidence Act, 1899, 5 of 1899, (Rep., Act 1 of 1938)",
+"1899",
+"repealed"
+],
+[
+"IND_REP_1428_1899",
+"The Indian Petroleum Act 1899, 8 of 1899 (Rep., Act 23 of 1937)",
+"1899",
+"repealed"
+],
+[
+"IND_REP_1429_1899",
+"The Arbitration Act 1899, 9 of 1899, (Rep., Act 10 of 1940 )",
+"1899",
+"repealed"
+],
+[
+"IND_REP_142_1841",
+"Markets, Bombay Town Act, 1841, 14 of 1841 (Rep., Act 14 of 1856)",
+"1841",
+"repealed"
+],
+[
+"IND_REP_1430_1899",
+"The Carriers Act 1899, 10 of 1899, (Rep., Act 1 of 1938)",
+"1899",
+"repealed"
+],
+[
+"IND_REP_1439_1899",
+"The Pesidency Banks Act 1899, 20 of 1899, (Rep., Act 47 of 1920)",
+"1899",
+"repealed"
+],
+[
+"IND_REP_1443_1899",
+"The Punjab Courts Act 1899, 25 of 1899, (Rep., Pun. Act 6 of 1918)",
+"1899",
+"repealed"
+],
+[
+"IND_REP_1447_1900",
+"The Whipping Act 1900, 5 of 1900 (Rep., Act 4 of 1909)",
+"1900",
+"repealed"
+],
+[
+"IND_REP_1452_1900",
+"The Indian Census Act 1900, 10 of 1900, (Rep., Act 12 of 1927)",
+"1900",
+"repealed"
+],
+[
+"IND_REP_1457_1901",
+"The Indian Ports Act 1901, 3 of 1901, (Rep., Act 15 of 1908)",
+"1901",
+"repealed"
+],
+[
+"IND_REP_145_1841",
+"Appeals, Bengal, 1841, 17 of 1841 (Rep., Act 12 of 1873)",
+"1841",
+"repealed"
+],
+[
+"IND_REP_1462_1901",
+"The Indian Mines Act, 1901, 8 of 1901 (Rep., 4 of 1923)",
+"1901",
+"repealed"
+],
+[
+"IND_REP_1467_1902",
+"The Indian Tramways Act 1902, 4 of 1902 (Rep., Act 23 of 2016)",
+"1902",
+"repealed"
+],
+[
+"IND_REP_1475_1903",
+"The Indian Electricity Act 1903, 3 of 1903 (Rep., Act 9 of 1910 )",
+"1903",
+"repealed"
+],
+[
+"IND_REP_1480_1903",
+"The Indian Tea Cess Act 1903, 9 of 1903 (Rep., Act 13 of 1949)",
+"1903",
+"repealed"
+],
+[
+"IND_REP_1483_1903",
+"The Lepers (Amendment) Act, 1903, 13 of 1903 (Rep., Act 1 of 1938)",
+"1903",
+"repealed"
+],
+[
+"IND_REP_1485_1903",
+"The Extradition Act 1903, 15 of 1903, (Rep., Act 34 of 1962)",
+"1903",
+"repealed"
+],
+[
+"IND_REP_1486_1904",
+"The Poisons Act 1904, 1 of 1904 (Rep., Act 12 of 1919 )",
+"1904",
+"repealed"
+],
+[
+"IND_REP_149_1841",
+"Local Nuisances Act, 1841, 21 of 1841 (Rep., Act 17 of 1862)",
+"1841",
+"repealed"
+],
+[
+"IND_REP_14_1835",
+"Magistrates. Bombay, 1835, 14 of 1835 (Rep., Act 8 of 1868)",
+"1835",
+"repealed"
+],
+[
+"IND_REP_1509_1906",
+"The Coinage Act, 1906, 3 of 1906 (Rep., Act 11 of 2011)",
+"1906",
+"repealed"
+],
+[
+"IND_REP_151_1841",
+"Import of Rum, Madras Act, 1841, 23 of 1841 (Rep., Act 6 of 1863)",
+"1841",
+"repealed"
+],
+[
+"IND_REP_1526_1908",
+"The Indian Limitation Act 1908, 9 of 1908 (Rep., Act 36 of 1963)",
+"1908",
+"repealed"
+],
+[
+"IND_REP_1530_1908",
+"The Indian Emigration Act 1908, 17 of 1908, (Rep., Act 7 of 1922)",
+"1908",
+"repealed"
+],
+[
+"IND_REP_1534_1909",
+"The Whipping Act 1909, 4 of 1909 (Rep., Act 44 of 1955 )",
+"1909",
+"repealed"
+],
+[
+"IND_REP_1535_1909",
+"The Amending (Army) Act, 1909, 5 of 1909 (Rep., Act 6 of 1923)",
+"1909",
+"repealed"
+],
+[
+"IND_REP_1537_1910",
+"The Indian Press Act, 1910, 1 of 1910 (Rep., Act 14 of 1922)",
+"1910",
+"repealed"
+],
+[
+"IND_REP_153_1841",
+"Contempts In Equity Act, 1841, 25 of 1841 (Rep., Act 8 of 1868)",
+"1841",
+"repealed"
+],
+[
+"IND_REP_1544_1910",
+"The Indian Electricity Act, 1910, 9 of 1910 (Rep., Act 36 of 2003)",
+"1910",
+"repealed"
+],
+[
+"IND_REP_1547_1910",
+"The Prisons (Amendment) Act, 13 of 1910 (Rep., Act 1 of 1938)",
+"1910",
+"repealed"
+],
+[
+"IND_REP_1549_1910",
+"The Contonments Act 1910, 15 of 1910, (Rep., Act 2 of 1924)",
+"1910",
+"repealed"
+],
+[
+"IND_REP_1550_1910",
+"The Indian Census Act 1910, 16 of 1910, (Rep., Act 12 of 1927)",
+"1910",
+"repealed"
+],
+[
+"IND_REP_1551_1910",
+"The Continuing Act 1910, 17 of 1910, (Rep., Act 10 of 1911)",
+"1910",
+"repealed"
+],
+[
+"IND_REP_1552_1911",
+"The Opium (Amendment) Act, 1911, 1 of 1911 (Rep., Act 48 of 1952)",
+"1911",
+"repealed"
+],
+[
+"IND_REP_1554_1911",
+"The Criminal Tribes Act, 1911, 3 of 1911 (Rep., Act 6 of 1924)",
+"1911",
+"repealed"
+],
+[
+"IND_REP_1555_1911",
+"The Indian Ports (Amendment) Act, 4 of 1911 (Rep., Act 1 of 1938)",
+"1911",
+"repealed"
+],
+[
+"IND_REP_1561_1911",
+"The Indian Factories Act, 1911, 12 of 1911 (Rep., Act 25 of 1934)",
+"1911",
+"repealed"
+],
+[
+"IND_REP_1566_1911",
+"The Indian Aircraft Act, 1911, 17 of 1911 (Rep., Act 22 of 1934)",
+"1911",
+"repealed"
+],
+[
+"IND_REP_1571_1912",
+"The Indian Lunacy Act 1912, 4 of 1912, (Rep., Act 14 of 1987)",
+"1912",
+"repealed"
+],
+[
+"IND_REP_1580_1912",
+"The Delhi Laws Act, 1912, 13 of 1912 (Rep., Act 37 of 2023)",
+"1912",
+"repealed"
+],
+[
+"IND_REP_1585_1913",
+"The Indian Companies Act 1913, 7 of 1913, (Rep., Act 1 of 1956)",
+"1913",
+"repealed"
+],
+[
+"IND_REP_1587_1914",
+"The Indian Copyright Act 1914, 3 of 1914, (Rep., Act 14 of 1957)",
+"1914",
+"repealed"
+],
+[
+"IND_REP_1588_1914",
+"The Decentralization Act 1914, 4 of 1914, (Rep., Act 1 of 1938)",
+"1914",
+"repealed"
+],
+[
+"IND_REP_159_1841",
+"Criminal Appeals Act, 1841, 31 of 1841 (Rep., Act 17 of 1862)",
+"1841",
+"repealed"
+],
+[
+"IND_REP_1607_1915",
+"The Delhi Laws Act, 1915, 7 of 1915 (Rep., Act 37 of 2023)",
+"1915",
+"repealed"
+],
+[
+"IND_REP_160_1842",
+"Sale of Opium, Calcutta Act, 1842, 1 of 1842 (Rep., Act 11 of 1849)",
+"1842",
+"repealed"
+],
+[
+"IND_REP_1614_1915",
+"The Enemy Trading Act 1915, 14 of 1915, (Rep., Act 12 of 1927)",
+"1915",
+"repealed"
+],
+[
+"IND_REP_161_1842",
+"Governal General Act, 1842, 2 of 1842 (Rep., Act 8 of 1868)",
+"1842",
+"repealed"
+],
+[
+"IND_REP_1625_1916",
+"The Enemy Trading Act 1916, 10 of 1916, (Rep., Act 12 of 1927)",
+"1916",
+"repealed"
+],
+[
+"IND_REP_1628_1916",
+"The Amending Act, 1916, 13 of 1916 (Rep., Act 1 of 1938)",
+"1916",
+"repealed"
+],
+[
+"IND_REP_1630_1917",
+"The Inland Vessels Act, 1917, 1 of 1917, (Rep., Act 24 of 2021)",
+"1917",
+"repealed"
+],
+[
+"IND_REP_1631_1917",
+"The Motor Spirit (Duties) Act 1917, 2 of 1917, (Rep., Act 1 of 1944)",
+"1917",
+"repealed"
+],
+[
+"IND_REP_1648_1917",
+"The Gold (Import) Act 1917, 22 of 1917, (Rep., Act 12 of 1927)",
+"1917",
+"repealed"
+],
+[
+"IND_REP_1653_1918",
+"The Indigo Cess Act, 1918, 3 of 1918 (Rep., Act 28 of 1923)",
+"1918",
+"repealed"
+],
+[
+"IND_REP_165_1842",
+"Nepali Jagir Act, 1842, 6 of 1842 (Rep., Act 15 of 1874)",
+"1842",
+"repealed"
+],
+[
+"IND_REP_1663_1918",
+"The Gold Coinage Act, 1918, 14 of 1918 (Rep., Act 12 of 1927)",
+"1918",
+"repealed"
+],
+[
+"IND_REP_1672_1918",
+"The Cotton Cloth Act 1918, 23 of 1918, (Rep., Act 25 of 2000)",
+"1918",
+"repealed"
+],
+[
+"IND_REP_1678_1919",
+"The Indian Oaths (Amendment) Act, 1919, 6 of 1919 (Rep., 1 of 1938)",
+"1919",
+"repealed"
+],
+[
+"IND_REP_167_1842",
+"Sadar Courts Act, 1842, 8 of 1842 (Rep., Act 17 of 1868)",
+"1842",
+"repealed"
+],
+[
+"IND_REP_168_1842",
+"Lease and Release Act, 1842, 9 of 1842 (Rep., Act 12 of 1891)",
+"1842",
+"repealed"
+],
+[
+"IND_REP_1697_1919",
+"The Indemnity Act 1919, 27 of 1919, (Rep., Act 1 of 1938)",
+"1919",
+"repealed"
+],
+[
+"IND_REP_169_1842",
+"Municipalities, Bengal Act, 1842, 10 of 1842 (Rep., Act 26 of 1850)",
+"1842",
+"repealed"
+],
+[
+"IND_REP_1701_1920",
+"The Indian Census Act 1920, 4 of 1920, (Rep., Act 12 of 1927)",
+"1920",
+"repealed"
+],
+[
+"IND_REP_1704_1920",
+"The Dourine (Amendment) Act, 1920, 8 of 1920 (Rep., Act 1 of 1938)",
+"1920",
+"repealed"
+],
+[
+"IND_REP_1706_1920",
+"The Indian Securties Act, 1920, 10 of 1920 (Rep., 38 of 2006)",
+"1920",
+"repealed"
+],
+[
+"IND_REP_170_1842",
+"Foreign Sugar Act, 1842, 11 of 1842 (Rep., Act 19 of 1854)",
+"1842",
+"repealed"
+],
+[
+"IND_REP_1710_1920",
+"The Jagannath College Act 1920, 16 of 1920, (Rep., Act 42 of 1953)",
+"1920",
+"repealed"
+],
+[
+"IND_REP_1712_1920",
+"The Dacca University Act 1920, 18 of 1920, (Rep., Act 42 of 1953)",
+"1920",
+"repealed"
+],
+[
+"IND_REP_1713_1920",
+"The Super Tax Act 1920, 19 of 1920, (Rep., Act 11 of 1922)",
+"1920",
+"repealed"
+],
+[
+"IND_REP_1716_1920",
+"The Lepers (Amendment) Act, 1920, 22 of 1920 (Rep., Act 1 of 1938)",
+"1920",
+"repealed"
+],
+[
+"IND_REP_1717_1920",
+"The Indian Rifles Act 1920, 23 of 1920, (Rep., Act 49 of 2006)",
+"1920",
+"repealed"
+],
+[
+"IND_REP_1724_1920",
+"The Rouble Note Act 1920, 30 of 1920, (Rep., Act 12 of 1927)",
+"1920",
+"repealed"
+],
+[
+"IND_REP_172_1842",
+"Nuisances, Bombay Town Act, 1842, 14 of 1842 (Rep., Act 14 of 1856",
+"1842",
+"repealed"
+],
+[
+"IND_REP_1731_1920",
+"The Indian Army (Amendment) Act, 1920, 37 of 1920 (Rep., 1 of 1938)",
+"1920",
+"repealed"
+],
+[
+"IND_REP_1732_1920",
+"The Devolution Act 1920, 38 of 1920, (Rep., Act 1 of 1938)",
+"1920",
+"repealed"
+],
+[
+"IND_REP_1739_1920",
+"The Cutchi Memons Act 1920, 46 of 1920, (Rep., Act 10 of 1938)",
+"1920",
+"repealed"
+],
+[
+"IND_REP_173_1842",
+"Emigration Act, 1842, 15 of 1842 (Rep., Act 13 of 1864)",
+"1842",
+"repealed"
+],
+[
+"IND_REP_1747_1921",
+"The Indian Finance Act 1921, 6 of 1921, (Rep., Act 11 of 1923)",
+"1921",
+"repealed"
+],
+[
+"IND_REP_1748_1921",
+"The Calcutta University Act 1921, 7 of 1921, (Rep., Act 1 of 1938)",
+"1921",
+"repealed"
+],
+[
+"IND_REP_174_1842",
+"Leases, Bengal Act, 1842, 16 of 1842 (Rep., Act 8 of 1868)",
+"1842",
+"repealed"
+],
+[
+"IND_REP_1750_1921",
+"The Enemy Missions Act 1921, 9 of 1921, (Rep., Act 42 of 1953)",
+"1921",
+"repealed"
+],
+[
+"IND_REP_1755_1921",
+"The Indian Lac Cess Act 1921, 14 of 1921, (Rep., Act 24 of 1930)",
+"1921",
+"repealed"
+],
+[
+"IND_REP_175_1842",
+"Revenue, Bombay Act, 1842, 18 of 1842 (Rep., Act 17 of 1862)",
+"1842",
+"repealed"
+],
+[
+"IND_REP_1766_1922",
+"The Indian Emigration Act 1922, 7 of 1922, (Rep., Act 31 of 1983)",
+"1922",
+"repealed"
+],
+[
+"IND_REP_1769_1922",
+"The Indian Finance Act 1922, 12 of 1922, (Rep., Act 1 of 1944)",
+"1922",
+"repealed"
+],
+[
+"IND_REP_1785_1923",
+"The Indian Mines Act 1923, 4 of 1923, (Rep., Act 35 of 1952)",
+"1923",
+"repealed"
+],
+[
+"IND_REP_1786_1923",
+"The Boilers Act, 1923, 5 of 1923 (Rep., Act 12 of 2025)",
+"1923",
+"repealed"
+],
+[
+"IND_REP_178_1843",
+"Special Appeals Act, 1843, 3 of 1843 (Rep., Act 16 of 1853)",
+"1843",
+"repealed"
+],
+[
+"IND_REP_17_1835",
+"Chaprasis Act, 1835, 18 of 1835 (Rep., Act 17 of 1862)",
+"1835",
+"repealed"
+],
+[
+"IND_REP_180_1843",
+"The Indian Slavery Act, 1843, 5 of 1843 (Rep., Act 48 of 1952)",
+"1843",
+"repealed"
+],
+[
+"IND_REP_1819_1923",
+"The Mussalman Wakf Act, 1923, 42 of 1923, (Rep., Act 15 of 2025)",
+"1923",
+"repealed"
+],
+[
+"IND_REP_1826_1924",
+"The Criminal Tribes Act 1924, 6 of 1924, (Rep., Act 24 of 1952)",
+"1924",
+"repealed"
+],
+[
+"IND_REP_183_1843",
+"Bank of Madras Act, 1843, 9 of 1843 (Rep., Act 5 of 1862)",
+"1843",
+"repealed"
+],
+[
+"IND_REP_1851_1925",
+"The Indian Finance Act 1925, 13 of 1925, (Rep., Act 20 of 1937)",
+"1925",
+"repealed"
+],
+[
+"IND_REP_186_1843",
+"Judicial Language Act, 1843, 12 of 1843 (Rep., Act 16 of 1874)",
+"1843",
+"repealed"
+],
+[
+"IND_REP_188_1843",
+"Inland Customs, Agra Act, 1843, 14 of 1843 (Rep., Act 8 of 1875)",
+"1843",
+"repealed"
+],
+[
+"IND_REP_18_1835",
+"Copper coinage Act, 1835, 21 of 1835 (Rep., Act 13 of 1862)",
+"1835",
+"repealed"
+],
+[
+"IND_REP_1913_1927",
+"The Currency Act 1927, 4 of 1927, (Rep., Act 2 of 1934)",
+"1927",
+"repealed"
+],
+[
+"IND_REP_191_1843",
+"Official Trustee Act, 1843, 17 of 1843 (Rep., Act 17 of 1864)",
+"1843",
+"repealed"
+],
+[
+"IND_REP_1921_1927",
+"The Repealing Act 1927, 12 of 1927, (Rep., Act 18 of 1928)",
+"1927",
+"repealed"
+],
+[
+"IND_REP_1925_1927",
+"The Light House Act, 1927, 17 of 1927, (Rep., Act 20 of 2021)",
+"1927",
+"repealed"
+],
+[
+"IND_REP_192_1843",
+"Thugs and Dacoits Act, 1843, 18 of 1843 (Rep., Act 8 of 1863)",
+"1843",
+"repealed"
+],
+[
+"IND_REP_1943_1928",
+"The Indian Finance Act 1928, 5 of 1928, (Rep., Act 8 of 1930)",
+"1928",
+"repealed"
+],
+[
+"IND_REP_194_1843",
+"Governor General Act, 1843, 20 of 1843 (Rep., Act 8 of 1868)",
+"1843",
+"repealed"
+],
+[
+"IND_REP_195_1843",
+"Emigration Act, 1843, 21 of 1843 (Rep., Act 13 of 1864)",
+"1843",
+"repealed"
+],
+[
+"IND_REP_1965_1929",
+"The Indian Finance Act 1929, 6 of 1929, (Rep., Act 32 of 1934)",
+"1929",
+"repealed"
+],
+[
+"IND_REP_1966_1929",
+"The Trade Disputes Act 1929, 7 of 1929, (Rep., Act 14 of 1947)",
+"1929",
+"repealed"
+],
+[
+"IND_REP_1983_1930",
+"The Dangerous Druge Act 1930, 2 of 1930, (Rep., Act 61 of 1985)",
+"1930",
+"repealed"
+],
+[
+"IND_REP_1995_1930",
+"The Indian Finance Act 1930, 15 of 1930, (Rep., Act 20 of 1937)",
+"1930",
+"repealed"
+],
+[
+"IND_REP_1998_1930",
+"The Silver (Excise Duty) Act 1930, 18 of 1930, (Rep., Act 1 of 1944)",
+"1930",
+"repealed"
+],
+[
+"IND_REP_1_1834",
+"Governor General Act, 1834, 1 of 1834 (Rep., Act 8 of 1868)",
+"1834",
+"repealed"
+],
+[
+"IND_REP_200_1844",
+"Nawab of Carnatic Act, 1844, 1 of 1844 (Rep., Act 8 of 1868)",
+"1844",
+"repealed"
+],
+[
+"IND_REP_2018_1931",
+"The Vizagapatam Port Act 1931, 10 of 1931, (Rep., Act 1 of 1938)",
+"1931",
+"repealed"
+],
+[
+"IND_REP_2023_1931",
+"The Wheat (Import Duty) Act 1931, 15 of 1931, (Rep., Act 32 of 1934)",
+"1931",
+"repealed"
+],
+[
+"IND_REP_202_1844",
+"Corporal Punishment Act, 1844, 3 of 1844 (Rep., Act 17 of 1862)",
+"1844",
+"repealed"
+],
+[
+"IND_REP_2040_1932",
+"The Indian Partnership Act, 1932, 8 of 1932 (Rep., Act 48 of 1952)",
+"1932",
+"repealed"
+],
+[
+"IND_REP_2043_1932",
+"The Foreign Relation Act 1932, 12 of 1932, (Rep., Act 56 of 1951)",
+"1932",
+"repealed"
+],
+[
+"IND_REP_204_1844",
+"Private Lotteries Act, 1844, 5 of 1844 (Rep., Act 27 of 1870)",
+"1844",
+"repealed"
+],
+[
+"IND_REP_206_1844",
+"Law of Evidence Act, 1844, 7 of 1844 (Rep., Act 8 of 1868)",
+"1844",
+"repealed"
+],
+[
+"IND_REP_2094_1934",
+"The Sugar (Excise Duty) Act 1934, 14 of 1934, (Rep., Act 1 of 1944)",
+"1934",
+"repealed"
+],
+[
+"IND_REP_209_1844",
+"Sentences for murder Act, 1844, 10 of 1844 (Rep., Act 8 of 1868)",
+"1844",
+"repealed"
+],
+[
+"IND_REP_2102_1934",
+"The Aircraft Act, 1934, 22 of 1934 (Rep., Act 16 of 2024)",
+"1934",
+"repealed"
+],
+[
+"IND_REP_2104_1934",
+"The Factories Act 1934, 25 of 1934, (Rep., Act 63 of 1948)",
+"1934",
+"repealed"
+],
+[
+"IND_REP_2110_1934",
+"The Indian Tariff Act, 1934, 32 of 1934 (Rep., Act 51 of 1975)",
+"1934",
+"repealed"
+],
+[
+"IND_REP_2113_1934",
+"The Amending Act, 1934, 35 of 1934 (Rep., Act 1 of 1938)",
+"1934",
+"repealed"
+],
+[
+"IND_REP_211_1844",
+"Indian Navy Act, 1844, 12 of 1844 (Rep., Act 8 of 1868)",
+"1844",
+"repealed"
+],
+[
+"IND_REP_2127_1935",
+"The Indian Coffee Cess Act 1935, 14 of 1935, (Rep., Act 4 of 1947)",
+"1935",
+"repealed"
+],
+[
+"IND_REP_212_1844",
+"Trisoolee Pyce Act, 1844, 13 of 1844 (Rep., Act 8 of 1868)",
+"1844",
+"repealed"
+],
+[
+"IND_REP_2130_1936",
+"The Payment of Wages Act, 1936, 4 of 1936 (Rep., Act 29 of 2019)",
+"1936",
+"repealed"
+],
+[
+"IND_REP_2132_1936",
+"The Cochin Port Act 1936, 6 of 1936, (Rep., Act 32 of 1940)",
+"1936",
+"repealed"
+],
+[
+"IND_REP_215_1844",
+"Salt duties, Bombay Act, 1844, 16 of 1844 (Rep., Act 12 of 1876)",
+"1844",
+"repealed"
+],
+[
+"IND_REP_216_1844",
+"Kolaba Act, 1844, 17 of 1844 (Rep., Act 8 of 1853)",
+"1844",
+"repealed"
+],
+[
+"IND_REP_2173_1937",
+"The Federal Court Act 1937, 25 of 1937, (Rep., Act 22 of 2001)",
+"1937",
+"repealed"
+],
+[
+"IND_REP_2177_1938",
+"The Repealing Act, 1938, 1 of 1938 (Rep., Act 25 of 1942)",
+"1938",
+"repealed"
+],
+[
+"IND_REP_217_1844",
+"Jails, Bengal Act, 1844, 18 of 1844 (Rep., Act 26 of 1870)",
+"1844",
+"repealed"
+],
+[
+"IND_REP_2182_1938",
+"The Indian Tea Control Act 1938, 8 of 1938, (Rep., Act 29 of 1953)",
+"1938",
+"repealed"
+],
+[
+"IND_REP_218_1844",
+"Factors Act, 1844, 20 of 1844 (Rep., Act 9 of 1872)",
+"1844",
+"repealed"
+],
+[
+"IND_REP_219_1844",
+"Emigration Act, 1844, 21 of 1844 (Rep., Act 13 of 1864)",
+"1844",
+"repealed"
+],
+[
+"IND_REP_21_1836",
+"cattle duty, salsette Act, 1836, 3 of 1836 (Rep., Act 8 of 1868)",
+"1836",
+"repealed"
+],
+[
+"IND_REP_2203_1939",
+"The Motor Vehicles Act, 1939, 4 of 1939 (Rep., Act 59 of 1988)",
+"1939",
+"repealed"
+],
+[
+"IND_REP_220_1844",
+"Copper Coinage Act, 1844, 22 of 1844 (Rep., Act 13 of 1862)",
+"1844",
+"repealed"
+],
+[
+"IND_REP_2221_1939",
+"The Indian Census Act 1939, 24 of 1939, (Rep., Act 6 of 1945)",
+"1939",
+"repealed"
+],
+[
+"IND_REP_2224_1939",
+"The Medical Diplomas Act, 1939, 27 of 1939 (Rep., Act 25 of 1942)",
+"1939",
+"repealed"
+],
+[
+"IND_REP_2225_1939",
+"The Medical Diplomas Act 1939, 28 of 1939, (Rep., Act A. O. of 1950)",
+"1939",
+"repealed"
+],
+[
+"IND_REP_222_1845",
+"Adultery, Bombay Act, 1845, 2 of 1845 (Rep., Act 17 of 1862)",
+"1845",
+"repealed"
+],
+[
+"IND_REP_2231_1939",
+"The Defence of India Act 1939, 35 of 1939, (Rep., Act 2 of 1948)",
+"1939",
+"repealed"
+],
+[
+"IND_REP_2240_1940",
+"The Foreigners Act 1940, 2 of 1940, (Rep., Act 31 of 1946)",
+"1940",
+"repealed"
+],
+[
+"IND_REP_2243_1940",
+"The Trade Marks Act 1940, 5 of 1940, (Rep., Act 43 of 1958)",
+"1940",
+"repealed"
+],
+[
+"IND_REP_2248_1940",
+"The Arbitration Act 1940, 10 of 1940, (Rep., Act 26 of 1996)",
+"1940",
+"repealed"
+],
+[
+"IND_REP_224_1845",
+"Registration of Deeds Act, 1845, 4 of 1845 (Rep., Act 16 of 1864)",
+"1845",
+"repealed"
+],
+[
+"IND_REP_225_1845",
+"Native Law Officers Act, 1845, 5 of 1845 (Rep., Act 11 of 1864)",
+"1845",
+"repealed"
+],
+[
+"IND_REP_227_1845",
+"Canals, Agra Act, 1845, 7 of 1845 (Rep., Act 8 of 1873)",
+"1845",
+"repealed"
+],
+[
+"IND_REP_2282_1941",
+"Berar Laws Act 1941, 4 of 1941, (Rep., Act 4 of 2018)",
+"1941",
+"repealed"
+],
+[
+"IND_REP_2286_1941",
+"The Tyres (Excise Duty) Act 1941, 10 of 1941, (Rep., Act 1 of 1944)",
+"1941",
+"repealed"
+],
+[
+"IND_REP_2297_1941",
+"The Federal Court Act, 1941, 21 of 1941 (Rep., Act 48 of 1952)",
+"1941",
+"repealed"
+],
+[
+"IND_REP_229_1845",
+"Import Duties Act, 1845, 9 of 1845 (Rep., Act 8 of 1868)",
+"1845",
+"repealed"
+],
+[
+"IND_REP_22_1836",
+"Insolvent debtors Act, 1836, 4 of 1836 (Rep., Act 8 of 1868)",
+"1836",
+"repealed"
+],
+[
+"IND_REP_2319_1942",
+"The Weekly Holidays Act 1942, 18 of 1942 (Rep., Act 4 of 2018)",
+"1942",
+"repealed"
+],
+[
+"IND_REP_235_1845",
+"Native Soldiers Act, 1845, 15 of 1845 (Rep., Act 10 of 1872)",
+"1845",
+"repealed"
+],
+[
+"IND_REP_238_1845",
+"Offences by Convicts Act, 1845, 18 of 1845 (Rep., Act 17 of 1862)",
+"1845",
+"repealed"
+],
+[
+"IND_REP_239_1845",
+"Assam Company Act, 1845, 19 of 1845 (Rep., Act 12 of 1873)",
+"1845",
+"repealed"
+],
+[
+"IND_REP_2406_1946",
+"The Foreigners Act, 1946, 31 of 1946 (Rep., Act 13 of 2025)",
+"1946",
+"repealed"
+],
+[
+"IND_REP_241_1845",
+"Meriah Sacrifices Act, 1845, 21 of 1845 (Rep., Act 16 of 1874)",
+"1845",
+"repealed"
+],
+[
+"IND_REP_242_1845",
+"Governor General Act, 1845, 22 of 1845 (Rep., Act 8 of 1868)",
+"1845",
+"repealed"
+],
+[
+"IND_REP_243_1845",
+"Union Bank Act, 1845, 23 of 1845 (Rep., Act 8 of 1868)",
+"1845",
+"repealed"
+],
+[
+"IND_REP_244_1845",
+"Pilot Court, Bengal Act, 1845, 24 of 1845 (Rep., Act 12 of 1859)",
+"1845",
+"repealed"
+],
+[
+"IND_REP_2456_1948",
+"The Repealing and Amending Act, 2 of 1948 (Rep., Act 35 of 1950)",
+"1948",
+"repealed"
+],
+[
+"IND_REP_245_1845",
+"Emigrant Ships Act, 1845, 25 of 1845 (Rep., Act 13 of 1864)",
+"1845",
+"repealed"
+],
+[
+"IND_REP_2463_1948",
+"The Minimum Wages Act, 1948, 11 of 1948 (Rep., Act 29 of 2019)",
+"1948",
+"repealed"
+],
+[
+"IND_REP_2477_1948",
+"The Atomic Energy Act 1948, 29 of 1948 (Rep., Act 33 of 1962)",
+"1948",
+"repealed"
+],
+[
+"IND_REP_248_1845",
+"Supreme Court, Madras Act, 1845, 28 of 1845 (Rep., Act 8 of 1868)",
+"1845",
+"repealed"
+],
+[
+"IND_REP_2501_1948",
+"The Factories Act, 1948, 63 of 1948 (Rep., Act 37 of 2020)",
+"1948",
+"repealed"
+],
+[
+"IND_REP_2513_1949",
+"The Central Tea Board Act 1949, 13 of 1949 (Rep., Act 29 of 1953)",
+"1949",
+"repealed"
+],
+[
+"IND_REP_254_1846",
+"Unscrewed Cotton Act, 1846, 2 of 1846 (Rep., Act 1 of 1852)",
+"1846",
+"repealed"
+],
+[
+"IND_REP_256_1846",
+"Surat Police Act, 1846, 5 of 1846 (Rep., Act 8 of 1868)",
+"1846",
+"repealed"
+],
+[
+"IND_REP_2578_1950",
+"The Drugs (Control) Act 1950, 26 of 1950, (Rep., Act 4 of 2005)",
+"1950",
+"repealed"
+],
+[
+"IND_REP_257_1846",
+"Bhatti Territory, Agra Act, 1846, 6 of 1846 (Rep., Act 4 of 1872)",
+"1846",
+"repealed"
+],
+[
+"IND_REP_2594_1950",
+"The Census (Amendment) Act, 1950, 51 of 1950 (Rep., Act 36 of 1957)",
+"1950",
+"repealed"
+],
+[
+"IND_REP_2618_1951",
+"The Part B States (Laws) Act 1951, 3 of 1951, (Rep., Act 4 of 2018)",
+"1951",
+"repealed"
+],
+[
+"IND_REP_263_1847",
+"Boundaries Act, 1847, 1 of 1847 (Rep., Act 19 of 1873)",
+"1847",
+"repealed"
+],
+[
+"IND_REP_2647_1951",
+"The Tariff Commission Act 1951, 50 of 1951, (Rep., Act 71 of 1976)",
+"1951",
+"repealed"
+],
+[
+"IND_REP_2685_1952",
+"The Mines Act, 1952, 35 of 1952 (Rep., Act 37 of 2020)",
+"1952",
+"repealed"
+],
+[
+"IND_REP_269_1847",
+"Distresses, Calcutta Act, 1847, 7 of 1847 (Rep., Act 1 of 1875)",
+"1847",
+"repealed"
+],
+[
+"IND_REP_2736_1953",
+"The Air Corporation Act 1953, 27 of 1953, (Rep., Act 13 of 1994)",
+"1953",
+"repealed"
+],
+[
+"IND_REP_2740_1953",
+"The Estate Duty Act 1953, 34 of 1953, (Rep., Act 20 of 2000)",
+"1953",
+"repealed"
+],
+[
+"IND_REP_2753_1953",
+"The Salt Cess Act. 1953, 49 of 1953, (Rep., Act 28 of 2016)",
+"1953",
+"repealed"
+],
+[
+"IND_REP_275_1847",
+"Emigration to Ceylon Act, 1847, 13 of 1847 (Rep., Act 13 of 1864)",
+"1847",
+"repealed"
+],
+[
+"IND_REP_2775_1954",
+"The Wakfs Act 1954, 29 of 1954, (Rep., Act 43 of 1995)",
+"1954",
+"repealed"
+],
+[
+"IND_REP_2789_1954",
+"The Tea (Amendment) Act 1954, 49 of 1954, (Rep., Act 58 of 1960)",
+"1954",
+"repealed"
+],
+[
+"IND_REP_2799_1955",
+"The Drugs (Amendment) Act 1955, 11 of 1955, (Rep., Act 58 of 1960)",
+"1955",
+"repealed"
+],
+[
+"IND_REP_282_1847",
+"The Indian Copyright Act, 1847, 20 of 1847 (Rep., Act 3 of 1914)",
+"1847",
+"repealed"
+],
+[
+"IND_REP_2832_1956",
+"The Companies Act 1956, 1 of 1956, (Rep., Act 18 of 2013)",
+"1956",
+"repealed"
+],
+[
+"IND_REP_283_1847",
+"Supreme Court, Bombay Act, 1847, 21 of 1847 (Rep., Act 8 of 1868)",
+"1847",
+"repealed"
+],
+[
+"IND_REP_285_1847",
+"Transportation Act, 1847, 23 of 1847 (Rep., Act 8 of 1868)",
+"1847",
+"repealed"
+],
+[
+"IND_REP_286_1848",
+"Forgery, Bengal Act, 1848, 1 of 1848 (Rep., Act 17 of 1862)",
+"1848",
+"repealed"
+],
+[
+"IND_REP_289_1848",
+"Corners, Juries Act, 1848, 4 of 1848 (Rep., Act 4 of 1871)",
+"1848",
+"repealed"
+],
+[
+"IND_REP_290_1848",
+"Penal Recognizances Act, 1848, 5 of 1848 (Rep., Act 17 of 1862)",
+"1848",
+"repealed"
+],
+[
+"IND_REP_291_1848",
+"Foreign Bottoms Act, 1848, 6 of 1848 (Rep., Act 8 of 1868)",
+"1848",
+"repealed"
+],
+[
+"IND_REP_292_1848",
+"Amending Act 6 of 1848, 1847, 7 of 1848 (Rep, Act 12 of 1873)",
+"1848",
+"repealed"
+],
+[
+"IND_REP_295_1848",
+"Mandvi , Bombay, 1848, 10 of 1848 (Rep., Act 12 of 1891)",
+"1848",
+"repealed"
+],
+[
+"IND_REP_2963_1958",
+"The Poisons (Amendment) Act 1958, 47 of 1958, (Rep., Act 58 of 1960)",
+"1958",
+"repealed"
+],
+[
+"IND_REP_2982_1959",
+"The Census (Amendment) Act, 1959, 22 of 1959, (Rep., Act 52 of 1964)",
+"1959",
+"repealed"
+],
+[
+"IND_REP_2988_1959",
+"The Wakf (Amendment) Act, 1959, 30 of 1959, (Rep., Act 52 of 1964)",
+"1959",
+"repealed"
+],
+[
+"IND_REP_298_1848",
+"Limitation, Bengal Act, 1848, 13 of 1848 (Rep., Act 8 of 1868)",
+"1848",
+"repealed"
+],
+[
+"IND_REP_3002_1959",
+"The Haj Committee Act, 1959, 51 of 1959, (Rep., Act 35 of 2002)",
+"1959",
+"repealed"
+],
+[
+"IND_REP_3008_1959",
+"The Mines (Amendment) Act, 1959, 62 of 1959, (Rep., Act 52 of 1964)",
+"1959",
+"repealed"
+],
+[
+"IND_REP_301_1848",
+"Salt, Agra Act, 1848, 16 of 1848 (Rep., Act 14 of 1870)",
+"1848",
+"repealed"
+],
+[
+"IND_REP_3020_1960",
+"The Rubber (Amendment) Act 1960, 21 of 1960, (Rep., Act 52 of 1964)",
+"1960",
+"repealed"
+],
+[
+"IND_REP_3029_1960",
+"The Drugs (Amendment) Act 1960, 35 of 1960, (Rep., Act 52 of 1964)",
+"1960",
+"repealed"
+],
+[
+"IND_REP_303_1848",
+"Nawab of Surat Act, 1848, 18 of 1848 (Rep., Act 32 of 1940)",
+"1848",
+"repealed"
+],
+[
+"IND_REP_3047_1960",
+"The Children Act, 1960, 60 of 1960, (Rep., Act 53 of 1986)",
+"1960",
+"repealed"
+],
+[
+"IND_REP_305_1848",
+"Wagers Act, 1848, 21 of 1848 (Rep., Act 9 of 1872)",
+"1848",
+"repealed"
+],
+[
+"IND_REP_3078_1961",
+"The Coffee (Amendment) Act, 1961, 48 of 1961, (Rep., Act 52 of 1964)",
+"1961",
+"repealed"
+],
+[
+"IND_REP_3081_1961",
+"The Maternity Benefit Act, 1961, 53 of 1961 (Rep., Act 36 of 2020)",
+"1961",
+"repealed"
+],
+[
+"IND_REP_308_1848",
+"Governor General Act, 1848, 24 of 1848 (Rep., Act 8 of 1868)",
+"1848",
+"repealed"
+],
+[
+"IND_REP_3097_1962",
+"The Drugs (Amendment) Act, 1962, 21 of 1962, (Rep., Act 56 of 1974)",
+"1962",
+"repealed"
+],
+[
+"IND_REP_309_1848",
+"Banganapalle, Madras Act, 1848, 25 of 1848 (Rep., Act 8 of 1868)",
+"1848",
+"repealed"
+],
+[
+"IND_REP_30_1836",
+"Sicca Rupees: Pice Act, 1836, 13 of 1836 (Rep., Act 8 of 1868)",
+"1836",
+"repealed"
+],
+[
+"IND_REP_311_1848",
+"Indian Navy Act, 1848, 27 of 1848 (Rep., Act 8 of 1868)",
+"1848",
+"repealed"
+],
+[
+"IND_REP_3130_1963",
+"The Super Profits Tax Act, 1963, 14 of 1963, (Rep., Act 13 of 1966)",
+"1963",
+"repealed"
+],
+[
+"IND_REP_313_1849",
+"Branding Convicts Act, 1849, 2 of 1849 (Rep., Act 8 of 1868)",
+"1849",
+"repealed"
+],
+[
+"IND_REP_314_1849",
+"Union Bank, Calcutta Act, 1849, 3 of 1849 (Rep., Act 8 of 1868)",
+"1849",
+"repealed"
+],
+[
+"IND_REP_3178_1964",
+"The Wakf (Amendment) Act, 1964, 34 of 1964, (Rep., Act 56 of 1974)",
+"1964",
+"repealed"
+],
+[
+"IND_REP_318_1849",
+"Administrator General Act, 1849, 7 of 1849 (Rep., Act 8 of 1855)",
+"1849",
+"repealed"
+],
+[
+"IND_REP_3196_1965",
+"The Income Tax (Amendment) Act 1965, 1 of 1965, (Rep., 20 of 2000)",
+"1965",
+"repealed"
+],
+[
+"IND_REP_3203_1965",
+"The Gold (Control) Act, 1965, 18 of 1965, (Rep., Act 45 of 1968)",
+"1965",
+"repealed"
+],
+[
+"IND_REP_3205_1965",
+"The Payment of Bonus Act, 1965, 21 of 1965 (Rep., Act 29 of 2019)",
+"1965",
+"repealed"
+],
+[
+"IND_REP_3211_1965",
+"The Press Council Act, 1965, 34 of 1965, (Rep., Act 24 of 1976)",
+"1965",
+"repealed"
+],
+[
+"IND_REP_321_1849",
+"Abkari, Calcutta, 1849, 11 of 1849 (Rep., Ben. Act 07 of 1879)",
+"1849",
+"repealed"
+],
+[
+"IND_REP_3224_1966",
+"The Produce Cess Act, 1966, 15 of 1966 (Rep., 46 of 2006)",
+"1966",
+"repealed"
+],
+[
+"IND_REP_3228_1966",
+"The Customs (Amendment) Act, 1966, 20 of 1966 (Rep., Act 56 of 1974)",
+"1966",
+"repealed"
+],
+[
+"IND_REP_3250_1967",
+"The Tea (Amendment) Act, 1967, 21 of 1967 (Rep., Act 56 of 1974)",
+"1967",
+"repealed"
+],
+[
+"IND_REP_3277_1968",
+"The Gold Control Act, 1968, 45 of 1968, (Rep., Act 18 of 1990)",
+"1968",
+"repealed"
+],
+[
+"IND_REP_327_1850",
+"Madras and Bombay Act, 1850, 2 of 1850 (Rep., Act 8 of 1855)",
+"1850",
+"repealed"
+],
+[
+"IND_REP_32_1836",
+"Sabathu Act, 1836, 15 of 1836 (Rep., Act 32 of 1850)",
+"1836",
+"repealed"
+],
+[
+"IND_REP_3308_1969",
+"The Wakf (Amendment) Act, 1969, 38 of 1969 (Rep., Act 23 of 2016)",
+"1969",
+"repealed"
+],
+[
+"IND_REP_330_1850",
+"Indian Coasting Trade Act, 1850, 5 of 1850 (Rep., Act 34 of 1939)",
+"1850",
+"repealed"
+],
+[
+"IND_REP_3327_1970",
+"The Tea (Amendment) Act, 1970, 22 of 1970 (Rep., Act 56 of 1974)",
+"1970",
+"repealed"
+],
+[
+"IND_REP_332_1850",
+"Removal of Prisoners, 1850, 7 of 1850 (Rep., Act 17 of 1862)",
+"1850",
+"repealed"
+],
+[
+"IND_REP_3375_1971",
+"The Arms (Amendment) Act, 1971, 55 of 1971 (Rep., Act 38 of 1978)",
+"1971",
+"repealed"
+],
+[
+"IND_REP_337_1850",
+"Breaches of Trust Act, 1850, 13 of 1850 (Rep., Act 17 of 1862)",
+"1850",
+"repealed"
+],
+[
+"IND_REP_339_1850",
+"Munsifs, Courts, Bengal, 1850, 15 of 1850 (Rep., Act 12 of 1873)",
+"1850",
+"repealed"
+],
+[
+"IND_REP_340_1850",
+"Fines, Act 1850, 16 of 1850 (Rep., Act 17 of 1862)",
+"1850",
+"repealed"
+],
+[
+"IND_REP_3412_1972",
+"The Seeds (Amendment) Act, 1972, 55 of 1972 (Rep., Act 38 of 1978)",
+"1972",
+"repealed"
+],
+[
+"IND_REP_3424_1972",
+"The Delimitation Act, 1972, 76 of 1972 (Rep., Act 33 of 2002)",
+"1972",
+"repealed"
+],
+[
+"IND_REP_3426_1972",
+"The Mulki Rules Act, 1972, 79 of 1972 (Rep., Act 68 of 1973)",
+"1972",
+"repealed"
+],
+[
+"IND_REP_343_1850",
+"Binding Apprentices Act, 1850, 19 of 1850 (Rep., Act 52 of 1961)",
+"1850",
+"repealed"
+],
+[
+"IND_REP_346_1850",
+"Governor General Act, 1850, 22 of 1850 (Rep., Act 8 of 1868)",
+"1850",
+"repealed"
+],
+[
+"IND_REP_3485_1974",
+"The Navy (Amendment) Act, 1974, 53 of 1974 (Rep., Act 38 of 1978)",
+"1974",
+"repealed"
+],
+[
+"IND_REP_34_1836",
+"Bigam Samru Act, 1836, 17 of 1836 (Rep., Act 8 of 1868)",
+"1836",
+"repealed"
+],
+[
+"IND_REP_352_1850",
+"Pleaders; Appeals Act, 1850, 30 of 1850 (Rep., Act 8 of 1868)",
+"1850",
+"repealed"
+],
+[
+"IND_REP_3554_1976",
+"The Tea (Amendment) Act, 1976, 75 of 1976 (Rep., Act 19 of 1988)",
+"1976",
+"repealed"
+],
+[
+"IND_REP_356_1850",
+"The State Prisoners Act, 1850, 34 of 1850 (Rep., Act 48 of 1952)",
+"1850",
+"repealed"
+],
+[
+"IND_REP_357_1850",
+"Ferries, Bombay Act, 1850, 35 of 1850 (Rep., Bom. Act 2 of 1868)",
+"1850",
+"repealed"
+],
+[
+"IND_REP_3589_1977",
+"The Tea (Amendment) Act 1977, 32 of 1977 (Rep., Act 19 of 1988)",
+"1977",
+"repealed"
+],
+[
+"IND_REP_35_1836",
+"Bhor Ghat Toll Act, 1836, 18 of 1836 (Rep., Act 2 of 1837)",
+"1836",
+"repealed"
+],
+[
+"IND_REP_3629_1979",
+"The Copra Cess Act, 1979, 4 of 1979 (Rep., Act 4 of 1987)",
+"1979",
+"repealed"
+],
+[
+"IND_REP_364_1850",
+"Joint Stock Companies Act, 1850, 43 of 1850 (Rep., Act 10 of 1866)",
+"1850",
+"repealed"
+],
+[
+"IND_REP_3662_1980",
+"The Tea (Amendment) Act, 1980, 68 of 1980 (Rep., Act 31 of 2019)",
+"1980",
+"repealed"
+],
+[
+"IND_REP_366_1850",
+"Coroners Act, 1850, 45 of 1850 (Rep., Act 4 of 1871)",
+"1850",
+"repealed"
+],
+[
+"IND_REP_3695_1982",
+"The Sugar Cess Act, 1982, 3 of 1982 (Rep., Act 18 of 2017)",
+"1982",
+"repealed"
+],
+[
+"IND_REP_36_1836",
+"Bank of Bengal Act, 1836, 19 of 1836 (Rep., Act 8 of 1868)",
+"1836",
+"repealed"
+],
+[
+"IND_REP_371_1851",
+"Foras Land, Bombay Act 1851 (6 of 1851) Rep., Act 14 of 1870",
+"1851",
+"repealed"
+],
+[
+"IND_REP_3720_1982",
+"The Navy (Amendment) Act, 1982, 48 of 1982 (Rep., Act 19 of 1988)",
+"1982",
+"repealed"
+],
+[
+"IND_REP_3738_1983",
+"The Aircraft (Amendment) Act, 1983, 1 of 1983 (Rep., Act 19 of 1988)",
+"1983",
+"repealed"
+],
+[
+"IND_REP_373_1851",
+"Gambling, Bombay Town Act 1851, 9 of 1851, (Rep., Act 13 of 1856)",
+"1851",
+"repealed"
+],
+[
+"IND_REP_3750_1983",
+"The Arms (Amendment) Act, 1983, 25 of 1983 (Rep., Act 19 of 1988)",
+"1983",
+"repealed"
+],
+[
+"IND_REP_376_1851",
+"Amending Act 5 of 1851, 1851, 13 of 1851 (Rep., Act 08 of 1868)",
+"1851",
+"repealed"
+],
+[
+"IND_REP_37_1836",
+"The Batwaras Act, 1836, 20 of 1836 (Rep., Act 32 of 1940)",
+"1836",
+"repealed"
+],
+[
+"IND_REP_3806_1984",
+"The Wakf Amendment Act, 1984, 69 of 1984 (Rep., Act 43 of 1995)",
+"1984",
+"repealed"
+],
+[
+"IND_REP_380_1852",
+"Custom, Bombay Act 1852, 1 of 1852, (Rep., Act 13 of 1871)",
+"1852",
+"repealed"
+],
+[
+"IND_REP_3821_1985",
+"The Coinage (Amendment) Act, 1985, 33 of 1985 (Rep., Act 30 of 2001",
+"1985",
+"repealed"
+],
+[
+"IND_REP_3827_1985",
+"The Arms (Amendment) Act 1985, 39 of 1985, (Rep., Act 30 of 2001)",
+"1985",
+"repealed"
+],
+[
+"IND_REP_3833_1985",
+"The Coffee (Amendment) Act 1985, 48 of 1985, (Rep., Act 30 of 2001)",
+"1985",
+"repealed"
+],
+[
+"IND_REP_383_1852",
+"Emigration Act 1852, 4 of 1852, (Rep., Act 13 of 1864)",
+"1852",
+"repealed"
+],
+[
+"IND_REP_384_1852",
+"Marriage by Registrars Act 1852, 5 of 1852, (Rep., Act 15 of 1872)",
+"1852",
+"repealed"
+],
+[
+"IND_REP_3855_1985",
+"The Customs (Amendment) Act, 1985, 80 of 1985 (Rep., Act 4 of 2018)",
+"1985",
+"repealed"
+],
+[
+"IND_REP_3861_1986",
+"The Central Excise Tariff Act, 1986, 5 of 1986 (Rep., 12 of 2017)",
+"1986",
+"repealed"
+],
+[
+"IND_REP_3864_1986",
+"The Spices Cess Act 1986, 11 of 1986 (Rep., Act 24 of 2006)",
+"1986",
+"repealed"
+],
+[
+"IND_REP_3869_1986",
+"The Tea (Amendment) Act 1986, 24 of 1986 (Rep., Act 30 of 2001)",
+"1986",
+"repealed"
+],
+[
+"IND_REP_3890_1986",
+"The Juvenile Justice Act 1986, 53 of 1986 (Rep., Act 56 of 2000)",
+"1986",
+"repealed"
+],
+[
+"IND_REP_3908_1987",
+"The Mental Act, 1987, 14 of 1987 (Rep., Act 10 of 2017)",
+"1987",
+"repealed"
+],
+[
+"IND_REP_390_1852",
+"Calcutta Police Act 1852, 13 of 1852, (Rep., Act 13 of 1856)",
+"1852",
+"repealed"
+],
+[
+"IND_REP_3923_1987",
+"The Navy (Amendment) Act 1987, 34 of 1987, (Rep., Act 30 of 2001)",
+"1987",
+"repealed"
+],
+[
+"IND_REP_392_1852",
+"Evidence Act 1852, 15 of 1852, (Rep., Act 1 of 1872)",
+"1852",
+"repealed"
+],
+[
+"IND_REP_3947_1988",
+"The Customs (Amendment) Act, 1988, 27 of 1988 (Rep., Act 30 of 2001)",
+"1988",
+"repealed"
+],
+[
+"IND_REP_3955_1988",
+"The Arms (Amendment) Act, 1988, 42 of 1988 (Rep., Act 30 of 2001)",
+"1988",
+"repealed"
+],
+[
+"IND_REP_396_1852",
+"Abkari, Madras Town Act 1852, 19 of 1852 (Rep., Mad. Act 1 of 1886)",
+"1852",
+"repealed"
+],
+[
+"IND_REP_3988_1989",
+"The Customs (Amendment) Act, 1989, 40 of 1989 (Rep., Act 30 of 2001)",
+"1989",
+"repealed"
+],
+[
+"IND_REP_3_1835",
+"Governor of Madars Act, 1835, 1 of 1835 (Rep., Act 8 of 1868)",
+"1835",
+"repealed"
+],
+[
+"IND_REP_401_1852",
+"Crimping Act 1852, 24 of 1852, (Rep., Act 13 of 1864)",
+"1852",
+"repealed"
+],
+[
+"IND_REP_4021_1991",
+"The Customs (Amendment) Act, 1991, 55 of 1991 (Rep., Act 30 of 2001)",
+"1991",
+"repealed"
+],
+[
+"IND_REP_4038_1992",
+"The Army (Amendment) Act, 1992, 37 of 1992 (Rep., Act 30 of 2001)",
+"1992",
+"repealed"
+],
+[
+"IND_REP_405_1852",
+"Police, Bombay Act 1852, 28 of 1852, (Rep., Act 8 of 1868)",
+"1852",
+"repealed"
+],
+[
+"IND_REP_4081_1994",
+"The Census (Amendment) Act, 1993, 11 of 1994 (Rep., Act 30 of 2011)",
+"1994",
+"repealed"
+],
+[
+"IND_REP_4085_1994",
+"The Coffee (Amendment) Act, 1994, 23 of 1994 (Rep., Act 30 of 2001)",
+"1994",
+"repealed"
+],
+[
+"IND_REP_4090_1994",
+"The Rubber (Amendment) Act, 1994, 33 of 1994 (Rep., Act 30 of 2001)",
+"1994",
+"repealed"
+],
+[
+"IND_REP_4155_1998",
+"The Finance Act 1998, 1 of 1998 (Rep., Act 21 of 1998)",
+"1998",
+"repealed"
+],
+[
+"IND_REP_416_1853",
+"Tabacco Monopoly, Madras Act 1853, 4 of 1853, (Rep., Act 8 of 1868)",
+"1853",
+"repealed"
+],
+[
+"IND_REP_4178_1999",
+"The Customs (Amendment) Act, 1998, 8 of 1999, (Rep., Act 04 of 2018)",
+"1999",
+"repealed"
+],
+[
+"IND_REP_4181_1999",
+"The Patents (Amendment) Act, 1999, 17 of 1999, (Rep., 23 of 2016)",
+"1999",
+"repealed"
+],
+[
+"IND_REP_4182_1999",
+"The Companies (Amendment) Act, 1999, 21 of 1999, (Rep., 23 of 2016)",
+"1999",
+"repealed"
+],
+[
+"IND_REP_418_1853",
+"Colaba Act, 1853, 8 of 1853 (Rep., 12 of 1891)",
+"1853",
+"repealed"
+],
+[
+"IND_REP_419_1853",
+"Amending Act 6 of 1853, 1853, 9 of 1853, (Rep., Act 8 of 1868)",
+"1853",
+"repealed"
+],
+[
+"IND_REP_420_1853",
+"Amending Act 22 of 1836, 1853, 10 of 1853, (Rep., Act 12 of 1873)",
+"1853",
+"repealed"
+],
+[
+"IND_REP_4221_2000",
+"The Forfeiture (Repeal) Act, 2000, 48 of 2000 (Rep., Act 4 of 2018)",
+"2000",
+"repealed"
+],
+[
+"IND_REP_422_1853",
+"Vishalghur Act, 1853, 13 of 1853 (Rep., 15 of 1874)",
+"1853",
+"repealed"
+],
+[
+"IND_REP_423_1853",
+"Indian Navy Act 1853, 14 of 1853, (Rep., Act 8 of 1868 )",
+"1853",
+"repealed"
+],
+[
+"IND_REP_425_1853",
+"Special Appeals Act 1853, 16 of 1853, (Rep., Act 12 of 1873)",
+"1853",
+"repealed"
+],
+[
+"IND_REP_429_1853",
+"Governor General Act 1853, 21 of 1853, (Rep., Act 8 of 1868)",
+"1853",
+"repealed"
+],
+[
+"IND_REP_42_1836",
+"Warehousing Ports Act, 1836, 25 of 1836 (Rep., Act 12 of 1873)",
+"1836",
+"repealed"
+],
+[
+"IND_REP_432_1854",
+"Native Army Act 1854, 3 of 1854, (Rep., Act 29 of 1861)",
+"1854",
+"repealed"
+],
+[
+"IND_REP_4336_2003",
+"The Railway (Amendment) Act, 2003 , 56 of 2003, (Rep., Act 23 of 2016)",
+"2003",
+"repealed"
+],
+[
+"IND_REP_4357_2005",
+"The Patents (Amendment) Act, 2005, 15 of 2005, (Rep., Act 23 of 2016)",
+"2005",
+"repealed"
+],
+[
+"IND_REP_4359_2005",
+"The Navy (Amendment) Act, 2005, 23 of 2005, (Rep., Act 23 of 2016)",
+"2005",
+"repealed"
+],
+[
+"IND_REP_436_1854",
+"Administration of Estates Act 1854, 8 of 1854 (Rep., 27 of 1860)",
+"1854",
+"repealed"
+],
+[
+"IND_REP_439_1854",
+"Copper Coinage Act 1854, 11 of 1854, (Rep., Act 13 of 1862)",
+"1854",
+"repealed"
+],
+[
+"IND_REP_43_1836",
+"Camp Police Act, 1836, 26 of 1836 (Rep., Act 12 of 1891)",
+"1836",
+"repealed"
+],
+[
+"IND_REP_441_1854",
+"Assam Company Act 1854, 14 of 1854, (Rep., Act 4 of 1855)",
+"1854",
+"repealed"
+],
+[
+"IND_REP_444_1854",
+"Railways Act 1854, 18 of 1854, (Rep., Act 4 of 1879)",
+"1854",
+"repealed"
+],
+[
+"IND_REP_445_1854",
+"Foreign Sugar Act 1854, 19 of 1854, (Rep., Act 8 of 1868)",
+"1854",
+"repealed"
+],
+[
+"IND_REP_447_1854",
+"British Subjects Act 1854, 22 of 1854, (Rep., Act 8 of 1868)",
+"1854",
+"repealed"
+],
+[
+"IND_REP_448_1854",
+"Outrages in Malabar Act 1854, 23 of 1854 (Rep., Act 20 of 1859)",
+"1854",
+"repealed"
+],
+[
+"IND_REP_44_1836",
+"Vakils, Madras Act, 1836, 27 of 1836 (Rep., Act 11 of 1864)",
+"1836",
+"repealed"
+],
+[
+"IND_REP_4520_2013",
+"The Wakf (Amendment) Act 2013, 27 of 2013, (Rep., Act 19 of 2015)",
+"2013",
+"repealed"
+],
+[
+"IND_REP_452_1854",
+"Nazim of Bengal Act 1854, 27 of 1854, (Rep., Act 3 of 1883)",
+"1854",
+"repealed"
+],
+[
+"IND_REP_453_1854",
+"Calcutta.-- Municipal Act 1854, 28 of 1854, (Rep., Act 28 of 1856)",
+"1854",
+"repealed"
+],
+[
+"IND_REP_454_1854",
+"Saltpetre Act 1854, 29 of 1854, (Rep., Act 8 of 1868)",
+"1854",
+"repealed"
+],
+[
+"IND_REP_4580_2019",
+"The Arms (Amendment) Act, 2019, 48 of 2019 (Rep., Act 37 of 2025)",
+"2019",
+"repealed"
+],
+[
+"IND_REP_458_1854",
+"Judicial Language Act 1854, 33 of 1854, (Rep., Act 16 of 1874)",
+"1854",
+"repealed"
+],
+[
+"IND_REP_460_1855",
+"Governor General Act 1855, 1 of 1855, (Rep., Act 8 of 1868)",
+"1855",
+"repealed"
+],
+[
+"IND_REP_461_1855",
+"Evidence Act 1855, 2 of 1855, (Rep., Act 1 of 1872)",
+"1855",
+"repealed"
+],
+[
+"IND_REP_462_1855",
+"Indian Navy Act 1855, 3 of 1855, (Rep., Act 8 of 1868)",
+"1855",
+"repealed"
+],
+[
+"IND_REP_463_1855",
+"The Assam Company Act 1855, 4 of 1855, (Rep., Act 11 of 1866)",
+"1855",
+"repealed"
+],
+[
+"IND_REP_467_1855",
+"Administrator General Act 1855, 8 of 1855, (Rep., Act 24 of 1867)",
+"1855",
+"repealed"
+],
+[
+"IND_REP_468_1855",
+"Regular Appeals, Madras Act 1855, 9 of 1855, (Rep., Act 10 of 1861)",
+"1855",
+"repealed"
+],
+[
+"IND_REP_469_1855",
+"Recusant Witnesses Act 1855, 10 of 1855, (Rep., Act 11 of 1901)",
+"1855",
+"repealed"
+],
+[
+"IND_REP_46_1836",
+"Sadr Amins, Madras Act, 1836, 29 of 1836 (Rep., Act 8 of 1868)",
+"1836",
+"repealed"
+],
+[
+"IND_REP_473_1855",
+"Use of Badges, Bombay Act 1855, 16 of 1855, (Rep., Act 17 of 1862)",
+"1855",
+"repealed"
+],
+[
+"IND_REP_474_1855",
+"Pardons and Reprives Act 1855, 18 of 1855, (Rep., Act 16 of 1874)",
+"1855",
+"repealed"
+],
+[
+"IND_REP_477_1855",
+"The Madras Minors Act 1855, 21 of 1855, (Rep., Mad. Act 1 of 1902)",
+"1855",
+"repealed"
+],
+[
+"IND_REP_47_1836",
+"Thugs Act, 1836, 30 of 1836 (Rep., Act 17 of 1862)",
+"1836",
+"repealed"
+],
+[
+"IND_REP_480_1855",
+"The Penal Servitude Act 1855, 24 of 1855, (Rep., Act 17 of 1949)",
+"1855",
+"repealed"
+],
+[
+"IND_REP_481_1855",
+"Sessions at Ootacamund Act 1855, 25 of 1855, (Rep., Act 8 of 1868)",
+"1855",
+"repealed"
+],
+[
+"IND_REP_484_1855",
+"The Usury Laws Repeal Act, 1855, 28 of 1855 (Rep., Act 37 of 2023)",
+"1855",
+"repealed"
+],
+[
+"IND_REP_488_1855",
+"Exportion of Saltpeire Act 1855, 33 of 1855, (Rep., Act 8 of 1868)",
+"1855",
+"repealed"
+],
+[
+"IND_REP_490_1855",
+"Import of Cotton, Agra Act 1855, 35 of 1855 (Rep., Act 8 of 1868)",
+"1855",
+"repealed"
+],
+[
+"IND_REP_491_1855",
+"Contraband Salt, Agra Act 1855, 36 of 1855 (Rep., Act 8 of 1875)",
+"1855",
+"repealed"
+],
+[
+"IND_REP_499_1856",
+"Patents Act 1856, 6 of 1856, (Rep., Act 9 of 1857)",
+"1856",
+"repealed"
+],
+[
+"IND_REP_501_1856",
+"Jails, Madras and Bombay Act 1856, 8 of 1856, (Rep., Act 9 of 1894)",
+"1856",
+"repealed"
+],
+[
+"IND_REP_510_1856",
+"Criminal Process Act 1856, 17 of 1856, (Rep., Act 17 of 1862)",
+"1856",
+"repealed"
+],
+[
+"IND_REP_51_1837",
+"Bengal Sadr Courts Act, 1837, 3 of 1837 (Rep., Act 16 of 1874)",
+"1837",
+"repealed"
+],
+[
+"IND_REP_522_1857",
+"Cattle Trespass Act 1857, 3 of 1857, (Rep., Act 1 of 1871)",
+"1857",
+"repealed"
+],
+[
+"IND_REP_527_1857",
+"Repealing Act 6 of 1856 Act 1857, 9 of 1857, (Rep., Act 8 of 1868)",
+"1857",
+"repealed"
+],
+[
+"IND_REP_528_1857",
+"The State Offences Act 1857, 11 of 1857, (Rep., Act 4 of 1922)",
+"1857",
+"repealed"
+],
+[
+"IND_REP_529_1857",
+"The Opium Act, 1857, 13 of 1857 (Rep., Act 61 of 1985)",
+"1857",
+"repealed"
+],
+[
+"IND_REP_531_1857",
+"Printing Presses Act 1857, 15 of 1857, (Rep., Act 8 of 1868)",
+"1857",
+"repealed"
+],
+[
+"IND_REP_532_1857",
+"Heinous Offences Act 1857, 16 of 1857, (Rep., Act 8 of 1868)",
+"1857",
+"repealed"
+],
+[
+"IND_REP_537_1857",
+"The Howrah Offences Act, 1857, 21 of 1857, (Rep., Act 4 of 2018)",
+"1857",
+"repealed"
+],
+[
+"IND_REP_539_1857",
+"Volunteer Corps Act 1857, 23 of 1857, (Rep., Act 20 of 1869)",
+"1857",
+"repealed"
+],
+[
+"IND_REP_53_1837",
+"Native Emigrants Act, 1837, 5 of 1837 (Rep., Act 14 of 1839)",
+"1837",
+"repealed"
+],
+[
+"IND_REP_541_1857",
+"The Forfeiture Act, 1857, 25 of 1857 (Rep., Act 4 of 1922)",
+"1857",
+"repealed"
+],
+[
+"IND_REP_543_1857",
+"Arms and Ammunition Act 1857, 28 of 1857, (Rep., Act 8 of 1868)",
+"1857",
+"repealed"
+],
+[
+"IND_REP_548_1857",
+"Foreigners Act 1857, 33 of 1857, (Rep., Act 8 of 1868)",
+"1857",
+"repealed"
+],
+[
+"IND_REP_553_1858",
+"The State Prisoners Act 1858, 3 of 1858, (Rep., Act 48 of 1952)",
+"1858",
+"repealed"
+],
+[
+"IND_REP_554_1858",
+"Governor General Act 1858, 4 of 1858, (Rep., Act 8 of 1868)",
+"1858",
+"repealed"
+],
+[
+"IND_REP_555_1858",
+"Escapped Convicts Act 1858, 5 of 1858, (Rep., Act 17 of 1860)",
+"1858",
+"repealed"
+],
+[
+"IND_REP_556_1858",
+"Impressment of Labour Act 1858, 6 of 1858, (Rep., Act 8 of 1868)",
+"1858",
+"repealed"
+],
+[
+"IND_REP_561_1858",
+"Corporal Punishment Act 1858, 11 of 1858, (Rep., Act 8 of 1868)",
+"1858",
+"repealed"
+],
+[
+"IND_REP_564_1858",
+"Minor, Madras Act 1858, 14 of 1858, (Rep., Act 8 of 1868)",
+"1858",
+"repealed"
+],
+[
+"IND_REP_572_1858",
+"Transportation Act 1858, 22 of 1858, (Rep., Act 8 of 1868)",
+"1858",
+"repealed"
+],
+[
+"IND_REP_573_1858",
+"Kurnool, Madras Act 1858, 23 of 1858, (Rep., Act 15 of 1874)",
+"1858",
+"repealed"
+],
+[
+"IND_REP_57_1837",
+"Foreign Bottoms Act, 1837, 14 of 1837 (Rep., Act 8 of 1868)",
+"1837",
+"repealed"
+],
+[
+"IND_REP_580_1858",
+"Nabob of Carnatic Act 1858, 30 of 1858 (Rep., 8 of 1868)",
+"1858",
+"repealed"
+],
+[
+"IND_REP_581_1858",
+"Tanjore Act 1858, 32 of 1858 (Rep., Act 15 of 1874)",
+"1858",
+"repealed"
+],
+[
+"IND_REP_582_1858",
+"Indian Navy Act 1858, 33 of 1858 (Rep., Act 8 of 1868)",
+"1858",
+"repealed"
+],
+[
+"IND_REP_586_1858",
+"Nawab of Carnatic Act 1858, 37 of 1858 (Rep., Act 32 of 1940)",
+"1858",
+"repealed"
+],
+[
+"IND_REP_587_1858",
+"Delhi Territory Act 1858, 38 of 1858 (Rep., Act 8 of 1868)",
+"1858",
+"repealed"
+],
+[
+"IND_REP_589_1858",
+"Minors Act 1858, 40 of 1858, (Rep., Act 8 of 1890)",
+"1858",
+"repealed"
+],
+[
+"IND_REP_58_1837",
+"Chaukidari Assesment Act, 1837, 15 of 1837 (Rep., Act 20 of 1856)",
+"1837",
+"repealed"
+],
+[
+"IND_REP_592_1859",
+"Amending Act 30 of 1858 Act 1859, 2 of 1859, (Rep., Act 8 of 1868)",
+"1859",
+"repealed"
+],
+[
+"IND_REP_594_1859",
+"Removal of Prisoners Act 1859, 4 of 1859, (Rep., Act 8 of 1868)",
+"1859",
+"repealed"
+],
+[
+"IND_REP_595_1859",
+"Ahmedabad Magistracy Act 1859, 6 of 1859, (Rep., Act 12 of 1873)",
+"1859",
+"repealed"
+],
+[
+"IND_REP_598_1859",
+"The Forfeiture Act, 1859, 9 of 1859, (Rep., Act 48 of 2000)",
+"1859",
+"repealed"
+],
+[
+"IND_REP_59_1837",
+"Custom House Act, 1837, 16 of 1837 (Rep., Act 12 of 1873)",
+"1837",
+"repealed"
+],
+[
+"IND_REP_600_1859",
+"The Calcutta Pilots Act 1859, 12 of 1859, (Rep., Act 4 of 2018)",
+"1859",
+"repealed"
+],
+[
+"IND_REP_604_1859",
+"Nawab of Carnatic Act 1859, 16 of 1859, (Rep., Act 37 of 1860)",
+"1859",
+"repealed"
+],
+[
+"IND_REP_609_1859",
+"Governor General Act 1859, 21 of 1859, (Rep., Act 8 of 1868)",
+"1859",
+"repealed"
+],
+[
+"IND_REP_60_1837",
+"Post Office Act, 1837, 17 of 1837 (Rep., Act 17 of 1854)",
+"1837",
+"repealed"
+],
+[
+"IND_REP_610_1859",
+"Amending Act I of 1852, 1859, 22 of 1859 (Rep., Act 13 of 1871)",
+"1859",
+"repealed"
+],
+[
+"IND_REP_615_1859",
+"Foreigners Act 1859, 28 of 1859, (Rep., Act 8 of 1868)",
+"1859",
+"repealed"
+],
+[
+"IND_REP_616_1860",
+"Duty on Salt, Agra Act 1860, 1 of 1860, (Rep., Act 8 of 1875)",
+"1860",
+"repealed"
+],
+[
+"IND_REP_618_1860",
+"Sessions Judges, Bengal Act 1860, 3 of 1860, (Rep., Act 17 of 1862)",
+"1860",
+"repealed"
+],
+[
+"IND_REP_619_1860",
+"Civil Procedure Act 1860, 4 of 1860, (Rep., Act 23 of 1861)",
+"1860",
+"repealed"
+],
+[
+"IND_REP_61_1837",
+"Thugs Act, 1837, 18 of 1837 (Rep., Act 17 of 1862)",
+"1837",
+"repealed"
+],
+[
+"IND_REP_621_1860",
+"Native Articles of War Act 1860, 6 of 1860, (Rep., Act 29 of 1861)",
+"1860",
+"repealed"
+],
+[
+"IND_REP_622_1860",
+"Joint Stock Banks Act 1860, 7 of 1860, (Rep., Act 10 of 1866)",
+"1860",
+"repealed"
+],
+[
+"IND_REP_623_1860",
+"Electic Telegraphs Act 1860, 8 of 1860, (Rep., Act 1 of 1876)",
+"1860",
+"repealed"
+],
+[
+"IND_REP_628_1860",
+"Furruckabad Zila Court Act 1860, 13 of 1860, (Rep., Act 8 of 1868)",
+"1860",
+"repealed"
+],
+[
+"IND_REP_629_1860",
+"King of Oudh Act 1860, 14 of 1860, (Rep., Act 12 of 1891)",
+"1860",
+"repealed"
+],
+[
+"IND_REP_62_1837",
+"Evidence Act, 1837, 19 of 1837 (Rep., Act 8 of 1868)",
+"1837",
+"repealed"
+],
+[
+"IND_REP_630_1860",
+"Calcutta Canals Act 1860, 15 of 1860, (Rep., Act 12 of 1873)",
+"1860",
+"repealed"
+],
+[
+"IND_REP_632_1860",
+"Escaped Convicts Act 1860, 17 of 1860, (Rep., Act 5 of 1871)",
+"1860",
+"repealed"
+],
+[
+"IND_REP_636_1860",
+"Chittagong Hill Tracts Act, 22 of 1860, (Rep., Act 1 of 1900)",
+"1860",
+"repealed"
+],
+[
+"IND_REP_637_1860",
+"Abkari Act 1860, 23 of 1860 (Rep., Act 10 of 1871)",
+"1860",
+"repealed"
+],
+[
+"IND_REP_640_1860",
+"Administrator General Act 1860, 26 of 1860, (Rep., Act 24 of 1867)",
+"1860",
+"repealed"
+],
+[
+"IND_REP_644_1860",
+"Koonch and Calpee Act 1860, 30 of 1860, (Rep., Act 8 of 1868)",
+"1860",
+"repealed"
+],
+[
+"IND_REP_645_1860",
+"Arms Act 1860, 31 of 1860, (Rep., Act 11 of 1878)",
+"1860",
+"repealed"
+],
+[
+"IND_REP_647_1860",
+"Emigration to Natal Act 1860, 33 of 1860, (Rep., Act 13 of 1864)",
+"1860",
+"repealed"
+],
+[
+"IND_REP_64_1837",
+"Mofussil Police (Bengal) Act, 1837, 24 of 1837 (Rep., Act 8 of 1868)",
+"1837",
+"repealed"
+],
+[
+"IND_REP_650_1860",
+"Stamps Act 1860, 36 of 1860, (Rep., Act 10 of 1862)",
+"1860",
+"repealed"
+],
+[
+"IND_REP_652_1860",
+"Nabob of Carnatic Act 1860, 38 of 1860, (Rep., Act 8 of 1868)",
+"1860",
+"repealed"
+],
+[
+"IND_REP_659_1860",
+"The Indian Penal Code, 45 of 1860 (Rep., Act 45 of 2023)",
+"1860",
+"repealed"
+],
+[
+"IND_REP_668_1861",
+"Supreme Courts, Bombay Act 1861, 1 of 1861, (Rep., Act 8 of 1868)",
+"1861",
+"repealed"
+],
+[
+"IND_REP_669_1861",
+"Amending Act 6 of 1857 Act 1861, 2 of 1861, (Rep., Act 10 of 1870)",
+"1861",
+"repealed"
+],
+[
+"IND_REP_66_1837",
+"Governor General Act, 1837, 26 of 1837 (Rep., Act 8 of 1868)",
+"1837",
+"repealed"
+],
+[
+"IND_REP_675_1861",
+"Minor Act 1861, 9 of 1861, (Rep., Act 8 of 1890)",
+"1861",
+"repealed"
+],
+[
+"IND_REP_679_1861",
+"Police Act 1861, 13 of 1861, (Rep., Act 8 of 1868)",
+"1861",
+"repealed"
+],
+[
+"IND_REP_67_1837",
+"Stamp officer (Bengal) Act, 1837, 28 of 1837 (Rep., Act 8 of 1868)",
+"1837",
+"repealed"
+],
+[
+"IND_REP_680_1861",
+"Rohil cund division, 1861, 14 of 1861 (Rep., Act 14 of 1874)",
+"1861",
+"repealed"
+],
+[
+"IND_REP_691_1861",
+"Andaman Islands Act 1861, 27 of 1861, (Rep., Reg 4 Act of 1874)",
+"1861",
+"repealed"
+],
+[
+"IND_REP_692_1861",
+"Marchant Seamen Act, 1861, 28 of 1861 (Rep., Act 15 of 1863)",
+"1861",
+"repealed"
+],
+[
+"IND_REP_693_1861",
+"Native Articles of War Act, 1861, 29 of 1861 (Rep., Act 5 of 1869)",
+"1861",
+"repealed"
+],
+[
+"IND_REP_695_1861",
+"Saltpetre Manufacture Act, 1861, 31 of 1861, (Rep., Act 12 of 1876)",
+"1861",
+"repealed"
+],
+[
+"IND_REP_696_1861",
+"Limitation Act, 1861, 32 of 1861 (Rep., Act 8 of 1868)",
+"1861",
+"repealed"
+],
+[
+"IND_REP_69_1837",
+"Coinage Act, 1837, 31 of 1837 (Rep., Act 13 of 1862)",
+"1837",
+"repealed"
+],
+[
+"IND_REP_700_1862",
+"The Governent Seal Act, 1862, 3 of 1862 (Rep., Act 4 of 2018)",
+"1862",
+"repealed"
+],
+[
+"IND_REP_701_1862",
+"Bank of Bengal Act, 1862, 4 of 1862 (Rep., Act 11 of 1876)",
+"1862",
+"repealed"
+],
+[
+"IND_REP_704_1862",
+"Amending Act 46 of 1862 Act, 1862, 7 of 1862 (Rep., Act 7 of 1871)",
+"1862",
+"repealed"
+],
+[
+"IND_REP_705_1862",
+"King of Oudh Act, 1862, 8 of 1862 (Rep., Act 12 of 1891)",
+"1862",
+"repealed"
+],
+[
+"IND_REP_706_1862",
+"Income - Tax Act, 1862, 9 of 1862 (Rep., Act 8 of 1868)",
+"1862",
+"repealed"
+],
+[
+"IND_REP_707_1862",
+"Stamp - Duties Act, 1862, 10 of 1862 (Rep., Act 7 of 1870)",
+"1862",
+"repealed"
+],
+[
+"IND_REP_70_1837",
+"Emigration Act, 1837, 32 of 1837 (Rep., Act 14 of 1839)",
+"1837",
+"repealed"
+],
+[
+"IND_REP_713_1862",
+"Income - Tax Act, 1862, 16 of 1862 (Rep., Act 8 of 1868)",
+"1862",
+"repealed"
+],
+[
+"IND_REP_716_1862",
+"Contraband Salt, Oudh Act, 1862, 19 of 1862 (Rep., Act 8 of 1875)",
+"1862",
+"repealed"
+],
+[
+"IND_REP_720_1862",
+"Custom - Duties Act 1862, 23 of 1862 (Rep., Act 14 of 1870)",
+"1862",
+"repealed"
+],
+[
+"IND_REP_722_1863",
+"Civil Courts, Burma Act 1863, 1 of 1863, (Rep., Act 7 of 1872)",
+"1863",
+"repealed"
+],
+[
+"IND_REP_725_1863",
+"Amending Act 29 of 1861 Act 1863, 5 of 1863, (Rep., Act 5 of 1869)",
+"1863",
+"repealed"
+],
+[
+"IND_REP_72_1838",
+"Salt, Agra Act, 1838, 2 of 1838 (Rep., Act of 14 of 1843)",
+"1838",
+"repealed"
+],
+[
+"IND_REP_730_1863",
+"Darjeeling Act 1863, 10 of 1863, (Rep., Act 19 of 1867)",
+"1863",
+"repealed"
+],
+[
+"IND_REP_732_1863",
+"Mahoba and Jeitpur Act 1863, 12 of 1863, (Rep., Act 15 of 1874)",
+"1863",
+"repealed"
+],
+[
+"IND_REP_735_1863",
+"Merchant Seamen Act 1863, 15 of 1863, (Rep., Act 4 of 1875)",
+"1863",
+"repealed"
+],
+[
+"IND_REP_736_1863",
+"The Excise (Spirits) Act 1863, 16 of 1863 (Rep., Act 23 of 2016)",
+"1863",
+"repealed"
+],
+[
+"IND_REP_73_1838",
+"Zilla Judges, Bengal Act, 1838, 7 of 1838 (Rep., Act 16 of 1874)",
+"1838",
+"repealed"
+],
+[
+"IND_REP_740_1863",
+"Burma Courts Act 1863, 24 of 1863, (Rep., Act 7 of 1872)",
+"1863",
+"repealed"
+],
+[
+"IND_REP_743_1863",
+"The Income Tax Act 1863, 27 of 1863 (Rep., Act 8 of 1868)",
+"1863",
+"repealed"
+],
+[
+"IND_REP_746_1863",
+"The Official Gazettes Act 1863, 31 of 1863, (Rep., Act 1 of 1938)",
+"1863",
+"repealed"
+],
+[
+"IND_REP_748_1864",
+"Poorwah and Khuddee Act 1864, 1 of 1864, (Rep., Act 15 of 1874)",
+"1864",
+"repealed"
+],
+[
+"IND_REP_74_1838",
+"Kumaon Act, 1838, 10 of 1838 (Rep., Act 15 of 1874)",
+"1838",
+"repealed"
+],
+[
+"IND_REP_750_1864",
+"The Foreigners Act 1864, 3 of 1864 (Rep., 31 of 1946)",
+"1864",
+"repealed"
+],
+[
+"IND_REP_753_1864",
+"The Whipping Act 1864, 6 of 1864, (Rep., Act 4 of 1909)",
+"1864",
+"repealed"
+],
+[
+"IND_REP_754_1864",
+"Salt, Central Provinces Act 1864, 7 of 1864, (Rep., Act 8 of 1875)",
+"1864",
+"repealed"
+],
+[
+"IND_REP_756_1864",
+"Repealing Act of 1861 Act 1864, 9 of 1864, (Rep., Act 8 of 1868)",
+"1864",
+"repealed"
+],
+[
+"IND_REP_757_1864",
+"Abkaree, Bengal Act 1864, 10 of 1864, (Rep., Act 10 of 1871)",
+"1864",
+"repealed"
+],
+[
+"IND_REP_758_1864",
+"Native Law Officers Act 1864, 11 of 1864, (Rep., Act 8 of 1868)",
+"1864",
+"repealed"
+],
+[
+"IND_REP_762_1864",
+"Registration Act 1864, 16 of 1864, (Rep., Act 20 of 1866)",
+"1864",
+"repealed"
+],
+[
+"IND_REP_763_1864",
+"The Official Trustees Act 1864, 17 of 1864, (Rep., Act 2 of 1913)",
+"1864",
+"repealed"
+],
+[
+"IND_REP_765_1864",
+"Minors, Bombay Act 1864, 20 of 1864, (Rep., Act 8 of 1890)",
+"1864",
+"repealed"
+],
+[
+"IND_REP_766_1864",
+"Police Magistrates Act 1864, 21 of 1864, (Rep., Act 4 of 1877)",
+"1864",
+"repealed"
+],
+[
+"IND_REP_767_1864",
+"Military Cantonments Act 1864, 22 of 1864, (Rep., Act 3 of 1880)",
+"1864",
+"repealed"
+],
+[
+"IND_REP_770_1864",
+"Marriage Act 1864, 25 of 1864, (Rep., Act 5 of 1865)",
+"1864",
+"repealed"
+],
+[
+"IND_REP_772_1864",
+"Justices of the Peace Act 1864, 27 of 1864, (Rep., Act 2 of 1869)",
+"1864",
+"repealed"
+],
+[
+"IND_REP_773_1864",
+"Abkari Act 1864, 28 of 1864 (Rep., Act 10 of 1882)",
+"1864",
+"repealed"
+],
+[
+"IND_REP_775_1865",
+"Rural Police, Agra Act 1865, 2 of 1865, (Rep., Act 3 of 1869)",
+"1865",
+"repealed"
+],
+[
+"IND_REP_776_1865",
+"The Carriers Act 1865, 3 of 1865 (Rep., 41 of 2007)",
+"1865",
+"repealed"
+],
+[
+"IND_REP_778_1865",
+"The Indian Marriage Act 1865, 5 of 1865, (Rep., Act 15 of 1872)",
+"1865",
+"repealed"
+],
+[
+"IND_REP_780_1865",
+"The Government Forests Act, 1865, 7 of 1865 (Rep., Act 7 of 1878)",
+"1865",
+"repealed"
+],
+[
+"IND_REP_783_1865",
+"The Indian Succession Act 1865, 10 of 1865, (Rep., Act 39 of 1925)",
+"1865",
+"repealed"
+],
+[
+"IND_REP_785_1865",
+"Prisoners in Calcutta Act 1865, 12 of 1865, (Rep., Act 12 of 1867)",
+"1865",
+"repealed"
+],
+[
+"IND_REP_789_1865",
+"Revenue Courts, Oudh Act 1865, 16 of 1865, (Rep., Act 32 of 1871)",
+"1865",
+"repealed"
+],
+[
+"IND_REP_78_1838",
+"Silver Coinage Act, 1838, 21 of 1838 (Rep., Act 13 of 1854)",
+"1838",
+"repealed"
+],
+[
+"IND_REP_792_1865",
+"The Punjab Courts Act 1865, 19 of 1865, (Rep., Act 17 of 1877)",
+"1865",
+"repealed"
+],
+[
+"IND_REP_7_1835",
+"District Munsifs, Madras Act, 1835, 5 of 1835 (Rep., Act 8 of 1868)",
+"1835",
+"repealed"
+],
+[
+"IND_REP_800_1865",
+"Civil Appeals, Punjab Act 1865, 27 of 1865, (Rep., Act 4 of 1866)",
+"1865",
+"repealed"
+],
+[
+"IND_REP_80_1838",
+"Bank of Bengal Act, 1838, 24 of 1838 (Rep., Act 8 of 1868)",
+"1838",
+"repealed"
+],
+[
+"IND_REP_811_1866",
+"Criminal Procedure, 1866, 08 of 1866 (Rep., Act 8 of 1869)",
+"1866",
+"repealed"
+],
+[
+"IND_REP_813_1866",
+"The Indian Companies Act 1866, 10 of 1866, (Rep., Act 6 of 1882)",
+"1866",
+"repealed"
+],
+[
+"IND_REP_818_1866",
+"Partnership Act 1866, 15 of 1866, (Rep., Act 9 of 1872)",
+"1866",
+"repealed"
+],
+[
+"IND_REP_81_1838",
+"The wills Act, 1838, 25 of 1838 (Rep., Act 8 of 1868)",
+"1838",
+"repealed"
+],
+[
+"IND_REP_820_1866",
+"Indian Museum Act 1866, 17 of 1866, (Rep., Act 22 of 1876)",
+"1866",
+"repealed"
+],
+[
+"IND_REP_822_1866",
+"Salt, Madras Act 1866, 19 of 1866, (Rep., Act 24 of 1869)",
+"1866",
+"repealed"
+],
+[
+"IND_REP_827_1866",
+"The High Court (Agra) Act 1866, 24 of 1866, (Rep., Act 10 of 1877)",
+"1866",
+"repealed"
+],
+[
+"IND_REP_82_1838",
+"Judiciary, Bengal Act, 1838, 27 of 1838 (Rep., Act 10 of 1861)",
+"1838",
+"repealed"
+],
+[
+"IND_REP_830_1866",
+"The Indian Trustee Act, 1866, 27 of 1866 (Rep., Act 48 of 1952)",
+"1866",
+"repealed"
+],
+[
+"IND_REP_832_1867",
+"Ganga Tolls, 1867, 01 of 1867 (Rep., Act 2 of 2018)",
+"1867",
+"repealed"
+],
+[
+"IND_REP_834_1867",
+"Meaning of offence Act 1867, 4 of 1867, (Rep., Act 27 of 1870)",
+"1867",
+"repealed"
+],
+[
+"IND_REP_841_1867",
+"The Presidency Jails Act 1867, 12 of 1867, (Rep., Act 5 of 1871)",
+"1867",
+"repealed"
+],
+[
+"IND_REP_845_1867",
+"The Acting Judges Act 1867, 16 of 1867, (Rep., Act 22 of 2001)",
+"1867",
+"repealed"
+],
+[
+"IND_REP_847_1867",
+"The Jhansi Courts Act 1867, 18 of 1867, (Rep., Act 20 of 1890)",
+"1867",
+"repealed"
+],
+[
+"IND_REP_84_1838",
+"Salt, Bengal Act, 1838, 29 of 1838 (Rep., Act 12 of 1876)",
+"1838",
+"repealed"
+],
+[
+"IND_REP_855_1867",
+"Deputy Commissioners, 1867, 27 of 1867 (Rep., Act 10 of 1872)",
+"1867",
+"repealed"
+],
+[
+"IND_REP_858_1867",
+"Paper Currency Act 1867, 30 of 1867, (Rep., Act 3 of 1871)",
+"1867",
+"repealed"
+],
+[
+"IND_REP_859_1867",
+"The Railway Servants Act 1867, 31 of 1867, (Rep., Act 4 of 1879)",
+"1867",
+"repealed"
+],
+[
+"IND_REP_864_1867",
+"Appeals, Oudh Act 1867, 37 of 1867, (Rep., Act 11 of 1871)",
+"1867",
+"repealed"
+],
+[
+"IND_REP_865_1868",
+"The General Clauses Act 1868, 1 of 1868, (Rep., Act 10 of 1897)",
+"1868",
+"repealed"
+],
+[
+"IND_REP_871_1868",
+"Punjab Appeals Act 1868, 7 of 1868, (Rep., Act 9 of 1873)",
+"1868",
+"repealed"
+],
+[
+"IND_REP_872_1868",
+"The Repealing Act 1868, 8 of 1868, (Rep., Act 14 of 1870)",
+"1868",
+"repealed"
+],
+[
+"IND_REP_879_1868",
+"The High Court Fees Act 1868, 15 of 1868, (Rep., Act 7 of 1870)",
+"1868",
+"repealed"
+],
+[
+"IND_REP_883_1868",
+"The Oudh Rent Act 1868, 19 of 1868, (Rep., Act 22 of 1886)",
+"1868",
+"repealed"
+],
+[
+"IND_REP_884_1868",
+"Duties in Lucknow Act 1868, 20 of 1868, (Rep., Act 14 of 1870)",
+"1868",
+"repealed"
+],
+[
+"IND_REP_885_1868",
+"Nawab of Carnatic Act 1868, 21 of 1868, (Rep., Act 12 of 1891)",
+"1868",
+"repealed"
+],
+[
+"IND_REP_886_1868",
+"Mauza Kheria Act 1868, 22 of 1868, (Rep., Act 15 of 1874)",
+"1868",
+"repealed"
+],
+[
+"IND_REP_887_1868",
+"Akbari, British Burma Act 1868, 23 of 1868, (Rep., Act 10 of 1871)",
+"1868",
+"repealed"
+],
+[
+"IND_REP_891_1868",
+"Registration Act 1868, 27 of 1868, (Rep., Act 8 of 1871)",
+"1868",
+"repealed"
+],
+[
+"IND_REP_892_1868",
+"The Punjab Tenancy Act 1868, 28 of 1868, (Rep., Act 16 of 1887)",
+"1868",
+"repealed"
+],
+[
+"IND_REP_893_1869",
+"The Justices of Peace Act 1869, 2 of 1869, (Rep., Act 10 of 1882)",
+"1869",
+"repealed"
+],
+[
+"IND_REP_894_1869",
+"The Rural Police (Agra) Act 1869, 3 of 1869, (Rep., Act 16 of 1873)",
+"1869",
+"repealed"
+],
+[
+"IND_REP_896_1869",
+"Emigration Act 1869, 6 of 1869, (Rep., Act 7 of 1871)",
+"1869",
+"repealed"
+],
+[
+"IND_REP_897_1869",
+"Forests, Burma Act 1869, 7 of 1869, (Rep., Act 19 of 1881)",
+"1869",
+"repealed"
+],
+[
+"IND_REP_899_1869",
+"The Income Tax Act 1869, 9 of 1869, (Rep., Act 16 of 1870)",
+"1869",
+"repealed"
+],
+[
+"IND_REP_89_1839",
+"Fines by Magistrates Act, 1839, 2 of 1839 (Rep., Act 17 of 1862)",
+"1839",
+"repealed"
+],
+[
+"IND_REP_8_1835",
+"Khasi hills and cachar Act, 6 of 1835 (Rep., Act 12 of 1891)",
+"1835",
+"repealed"
+],
+[
+"IND_REP_905_1869",
+"The Bhutan Duars Act 1869, 16 of 1869, (Rep., Act 1 of 1903)",
+"1869",
+"repealed"
+],
+[
+"IND_REP_906_1869",
+"Landing Cargo Act 1869, 17 of 1869, (Rep., Act 8 of 1878)",
+"1869",
+"repealed"
+],
+[
+"IND_REP_907_1869",
+"The General Stamp Act 1869, 18 of 1869, (Rep., Act 1 of 1879)",
+"1869",
+"repealed"
+],
+[
+"IND_REP_908_1869",
+"Administrator General Act 1869, 19 of 1869, (Rep., Act 2 of 1874)",
+"1869",
+"repealed"
+],
+[
+"IND_REP_909_1869",
+"The India Volunteers Act, 1869, 20 of 1869, (Rep., Act 49 of 1920)",
+"1869",
+"repealed"
+],
+[
+"IND_REP_911_1869",
+"The Garo Hills Act, 1869, 22 of 1869 (Rep., Act 14 of 1874)",
+"1869",
+"repealed"
+],
+[
+"IND_REP_912_1869",
+"Income Tax Act 1869, 23 of 1869, (Rep., Act 16 of 1870)",
+"1869",
+"repealed"
+],
+[
+"IND_REP_914_1869",
+"Salt; Agra, Punjab etc Act 1869, 25 of 1869, (Rep., 8 of 1875)",
+"1869",
+"repealed"
+],
+[
+"IND_REP_915_1869",
+"Correcting Act 8 of 1863 Act 1869, 26 of 1869, (Rep., 5 of 1875)",
+"1869",
+"repealed"
+],
+[
+"IND_REP_916_1870",
+"The Indian Quarantine Act 1870, 1 of 1870 (Rep., Act 3 of 1901)",
+"1870",
+"repealed"
+],
+[
+"IND_REP_918_1870",
+"The Agror valley Act 1870, 3 of 1870 (Rep., Act 4 of 1872)",
+"1870",
+"repealed"
+],
+[
+"IND_REP_91_1839",
+"Bank of Bengal Act, 1839, 6 of 1839 (Rep., Act 4 of 1862)",
+"1839",
+"repealed"
+],
+[
+"IND_REP_920_1870",
+"The Unclaimed Deposits Act, 1870, 5 of 1870 (Rep., Act 22 of 2001)",
+"1870",
+"repealed"
+],
+[
+"IND_REP_921_1870",
+"Emigrants Act 1870, 6 of 1870, (Rep., Act 7 of 1871)",
+"1870",
+"repealed"
+],
+[
+"IND_REP_927_1870",
+"Governmet Railways Act 1870, 13 of 1870, (Rep., Act 4 of 1879)",
+"1870",
+"repealed"
+],
+[
+"IND_REP_928_1870",
+"The Repealing Act, 1870, 14 of 1870 (Rep., Act 12 of 1873)",
+"1870",
+"repealed"
+],
+[
+"IND_REP_929_1870",
+"Paper Currency Act 1870, 15 of 1870, (Rep., Act 3 of 1871)",
+"1870",
+"repealed"
+],
+[
+"IND_REP_92_1839",
+"Pauper Suits, Bengal Act, 1839, 9 of 1839 (Rep., Act 16 of 1874)",
+"1839",
+"repealed"
+],
+[
+"IND_REP_930_1870",
+"The Indian Income Tax Act 1870, 16 of 1870, (Rep., Act 12 of 1871)",
+"1870",
+"repealed"
+],
+[
+"IND_REP_935_1870",
+"The Hindu Wills Act 1870, 21 of 1870, (Rep., Act 39 of 1925)",
+"1870",
+"repealed"
+],
+[
+"IND_REP_937_1870",
+"The Indian Coinage Act 1870, 23 of 1870, (Rep., Act 03 of 1906)",
+"1870",
+"repealed"
+],
+[
+"IND_REP_939_1870",
+"The Prisons Act, 1870, 26 of 1870 (Rep., Act 9 of 1894)",
+"1870",
+"repealed"
+],
+[
+"IND_REP_944_1871",
+"The Coroners Act, 1871, 04 of 1871 (Rep., Act 37 of 2023)",
+"1871",
+"repealed"
+],
+[
+"IND_REP_945_1871",
+"The Prisoners Act, 1871, 5 of 1871 (Rep., Act 1 of 1938 )",
+"1871",
+"repealed"
+],
+[
+"IND_REP_947_1871",
+"The Indian Emigration Act 1871, 7 of 1871, (Rep., Act 21 of 1883)",
+"1871",
+"repealed"
+],
+[
+"IND_REP_949_1871",
+"The Indian Limitation Act 1871, 9 of 1871, (Rep., Act 15 of 1877)",
+"1871",
+"repealed"
+],
+[
+"IND_REP_94_1839",
+"Port Duties Act, 1839, 13 of 1839 (Rep., Act 12 of 1875)",
+"1839",
+"repealed"
+],
+[
+"IND_REP_950_1871",
+"The Excise Act 1871, 10 of 1871, (Rep., Act 22 of 1881)",
+"1871",
+"repealed"
+],
+[
+"IND_REP_952_1871",
+"The Indian Income Tax Act 1871, 12 of 1871, (Rep., Act 16 of 1874)",
+"1871",
+"repealed"
+],
+[
+"IND_REP_953_1871",
+"The Indian Tariff Act, 1871, 13 of 1871 (Rep., Act 16 of 1875)",
+"1871",
+"repealed"
+],
+[
+"IND_REP_957_1871",
+"The Oudh Local Rates Act 1871, 17 of 1871 (Rep., Act 4 of 1878)",
+"1871",
+"repealed"
+],
+[
+"IND_REP_958_1871",
+"NWP Local Rates Act 1871, 18 of 1871, (Rep., Act 3 of 1878)",
+"1871",
+"repealed"
+],
+[
+"IND_REP_960_1871",
+"The Punjab Local Rates Act 1871, 20 of 1871, (Rep., Act 5 of 1878)",
+"1871",
+"repealed"
+],
+[
+"IND_REP_963_1871",
+"The Railway Amendment Act 1871, 25 of 1871, (Rep., Act 4 of 1879)",
+"1871",
+"repealed"
+],
+[
+"IND_REP_965_1871",
+"The Criminal Tribes Act 1871, 27 of 1871, (Rep., Act 3 of 1911 )",
+"1871",
+"repealed"
+],
+[
+"IND_REP_966_1871",
+"European Vagrancy Act 1871, 28 of 1871, (Rep., Act 9 of 1874)",
+"1871",
+"repealed"
+],
+[
+"IND_REP_969_1871",
+"The Oudh Civil Courts Act, 1871, 32 of 1871 (Rep., Act 22 of 1886)",
+"1871",
+"repealed"
+],
+[
+"IND_REP_96_1839",
+"Post Office Act, 1839, 17 of 1839 (Rep., Act 17 of 1854)",
+"1839",
+"repealed"
+],
+[
+"IND_REP_971_1872",
+"The Indian Evidence Act, 1872, 1 of 1872 (Rep., Act 47 of 2023)",
+"1872",
+"repealed"
+],
+[
+"IND_REP_973_1872",
+"The Special Marriage Act 1872, 3 of 1872 (Rep., Act 43 of 1954)",
+"1872",
+"repealed"
+],
+[
+"IND_REP_975_1872",
+"The Oaths Act 1875, 6 of 1872, (Rep., Act 10 of 1873)",
+"1872",
+"repealed"
+],
+[
+"IND_REP_976_1872",
+"The Burma Courts Act 1872, 7 of 1872, (Rep., Act 17 of 1875)",
+"1872",
+"repealed"
+],
+[
+"IND_REP_977_1872",
+"The Indian Income Tax Act 1872, 8 of 1872, (Rep., Act 16 of 1874 )",
+"1872",
+"repealed"
+],
+[
+"IND_REP_97_1839",
+"Thugs Act, 1839, 18 of 1839 (Rep., Act 17 of 1862)",
+"1839",
+"repealed"
+],
+[
+"IND_REP_983_1872",
+"The Burma Spirti Duty Act, 1872, 16 of 1872 (Rep., Act 11 of 1889)",
+"1872",
+"repealed"
+],
+[
+"IND_REP_991_1872",
+"Salt punjab Act 1872, 25 of 1872 (Rep., Act 8 of 1875)",
+"1872",
+"repealed"
+],
+[
+"IND_REP_995_1873",
+"The Burma Ferries Act 1873, 2 of 1873 (Rep., Act 2 of 1898)",
+"1873",
+"repealed"
+],
+[
+"IND_REP_996_1873",
+"The Punjab Municipal Act 1873, 4 of 1873, (Rep., Act 12 of 1891)",
+"1873",
+"repealed"
+],
+[
+"IND_REP_999_1873",
+"The Panjab Appeals Act 1873, 9 of 1873, (Rep., 17 Act of 1877 )",
+"1873",
+"repealed"
+],
+[
+"IND_REP_9_1835",
+"Sessions Judges Act, 1835, 7 of 1835 (Rep., Act 8 of 1868)",
+"1835",
+"repealed"
+],
+[
+"IND_SPENT_13_2021",
+"The Essential Defence Services Act, 2021",
+"2021",
+"spent"
+],
+[
+"IND_SPENT_1_1839",
+"The Inheritance Act, 1839",
+"1839",
+"spent"
+],
+[
+"IND_SPENT_2_1962",
+"The Defence of India Act, 1962",
+"1962",
+"spent"
+],
+[
+"IND_SPENT_3_1968",
+"The Essential Services Maintenance Act, 1968",
+"1968",
+"spent"
+],
+[
+"IND_SPENT_4_1971",
+"The Defence and Internal Security of India Act, 1971",
+"1971",
+"spent"
+],
+[
+"IND_SPENT_5_1971",
+"The Emergency Risks (Goods) Insurance Act, 1971",
+"1971",
+"spent"
+],
+[
+"IND_SPENT_6_1971",
+"The Emergency Risks (Undertakings) Insurance Act, 1971",
+"1971",
+"spent"
+],
+[
+"IND_SPENT_7_1972",
+"The Newspapers (Price Control) Act, 1972",
+"1972",
+"spent"
+],
+[
+"IND_SPENT_8_1981",
+"The Essential Services Maintenance Act, 1981",
+"1981",
+"spent"
+],
+[
+"IND_SPENT_9_2006",
+"The Delhi Laws (Special Provisions) Act, 2006",
+"2006",
+"spent"
+],
+[
+"IND_central_11008",
+"The Central Educational Institutions (Reservation in Teachers  Cadre) Act, 2019",
+"2019",
+"in_force"
+],
+[
+"IND_central_11413",
+"The India International Arbitration Centre Act, 2019",
+"2019",
+"in_force"
+],
+[
+"IND_central_11564",
+"The Muslim Women (Protection of Rights on Marriage) Act, 2019",
+"2019",
+"in_force"
+],
+[
+"IND_central_11641",
+"The Banning of Unregulated Deposit Schemes Act, 2019",
+"2019",
+"in_force"
+],
+[
+"IND_central_11820",
+"The National Medical Commission Act, 2019",
+"2019",
+"in_force"
+],
+[
+"IND_central_11956",
+"The Repealing and Amending Act, 2019",
+"2019",
+"in_force"
+],
+[
+"IND_central_12030",
+"The Jammu and Kashmir Reorganisation Act, 2019",
+"2019",
+"in_force"
+],
+[
+"IND_central_12141",
+"The Repealing and Amending Act, 2016",
+"2016",
+"in_force"
+],
+[
+"IND_central_12142",
+"The Repealing and Amending Act, 2015",
+"2015",
+"in_force"
+],
+[
+"IND_central_12143",
+"The Repealing and Amending (Second) Act, 2015",
+"2015",
+"in_force"
+],
+[
+"IND_central_13051",
+"The Coal Bearing Areas (Acquisition and Development) Act, 1957",
+"1957",
+"in_force"
+],
+[
+"IND_central_13052",
+"The Orphanages and other Charitable Homes (Supervision and Control) Act, 1960",
+"1960",
+"in_force"
+],
+[
+"IND_central_13053",
+"The Ancient Monuments and Archaeological Sites and Remains Act, 1958",
+"1958",
+"in_force"
+],
+[
+"IND_central_13078",
+"The Prohibition of Electronic Cigarettes (Production, Manufacture, Import, Export, Transport, Sale, Distribution, Storage and Advertisement) Act, 2019",
+"2019",
+"in_force"
+],
+[
+"IND_central_13079",
+"The Dadra and Nagar Haveli and Daman and Diu (Merger of Union territories) Act, 2019",
+"2019",
+"in_force"
+],
+[
+"IND_central_13080",
+"The National Capital Territory of Delhi (Recognition of Property Rights of Residents in Unauthorised Colonies) Act, 2019",
+"2019",
+"in_force"
+],
+[
+"IND_central_13091",
+"The Transgender Persons (Protection of Rights) Act, 2019.",
+"2019",
+"in_force"
+],
+[
+"IND_central_1363",
+"The All-India Services Act, 1951",
+"1951",
+"in_force"
+],
+[
+"IND_central_1364",
+"The Pharmacy Act, 1948",
+"1948",
+"in_force"
+],
+[
+"IND_central_1367",
+"The Copyright Act, 1957",
+"1957",
+"in_force"
+],
+[
+"IND_central_1368",
+"The Parliament (Prevention of Disqualification) Act, 1959",
+"1959",
+"in_force"
+],
+[
+"IND_central_1369",
+"The Goa, Daman and Diu (Administration) Act, 1962",
+"1962",
+"in_force"
+],
+[
+"IND_central_1370",
+"The Companies (Profits) Surtax Act, 1964",
+"1964",
+"in_force"
+],
+[
+"IND_central_1371",
+"The Warehousing Corporations Act, 1962",
+"1962",
+"in_force"
+],
+[
+"IND_central_1372",
+"The Passports Act, 1967",
+"1967",
+"in_force"
+],
+[
+"IND_central_1373",
+"The Banking Companies (Acquisition and Transfer of Undertakings) Act, 1970",
+"1970",
+"in_force"
+],
+[
+"IND_central_1374",
+"The Rajasthan and Madhya Pradesh (Transfer of Territories) Act, 1959",
+"1959",
+"in_force"
+],
+[
+"IND_central_1377",
+"The Himachal Pradesh and Bilaspur (New State) Act, 1954",
+"1954",
+"in_force"
+],
+[
+"IND_central_1379",
+"The Cantonments (Extension of Rent Control Laws) Act, 1957",
+"1957",
+"in_force"
+],
+[
+"IND_central_13812",
+"The Direct Tax Vivad se Vishwas Act, 2020",
+"2020",
+"in_force"
+],
+[
+"IND_central_1382",
+"The Legal Tender (Inscribed Notes) Act, 1964",
+"1964",
+"in_force"
+],
+[
+"IND_central_1384",
+"The State of Nagaland Act, 1962",
+"1962",
+"in_force"
+],
+[
+"IND_central_1385",
+"The Cost Accountants Act, 1959",
+"1959",
+"in_force"
+],
+[
+"IND_central_1386",
+"The Khaddar (Protection of Name) Act, 1950",
+"1950",
+"in_force"
+],
+[
+"IND_central_1387",
+"The Special Marriage Act, 1954",
+"1954",
+"in_force"
+],
+[
+"IND_central_1388",
+"The Authoritative Texts (Central Laws) Act, 1973",
+"1973",
+"in_force"
+],
+[
+"IND_central_1389",
+"The Air (Prevention and Control of Pollution) Act, 1981",
+"1981",
+"in_force"
+],
+[
+"IND_central_1390",
+"The Industrial Finance Corporation (Transfer of Undertaking and Repeal) Act, 1993",
+"1993",
+"in_force"
+],
+[
+"IND_central_1391",
+"The Delhi Development Act, 1957",
+"1957",
+"in_force"
+],
+[
+"IND_central_1392",
+"The Patents Act, 1970",
+"1970",
+"in_force"
+],
+[
+"IND_central_1393",
+"The Chandigarh (Delegation of Powers) Act, 1987",
+"1987",
+"in_force"
+],
+[
+"IND_central_1395",
+"The Lushai Hills District (Change of Name) Act, 1954",
+"1954",
+"in_force"
+],
+[
+"IND_central_1397",
+"The Oilfields (Regulation and Development) Act, 1948",
+"1948",
+"in_force"
+],
+[
+"IND_central_1398",
+"The Arms Act, 1959",
+"1959",
+"in_force"
+],
+[
+"IND_central_1400",
+"The Navy Act, 1957",
+"1957",
+"in_force"
+],
+[
+"IND_central_14004",
+"The Central Sanskrit Universities Act, 2020",
+"2020",
+"in_force"
+],
+[
+"IND_central_14009",
+"The International Financial Services Centres Authority Act, 2019",
+"2019",
+"in_force"
+],
+[
+"IND_central_1404",
+"The Inter-State Corporations Act, 1957",
+"1957",
+"in_force"
+],
+[
+"IND_central_1405",
+"The Election Laws (Extension to Sikkim) Act, 1976",
+"1976",
+"in_force"
+],
+[
+"IND_central_1408",
+"The Reserve Bank (Transfer to Public Ownership) Act, 1948",
+"1948",
+"in_force"
+],
+[
+"IND_central_1409",
+"The Andhra Pradesh and Madras (Alteration of Boundaries) Act, 1959",
+"1959",
+"in_force"
+],
+[
+"IND_central_1410",
+"The Delhi Municipal Corporation Act, 1957",
+"1957",
+"in_force"
+],
+[
+"IND_central_1412",
+"The Drugs and Magic Remedies (Objectionable Advertisement) Act, 1954",
+"1954",
+"in_force"
+],
+[
+"IND_central_1413",
+"The Atomic Energy Act, 1962",
+"1962",
+"in_force"
+],
+[
+"IND_central_1414",
+"The Sick Industrial Companies (Special Provisions) Repeal Act, 2003",
+"2003",
+"in_force"
+],
+[
+"IND_central_1415",
+"The Food Corporations Act, 1964",
+"1964",
+"in_force"
+],
+[
+"IND_central_1416",
+"The Hindi Sahitya Sammelan Act, 1962",
+"1962",
+"in_force"
+],
+[
+"IND_central_1417",
+"The Naga Hills-Tuensang Area Act, 1957",
+"1957",
+"in_force"
+],
+[
+"IND_central_1419",
+"The Armed Forces (Emergency Duties) Act, 1947",
+"1947",
+"in_force"
+],
+[
+"IND_central_1420",
+"The Haryana and Punjab Agricultural Universities Act, 1970",
+"1970",
+"in_force"
+],
+[
+"IND_central_1421",
+"The Mines and Minerals (Development and Regulation) Act, 1957",
+"1957",
+"in_force"
+],
+[
+"IND_central_1422",
+"The Delivery of Books and Newspapers (Public Libraries) Act, 1954",
+"1954",
+"in_force"
+],
+[
+"IND_central_1424",
+"The Petroleum and Minerals Pipelines (Acquisition of Right of User in Land) Act, 1962",
+"1962",
+"in_force"
+],
+[
+"IND_central_1425",
+"The Indian Statistical Institute Act, 1959",
+"1959",
+"in_force"
+],
+[
+"IND_central_1426",
+"The Manipur (Sales of Motor Spirit and Lubricants) Taxation Act, 1962",
+"1962",
+"in_force"
+],
+[
+"IND_central_1427",
+"The Taxation Laws (Continuation and Validation of Recovery Proceedings) Act, 1964",
+"1964",
+"in_force"
+],
+[
+"IND_central_1429",
+"The Public Employment (Requirement as to Residence) Act, 1957",
+"1957",
+"in_force"
+],
+[
+"IND_central_1430",
+"The Police Act, 1949",
+"1949",
+"in_force"
+],
+[
+"IND_central_1431",
+"The High Court Judges Salaries and Conditions of Service Act, 1954",
+"1954",
+"in_force"
+],
+[
+"IND_central_1433",
+"The Life Insurance Corporation (Modification of Settlements) Act, 1976",
+"1976",
+"in_force"
+],
+[
+"IND_central_1438",
+"The Salary, Allowances and Pension of Members of Parliament Act, 1954",
+"1954",
+"in_force"
+],
+[
+"IND_central_1440",
+"The Extradition Act, 1962",
+"1962",
+"in_force"
+],
+[
+"IND_central_1443",
+"The State-Associated Banks (Miscellaneous Provisions) Act, 1962",
+"1962",
+"in_force"
+],
+[
+"IND_central_1445",
+"The Shillong (Rifle Range and Umlong) Cantonments Assimilation of Laws Act, 1954",
+"1954",
+"in_force"
+],
+[
+"IND_central_1447",
+"The Dakshina Bharat Hindi Prachar Sabha Act, 1964",
+"1964",
+"in_force"
+],
+[
+"IND_central_1449",
+"The Supreme Court (Enlargement of Criminal Appellate Jurisdiction) Act, 1970",
+"1970",
+"in_force"
+],
+[
+"IND_central_1450",
+"The Railway Protection Force Act, 1957",
+"1957",
+"in_force"
+],
+[
+"IND_central_1452",
+"The Assam (Alteration of Boundaries) Act, 1951",
+"1951",
+"in_force"
+],
+[
+"IND_central_1454",
+"The Delhi Motor Vehicles Taxation Act, 1962",
+"1962",
+"in_force"
+],
+[
+"IND_central_1456",
+"The Delhi School Education Act, 1973",
+"1973",
+"in_force"
+],
+[
+"IND_central_1462",
+"The National Co-operative Development Corporation Act, 1962",
+"1962",
+"in_force"
+],
+[
+"IND_central_1463",
+"The Dentists Act, 1948",
+"1948",
+"in_force"
+],
+[
+"IND_central_1464",
+"The State of Himachal Pradesh Act, 1970",
+"1970",
+"in_force"
+],
+[
+"IND_central_1465",
+"The Diplomatic and Consular Officers (Oaths and Fees) (Extension to Jammu and Kashmir) Act, 1973",
+"1973",
+"in_force"
+],
+[
+"IND_central_1468",
+"The High Court at Patna (Establishment of a Permanent Bench at Ranchi) Act, 1976",
+"1976",
+"in_force"
+],
+[
+"IND_central_1470",
+"The Unlawful Activities (Prevention) Act, 1967",
+"1967",
+"in_force"
+],
+[
+"IND_central_1471",
+"The Pondicherry (Administration) Act, 1962",
+"1962",
+"in_force"
+],
+[
+"IND_central_1474",
+"The Central Silk Board Act, 1948",
+"1948",
+"in_force"
+],
+[
+"IND_central_1475",
+"The High Courts (Seals) Act, 1950",
+"1950",
+"in_force"
+],
+[
+"IND_central_1478",
+"The North-Eastern Hill University Act, 1973",
+"1973",
+"in_force"
+],
+[
+"IND_central_1479",
+"The Betwa River Board Act, 1976",
+"1976",
+"in_force"
+],
+[
+"IND_central_1482",
+"The Disturbed Areas (Special Courts) Act, 1976",
+"1976",
+"in_force"
+],
+[
+"IND_central_1483",
+"The Departmentalisation of Union Accounts (Transfer of Personnel) Act, 1976",
+"1976",
+"in_force"
+],
+[
+"IND_central_1484",
+"The Territorial Waters, Continental Shelf, Exclusive Economic Zone and Other Maritime Zones Act, 1976",
+"1976",
+"in_force"
+],
+[
+"IND_central_1490",
+"The Smugglers and Foreign Exchange Manipulators (Forfeiture of Property) Act, 1976",
+"1976",
+"in_force"
+],
+[
+"IND_central_1491",
+"The Bonded Labour System (Abolition) Act, 1976",
+"1976",
+"in_force"
+],
+[
+"IND_central_1492",
+"The Regional Rural Banks Act, 1976",
+"1976",
+"in_force"
+],
+[
+"IND_central_1497",
+"The Territorial Army Act, 1948",
+"1948",
+"in_force"
+],
+[
+"IND_central_1498",
+"The Acquired Territories (Merger) Act, 1960",
+"1960",
+"in_force"
+],
+[
+"IND_central_1500",
+"The Central Boards of Revenue Act, 1963",
+"1963",
+"in_force"
+],
+[
+"IND_central_1501",
+"The Bihar and Uttar Pradesh (Alteration of Boundaries) Act, 1968",
+"1968",
+"in_force"
+],
+[
+"IND_central_1505",
+"The Orissa Weights and Measures (Delhi Repeal) Act, 1958",
+"1958",
+"in_force"
+],
+[
+"IND_central_1506",
+"The Durgah khawaja Saheb Act, 1955",
+"1955",
+"in_force"
+],
+[
+"IND_central_1507",
+"The Probation of Offenders Act, 1958",
+"1958",
+"in_force"
+],
+[
+"IND_central_1508",
+"The Commissions of Inquiry Act, 1952",
+"1952",
+"in_force"
+],
+[
+"IND_central_1511",
+"The International Development Association (Status, Immunities and Privileges) Act, 1960",
+"1960",
+"in_force"
+],
+[
+"IND_central_1512",
+"The Manipur (Courts) Act, 1955",
+"1955",
+"in_force"
+],
+[
+"IND_central_1514",
+"The Contempt of Courts Act, 1971",
+"1971",
+"in_force"
+],
+[
+"IND_central_1515",
+"The Prize Competitions Act, 1955",
+"1955",
+"in_force"
+],
+[
+"IND_central_1519",
+"The Census Act, 1948",
+"1948",
+"in_force"
+],
+[
+"IND_central_1520",
+"The Marine Insurance Act, 1963",
+"1963",
+"in_force"
+],
+[
+"IND_central_1522",
+"The Citizenship Act, 1955",
+"1955",
+"in_force"
+],
+[
+"IND_central_1524",
+"The Civil Defence Act, 1968",
+"1968",
+"in_force"
+],
+[
+"IND_central_1525",
+"The Warehousing Corporations (Supplementary) Act, 1965",
+"1965",
+"in_force"
+],
+[
+"IND_central_15256",
+"The Consumer Protection Act, 2019",
+"2019",
+"in_force"
+],
+[
+"IND_central_1526",
+"The Official Languages Act, 1963",
+"1963",
+"in_force"
+],
+[
+"IND_central_1527",
+"The Armed Forces (Special Powers) Act, 1958",
+"1958",
+"in_force"
+],
+[
+"IND_central_1531",
+"The Manipur Land Revenue and Land Reforms Act, 1960",
+"1960",
+"in_force"
+],
+[
+"IND_central_1534",
+"The North-Eastern Areas (Reorganisation) Act, 1971",
+"1971",
+"in_force"
+],
+[
+"IND_central_1535",
+"The Bombay Reorganisation Act, 1960",
+"1960",
+"in_force"
+],
+[
+"IND_central_1539",
+"The Judges (Inquiry) Act, 1968",
+"1968",
+"in_force"
+],
+[
+"IND_central_1540",
+"The Cardamom Act, 1965",
+"1965",
+"in_force"
+],
+[
+"IND_central_1541",
+"The Road Transport Corporations Act, 1950",
+"1950",
+"in_force"
+],
+[
+"IND_central_1543",
+"The Delhi Primary Education Act, 1960",
+"1960",
+"in_force"
+],
+[
+"IND_central_1544",
+"The Protection of Civil Rights Act, 1955",
+"1955",
+"in_force"
+],
+[
+"IND_central_1545",
+"The Supreme Court Judges (Salaries and Conditions of Service) Act, 1958",
+"1958",
+"in_force"
+],
+[
+"IND_central_1546",
+"The Government of Union Territories Act, 1963",
+"1963",
+"in_force"
+],
+[
+"IND_central_1547",
+"The Prevention of Cruelty to Animals Act, 1960",
+"1960",
+"in_force"
+],
+[
+"IND_central_1550",
+"The Textiles Committee Act, 1963",
+"1963",
+"in_force"
+],
+[
+"IND_central_1551",
+"The Insecticides Act, 1968",
+"1968",
+"in_force"
+],
+[
+"IND_central_15510",
+"The Indian Stamp Act, 1899",
+"1899",
+"in_force"
+],
+[
+"IND_central_15512",
+"The Jammu and Kashmir Official Languages Act, 2020.",
+"2020",
+"in_force"
+],
+[
+"IND_central_1552",
+"The Chartered Accountants Act, 1949",
+"1949",
+"in_force"
+],
+[
+"IND_central_1553",
+"The State Bank of India Act, 1955",
+"1955",
+"in_force"
+],
+[
+"IND_central_1555",
+"The Central Laws (Extension to Jammu and Kashmir) Act, 1968",
+"1968",
+"in_force"
+],
+[
+"IND_central_1556",
+"The International Finance Corporation (Status, Immunities and Privileges) Act, 1958",
+"1958",
+"in_force"
+],
+[
+"IND_central_1558",
+"The Prevention of Corruption Act, 1988",
+"1988",
+"in_force"
+],
+[
+"IND_central_1559",
+"The Geneva Conventions Act, 1960",
+"1960",
+"in_force"
+],
+[
+"IND_central_1560",
+"The Hindu Marriage Act, 1955",
+"1955",
+"in_force"
+],
+[
+"IND_central_1561",
+"The Border Security Force Act, 1968",
+"1968",
+"in_force"
+],
+[
+"IND_central_15618",
+"The Bilateral Netting of Qualified Financial Contracts Act, 2020",
+"2020",
+"in_force"
+],
+[
+"IND_central_15619",
+"The Rashtriya Raksha University Act, 2020.",
+"2020",
+"in_force"
+],
+[
+"IND_central_1562",
+"The Merchant Shipping Act, 1958",
+"1958",
+"in_force"
+],
+[
+"IND_central_15621",
+"The National Commission for Homoeopathy Act, 2020.",
+"2020",
+"in_force"
+],
+[
+"IND_central_15622",
+"The National Commission for Indian System of Medicine Act, 2020",
+"2020",
+"in_force"
+],
+[
+"IND_central_15623",
+"The National Forensic Sciences University Act, 2020",
+"2020",
+"in_force"
+],
+[
+"IND_central_1563",
+"The Rubber Act, 1947",
+"1947",
+"in_force"
+],
+[
+"IND_central_1564",
+"The Tripura Land Revenue and Land Reforms Act, 1960",
+"1960",
+"in_force"
+],
+[
+"IND_central_15647",
+"The Institute of Teaching and Research in Ayurveda Act, 2020",
+"2020",
+"in_force"
+],
+[
+"IND_central_1565",
+"The Limitation Act, 1963",
+"1963",
+"in_force"
+],
+[
+"IND_central_1567",
+"The Administrators-General Act, 1963",
+"1963",
+"in_force"
+],
+[
+"IND_central_1568",
+"The Delhi Land Holdings (Ceiling) Act, 1960",
+"1960",
+"in_force"
+],
+[
+"IND_central_15689",
+"The Central Goods and Services Tax Act, 2017",
+"2017",
+"in_force"
+],
+[
+"IND_central_1569",
+"The Comptroller Auditor-General s (Duties, Powers and Conditions of Service) Act, 1971",
+"1971",
+"in_force"
+],
+[
+"IND_central_15690",
+"The Recycling of Ships Act, 2019",
+"2019",
+"in_force"
+],
+[
+"IND_central_1570",
+"The Prisoners (Attendance in Courts) Act, 1955",
+"1955",
+"in_force"
+],
+[
+"IND_central_15709",
+"The Protection of Human Rights Act, 1993",
+"1993",
+"in_force"
+],
+[
+"IND_central_1571",
+"The Union Territories (Direct Election to the House of the People) Act, 1965",
+"1965",
+"in_force"
+],
+[
+"IND_central_1572",
+"The Preference Shares (Regulation of Dividends) Act, 1960",
+"1960",
+"in_force"
+],
+[
+"IND_central_1574",
+"The Transfer of Prisoners Act, 1950",
+"1950",
+"in_force"
+],
+[
+"IND_central_1575",
+"The Goa, Daman and Diu (Extension of the Code of Civil Procedure and the Arbitration Act) Act, 1965",
+"1965",
+"in_force"
+],
+[
+"IND_central_1577",
+"The Legislative Assembly of Nagaland (Change in Representation) Act, 1968",
+"1968",
+"in_force"
+],
+[
+"IND_central_1578",
+"The Prevention of Insults to National Honour Act, 1971",
+"1971",
+"in_force"
+],
+[
+"IND_central_1579",
+"The Essential Commodities Act, 1955",
+"1955",
+"in_force"
+],
+[
+"IND_central_15793",
+"The Code on Wages, 2019",
+"2019",
+"in_force"
+],
+[
+"IND_central_1580",
+"The North-Eastern Council Act, 1971",
+"1971",
+"in_force"
+],
+[
+"IND_central_1581",
+"The Employment of Manual Scavengers and Construction of Dry Latrines (Prohibition) Act, 1993",
+"1993",
+"in_force"
+],
+[
+"IND_central_1582",
+"The Enemy Property Act, 1968",
+"1968",
+"in_force"
+],
+[
+"IND_central_1583",
+"The Specific Relief Act, 1963",
+"1963",
+"in_force"
+],
+[
+"IND_central_1589",
+"The Railways (Employment of Members of the Armed Forces) Act, 1965",
+"1965",
+"in_force"
+],
+[
+"IND_central_1591",
+"The Export (Quality Control and Inspection) Act, 1963",
+"1963",
+"in_force"
+],
+[
+"IND_central_1592",
+"The Pondicherry (Extension of Laws) Act, 1968",
+"1968",
+"in_force"
+],
+[
+"IND_central_1593",
+"The Medical Termination of Pregnancy Act, 1971",
+"1971",
+"in_force"
+],
+[
+"IND_central_1598",
+"The Delhi Sikh Gurdwaras Act, 1971",
+"1971",
+"in_force"
+],
+[
+"IND_central_1599",
+"The Central Industrial Security Force Act, 1968",
+"1968",
+"in_force"
+],
+[
+"IND_central_1600",
+"The Manipur (Hill Areas) District Councils Act, 1971",
+"1971",
+"in_force"
+],
+[
+"IND_central_1601",
+"The Delhi Urban Art Commission Act, 1973",
+"1973",
+"in_force"
+],
+[
+"IND_central_1603",
+"The Andhra Pradesh and Mysore (Transfer of Territory) Act, 1968",
+"1968",
+"in_force"
+],
+[
+"IND_central_1606",
+"The Naval and Aircraft Prize Act, 1971",
+"1971",
+"in_force"
+],
+[
+"IND_central_1607",
+"The Sick Textile Undertakings (Nationalisation) Act, 1974",
+"1974",
+"in_force"
+],
+[
+"IND_central_1608",
+"The Central Reserve Police Force Act, 1949",
+"1949",
+"in_force"
+],
+[
+"IND_central_1609",
+"The Public Premises (Eviction of Unauthorised Occupants) Act, 1971",
+"1971",
+"in_force"
+],
+[
+"IND_central_1610",
+"The East Punjab Urban Rent Restriction Act (Extension to Chandigarh) Act, 1974",
+"1974",
+"in_force"
+],
+[
+"IND_central_1612",
+"The Water (Prevention and Control of Pollution) Act, 1974",
+"1974",
+"in_force"
+],
+[
+"IND_central_1613",
+"The Economic Offences (Inapplicability of Limitation) Act, 1974",
+"1974",
+"in_force"
+],
+[
+"IND_central_1615",
+"The University of Hyderabad Act, 1974",
+"1974",
+"in_force"
+],
+[
+"IND_central_1616",
+"The Interest-tax Act, 1974",
+"1974",
+"in_force"
+],
+[
+"IND_central_1617",
+"The Oil Industry (Development) Act, 1974",
+"1974",
+"in_force"
+],
+[
+"IND_central_1618",
+"The Conservation of Foreign Exchange and Prevention of Smuggling Activities Act, 1974",
+"1974",
+"in_force"
+],
+[
+"IND_central_1622",
+"The Salary and Allowances of Leaders of Opposition in Parliament Act, 1977",
+"1977",
+"in_force"
+],
+[
+"IND_central_16226",
+"The Industrial Reconstruction Bank (Transfer of Undertakings and Repeal) Act, 1997",
+"1997",
+"in_force"
+],
+[
+"IND_central_1623",
+"The Lady Hardinge Medical College and Hospital (Acquisition and Miscellaneous Provisions) Act, 1977",
+"1977",
+"in_force"
+],
+[
+"IND_central_1627",
+"The University Grants Commission Act, 1956",
+"1956",
+"in_force"
+],
+[
+"IND_central_1628",
+"The Prize Chits and Money Circulation Schemes (Banning) Act, 1978",
+"1978",
+"in_force"
+],
+[
+"IND_central_1629",
+"The National Service Act, 1972",
+"1972",
+"in_force"
+],
+[
+"IND_central_1630",
+"The Delhi and Ajmer-Merwara Land Development Act, 1948",
+"1948",
+"in_force"
+],
+[
+"IND_central_1631",
+"The Advocates Act, 1961",
+"1961",
+"in_force"
+],
+[
+"IND_central_1632",
+"The Life Insurance Corporation Act, 1956",
+"1956",
+"in_force"
+],
+[
+"IND_central_1633",
+"The Seamens Provident Fund Act, 1966",
+"1966",
+"in_force"
+],
+[
+"IND_central_1636",
+"The Bihar and West Bengal (Transfer of Territories) Act, 1956",
+"1956",
+"in_force"
+],
+[
+"IND_central_1637",
+"The Delhi Sales Tax Act, 1975",
+"1975",
+"in_force"
+],
+[
+"IND_central_1638",
+"The Hindu Adoptions and Maintenance  Act, 1956",
+"1956",
+"in_force"
+],
+[
+"IND_central_1640",
+"The Dadra and Nagar Haveli Act, 1961",
+"1961",
+"in_force"
+],
+[
+"IND_central_1641",
+"The United Nations (Security Council) Act, 1947",
+"1947",
+"in_force"
+],
+[
+"IND_central_1643",
+"The Oaths Act, 1969",
+"1969",
+"in_force"
+],
+[
+"IND_central_1644",
+"The Securities Contracts (Regulation) Act, 1956",
+"1956",
+"in_force"
+],
+[
+"IND_central_1645",
+"The Punjab Reorganisation Act, 1966",
+"1966",
+"in_force"
+],
+[
+"IND_central_1646",
+"The Salar Jung Museum Act, 1961",
+"1961",
+"in_force"
+],
+[
+"IND_central_1649",
+"The Hindu Minority and Guardianship Act, 1956",
+"1956",
+"in_force"
+],
+[
+"IND_central_1651",
+"The National Highways Act, 1956",
+"1956",
+"in_force"
+],
+[
+"IND_central_1652",
+"The Visva-Bharati Act, 1951",
+"1951",
+"in_force"
+],
+[
+"IND_central_1654",
+"The President (Discharge of Functions) Act, 1969",
+"1969",
+"in_force"
+],
+[
+"IND_central_1655",
+"The Deposit Insurance and Credit Guarantee Corporation Act, 1961",
+"1961",
+"in_force"
+],
+[
+"IND_central_1656",
+"The Asian Development Bank Act, 1966",
+"1966",
+"in_force"
+],
+[
+"IND_central_1658",
+"The Carriage by Air Act, 1972",
+"1972",
+"in_force"
+],
+[
+"IND_central_1659",
+"The River Boards Act, 1956",
+"1956",
+"in_force"
+],
+[
+"IND_central_1660",
+"The Voluntary Surrender of Salaries (Exemption from Taxation) Act, 1961",
+"1961",
+"in_force"
+],
+[
+"IND_central_1663",
+"The Representation of the People Act, 1950",
+"1950",
+"in_force"
+],
+[
+"IND_central_1664",
+"The Inter-State River Water Disputes Act, 1956",
+"1956",
+"in_force"
+],
+[
+"IND_central_1665",
+"The Marine Products Export Development Authority Act, 1972",
+"1972",
+"in_force"
+],
+[
+"IND_central_1666",
+"The Manipur (Village Authorities in Hill Areas) Act, 1956",
+"1956",
+"in_force"
+],
+[
+"IND_central_1668",
+"The Apprentices Act, 1961",
+"1961",
+"in_force"
+],
+[
+"IND_central_1669",
+"The Lok Sahayak Sena Act, 1956",
+"1956",
+"in_force"
+],
+[
+"IND_central_1670",
+"The National Bank for Agriculture and Rural Development Act, 1981",
+"1981",
+"in_force"
+],
+[
+"IND_central_1672",
+"The Prevention of Terrorism (Repeal) Act, 2004",
+"2004",
+"in_force"
+],
+[
+"IND_central_1674",
+"The Immigrants (Expulsion from Assam) Act, 1950",
+"1950",
+"in_force"
+],
+[
+"IND_central_1676",
+"The Supreme Court (Number of Judges) Act, 1956",
+"1956",
+"in_force"
+],
+[
+"IND_central_1679",
+"The Dowry Prohibition Act, 1961",
+"1961",
+"in_force"
+],
+[
+"IND_central_1680",
+"The States Reorganisation Act, 1956",
+"1956",
+"in_force"
+],
+[
+"IND_central_16802",
+"The National Bank for Financing Infrastructure and Development Act, 2021",
+"2021",
+"in_force"
+],
+[
+"IND_central_1682",
+"The Registration of Births and Deaths Act, 1969",
+"1969",
+"in_force"
+],
+[
+"IND_central_16823",
+"The Code on Social Security, 2020",
+"2020",
+"in_force"
+],
+[
+"IND_central_16824",
+"The National Commission for Allied and Healthcare Professions Act, 2021",
+"2021",
+"in_force"
+],
+[
+"IND_central_16825",
+"The Sikh Gurdwaras (Supplementary) Act, 1925.",
+"1925",
+"in_force"
+],
+[
+"IND_central_1683",
+"The Khadi and Village Industries Commission Act, 1956",
+"1956",
+"in_force"
+],
+[
+"IND_central_1684",
+"The Post-Graduate Institute of Medical Education and Research, Chandigarh, Act 1966",
+"1966",
+"in_force"
+],
+[
+"IND_central_1687",
+"The Labour Laws (Simplification of Procedure for Furnishing Returns and Maintaining Registers by certain Establishments) Act, 1988",
+"1988",
+"in_force"
+],
+[
+"IND_central_1688",
+"The Railway Property (Unlawful Possession) Act, 1966",
+"1966",
+"in_force"
+],
+[
+"IND_central_16898",
+"The Commission for Air Quality Management in National Capital Region and Adjoining Areas Act, 2021",
+"2021",
+"in_force"
+],
+[
+"IND_central_1690",
+"The Architects Act, 1972",
+"1972",
+"in_force"
+],
+[
+"IND_central_16901",
+"The Tribunals Reforms Act, 2021",
+"2021",
+"in_force"
+],
+[
+"IND_central_1693",
+"The Antiquities and Art Treasures Act, 1972",
+"1972",
+"in_force"
+],
+[
+"IND_central_16941",
+"The National Institutes of Food Technology, Entrepreneurship and Management Act, 2021.",
+"2021",
+"in_force"
+],
+[
+"IND_central_1695",
+"The Delhi (Urban Areas) Tenants Relief Act, 1961",
+"1961",
+"in_force"
+],
+[
+"IND_central_16956",
+"The Major Port Authorities Act, 2021",
+"2021",
+"in_force"
+],
+[
+"IND_central_1696",
+"The Contingency Fund of India Act, 1950",
+"1950",
+"in_force"
+],
+[
+"IND_central_1697",
+"The United Nations (Privileges and Immunities) Act, 1947",
+"1947",
+"in_force"
+],
+[
+"IND_central_16976",
+"The Farm Laws Repeal Act, 2021",
+"2021",
+"in_force"
+],
+[
+"IND_central_1699",
+"The All-India Institute of Medical Science Act, 1956",
+"1956",
+"in_force"
+],
+[
+"IND_central_1700",
+"The Delhi High Court Act, 1966",
+"1966",
+"in_force"
+],
+[
+"IND_central_17002",
+"The Dam Safety Act, 2021",
+"2021",
+"in_force"
+],
+[
+"IND_central_1701",
+"The Jawaharlal Nehru University Act, 1966",
+"1966",
+"in_force"
+],
+[
+"IND_central_17031",
+"The Assisted Reproductive Technology (Regulation) Act, 2021",
+"2021",
+"in_force"
+],
+[
+"IND_central_1704",
+"The Police-Forces (Restriction of Rights) Act, 1966",
+"1966",
+"in_force"
+],
+[
+"IND_central_17046",
+"The Surrogacy (Regulation) Act, 2021",
+"2021",
+"in_force"
+],
+[
+"IND_central_17048",
+"The Inland Vessels Act, 2021",
+"2021",
+"in_force"
+],
+[
+"IND_central_1705",
+"The Institutes of Technology Act, 1961",
+"1961",
+"in_force"
+],
+[
+"IND_central_1706",
+"The Union Territories (Separation of Judicial and Executive Functions) Act, 1969",
+"1969",
+"in_force"
+],
+[
+"IND_central_1707",
+"The Public Sector Iron and Steel Companies (Restructuring) and Miscellaneous Provisions Act, 1978",
+"1978",
+"in_force"
+],
+[
+"IND_central_1708",
+"The Dock Workers (Regulation of Employment) Act, 1948",
+"1948",
+"in_force"
+],
+[
+"IND_central_1709",
+"The Slum Areas (Improvement and Clearance) Act, 1956",
+"1956",
+"in_force"
+],
+[
+"IND_central_1710",
+"The General Insurance Business (Nationalisation) Act, 1972",
+"1972",
+"in_force"
+],
+[
+"IND_central_1712",
+"The Seeds Act, 1966",
+"1966",
+"in_force"
+],
+[
+"IND_central_1713",
+"The Hindu Succession Act, 1956",
+"1956",
+"in_force"
+],
+[
+"IND_central_1716",
+"The Assam Reorganisation (Meghalaya) Act, 1969",
+"1969",
+"in_force"
+],
+[
+"IND_central_1718",
+"The Departmental Inquiries (Enforcement of Attendance of Witnesses and Production of Documents) Act, 1972",
+"1972",
+"in_force"
+],
+[
+"IND_central_1719",
+"The National Cadet Corps Act, 1948",
+"1948",
+"in_force"
+],
+[
+"IND_central_1720",
+"The Foreign Marriage Act, 1969",
+"1969",
+"in_force"
+],
+[
+"IND_central_17202",
+"The Marine Aids to Navigation Act, 2021.",
+"2021",
+"in_force"
+],
+[
+"IND_central_1721",
+"The Diplomatic Relations (Vienna Convention) Act, 1972",
+"1972",
+"in_force"
+],
+[
+"IND_central_1722",
+"The Jammu and Kashmir (Extension of Laws) Act, 1956",
+"1956",
+"in_force"
+],
+[
+"IND_central_1723",
+"The Delhi Lands (Restrictions on Transfer) Act, 1972",
+"1972",
+"in_force"
+],
+[
+"IND_central_1724",
+"The Interest Act, 1978",
+"1978",
+"in_force"
+],
+[
+"IND_central_1726",
+"The Wild Life (Protection) Act, 1972",
+"1972",
+"in_force"
+],
+[
+"IND_central_1728",
+"The Former Secretary of State Service Officers (Conditions of Service) Act, 1972",
+"1972",
+"in_force"
+],
+[
+"IND_central_1729",
+"The Faridabad Development Corporation Act, 1956",
+"1956",
+"in_force"
+],
+[
+"IND_central_1731",
+"The Khuda Bakhsh Oriental Public Library Act, 1969",
+"1969",
+"in_force"
+],
+[
+"IND_central_1732",
+"The Andhra Pradesh Legislative Council Act, 2005",
+"2005",
+"in_force"
+],
+[
+"IND_central_1734",
+"The Coast Guard Act, 1978",
+"1978",
+"in_force"
+],
+[
+"IND_central_1735",
+"The Rampur Raza Library Act, 1975",
+"1975",
+"in_force"
+],
+[
+"IND_central_1737",
+"The Metro Railways (Construction of Works) Act, 1978",
+"1978",
+"in_force"
+],
+[
+"IND_central_1738",
+"The Richardson and Cruddas Limited (Acquisition and Transfer of Undertaking) Act, 1972",
+"1972",
+"in_force"
+],
+[
+"IND_central_1739",
+"The Tobacco Board Act, 1975",
+"1975",
+"in_force"
+],
+[
+"IND_central_1742",
+"The Delhi Police Act, 1978",
+"1978",
+"in_force"
+],
+[
+"IND_central_1743",
+"The Tokyo Convention Act, 1975",
+"1975",
+"in_force"
+],
+[
+"IND_central_1744",
+"The Press Council Act, 1978",
+"1978",
+"in_force"
+],
+[
+"IND_central_1745",
+"The Coconut Development Board Act, 1979",
+"1979",
+"in_force"
+],
+[
+"IND_central_1749",
+"The Union Duties of Excise (Distribution) Act, 1979",
+"1979",
+"in_force"
+],
+[
+"IND_central_1751",
+"The Haryana and Uttar Pradesh (Alteration of Boundaries) Act, 1979",
+"1979",
+"in_force"
+],
+[
+"IND_central_1754",
+"The Company Secretaries Act, 1980",
+"1980",
+"in_force"
+],
+[
+"IND_central_1756",
+"The Jute Companies (Nationalisation) Act, 1980",
+"1980",
+"in_force"
+],
+[
+"IND_central_1758",
+"The National Security Act, 1980",
+"1980",
+"in_force"
+],
+[
+"IND_central_1760",
+"The Van (Sanrakshan Evam Samvardhan) Adhiniyam, 1980",
+"1980",
+"in_force"
+],
+[
+"IND_central_1763",
+"The Diplomatic and Consular Officers (Oaths and Fees) Act, 1948",
+"1948",
+"in_force"
+],
+[
+"IND_central_1766",
+"The Illegal Migrants (Determination by Tribunals) Act, 1983",
+"1983",
+"in_force"
+],
+[
+"IND_central_1768",
+"The Indecent Representation of Women (Prohibition) Act, 1986",
+"1986",
+"in_force"
+],
+[
+"IND_central_1769",
+"The Hind Cycles Limited and Sen-Raleigh Limited (Nationalisation) Act, 1980",
+"1980",
+"in_force"
+],
+[
+"IND_central_1770",
+"The Prevention of Damage to Public Property Act, 1984",
+"1984",
+"in_force"
+],
+[
+"IND_central_1771",
+"The Railway Claims Tribunal Act, 1987",
+"1987",
+"in_force"
+],
+[
+"IND_central_1773",
+"The State Bank of Sikkim (Acquisition of Shares) and Miscellaneous Provisions Act, 1982",
+"1982",
+"in_force"
+],
+[
+"IND_central_1775",
+"The Recovery Of Debts And Bankruptcy Act, 1993",
+"1993",
+"in_force"
+],
+[
+"IND_central_1776",
+"The Auroville Foundation Act, 1988",
+"1988",
+"in_force"
+],
+[
+"IND_central_1779",
+"The Emigration Act, 1983",
+"1983",
+"in_force"
+],
+[
+"IND_central_1780",
+"The Sugar Development Fund Act, 1982",
+"1982",
+"in_force"
+],
+[
+"IND_central_1781",
+"The Prevention of Blackmarketing and Maintenance of Supplies of Essential Commodities Act, 1980",
+"1980",
+"in_force"
+],
+[
+"IND_central_1782",
+"The Export-Import Bank of India Act, 1981",
+"1981",
+"in_force"
+],
+[
+"IND_central_1783",
+"The High Court at Bombay (Extension of Jurisdiction to Goa, Daman and Diu) Act, 1981",
+"1981",
+"in_force"
+],
+[
+"IND_central_1785",
+"The Indian Nursing Council Act, 1947",
+"1947",
+"in_force"
+],
+[
+"IND_central_1789",
+"The Asiatic Society Act, 1984",
+"1984",
+"in_force"
+],
+[
+"IND_central_1790",
+"The British India Corporation Limited (Acquisition of Shares) Act, 1981",
+"1981",
+"in_force"
+],
+[
+"IND_central_1791",
+"The Narcotic Drugs and Psychotropic Substances Act, 1985",
+"1985",
+"in_force"
+],
+[
+"IND_central_1792",
+"The Banking Companies (Acquisition and Transfer of Undertakings) Act, 1980",
+"1980",
+"in_force"
+],
+[
+"IND_central_1793",
+"The Jamia Millia Islamia Act, 1988",
+"1988",
+"in_force"
+],
+[
+"IND_central_1795",
+"The Suppression of Unlawful Acts against Safety of Civil Aviation Act, 1982",
+"1982",
+"in_force"
+],
+[
+"IND_central_1796",
+"The Ajmer Tenancy and Land Records Act, 1950",
+"1950",
+"in_force"
+],
+[
+"IND_central_1797",
+"The Chit Funds Act, 1982",
+"1982",
+"in_force"
+],
+[
+"IND_central_1798",
+"The Motor Vehicles Act, 1988",
+"1988",
+"in_force"
+],
+[
+"IND_central_1800",
+"The Punjab Disturbed Areas Act, 1983",
+"1983",
+"in_force"
+],
+[
+"IND_central_1801",
+"The National Company Limited (Acquisition and Transfer of Undertakings) Act, 1980",
+"1980",
+"in_force"
+],
+[
+"IND_central_1803",
+"The National Highways Authority of India Act, 1988",
+"1988",
+"in_force"
+],
+[
+"IND_central_1805",
+"The Delhi Apartment Ownership Act, 1986",
+"1986",
+"in_force"
+],
+[
+"IND_central_1807",
+"The Damodar Valley Corporation Act, 1948",
+"1948",
+"in_force"
+],
+[
+"IND_central_1810",
+"The Brahmaputra Board Act, 1980",
+"1980",
+"in_force"
+],
+[
+"IND_central_1811",
+"The Intelligence Organisations (Restriction of Rights) Act, 1985",
+"1985",
+"in_force"
+],
+[
+"IND_central_1812",
+"The Indian Veterinary Council Act, 1984",
+"1984",
+"in_force"
+],
+[
+"IND_central_1814",
+"The Commission of Sati (Prevention ) Act, 1987",
+"1987",
+"in_force"
+],
+[
+"IND_central_1817",
+"The Maritime Zones of India (Regulation of Fishing by Foreign Vessels) Act, 1981",
+"1981",
+"in_force"
+],
+[
+"IND_central_1819",
+"The Air Force Act, 1950",
+"1950",
+"in_force"
+],
+[
+"IND_central_1821",
+"The Public Financial Institutions (Obligation as to Fidelity and Secrecy) Act, 1983",
+"1983",
+"in_force"
+],
+[
+"IND_central_1822",
+"The Inchek Tyres Limited and National Rubber Manufacturers Limited (Nationalisation) Act, 1984",
+"1984",
+"in_force"
+],
+[
+"IND_central_1823",
+"The Chandigarh Disturbed Areas Act, 1983",
+"1983",
+"in_force"
+],
+[
+"IND_central_1824",
+"The Special Protection Group Act, 1988",
+"1988",
+"in_force"
+],
+[
+"IND_central_1825",
+"The Sree Chitra Tirunal Institute for Medical Sciences and Technology, Trivandrum Act, 1980",
+"1980",
+"in_force"
+],
+[
+"IND_central_1827",
+"The Anti-Apartheid (United Nations Convention) Act, 1981",
+"1981",
+"in_force"
+],
+[
+"IND_central_1828",
+"The African Development Fund Act, 1982",
+"1982",
+"in_force"
+],
+[
+"IND_central_1831",
+"The Terrorist Affected Areas (Special Courts) Act, 1984",
+"1984",
+"in_force"
+],
+[
+"IND_central_1832",
+"The Administrative Tribunals Act, 1985",
+"1985",
+"in_force"
+],
+[
+"IND_central_1833",
+"The Religious Institutions (Prevention of Misuse) Act, 1988",
+"1988",
+"in_force"
+],
+[
+"IND_central_1834",
+"The Hotel-Receipts Tax Act, 1980",
+"1980",
+"in_force"
+],
+[
+"IND_central_1838",
+"The Governors (Emoluments, Allowances and Privileges) Act, 1982",
+"1982",
+"in_force"
+],
+[
+"IND_central_1839",
+"The African Development Bank Act, 1983",
+"1983",
+"in_force"
+],
+[
+"IND_central_1840",
+"The Prohibition of Benami Property Transactions Act, 1988",
+"1988",
+"in_force"
+],
+[
+"IND_central_1841",
+"The Coal Mines Provident Fund and Miscellaneous Provisions Act, 1948",
+"1948",
+"in_force"
+],
+[
+"IND_central_1843",
+"The Armed Forces (Punjab and Chandigarh) Special Powers Act, 1983",
+"1983",
+"in_force"
+],
+[
+"IND_central_1844",
+"The Family Courts Act, 1984",
+"1984",
+"in_force"
+],
+[
+"IND_central_1847",
+"The National Capital Region Planning Board Act, 1985",
+"1985",
+"in_force"
+],
+[
+"IND_central_1848",
+"The Child and Adolescent Labour (Prohibition and Regulation) Act, 1986",
+"1986",
+"in_force"
+],
+[
+"IND_central_1850",
+"The Indira Gandhi National Open University Act, 1985",
+"1985",
+"in_force"
+],
+[
+"IND_central_1852",
+"The Calcutta Port (Pilotage) Act, 1948",
+"1948",
+"in_force"
+],
+[
+"IND_central_1853",
+"The National Security Guard Act, 1986",
+"1986",
+"in_force"
+],
+[
+"IND_central_1855",
+"The Bhopal Gas Leak Disaster (Processing of Claims) Act, 1985",
+"1985",
+"in_force"
+],
+[
+"IND_central_1856",
+"The Inland Waterways Authority of India Act, 1985",
+"1985",
+"in_force"
+],
+[
+"IND_central_1858",
+"The Judges (Protection) Act, 1985",
+"1985",
+"in_force"
+],
+[
+"IND_central_1859",
+"The Coal Mines Labour Welfare Fund (Repeal) Act, 1986",
+"1986",
+"in_force"
+],
+[
+"IND_central_1862",
+"The Pondicherry University Act, 1985",
+"1985",
+"in_force"
+],
+[
+"IND_central_1863",
+"The Rehabilitation Finance Administration Act, 1948",
+"1948",
+"in_force"
+],
+[
+"IND_central_1864",
+"The Handlooms (Reservation of Articles for Production) Act, 1985",
+"1985",
+"in_force"
+],
+[
+"IND_central_1865",
+"The Agricultural and Processed Food Products Export Development Authority Act, 1985",
+"1985",
+"in_force"
+],
+[
+"IND_central_1866",
+"The Calcutta Metro Railway (Operation and Maintenance) Temporary Provisions Act, 1985",
+"1985",
+"in_force"
+],
+[
+"IND_central_1869",
+"The State of Mizoram Act, 1986",
+"1986",
+"in_force"
+],
+[
+"IND_central_1871",
+"The Swadeshi Cotton Mills Company Limited (Acquisition and Transfer of Undertakings) Act, 1986",
+"1986",
+"in_force"
+],
+[
+"IND_central_1872",
+"The Spices Board Act, 1986",
+"1986",
+"in_force"
+],
+[
+"IND_central_1873",
+"The Muslim Women (Protection of Rights on Divorce) Act, 1986",
+"1986",
+"in_force"
+],
+[
+"IND_central_1874",
+"The Union Territories (Laws) Act, 1950",
+"1950",
+"in_force"
+],
+[
+"IND_central_1876",
+"The Environment (Protection) Act, 1986",
+"1986",
+"in_force"
+],
+[
+"IND_central_1878",
+"The State of Arunachal Pradesh Act, 1986",
+"1986",
+"in_force"
+],
+[
+"IND_central_1880",
+"The All India Council for Technical Education Act, 1987",
+"1987",
+"in_force"
+],
+[
+"IND_central_1881",
+"The National Housing Bank Act, 1987",
+"1987",
+"in_force"
+],
+[
+"IND_central_1882",
+"The Jute Packaging Materials (Compulsory Use in Packing Commodities) Act, 1987",
+"1987",
+"in_force"
+],
+[
+"IND_central_1884",
+"The Goa, Daman and Diu Mining Concessions (Abolition and Declaration as Mining Leases) Act, 1987",
+"1987",
+"in_force"
+],
+[
+"IND_central_1885",
+"The Banking Regulation Act, 1949",
+"1949",
+"in_force"
+],
+[
+"IND_central_1886",
+"The Goa, Daman and Diu Reorganisation Act, 1987",
+"1987",
+"in_force"
+],
+[
+"IND_central_1887",
+"The Prevention of Illicit Traffic in Narcotic Drugs and Psychotropic Substances Act, 1988",
+"1988",
+"in_force"
+],
+[
+"IND_central_1889",
+"The Unit Trust of India (Transfer of Undertaking and Repeal) Act, 2002",
+"2002",
+"in_force"
+],
+[
+"IND_central_1890",
+"The Securities and Exchange Board of India Act, 1992",
+"1992",
+"in_force"
+],
+[
+"IND_central_1892",
+"The Expenditure-tax Act, 1987",
+"1987",
+"in_force"
+],
+[
+"IND_central_1893",
+"The Insurance Regulatory and Development Authority Act, 1999",
+"1999",
+"in_force"
+],
+[
+"IND_central_18935",
+"The Bengal Indigo Contracts Act, 1836",
+"1836",
+"in_force"
+],
+[
+"IND_central_18937",
+"The Bihar Value Added Tax Act, 2005",
+"2005",
+"in_force"
+],
+[
+"IND_central_18939",
+"The parel investments and trading private limited and domestic gas private limited (taking over of management) repeal act, 2005",
+"2005",
+"in_force"
+],
+[
+"IND_central_1894",
+"The Lalit Kala Akadami (Taking Over of Management) Act, 1997",
+"1997",
+"in_force"
+],
+[
+"IND_central_18940",
+"The Scheduled Securities (Hyderabad) Act,1949",
+"1949",
+"in_force"
+],
+[
+"IND_central_18941",
+"The Urban Land (Ceiling and Regulation) Repeal Act, 1999",
+"1999",
+"in_force"
+],
+[
+"IND_central_18942",
+"The Bengal Land Holder's Attendance Act, 1848",
+"1848",
+"in_force"
+],
+[
+"IND_central_18943",
+"The Boundary-Marks, Bombay 1846",
+"1846",
+"in_force"
+],
+[
+"IND_central_18944",
+"The Essential Services Maintenance (Assam) Act, 1980",
+"1980",
+"in_force"
+],
+[
+"IND_central_18945",
+"The Revenue, Bombay, 1842",
+"1842",
+"in_force"
+],
+[
+"IND_central_18946",
+"The Revenue Commissioners, Bombay Act, 1842",
+"1842",
+"in_force"
+],
+[
+"IND_central_1895",
+"The Assam University Act, 1989",
+"1989",
+"in_force"
+],
+[
+"IND_central_1896",
+"The Emblems and Names (Prevention of Improper Use) Act, 1950",
+"1950",
+"in_force"
+],
+[
+"IND_central_1897",
+"The National Commission for Minority Educational Institutes Act, 2004",
+"2004",
+"in_force"
+],
+[
+"IND_central_1898",
+"The Central Agricultural University Act, 1992",
+"1992",
+"in_force"
+],
+[
+"IND_central_1899",
+"The Manipur Panchayati Raj Act, 1994",
+"1994",
+"in_force"
+],
+[
+"IND_central_1901",
+"The Technology Development Board Act, 1995",
+"1995",
+"in_force"
+],
+[
+"IND_central_1902",
+"The Oil and Natural Gas Commission (Transfer of Undertaking and Repeal) Act, 1993",
+"1993",
+"in_force"
+],
+[
+"IND_central_19027",
+"The Bombay Rent-free Estates Act, 1851",
+"1851",
+"in_force"
+],
+[
+"IND_central_19028",
+"The Calcutta Land-Revenue Act, 1856",
+"1856",
+"in_force"
+],
+[
+"IND_central_19029",
+"The Criminal Procedure (Identification) Act, 2022",
+"2022",
+"in_force"
+],
+[
+"IND_central_19030",
+"The Forfeited Deposits Act, 1850",
+"1850",
+"in_force"
+],
+[
+"IND_central_19031",
+"The Improvements in Towns Act, 1850",
+"1850",
+"in_force"
+],
+[
+"IND_central_19032",
+"The Madras City Land Revenue Act, 1851",
+"1851",
+"in_force"
+],
+[
+"IND_central_19033",
+"The Partition of Revenue-Paying Estates Act, 1863",
+"1863",
+"in_force"
+],
+[
+"IND_central_19035",
+"The WASTE-LANDS (CLAIMS) ACT, 1863",
+"1863",
+"in_force"
+],
+[
+"IND_central_19036",
+"The Bengal Bonded Warehouse Association Act, 1854",
+"1854",
+"in_force"
+],
+[
+"IND_central_19037",
+"The Bengal Embankment Act, 1855",
+"1855",
+"in_force"
+],
+[
+"IND_central_19038",
+"The Police, Agra Act, 1854",
+"1854",
+"in_force"
+],
+[
+"IND_central_19039",
+"The Rent Recovery Act, 1853",
+"1853",
+"in_force"
+],
+[
+"IND_central_19040",
+"The Shore Nuisances (Bombay and Kotaba) Act, 1853",
+"1853",
+"in_force"
+],
+[
+"IND_central_19042",
+"The Bengal Ghatwali Land Act, 1859",
+"1859",
+"in_force"
+],
+[
+"IND_central_19045",
+"The Sarais' Act, 1867",
+"1867",
+"in_force"
+],
+[
+"IND_central_1905",
+"The Remittances of Foreign Exchange and Investment in Foreign Exchange Bonds (Immunities and Exemptions)  Act, 1991",
+"1991",
+"in_force"
+],
+[
+"IND_central_1908",
+"The Railways Act, 1989",
+"1989",
+"in_force"
+],
+[
+"IND_central_1909",
+"The Protection of Plant Varieties and Farmers Rights Act, 2001",
+"2001",
+"in_force"
+],
+[
+"IND_central_19097",
+"The Bengal Bonded Warehouse Association Act, 1838",
+"1838",
+"in_force"
+],
+[
+"IND_central_19098",
+"The Dehra Dun Act, 1871",
+"1871",
+"in_force"
+],
+[
+"IND_central_19099",
+"The Madras District Police Act, 1859",
+"1859",
+"in_force"
+],
+[
+"IND_central_1910",
+"The Cess and Other Taxes on Minerals (Validation) Act, 1992",
+"1992",
+"in_force"
+],
+[
+"IND_central_19100",
+"The Tobacco Duty (Town of Bombay) Act, 1857",
+"1857",
+"in_force"
+],
+[
+"IND_central_1912",
+"The Haj Committee Act, 2002",
+"2002",
+"in_force"
+],
+[
+"IND_central_1913",
+"The National Dairy Development Board Act, 1987",
+"1987",
+"in_force"
+],
+[
+"IND_central_19137",
+"The Punjab Laws Act, 1872",
+"1872",
+"in_force"
+],
+[
+"IND_central_19139",
+"The Oudh Taluqdar's Relief Act, 1870",
+"1870",
+"in_force"
+],
+[
+"IND_central_1914",
+"The Multi-State Co-operative Societies Act, 2002",
+"2002",
+"in_force"
+],
+[
+"IND_central_19140",
+"The Agriculturists' Loans Act, 1884",
+"1884",
+"in_force"
+],
+[
+"IND_central_19142",
+"The Chutia Nagpur Encumbered Estates Act, 1876",
+"1876",
+"in_force"
+],
+[
+"IND_central_19144",
+"The Dekkhan Agriculturists' Relief Act, 1879",
+"1879",
+"in_force"
+],
+[
+"IND_central_19146",
+"The Laws Local Extent Act, 1874",
+"1874",
+"in_force"
+],
+[
+"IND_central_19147",
+"The Local Authorities Loans Act, 1914",
+"1914",
+"in_force"
+],
+[
+"IND_central_19149",
+"The Oudh Estates Act, 1869",
+"1869",
+"in_force"
+],
+[
+"IND_central_1915",
+"The Acquisition of Certain Area at Ayodhya Act, 1993",
+"1993",
+"in_force"
+],
+[
+"IND_central_1916",
+"The Chemical Weapons Convention Act, 2000",
+"2000",
+"in_force"
+],
+[
+"IND_central_1917",
+"The Designs Act, 2000",
+"2000",
+"in_force"
+],
+[
+"IND_central_1919",
+"The Industrial Disputes (Banking and Insurance Companies) Act, 1949",
+"1949",
+"in_force"
+],
+[
+"IND_central_1920",
+"The Scheduled Castes and the Scheduled Tribes (Prevention of Atrocities) Act, 1989",
+"1989",
+"in_force"
+],
+[
+"IND_central_1921",
+"The Public Records Act, 1993",
+"1993",
+"in_force"
+],
+[
+"IND_central_19215",
+"The Central Provinces Land-Revenue Act, 1881",
+"1881",
+"in_force"
+],
+[
+"IND_central_19217",
+"The Oudh Laws Act, 1876",
+"1876",
+"in_force"
+],
+[
+"IND_central_1922",
+"The Places of Worship (Special Provisions) Act, 1991",
+"1991",
+"in_force"
+],
+[
+"IND_central_19221",
+"The Bengal Military Police Act, 1892.",
+"1892",
+"in_force"
+],
+[
+"IND_central_19222",
+"The Central Provinces Financial Commissioner's Act, 1908",
+"1908",
+"in_force"
+],
+[
+"IND_central_19223",
+"The delhi rent control act, 1958",
+"1958",
+"in_force"
+],
+[
+"IND_central_19224",
+"The North-western Provinces and Oudh Act, 1890",
+"1890",
+"in_force"
+],
+[
+"IND_central_19225",
+"The Sir Dinshaw Manockjee Petit Act, 1893",
+"1893",
+"in_force"
+],
+[
+"IND_central_19226",
+"The Co-operative Societies Act, 1912",
+"1912",
+"in_force"
+],
+[
+"IND_central_19227",
+"The Bengal Land Revenue Sales Act, 1859",
+"1859",
+"in_force"
+],
+[
+"IND_central_19228",
+"The King of Oudh's Estate Act, 1887",
+"1887",
+"in_force"
+],
+[
+"IND_central_19229",
+"The Punjab Land-Revenue Act, 1887",
+"1887",
+"in_force"
+],
+[
+"IND_central_1923",
+"The Government of National Capital Territory of Delhi Act, 1991",
+"1991",
+"in_force"
+],
+[
+"IND_central_19230",
+"The Punjab Tenancy Act, 1887.",
+"1887",
+"in_force"
+],
+[
+"IND_central_19231",
+"The Broach and Kaira Incumbered Estates Act, 1877",
+"1877",
+"in_force"
+],
+[
+"IND_central_19232",
+"The Central Provinces Court of Wards Act, 1899",
+"1899",
+"in_force"
+],
+[
+"IND_central_19233",
+"The Madras, Bengal and Bombay Children (Supplementary) Act, 1925",
+"1925",
+"in_force"
+],
+[
+"IND_central_19235",
+"The Bird and Company Limited (Acquisition and Transfer of Undertakings and Other Properties) Act, 1980",
+"1980",
+"in_force"
+],
+[
+"IND_central_19238",
+"The Central Excise Act, 1944",
+"1944",
+"in_force"
+],
+[
+"IND_central_19239",
+"The Bihar Land Reforms Laws (Regulating Mines and Minerals) Validation Act, 1969.",
+"1969",
+"in_force"
+],
+[
+"IND_central_1924",
+"The Gold Bonds (Immunities and Exemptions) Act, 1993",
+"1993",
+"in_force"
+],
+[
+"IND_central_19240",
+"The Central Industrial Security Force (Amendment and Validation) Act, 1999.",
+"1999",
+"in_force"
+],
+[
+"IND_central_19241",
+"The Destructive Insects and Pests (Amendment and Validation) Act, 1992.",
+"1992",
+"in_force"
+],
+[
+"IND_central_19242",
+"The Foreigners Law (Application and Amendment) Act, 1962",
+"1962",
+"in_force"
+],
+[
+"IND_central_19243",
+"The Immoral Traffic (Prevention) Act, 1956",
+"1956",
+"in_force"
+],
+[
+"IND_central_19244",
+"The Land Acquisition (Amendment and Validation) Act, 1967",
+"1967",
+"in_force"
+],
+[
+"IND_central_19246",
+"The State Armed Police Forces (Extension of Laws) Act, 1952",
+"1952",
+"in_force"
+],
+[
+"IND_central_19247",
+"The Taxation Laws (Extension to Jammu and Kashmir) Act, 1972",
+"1972",
+"in_force"
+],
+[
+"IND_central_19248",
+"The Union Territories (Stamp and Court-fees Laws) Act, 1961",
+"1961",
+"in_force"
+],
+[
+"IND_central_19249",
+"The King of Oudh's Estate Validation Act, 1917",
+"1917",
+"in_force"
+],
+[
+"IND_central_1925",
+"The Legal Services Authorities Act, 1987",
+"1987",
+"in_force"
+],
+[
+"IND_central_19250",
+"The Central Provinces Tenancy Act, 1898",
+"1898",
+"in_force"
+],
+[
+"IND_central_1926",
+"The Punjab Municipal Corporation Law (Extension to Chandigarh) Act, 1994",
+"1994",
+"in_force"
+],
+[
+"IND_central_1927",
+"The National Commission for Minorities Act, 1992",
+"1992",
+"in_force"
+],
+[
+"IND_central_19279",
+"The King of Oudh's Estate Act, 1888",
+"1888",
+"in_force"
+],
+[
+"IND_central_1928",
+"The Cable Television Networks (Regulation) Act, 1995",
+"1995",
+"in_force"
+],
+[
+"IND_central_19280",
+"The Sugar Export Promotion Act, 1958",
+"1958",
+"in_force"
+],
+[
+"IND_central_19281",
+"The Women’s and Children’s Institutions (Licensing) Act, 1956.",
+"1956",
+"in_force"
+],
+[
+"IND_central_1929",
+"The Telecom Regulatory Authority of India Act, 1997",
+"1997",
+"in_force"
+],
+[
+"IND_central_1930",
+"The Army Act, 1950",
+"1950",
+"in_force"
+],
+[
+"IND_central_1931",
+"The Central Road and Infrastructure Fund Act, 2000",
+"2000",
+"in_force"
+],
+[
+"IND_central_1932",
+"The Nagaland University Act, 1989",
+"1989",
+"in_force"
+],
+[
+"IND_central_1935",
+"The Indo-Tibetan Border Police Force Act, 1992",
+"1992",
+"in_force"
+],
+[
+"IND_central_1936",
+"The Vice-President s Pension Act, 1997",
+"1997",
+"in_force"
+],
+[
+"IND_central_1937",
+"The Pre-conception and Pre-natal Diagnostic Techniques (Prohibition of Sex Selection) Act, 1994",
+"1994",
+"in_force"
+],
+[
+"IND_central_1938",
+"The National Council for Teacher Education Act, 1993",
+"1993",
+"in_force"
+],
+[
+"IND_central_1939",
+"The Dock Workers (Regulation of Employment) (Inapplicability to Major Ports) Act, 1997",
+"1997",
+"in_force"
+],
+[
+"IND_central_1940",
+"The SAARC Convention (Suppression of Terrorism) Act, 1993",
+"1993",
+"in_force"
+],
+[
+"IND_central_1941",
+"The Finance Commission (Miscellaneous Provisions) Act, 1951",
+"1951",
+"in_force"
+],
+[
+"IND_central_1943",
+"The Small Industries Development Bank of India Act, 1989",
+"1989",
+"in_force"
+],
+[
+"IND_central_1944",
+"The National Commission for Women Act, 1990",
+"1990",
+"in_force"
+],
+[
+"IND_central_1945",
+"The National Commission for Safai Karamcharis Act, 1993",
+"1993",
+"in_force"
+],
+[
+"IND_central_1946",
+"The Multimodal Transportation of Goods Act, 1993",
+"1993",
+"in_force"
+],
+[
+"IND_central_1947",
+"The Foreign Trade (Development and Regulation) Act, 1992",
+"1992",
+"in_force"
+],
+[
+"IND_central_1950",
+"The Indian Council of World Affairs Act, 2001",
+"2001",
+"in_force"
+],
+[
+"IND_central_1951",
+"The National Trust for Welfare of Persons with Autism, Cerebral Palsy, Mental Retardation and Multiple Disabilities Act, 1999",
+"1999",
+"in_force"
+],
+[
+"IND_central_1953",
+"The Armed Forces (Jammu and Kashmir) Special Powers Act, 1990",
+"1990",
+"in_force"
+],
+[
+"IND_central_19543",
+"The Extending certain Acts to Straits Settlement , 1852",
+"1852",
+"in_force"
+],
+[
+"IND_central_19544",
+"The Madras Board of Revenue,1849",
+"1849",
+"in_force"
+],
+[
+"IND_central_19545",
+"The Madras Rent and Revenue Sales Act, 1839",
+"1839",
+"in_force"
+],
+[
+"IND_central_19546",
+"The City of Bombay Municipal (Supplementary) Act, 1888",
+"1888",
+"in_force"
+],
+[
+"IND_central_19547",
+"The Deo Estate Act",
+"",
+"in_force"
+],
+[
+"IND_central_1955",
+"The Depositories Act, 1996",
+"1996",
+"in_force"
+],
+[
+"IND_central_1956",
+"The Central Laws (Extension to Arunachal Pradesh) Act, 1993",
+"1993",
+"in_force"
+],
+[
+"IND_central_1958",
+"The Infant Milk Substitutes, Feeding Bottles and Infant Foods (Regulation of Production, Supply and Distribution) Act, 1992",
+"1992",
+"in_force"
+],
+[
+"IND_central_19581",
+"The Indian Antarctic Act, 2022",
+"2022",
+"in_force"
+],
+[
+"IND_central_1959",
+"The Prasar Bharati (Broadcasting Corporation of India) Act, 1990",
+"1990",
+"in_force"
+],
+[
+"IND_central_1960",
+"The Public Liability Insurance Act, 1991",
+"1991",
+"in_force"
+],
+[
+"IND_central_1961",
+"The Babasaheb Bhimrao Ambedkar University Act, 1994",
+"1994",
+"in_force"
+],
+[
+"IND_central_1962",
+"The Transplantation of Human Organs and Tissues Act, 1994",
+"1994",
+"in_force"
+],
+[
+"IND_central_19621",
+"The Maritime Anti-Piracy Act, 2022.",
+"2022",
+"in_force"
+],
+[
+"IND_central_1963",
+"The Mangrol and Manavadar (Administration of Property) Act, 1949",
+"1949",
+"in_force"
+],
+[
+"IND_central_19637",
+"The Mediation Act, 2023",
+"2023",
+"in_force"
+],
+[
+"IND_central_1966",
+"The Special Court (Trial of Offences Relating to Transactions in Securities) Act, 1992",
+"1992",
+"in_force"
+],
+[
+"IND_central_1968",
+"The Tezpur University Act, 1993",
+"1993",
+"in_force"
+],
+[
+"IND_central_1969",
+"The Kalakshetra Foundation Act, 1993",
+"1993",
+"in_force"
+],
+[
+"IND_central_19719",
+"The Repealing and Amending Act, 2023",
+"2023",
+"in_force"
+],
+[
+"IND_central_1972",
+"The Manipur Municipalities Act, 1994",
+"1994",
+"in_force"
+],
+[
+"IND_central_19720",
+"The Provisional collection of Taxes Act,2023",
+"2023",
+"in_force"
+],
+[
+"IND_central_19721",
+"The Chief  Election Commissioner And Other Election Commissioners (Appointment, Conditions of  Service And Term of Office) Act, 2023",
+"2023",
+"in_force"
+],
+[
+"IND_central_19722",
+"The Presidency-Towns Insolvency Act, 1909",
+"1909",
+"in_force"
+],
+[
+"IND_central_19723",
+"The Provincial Insolvency Act, 1920",
+"1920",
+"in_force"
+],
+[
+"IND_central_1973",
+"The Provisions of the Panchayats (Extension to the Scheduled Areas) Act, 1996",
+"1996",
+"in_force"
+],
+[
+"IND_central_1974",
+"The West Godavari District (Assimilation of Laws on Federal Subjects) Act, 1949",
+"1949",
+"in_force"
+],
+[
+"IND_central_1975",
+"The Maulana Azad National Urdu University Act, 1996",
+"1996",
+"in_force"
+],
+[
+"IND_central_1976",
+"The Textile Undertakings (Nationalisation) Act, 1995",
+"1995",
+"in_force"
+],
+[
+"IND_central_19767",
+"The Anusandhan  National Research Foundation Act, 2023",
+"2023",
+"in_force"
+],
+[
+"IND_central_1977",
+"The Rehabilitation Council of India Act, 1992",
+"1992",
+"in_force"
+],
+[
+"IND_central_1978",
+"The Arbitration and Conciliation Act, 1996",
+"1996",
+"in_force"
+],
+[
+"IND_central_1979",
+"The Airports Authority of India Act, 1994",
+"1994",
+"in_force"
+],
+[
+"IND_central_19795",
+"The National Dental Commission Act, 2023",
+"2023",
+"in_force"
+],
+[
+"IND_central_19796",
+"The National Nursing and Midwifery Commission Act, 2023",
+"2023",
+"in_force"
+],
+[
+"IND_central_1981",
+"The Geographical Indications of Goods (Registration and Protection) Act, 1999",
+"1999",
+"in_force"
+],
+[
+"IND_central_1982",
+"The Mizoram University Act, 2000",
+"2000",
+"in_force"
+],
+[
+"IND_central_1983",
+"The National Institute of Pharmaceutical Education and Research Act, 1998",
+"1998",
+"in_force"
+],
+[
+"IND_central_1984",
+"The Unified Waqf Management, Empowerment, Efficiency and Development Act, 1995",
+"1995",
+"in_force"
+],
+[
+"IND_central_1986",
+"The New Delhi Municipal Council Act, 1994",
+"1994",
+"in_force"
+],
+[
+"IND_central_1987",
+"The Mahatma Gandhi Antarrashtriya Hindi Vishwavidyalaya Act, 1996",
+"1996",
+"in_force"
+],
+[
+"IND_central_1988",
+"The Foreign Exchange Management Act, 1999",
+"1999",
+"in_force"
+],
+[
+"IND_central_1990",
+"The Coal India (Regulation of Transfers and Validation) Act, 2000",
+"2000",
+"in_force"
+],
+[
+"IND_central_1992",
+"The Madhya Pradesh Reorganisation Act, 2000",
+"2000",
+"in_force"
+],
+[
+"IND_central_1993",
+"The Trade Marks Act, 1999",
+"1999",
+"in_force"
+],
+[
+"IND_central_1994",
+"The Lotteries (Regulation) Act, 1998",
+"1998",
+"in_force"
+],
+[
+"IND_central_1995",
+"The Leaders and Chief Whips of Recognised Parties and Groups in Parliament (Facilities) Act, 1998",
+"1998",
+"in_force"
+],
+[
+"IND_central_19976",
+"The Inter-Services Organisations (Command, Control and Discipline) Act, 2023",
+"2023",
+"in_force"
+],
+[
+"IND_central_1998",
+"The Semiconductor Integrated Circuits Layout-Design Act, 2000",
+"2000",
+"in_force"
+],
+[
+"IND_central_1999",
+"The Information Technology Act, 2000",
+"2000",
+"in_force"
+],
+[
+"IND_central_2000",
+"The Uttar Pradesh Reorganisation Act, 2000",
+"2000",
+"in_force"
+],
+[
+"IND_central_2001",
+"The Bihar Reorganisation Act, 2000",
+"2000",
+"in_force"
+],
+[
+"IND_central_2002",
+"The ADVOCATES’ WELFARE FUND ACT, 2001",
+"2001",
+"in_force"
+],
+[
+"IND_central_2003",
+"The Energy Conservation Act, 2001",
+"2001",
+"in_force"
+],
+[
+"IND_central_2004",
+"The Delimitation Act, 2002",
+"2002",
+"in_force"
+],
+[
+"IND_central_2005",
+"The Foreign Aircraft (Exemption from Taxes and Duties on Fuel and Lubricants) Act, 2002",
+"2002",
+"in_force"
+],
+[
+"IND_central_2006",
+"The Securitisation and Reconstruction of Financial Assets and Enforcement of Security Interest Act, 2002",
+"2002",
+"in_force"
+],
+[
+"IND_central_20062",
+"The Bharatiya Nyaya Sanhita, 2023",
+"2023",
+"in_force"
+],
+[
+"IND_central_20063",
+"The Bharatiya Sakshya Adhiniyam, 2023",
+"2023",
+"in_force"
+],
+[
+"IND_central_20064",
+"The Post Office Act, 2023",
+"2023",
+"in_force"
+],
+[
+"IND_central_2008",
+"The Metro Railways (Operation and Maintenance) Act, 2002",
+"2002",
+"in_force"
+],
+[
+"IND_central_2009",
+"The Suppression of Unlawful Acts Against Safety of Maritime Navigation and Fixed Platforms on Continental Shelf Act, 2002",
+"2002",
+"in_force"
+],
+[
+"IND_central_20099",
+"The Bharatiya Nagarik Suraksha Sanhita, 2023",
+"2023",
+"in_force"
+],
+[
+"IND_central_2010",
+"The Competition Act, 2002",
+"2002",
+"in_force"
+],
+[
+"IND_central_20100",
+"The Public Examinations (Prevention of Unfair Means) Act, 2024",
+"2024",
+"in_force"
+],
+[
+"IND_central_20101",
+"The Telecommunications Act, 2023.",
+"2023",
+"in_force"
+],
+[
+"IND_central_2011",
+"The Repatriation of Prisoners Act, 2003",
+"2003",
+"in_force"
+],
+[
+"IND_central_2012",
+"The Petroleum and Natural Gas Regulatory Board Act, 2006",
+"2006",
+"in_force"
+],
+[
+"IND_central_2013",
+"The Micro, Small and Medium Enterprises Development Act, 2006",
+"2006",
+"in_force"
+],
+[
+"IND_central_2014",
+"The Mahatma Gandhi National Rural Employment Guarantee Act, 2005",
+"2005",
+"in_force"
+],
+[
+"IND_central_2015",
+"The Tamil Nadu Legislative Council Act, 2010",
+"2010",
+"in_force"
+],
+[
+"IND_central_2016",
+"The Indira Gandhi National Tribal University Act, 2007",
+"2007",
+"in_force"
+],
+[
+"IND_central_20162",
+"The Press and Registration of Periodicals Act, 2023",
+"2023",
+"in_force"
+],
+[
+"IND_central_2017",
+"The Weapons of Mass Destruction and their Delivery Systems (Prohibition of Unlawful Activities) Act, 2005",
+"2005",
+"in_force"
+],
+[
+"IND_central_2018",
+"The State Financial Corporations Act, 1951",
+"1951",
+"in_force"
+],
+[
+"IND_central_2019",
+"The University of Allahabad Act, 2005",
+"2005",
+"in_force"
+],
+[
+"IND_central_2020",
+"The Warehousing (Development and Regulation) Act, 2007",
+"2007",
+"in_force"
+],
+[
+"IND_central_2021",
+"The Protection of Women from Domestic Violence Act, 2005",
+"2005",
+"in_force"
+],
+[
+"IND_central_2023",
+"The Limited Liability Partnership Act, 2008",
+"2008",
+"in_force"
+],
+[
+"IND_central_2024",
+"The Private Security Agencies (Regulation) Act, 2005",
+"2005",
+"in_force"
+],
+[
+"IND_central_2025",
+"The National Green Tribunal Act, 2010",
+"2010",
+"in_force"
+],
+[
+"IND_central_2026",
+"The Industrial Development Bank (Transfer of Undertaking and Repeal) Act, 2003",
+"2003",
+"in_force"
+],
+[
+"IND_central_2027",
+"The Food Safety and Standards Act, 2006",
+"2006",
+"in_force"
+],
+[
+"IND_central_2028",
+"The Control of National Highways (Land and Traffic) Act, 2002",
+"2002",
+"in_force"
+],
+[
+"IND_central_2029",
+"The Army and Air Force (Disposal of Private Property) Act, 1950",
+"1950",
+"in_force"
+],
+[
+"IND_central_2031",
+"The National Institute of Fashion Technology Act, 2006",
+"2006",
+"in_force"
+],
+[
+"IND_central_2032",
+"The National Tax Tribunal Act, 2005",
+"2005",
+"in_force"
+],
+[
+"IND_central_2033",
+"The Maintenance and Welfare of Parents and Senior Citizens Act, 2007",
+"2007",
+"in_force"
+],
+[
+"IND_central_2036",
+"The Prevention of Money-Laundering Act, 2002",
+"2002",
+"in_force"
+],
+[
+"IND_central_2037",
+"The Assam Rifles Act, 2006",
+"2006",
+"in_force"
+],
+[
+"IND_central_2038",
+"The State Emblem of India (Prohibition of Improper Use) Act, 2005",
+"2005",
+"in_force"
+],
+[
+"IND_central_2039",
+"The Sashastra Seema Bal Act, 2007",
+"2007",
+"in_force"
+],
+[
+"IND_central_2040",
+"The Offshore Areas Mineral (Development and Regulation) Act, 2002",
+"2002",
+"in_force"
+],
+[
+"IND_central_2041",
+"The Special Criminal Courts (Jurisdiction) Act, 1950",
+"1950",
+"in_force"
+],
+[
+"IND_central_2042",
+"The Special Economic Zones Act, 2005",
+"2005",
+"in_force"
+],
+[
+"IND_central_2043",
+"The Carriage by Road Act, 2007",
+"2007",
+"in_force"
+],
+[
+"IND_central_2045",
+"The Disaster Management Act, 2005",
+"2005",
+"in_force"
+],
+[
+"IND_central_2046",
+"The Biological Diversity Act, 2002",
+"2002",
+"in_force"
+],
+[
+"IND_central_2047",
+"The Uttaranchal (Alteration of Name) Act, 2006",
+"2006",
+"in_force"
+],
+[
+"IND_central_2048",
+"The Clinical Establishments (Registration and Regulation) Act, 2010",
+"2010",
+"in_force"
+],
+[
+"IND_central_2049",
+"The Sikkim University Act, 2006",
+"2006",
+"in_force"
+],
+[
+"IND_central_2051",
+"The Manipur University Act, 2005",
+"2005",
+"in_force"
+],
+[
+"IND_central_2052",
+"The Jallianwala Bagh National Memorial  Act, 1951",
+"1951",
+"in_force"
+],
+[
+"IND_central_2053",
+"The Cigarettes and Other Tobacco Products (Prohibition of Advertisement and Regulation of Trade and Commerce, Production, Supply and Distribution) Act, 2003",
+"2003",
+"in_force"
+],
+[
+"IND_central_2054",
+"The National Investigation Agency Act, 2008",
+"2008",
+"in_force"
+],
+[
+"IND_central_2055",
+"The Prohibition of Child Marriage Act, 2006",
+"2006",
+"in_force"
+],
+[
+"IND_central_2056",
+"The Commissions for Protection of Child Rights Act, 2005",
+"2005",
+"in_force"
+],
+[
+"IND_central_2057",
+"The Credit Information Companies (Regulation) Act, 2005.",
+"2005",
+"in_force"
+],
+[
+"IND_central_2058",
+"The Electricity Act, 2003",
+"2003",
+"in_force"
+],
+[
+"IND_central_20589",
+"The Bharatiya Vayuyan Adhiniyam, 2024",
+"2024",
+"in_force"
+],
+[
+"IND_central_2059",
+"The Government Securities Act, 2006",
+"2006",
+"in_force"
+],
+[
+"IND_central_2060",
+"The Gram Nyayalayas Act, 2008",
+"2008",
+"in_force"
+],
+[
+"IND_central_2062",
+"The Rajiv Gandhi Institute of Petroleum Technology Act, 2007",
+"2007",
+"in_force"
+],
+[
+"IND_central_2063",
+"The Marking of Heavy Packages Act, 1951",
+"1951",
+"in_force"
+],
+[
+"IND_central_2064",
+"The Fiscal Responsibility and Budget Management Act, 2003",
+"2003",
+"in_force"
+],
+[
+"IND_central_2065",
+"The Right to Information Act, 2005",
+"2005",
+"in_force"
+],
+[
+"IND_central_2066",
+"The Cantonments Act, 2006",
+"2006",
+"in_force"
+],
+[
+"IND_central_2067",
+"The Central Vigilance Commission Act, 2003",
+"2003",
+"in_force"
+],
+[
+"IND_central_2068",
+"The Coastal Aquaculture Authority Act, 2005",
+"2005",
+"in_force"
+],
+[
+"IND_central_2069",
+"The Actuaries Act, 2006",
+"2006",
+"in_force"
+],
+[
+"IND_central_2070",
+"The Scheduled Tribes and Other Traditional Forest Dwellers (Recognition of Forest Rights) Act, 2006",
+"2006",
+"in_force"
+],
+[
+"IND_central_2072",
+"The Tyre Corporation of India Limited (Disinvestment of Ownership) Act, 2007",
+"2007",
+"in_force"
+],
+[
+"IND_central_2075",
+"The Pondicherry (Alteration of Name) Act, 2006",
+"2006",
+"in_force"
+],
+[
+"IND_central_2076",
+"The Sports Broadcasting Signals (Mandatory Sharing with PrasarBharati) Act, 2007",
+"2007",
+"in_force"
+],
+[
+"IND_central_2077",
+"The Armed Forces Tribunal Act, 2007",
+"2007",
+"in_force"
+],
+[
+"IND_central_2078",
+"The English and Foreign Languages University Act, 2006",
+"2006",
+"in_force"
+],
+[
+"IND_central_2079",
+"The Protection of Children from Sexual Offences Act, 2012",
+"2012",
+"in_force"
+],
+[
+"IND_central_2080",
+"The Central Universities Act, 2009",
+"2009",
+"in_force"
+],
+[
+"IND_central_2081",
+"The Collection of Statistics Act, 2008",
+"2008",
+"in_force"
+],
+[
+"IND_central_2082",
+"The Payment and Settlement Systems Act, 2007",
+"2007",
+"in_force"
+],
+[
+"IND_central_2083",
+"The National Institutes of Technology, Science Education and Research Act, 2007",
+"2007",
+"in_force"
+],
+[
+"IND_central_2084",
+"The Civil Liability for Nuclear Damage Act, 2010",
+"2010",
+"in_force"
+],
+[
+"IND_central_2086",
+"The Right of Children to Free and Compulsory Education Act, 2009",
+"2009",
+"in_force"
+],
+[
+"IND_central_2087",
+"The Rajiv Gandhi University Act, 2006",
+"2006",
+"in_force"
+],
+[
+"IND_central_2088",
+"The National Rural Employment Guarantee (Extension to Jammu and Kashmir) Act, 2007",
+"2007",
+"in_force"
+],
+[
+"IND_central_2089",
+"The Jawaharlal Institute of Post-Graduate Medical Education and Research, Puducherry, Act, 2008",
+"2008",
+"in_force"
+],
+[
+"IND_central_2090",
+"The Airports Economic Regulatory Authority of India Act, 2008",
+"2008",
+"in_force"
+],
+[
+"IND_central_2091",
+"The Central Educational Institutions (Reservation in Admission) Act, 2006",
+"2006",
+"in_force"
+],
+[
+"IND_central_2092",
+"The National Jute Board Act, 2008",
+"2008",
+"in_force"
+],
+[
+"IND_central_2093",
+"The Indian Maritime University Act, 2008",
+"2008",
+"in_force"
+],
+[
+"IND_central_2094",
+"The Tripura University Act, 2006",
+"2006",
+"in_force"
+],
+[
+"IND_central_2095",
+"The South Asian University Act, 2008",
+"2008",
+"in_force"
+],
+[
+"IND_central_2096",
+"The Representation of the People Act, 1951",
+"1951",
+"in_force"
+],
+[
+"IND_central_2098",
+"The Foreign Contribution (Regulation) Act, 2010",
+"2010",
+"in_force"
+],
+[
+"IND_central_2101",
+"The Prevention and Control of Infectious and Contagious Diseases in Animals Act, 2009",
+"2009",
+"in_force"
+],
+[
+"IND_central_2102",
+"The Legal Metrology Act, 2009",
+"2009",
+"in_force"
+],
+[
+"IND_central_2103",
+"The National Institute of Mental Health and Neuro-Sciences, Bangalore Act, 2012",
+"2012",
+"in_force"
+],
+[
+"IND_central_2104",
+"The Sexual Harassment of Women at Workplace (Prevention, Prohibition and Redressal) Act, 2013",
+"2013",
+"in_force"
+],
+[
+"IND_central_21048",
+"The Mussalman Wakf (Repeal) Act, 2025",
+"2025",
+"in_force"
+],
+[
+"IND_central_21049",
+"The &quot;Tribhuvan&quot; Sahkari University Act, 2025",
+"2025",
+"in_force"
+],
+[
+"IND_central_2105",
+"The Land Ports Authority of India Act, 2010",
+"2010",
+"in_force"
+],
+[
+"IND_central_2107",
+"The Presidents Emoluments and Pension  Act, 1951",
+"1951",
+"in_force"
+],
+[
+"IND_central_2108",
+"The Orissa (Alteration of Name) Act, 2011",
+"2011",
+"in_force"
+],
+[
+"IND_central_2109",
+"The Nalanda University Act, 2010",
+"2010",
+"in_force"
+],
+[
+"IND_central_2110",
+"The Academy of Scientific and Innovative Research Act, 2011",
+"2011",
+"in_force"
+],
+[
+"IND_central_2111",
+"The Rajiv Gandhi National Institute of Youth Development Act, 2012",
+"2012",
+"in_force"
+],
+[
+"IND_central_2112",
+"The Coinage Act, 2011",
+"2011",
+"in_force"
+],
+[
+"IND_central_2113",
+"The National Food Security Act, 2013",
+"2013",
+"in_force"
+],
+[
+"IND_central_21133",
+"The Protection of Interests in Aircraft Objects Act, 2025",
+"2025",
+"in_force"
+],
+[
+"IND_central_2114",
+"The Companies Act, 2013",
+"2013",
+"in_force"
+],
+[
+"IND_central_2115",
+"The National Capital Territory of Delhi Laws (Special Provisions) Second Act, 2011",
+"2011",
+"in_force"
+],
+[
+"IND_central_2116",
+"The Factoring Regulation Act, 2011",
+"2011",
+"in_force"
+],
+[
+"IND_central_2117",
+"The Pension Fund Regulatory and Development Authority Act, 2013",
+"2013",
+"in_force"
+],
+[
+"IND_central_2118",
+"The Industries (Development and Regulation)  Act, 1951",
+"1951",
+"in_force"
+],
+[
+"IND_central_2119",
+"The Prohibition of Employment as Manual Scavengers and their Rehabilitation Act, 2013",
+"2013",
+"in_force"
+],
+[
+"IND_central_2120",
+"The Rajiv Gandhi National Aviation University Act, 2013",
+"2013",
+"in_force"
+],
+[
+"IND_central_2121",
+"The Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement Act, 2013",
+"2013",
+"in_force"
+],
+[
+"IND_central_2122",
+"The Lokpal and Lokayuktas Act, 2013",
+"2013",
+"in_force"
+],
+[
+"IND_central_2123",
+"The Andhra Pradesh Reorganisation Act, 2014",
+"2014",
+"in_force"
+],
+[
+"IND_central_2124",
+"The Street Vendors (Protection of Livelihood and Regulation of Street Vending) Act, 2014",
+"2014",
+"in_force"
+],
+[
+"IND_central_2129",
+"The Salaries and Allowances of Ministers Act, 1952",
+"1952",
+"in_force"
+],
+[
+"IND_central_2132",
+"The National Institutes of Design Act, 2014",
+"2014",
+"in_force"
+],
+[
+"IND_central_2135",
+"The Indian Institutes of Information Technology Act, 2014",
+"2014",
+"in_force"
+],
+[
+"IND_central_2138",
+"The School of Planning and Architecture Act, 2014",
+"2014",
+"in_force"
+],
+[
+"IND_central_21395",
+"The Boilers Act, 2025",
+"2025",
+"in_force"
+],
+[
+"IND_central_2141",
+"The Scheduled Areas (Assimilation of Laws) Act, 1951",
+"1951",
+"in_force"
+],
+[
+"IND_central_2142",
+"The National Judicial Appointments Commission Act, 2014",
+"2014",
+"in_force"
+],
+[
+"IND_central_2146",
+"The Coal Mines (Special Provisions) Act, 2015",
+"2015",
+"in_force"
+],
+[
+"IND_central_2147",
+"The Black Money (Undisclosed Foreign Income and Assets) and Imposition of Tax Act, 2015",
+"2015",
+"in_force"
+],
+[
+"IND_central_2148",
+"The Juvenile Justice (Care and Protection of Children) Act, 2015.",
+"2015",
+"in_force"
+],
+[
+"IND_central_2149",
+"The Anti-Hijacking Act, 2016.",
+"2016",
+"in_force"
+],
+[
+"IND_central_2150",
+"The Dr. Rajendra Prasad Central Agricultural University Act, 2016.",
+"2016",
+"in_force"
+],
+[
+"IND_central_2151",
+"The Compensatory Afforestation Fund Act, 2016.",
+"2016",
+"in_force"
+],
+[
+"IND_central_2152",
+"The Employees Provident Funds and Miscellaneous Provisions Act, 1952",
+"1952",
+"in_force"
+],
+[
+"IND_central_2153",
+"The Regional Centre for Biotechnology Act, 2016.",
+"2016",
+"in_force"
+],
+[
+"IND_central_2154",
+"The Insolvency and Bankruptcy Code, 2016.",
+"2016",
+"in_force"
+],
+[
+"IND_central_2155",
+"The Rights of Persons with Disabilities Act, 2016.",
+"2016",
+"in_force"
+],
+[
+"IND_central_2156",
+"The Commercial Courts Act, 2015",
+"2015",
+"in_force"
+],
+[
+"IND_central_2157",
+"The Bureau of Indian Standards Act, 2016.",
+"2016",
+"in_force"
+],
+[
+"IND_central_2158",
+"The Real Estate (Regulation and Development) Act, 2016.",
+"2016",
+"in_force"
+],
+[
+"IND_central_2159",
+"The National Waterways Act, 2016.",
+"2016",
+"in_force"
+],
+[
+"IND_central_2160",
+"The Aadhaar (Targeted Delivery of Financial and Other Subsidies, Benefits and Services) Act, 2016.",
+"2016",
+"in_force"
+],
+[
+"IND_central_2161",
+"The Reserve and Auxiliary Air Forces Act, 1952",
+"1952",
+"in_force"
+],
+[
+"IND_central_2162",
+"The Rajghat Samadhi Act, 1951",
+"1951",
+"in_force"
+],
+[
+"IND_central_2163",
+"The Forward Contracts (Regulation) Act, 1952",
+"1952",
+"in_force"
+],
+[
+"IND_central_2165",
+"The Inflammable Substances Act, 1952",
+"1952",
+"in_force"
+],
+[
+"IND_central_2166",
+"The Requisitioning and Acquisition of Immovable Property Act, 1952",
+"1952",
+"in_force"
+],
+[
+"IND_central_2167",
+"The Presidential and Vice-Presidential Elections Act, 1952",
+"1952",
+"in_force"
+],
+[
+"IND_central_2170",
+"The Cinematograph Act, 1952",
+"1952",
+"in_force"
+],
+[
+"IND_central_2172",
+"The Notaries Act, 1952",
+"1952",
+"in_force"
+],
+[
+"IND_central_2173",
+"The Scheduled Areas (Assimilation of Laws) Act, 1953",
+"1953",
+"in_force"
+],
+[
+"IND_central_2174",
+"The Salaries and Allowances of Officers of Parliament Act, 1953",
+"1953",
+"in_force"
+],
+[
+"IND_central_2175",
+"The Tea Act, 1953",
+"1953",
+"in_force"
+],
+[
+"IND_central_2176",
+"The Andhra State Act, 1953",
+"1953",
+"in_force"
+],
+[
+"IND_central_2178",
+"The Calcutta High Court (Extension of Jurisdiction) Act, 1953",
+"1953",
+"in_force"
+],
+[
+"IND_central_2179",
+"The Coir Industry Act, 1953",
+"1953",
+"in_force"
+],
+[
+"IND_central_2186",
+"The Indian Christian Marriage Act, 1872",
+"1872",
+"in_force"
+],
+[
+"IND_central_2187",
+"The Indian Contract Act, 1872",
+"1872",
+"in_force"
+],
+[
+"IND_central_2189",
+"The Negotiable Instruments Act, 1881",
+"1881",
+"in_force"
+],
+[
+"IND_central_2190",
+"The Registration Act, 1908",
+"1908",
+"in_force"
+],
+[
+"IND_central_2191",
+"The Code of Civil Procedure, 1908",
+"1908",
+"in_force"
+],
+[
+"IND_central_21917",
+"The Carriage of Goods by Sea  Act, 2025",
+"2025",
+"in_force"
+],
+[
+"IND_central_21918",
+"The Immigration and Foreigners Act, 2025",
+"2025",
+"in_force"
+],
+[
+"IND_central_21919",
+"The Bills of Lading Act, 2025",
+"2025",
+"in_force"
+],
+[
+"IND_central_22037",
+"The Digital Personal Data Protection Act, 2023.",
+"2023",
+"in_force"
+],
+[
+"IND_central_22040",
+"The Industrial Relations Code, 2020",
+"2020",
+"in_force"
+],
+[
+"IND_central_22041",
+"The Occupational Safety, Health and Working Conditions Code, 2020",
+"2020",
+"in_force"
+],
+[
+"IND_central_22042",
+"The Industrial Disputes Act, 1947",
+"1947",
+"in_force"
+],
+[
+"IND_central_22043",
+"The Industrial Employmnet (Standing Orders) Act, 1946",
+"1946",
+"in_force"
+],
+[
+"IND_central_22044",
+"The Trade Unions Act, 1926",
+"1926",
+"in_force"
+],
+[
+"IND_central_22045",
+"The National Sports Governance Act, 2025",
+"2025",
+"in_force"
+],
+[
+"IND_central_22046",
+"The Repealing and Amending Act, 2025",
+"2025",
+"in_force"
+],
+[
+"IND_central_22086",
+"The Health Security Se National Security  Cess Act, 2025",
+"2025",
+"in_force"
+],
+[
+"IND_central_2244",
+"The Specified Bank Notes (Cessation of Liabilities) Act, 2017",
+"2017",
+"in_force"
+],
+[
+"IND_central_2245",
+"The Indian Institutes of Information Technology (Public-private Partnership) Act, 2017",
+"2017",
+"in_force"
+],
+[
+"IND_central_2246",
+"The Central Goods and Services Tax (Extension to Jammu and Kashmir) Act, 2017",
+"2017",
+"in_force"
+],
+[
+"IND_central_2247",
+"The Integrated Goods and Services Tax (Extension to Jammu and Kashmir) Act, 2017",
+"2017",
+"in_force"
+],
+[
+"IND_central_2248",
+"The Indian Institute of Management Act, 2017",
+"2017",
+"in_force"
+],
+[
+"IND_central_2249",
+"The Mental Healthcare Act, 2017",
+"2017",
+"in_force"
+],
+[
+"IND_central_2251",
+"The Integrated Goods and Services Tax Act, 2017",
+"2017",
+"in_force"
+],
+[
+"IND_central_2252",
+"The Union Territory Goods and Services Tax Act, 2017",
+"2017",
+"in_force"
+],
+[
+"IND_central_2253",
+"The Goods and Services Tax (Compensation to States) Act, 2017",
+"2017",
+"in_force"
+],
+[
+"IND_central_2254",
+"The Human Immunodeficiency Virus and Acquired Immune Deficiency Syndrome (Prevention and Control) Act, 2017",
+"2017",
+"in_force"
+],
+[
+"IND_central_2255",
+"The Footwear Design and Development Institute Act, 2017",
+"2017",
+"in_force"
+],
+[
+"IND_central_2256",
+"The Admiralty (Jurisdiction and Settlement of Maritime Claims) Act, 2017",
+"2017",
+"in_force"
+],
+[
+"IND_central_2258",
+"The Delhi Special Police Establishment Act, 1946",
+"1946",
+"in_force"
+],
+[
+"IND_central_2260",
+"The Coasting vessels Act, 1838",
+"1838",
+"in_force"
+],
+[
+"IND_central_2262",
+"The Societies Registration Act, 1860",
+"1860",
+"in_force"
+],
+[
+"IND_central_2264",
+"The Police Act, 1861",
+"1861",
+"in_force"
+],
+[
+"IND_central_2265",
+"The Stage-Carriages Act, 1861",
+"1861",
+"in_force"
+],
+[
+"IND_central_2266",
+"The Religious endowments act, 1863",
+"1863",
+"in_force"
+],
+[
+"IND_central_2267",
+"The Indian Tolls Act, 1864",
+"1864",
+"in_force"
+],
+[
+"IND_central_2269",
+"The Public Gambling Act, 1867",
+"1867",
+"in_force"
+],
+[
+"IND_central_2274",
+"The Indian Tolls Act, 1851",
+"1851",
+"in_force"
+],
+[
+"IND_central_2275",
+"The Legal Representatives Suits Act, 1855",
+"1855",
+"in_force"
+],
+[
+"IND_central_2276",
+"The Fatal Accidents Act, 1855",
+"1855",
+"in_force"
+],
+[
+"IND_central_2280",
+"The Divorce Act, 1869",
+"1869",
+"in_force"
+],
+[
+"IND_central_2281",
+"The Government Savings Promotion Act, 1873",
+"1873",
+"in_force"
+],
+[
+"IND_central_2282",
+"The Northern India Canal and Drainage Act, 1873",
+"1873",
+"in_force"
+],
+[
+"IND_central_2283",
+"The Married Womens Property Act, 1874",
+"1874",
+"in_force"
+],
+[
+"IND_central_2284",
+"The Majority Act, 1875",
+"1875",
+"in_force"
+],
+[
+"IND_central_2286",
+"The Indian Treasure-trove Act, 1878",
+"1878",
+"in_force"
+],
+[
+"IND_central_2287",
+"The Northern Indian Ferries Act, 1878",
+"1878",
+"in_force"
+],
+[
+"IND_central_2288",
+"The Legal Practitioners Act, 1879",
+"1879",
+"in_force"
+],
+[
+"IND_central_2289",
+"The Religious Societies Act, 1880",
+"1880",
+"in_force"
+],
+[
+"IND_central_2290",
+"The Kazis Act, 1880",
+"1880",
+"in_force"
+],
+[
+"IND_central_2291",
+"The Bombay Civil Courts Act, 1869",
+"1869",
+"in_force"
+],
+[
+"IND_central_2293",
+"The Court-Fees Act, 1870",
+"1870",
+"in_force"
+],
+[
+"IND_central_2294",
+"The Cattle-Trespass Act, 1871",
+"1871",
+"in_force"
+],
+[
+"IND_central_2295",
+"The Pensions Act, 1871",
+"1871",
+"in_force"
+],
+[
+"IND_central_2299",
+"The Madras Civil Courts Act, 1873",
+"1873",
+"in_force"
+],
+[
+"IND_central_2301",
+"The Explosives Act, 1884",
+"1884",
+"in_force"
+],
+[
+"IND_central_2302",
+"The Arya Marriage Validation Act, 1937",
+"1937",
+"in_force"
+],
+[
+"IND_central_2303",
+"The Muslim Personal Law (Shariat) Application Act, 1937",
+"1937",
+"in_force"
+],
+[
+"IND_central_2304",
+"The Insurance Act, 1938",
+"1938",
+"in_force"
+],
+[
+"IND_central_2305",
+"The Manoeuvres, Field Firing and Artillery Practice Act, 1938",
+"1938",
+"in_force"
+],
+[
+"IND_central_2306",
+"The Cutchi Memons Act, 1938",
+"1938",
+"in_force"
+],
+[
+"IND_central_2309",
+"The Births, Deaths and Marriages Registration Act, 1886",
+"1886",
+"in_force"
+],
+[
+"IND_central_2311",
+"The Suits Valuation Act, 1887",
+"1887",
+"in_force"
+],
+[
+"IND_central_2312",
+"The Provincial Small Cause Courts Act, 1887",
+"1887",
+"in_force"
+],
+[
+"IND_central_2313",
+"The Bengal, Agra and Assam Civil Courts Act, 1887",
+"1887",
+"in_force"
+],
+[
+"IND_central_2314",
+"The Indian Reserve Forces Act, 1888",
+"1888",
+"in_force"
+],
+[
+"IND_central_2315",
+"The Revenue Recovery Act, 1890",
+"1890",
+"in_force"
+],
+[
+"IND_central_2317",
+"The Charitable Endowments Act, 1890",
+"1890",
+"in_force"
+],
+[
+"IND_central_2318",
+"The Guardians and Wards Act, 1890",
+"1890",
+"in_force"
+],
+[
+"IND_central_2319",
+"The Easements (Extending Act 5 of 1882), 1891",
+"1882",
+"in_force"
+],
+[
+"IND_central_2320",
+"The Moorshedabad Act, 1891",
+"1891",
+"in_force"
+],
+[
+"IND_central_2322",
+"The Bankers Books Evidence Act, 1891",
+"1891",
+"in_force"
+],
+[
+"IND_central_2323",
+"The Madras City Civil Court Act, 1892",
+"1892",
+"in_force"
+],
+[
+"IND_central_2325",
+"The Prisons Act, 1894",
+"1894",
+"in_force"
+],
+[
+"IND_central_2326",
+"The Epidemic Diseases Act, 1897",
+"1897",
+"in_force"
+],
+[
+"IND_central_2327",
+"The Indian Trust Act, 1882",
+"1882",
+"in_force"
+],
+[
+"IND_central_2328",
+"The General Clauses Act, 1897",
+"1897",
+"in_force"
+],
+[
+"IND_central_2330",
+"The Live-stock Importation Act, 1898",
+"1898",
+"in_force"
+],
+[
+"IND_central_2332",
+"The Government Buildings Act, 1899",
+"1899",
+"in_force"
+],
+[
+"IND_central_2334",
+"The Prisoners Act, 1900",
+"1900",
+"in_force"
+],
+[
+"IND_central_2335",
+"The Indian Tolls (Army and Air Force) Act, 1901",
+"1901",
+"in_force"
+],
+[
+"IND_central_2336",
+"The Victoria Memorial Act, 1903",
+"1903",
+"in_force"
+],
+[
+"IND_central_2337",
+"The Works of Defence Act, 1903",
+"1903",
+"in_force"
+],
+[
+"IND_central_2338",
+"The Transfer of Property Act, 1882",
+"1882",
+"in_force"
+],
+[
+"IND_central_2339",
+"The Ancient Monuments Preservation Act, 1904",
+"1904",
+"in_force"
+],
+[
+"IND_central_2342",
+"The Explosive Substances Act, 1908",
+"1908",
+"in_force"
+],
+[
+"IND_central_2344",
+"The Indian Ports Act, 1908",
+"1908",
+"in_force"
+],
+[
+"IND_central_2347",
+"The Anand Marriage Act, 1909",
+"1909",
+"in_force"
+],
+[
+"IND_central_2349",
+"The Indian Easements Act, 1882",
+"1882",
+"in_force"
+],
+[
+"IND_central_2350",
+"The Indian Museum Act, 1910",
+"1910",
+"in_force"
+],
+[
+"IND_central_2352",
+"The Official Trusteers Act, 1913",
+"1913",
+"in_force"
+],
+[
+"IND_central_2353",
+"The White Phosphorus Matches Prohibition Act, 1913",
+"1913",
+"in_force"
+],
+[
+"IND_central_2354",
+"The Destructive Insects and Pests Act, 1914",
+"1914",
+"in_force"
+],
+[
+"IND_central_2355",
+"The Sir Jamsetjee Jejeebhoy Baronetcy Act, 1915",
+"1915",
+"in_force"
+],
+[
+"IND_central_2356",
+"The Banaras Hindu University Act, 1915",
+"1915",
+"in_force"
+],
+[
+"IND_central_2357",
+"The Hindu Disposition of Property Act, 1916",
+"1916",
+"in_force"
+],
+[
+"IND_central_2359",
+"The Destruction of Records Act, 1917",
+"1917",
+"in_force"
+],
+[
+"IND_central_2360",
+"The Powers-of Attorney Act, 1882",
+"1882",
+"in_force"
+],
+[
+"IND_central_2361",
+"The Post Office Cash Certificates Act, 1917",
+"1917",
+"in_force"
+],
+[
+"IND_central_2362",
+"The Usurious Loans Act, 1918",
+"1918",
+"in_force"
+],
+[
+"IND_central_2363",
+"The Poisons Act, 1919",
+"1919",
+"in_force"
+],
+[
+"IND_central_2364",
+"The Calcutta High Court (Jurisdictional Limits) Act, 1919",
+"1919",
+"in_force"
+],
+[
+"IND_central_2367",
+"The Charitable and Religious Trusts Act, 1920",
+"1920",
+"in_force"
+],
+[
+"IND_central_2368",
+"The Indian Red Cross Society Act, 1920",
+"1920",
+"in_force"
+],
+[
+"IND_central_2371",
+"The Presidency Small Cause Courts Act, 1882",
+"1882",
+"in_force"
+],
+[
+"IND_central_2372",
+"The Aligarh Muslim University Act, 1920",
+"1920",
+"in_force"
+],
+[
+"IND_central_2373",
+"The Maintenance Orders Enforcement Act, 1921",
+"1921",
+"in_force"
+],
+[
+"IND_central_2374",
+"The Delhi University Act, 1922",
+"1922",
+"in_force"
+],
+[
+"IND_central_2377",
+"The Indian Naval Armament Act, 1923",
+"1923",
+"in_force"
+],
+[
+"IND_central_2379",
+"The Official Secrets Act, 1923",
+"1923",
+"in_force"
+],
+[
+"IND_central_2381",
+"The Indian Soldiers (Litigation) Act, 1925",
+"1925",
+"in_force"
+],
+[
+"IND_central_2382",
+"The Land Improvement Loans Act, 1883",
+"1883",
+"in_force"
+],
+[
+"IND_central_2383",
+"The Provident Funds Act, 1925",
+"1925",
+"in_force"
+],
+[
+"IND_central_2385",
+"The Indian Succession Act, 1925",
+"1925",
+"in_force"
+],
+[
+"IND_central_2388",
+"The Indian Forest Act, 1927",
+"1927",
+"in_force"
+],
+[
+"IND_central_2390",
+"The Sale of Goods Act, 1930",
+"1930",
+"in_force"
+],
+[
+"IND_central_2391",
+"The Hindu Gains of Learning Act, 1930",
+"1930",
+"in_force"
+],
+[
+"IND_central_2393",
+"The Punjab District Boards Act, 1883",
+"1883",
+"in_force"
+],
+[
+"IND_central_2394",
+"The Indian Partnership Act, 1932",
+"1932",
+"in_force"
+],
+[
+"IND_central_2397",
+"The Murshidabad Estate Administration Act, 1933",
+"1933",
+"in_force"
+],
+[
+"IND_central_2398",
+"The Reserve Bank of India Act, 1934",
+"1934",
+"in_force"
+],
+[
+"IND_central_2401",
+"The Petroleum Act, 1934",
+"1934",
+"in_force"
+],
+[
+"IND_central_2403",
+"The Agricultural Produce (Grading and Marking) Act, 1937",
+"1937",
+"in_force"
+],
+[
+"IND_central_2404",
+"The Dissolution of Muslim Marriages Act, 1939",
+"1939",
+"in_force"
+],
+[
+"IND_central_2405",
+"The Public Debt Act, 1944",
+"1944",
+"in_force"
+],
+[
+"IND_central_2406",
+"The International Monetary Fund and Bank Act, 1945",
+"1945",
+"in_force"
+],
+[
+"IND_central_2408",
+"The Commercial Documents Evidence Act, 1939",
+"1939",
+"in_force"
+],
+[
+"IND_central_2409",
+"The Drugs and Cosmetics Act, 1940",
+"1940",
+"in_force"
+],
+[
+"IND_central_2412",
+"The Coffee Act, 1942",
+"1942",
+"in_force"
+],
+[
+"IND_central_2413",
+"The Reciprocity Act, 1943",
+"1943",
+"in_force"
+],
+[
+"IND_central_2416",
+"The Companies (Donations to National Funds) Act, 1951",
+"1951",
+"in_force"
+],
+[
+"IND_central_2432",
+"The Repealing and Amending Act, 2017",
+"2017",
+"in_force"
+],
+[
+"IND_central_2433",
+"The Indian Institute of Petroleum and Energy Act, 2017",
+"2017",
+"in_force"
+],
+[
+"IND_central_2434",
+"The Repealing and Amending (Second) Act, 2017",
+"2017",
+"in_force"
+],
+[
+"IND_central_2435",
+"The Income-tax Act, 1961",
+"1961",
+"in_force"
+],
+[
+"IND_central_2437",
+"The Seaward Artillery Practice Act, 1949",
+"1949",
+"in_force"
+],
+[
+"IND_central_2442",
+"The Parliamentary Proceedings (Protection of Publication) Act, 1977",
+"1977",
+"in_force"
+],
+[
+"IND_central_2460",
+"The Jammu and Kashmir Representation of the People (Supplementary) Act, 1968 (3 of 1968)",
+"1968",
+"in_force"
+],
+[
+"IND_central_2475",
+"The Customs Act,1962",
+"1962",
+"in_force"
+],
+[
+"IND_central_2476",
+"The Parsi Marriage and Divorce Act, 1936.",
+"1936",
+"in_force"
+],
+[
+"IND_central_2477",
+"The Dalmia Dadri Cement Limited (Acquisition and Transfer of Undertakings) Act, 1981",
+"1981",
+"in_force"
+],
+[
+"IND_central_2483",
+"The Gift-tax Act, 1958",
+"1958",
+"in_force"
+],
+[
+"IND_central_2484",
+"The Central Sales Tax Act, 1956",
+"1956",
+"in_force"
+],
+[
+"IND_central_3123",
+"The Wealth-tax Act, 1957",
+"1957",
+"in_force"
+],
+[
+"IND_central_4035",
+"The Fugitive Economic Offenders Act, 2018",
+"2018",
+"in_force"
+],
+[
+"IND_central_4036",
+"The National Commission for Backward Classes (Repeal) Act, 2018",
+"2018",
+"in_force"
+],
+[
+"IND_central_4037",
+"The National Sports University Act, 2018",
+"2018",
+"in_force"
+],
+[
+"IND_central_5657",
+"The Partition Act, 1893",
+"1893",
+"in_force"
+],
+[
+"IND_central_7753",
+"The Bombay Revenue Jurisdiction Act, 1876",
+"1876",
+"in_force"
+],
+[
+"IND_central_8774",
+"The Customs Tariff Act, 1975",
+"1975",
+"in_force"
+]
+]
+}

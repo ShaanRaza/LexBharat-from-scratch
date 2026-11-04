@@ -5,4 +5,13 @@ Choose "scope" using exactly these definitions:
 Return {{"scope": one of {scope_choices},
 "safety": one of normal|personal_advice|trick,
 "court": string or null, "year_from": int or null, "year_to": int or null,
-"act": string or null, "section": string or null}}
+"act": string or null, "act_year": int or null, "section": string or null}}
+"act" is the full title of the Act the question is about, as printed, with its year
+("Code of Criminal Procedure, 1973"); a short name such as CrPC or IPC is fine.
+"year_from" and "year_to" are the years of the JUDGMENTS wanted ("after 2015",
+"in 2019"). A year that is part of an Act's name is NOT a judgment year: in "CrPC
+1973", "IPC 1860", "Contract Act 1872", "Companies Act 2013" and "BNS 2023" the
+year dates the Act, so year_from and year_to stay null and that year goes in
+"act_year". When the question gives no year for judgments, both stay null.
+"section" is the section number only ("438", "65B"). It is null for an Article of
+the Constitution, an Order and Rule, or anything that is not a numbered section.

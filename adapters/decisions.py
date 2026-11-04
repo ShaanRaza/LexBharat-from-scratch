@@ -120,12 +120,14 @@ class GeminiDecider:
         scope, safety = d.get("scope"), d.get("safety")
         if scope not in get_args(ScopeClass) or safety not in get_args(SafetyClass):
             raise DecisionUnavailable("choice outside allowed list")
+        act_year = d.get("act_year")
         f = Filters(
             court=d.get("court"),
             year_from=d.get("year_from"),
             year_to=d.get("year_to"),
             act=d.get("act"),
             section=d.get("section"),
+            act_year=act_year if isinstance(act_year, int) else None,
         )
         return Decision(
             cast(ScopeClass, scope), f, cast(SafetyClass, safety), (), False

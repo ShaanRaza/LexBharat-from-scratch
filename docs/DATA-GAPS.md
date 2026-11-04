@@ -1995,17 +1995,26 @@ indexing gap.** DATASET.md's "848" is the in-force count only: **848 in force + 
 The 74,509 points are all 1,568 Acts; they are not 848 Acts. Whether 1,568 is *complete against India Code* is not verified from
 here (that needs the live site).
 
-**The checklist (84 statutes the owner named or that are most practised): 78 present, 6 absent from the central file.** The six are
-an ACQUISITION problem (the source file does not have them), none an indexing problem:
+**The checklist (84 statutes the owner named or that are most practised): 78 present and served, 6 absent from the central file and from
+the served collection. Corrected 4 Nov 2026: five of the six are an INDEXING problem, one an ACQUISITION problem.** A first draft of this
+table called all six acquisition; it had looked for them in `acts_india` and the source files as central Acts and stopped at "not central". The
+text exists for five, filed under States, and is **staged in full in `acts_noncentral_v1`** (the A133 state-Act staging collection, every
+chunk of every copy present: 10,696 + 819 + 396 + 525 + 402) but **not promoted into the served `kanoon_v1`**. That is the A133 promotion work,
+not a purchase or an extraction.
 
-| Absent as a central Act | In any other source file? | Note |
+| Absent from the served collection | What exists | Class |
 |---|---|---|
-| Code of Criminal Procedure, 1973 (Act 2 of 1974) | **14 state- and UT-tagged copies** in 8 files (Chandigarh 5, Chhattisgarh 3, Dadra and Nagar Haveli, Maharashtra, Punjab, Rajasthan, Tripura, Uttar Pradesh: 1 each), each 764 chunks; all in `acts_india`, **none in the served collection** | Repealed by the BNSS, which IS present, but it still governs proceedings begun before 1 July 2024. The 9 CrPC lookups of the labelling run returned 0 passages |
-| Constitution of India | 9 items titled "Constitution of India" in state/UT files (Andaman and Nicobar 2, Chandigarh 5, Puducherry 1, Rajasthan 1) plus one GST-tribunal item. Not checked whether any is the full text | Not an "Act" in India Code's central list |
-| Indian Trusts Act, 1882 | **None, in any of the 49 legislation and regulation files** | |
-| Consumer Protection Act, 1986 | 7 state-tagged copies (Chandigarh, Gujarat, Jharkhand, Madhya Pradesh, Manipur, Odisha, Rajasthan) | Repealed by the 2019 Act, which IS present; the 1986 Act governs older disputes |
-| Payment of Gratuity Act, 1972 | state-tagged copies in 10 files | The Factories Act 1948, Minimum Wages Act 1948, Payment of Wages Act 1936 and Maternity Benefit Act 1961 are in the data as repealed, so the central file does list Acts the labour codes repealed; Gratuity is not among them |
-| Employees' Compensation (Workmen's Compensation) Act, 1923 | 3 state-tagged copies (Haryana, Punjab, Rajasthan) | as above |
+| Code of Criminal Procedure, 1973 (Act 2 of 1974) | **14 state- and UT-tagged copies**, 764 chunks each, in 8 files (Chandigarh 5, Chhattisgarh 3, Dadra and Nagar Haveli, Maharashtra, Punjab, Rajasthan, Tripura, Uttar Pradesh: 1 each), all in `acts_india` and staged in `acts_noncentral_v1`. **`IND_state_6796` (Dadra and Nagar Haveli) is the central copy**: the owner's earlier repo records it as "the Central CrPC 1973 whose category was corrected to central (not a State copy)" (`vaquill-local/docs/W9.md` line 38, `MISSING-SECTIONS.md` line 434); in `acts_india` it still carries `category: state` and `act_status: in_force`, and as the Code repealed by the BNSS it should read repealed | **Indexing** (promote one copy, `IND_state_6796`, with its category corrected) |
+| Consumer Protection Act, 1986 | 7 state-tagged copies, 75 chunks each (Chandigarh, Gujarat, Jharkhand, Madhya Pradesh, Manipur, Odisha, Rajasthan) | **Indexing**. Repealed by the 2019 Act, which IS served; the 1986 Act governs older disputes |
+| Payment of Gratuity Act, 1972 | 11 state-tagged copies, 36 chunks each | **Indexing** |
+| Employees' Compensation (Workmen's Compensation) Act, 1923 | 3 state-tagged copies, 134 chunks each (Haryana, Punjab, Rajasthan) | **Indexing** |
+| Constitution of India | 9 state- and UT-tagged copies, 91 chunks each (Andaman and Nicobar 2, Chandigarh 5, Puducherry 1, Rajasthan 1) | **Indexing, with one check owed:** that 91 chunks is the whole Constitution. Not verified; the identical count across nine copies says they are one text, not that it is complete |
+| **Indian Trusts Act, 1882** | **None, in any of the 49 legislation and regulation files** | **Acquisition**: the only one genuinely absent from the data |
+
+The Factories Act 1948, Minimum Wages Act 1948, Payment of Wages Act 1936 and Maternity Benefit Act 1961 are in the data as repealed (by the labour
+codes), so the central file does list Acts those codes repealed; Gratuity and Employees' Compensation, which the Code on Social Security also
+subsumes, are not among them. **Promotion is not a bare copy:** the 14 CrPC copies share one title, so a promotion that copies all of them serves the same text
+fourteen times, and a state copy may carry a state's amendments. The owner's earlier repo promoted exactly one (`IND_state_6796`) for that reason. Not decided here.
 
 **Present and served (78):** IPC 1860 (repealed, 774 chunks), Evidence Act 1872 (repealed, 274), CPC 1908, BNS, BNSS and BSA 2023
 (469, 827, 210 chunks), Contract Act, Sale of Goods, Partnership, LLP, Companies Act 2013 and 1956 (1956 repealed), Arbitration and
@@ -2127,7 +2136,7 @@ is a property of the ingestion batch, not the court, and groups fall into three 
 | Calcutta | WBCHCA, J, O, P | 328,369 | 0% | 0% (Original: 100% of 4 points) |
 
 **What it would cost to make the corpus uniform.** Re-embedding only the off-model points (about 16.4M, before A126's de-duplication, which lowers it) to
-`voyage-4` is about 15.2B tokens: **$912 at standard, $611 at batch rates** (collection 1 about $301 at batch, collection 2 about $309). This is a price, not a proposal.
+`voyage-4` is about 15.2B tokens: **$912 at standard, $611 at batch rates** (collection 1 about $301 at batch, collection 2 about $309). This is a price and is NOT proposed: the question that matters is the `large` slice (Finding 4), not uniformity.
 
 **What these numbers do settle.** How much of each court sits off the query model, with tight intervals (about 0.2 to 0.4 points at the
 uniform ends); that no court but Kerala holds a vector unrelated to its text; and that the other-model vectors are *right for their text*
@@ -2135,10 +2144,35 @@ uniform ends); that no court but Kerala holds a vector unrelated to its text; an
 settle:** whether the mix costs retrieval quality. A cosine between two models' vectors of one text is agreement, not recall. The retrieval evidence is
 A128's: for `voyage-4-lite` courts, switching the query to the chunk's own model did *worse* than the `voyage-4` query (hybrid @10 -2.5, dense @10 -1.9
 with a court filter, so the `voyage-4` query read lite chunks 1.9 to 2.5 points better); for `voyage-4-large` courts it did better (hybrid @10 +3.8), the one place a
-mismatch cost recall; and A136 did not confirm a single `large` query vector as a replacement. A138 caps all of it: the harness is at its ceiling on hybrid. **This
-run cannot split the off-model share into lite and large** (their cosines to `voyage-4` overlap: medians 0.951 and 0.944), so it cannot say how
-much of the 52% is the large-model share where mismatch cost something. Section 13's 2,640-chunk identification is still the only split. Closing it: embed about 100 off-model chunks per
-group under lite and large (about 4,800 chunks, roughly $0.6). Not run.
+mismatch cost recall; and A136 did not confirm a single `large` query vector as a replacement. A138 caps all of it: the harness is at its ceiling on hybrid.
+
+### Finding 4: the lite versus large split, which sizes the only slice where mismatch measurably costs recall
+
+**Measured 4 Nov 2026, $0.47** (exact local count before the run: 3,826 chunks, 3.32M tokens under each of two models; every request ledgered under
+`health:split-`). Up to 100 off-model chunks per group (3,826 in all, drawn at random from the saved sample) were re-embedded under `voyage-4-lite` and under
+`voyage-4-large`; a chunk whose stored vector reproduces at cosine 0.99 or more under one of them was made by it. **All 3,826 were identified:
+2,890 lite, 936 large, none unidentified** (identified chunks reproduce at 0.9998 or better for lite, 0.9979 or better for large). Section 13's 2,640-chunk split is
+now confirmed on 3,826 more and extended to every group.
+
+| By points, collections 1 and 2 together | Share | Points (estimate) |
+|---|---:|---:|
+| `voyage-4`'s own | **47.7%** | 15.0M |
+| `voyage-4-lite` | **19.9%** (95% interval 19.7 to 20.4) | 6.3M |
+| `voyage-4-large` | **32.3%** (31.9 to 32.6) | **10.2M** |
+
+The interval is sampling only (it resamples the off-model share and the large share within each group); it does not include the sampler's tendency to under-count,
+which the Kerala control shows is about a fifth for a defect shaped like Kerala's, and nothing shows it moves a model share.
+
+**The large slice, by court** (collection and share of the court's own points): Patna (collection 1) 2.56M, 96% of the court; Chhattisgarh (1) 1.76M, 96%; Karnataka (2)
+1.54M, 98%; Jharkhand (2) 1.21M, 97%; Andhra Pradesh (1) 0.95M, 90%; Delhi (1) 0.89M, 79%; Himachal Pradesh (2) 0.48M, 62%; Supreme Court (2) 0.37M, 100%;
+Jammu and Kashmir (2) 0.23M, 94%; Kerala (2) 0.15M, 5% (50 of 100 off-model Kerala chunks are large, 50 lite). In every other group the sample found no large chunk
+(a bound of about 3 in 100 of the off-model chunks), and those groups are uniformly `voyage-4` or uniformly `voyage-4-lite`.
+
+**What this sizes.** For `voyage-4-lite` chunks, 19.9% of the corpus, the measured cost of a `voyage-4` query is nil or better (A128: 1.9 to 2.5 points better
+than lite's own query). The slice where a model mismatch measurably costs recall is the `voyage-4-large` slice: **about a third of the corpus, ten million points, concentrated in nine
+courts** (A128: +3.8 points on hybrid @10 for matching the model), with the caveats of A138 (the harness is at its ceiling on hybrid) and A136 (a single
+`large` query vector did not confirm as a replacement). This is a size, not a measured loss on this slice: A128's 3.8 was measured on 18,399 chunks of 24
+courts through the shipped code, not on these ten million points. Nothing here proposes a re-embed.
 
 ## 22. Text that is in the record but is not the court's holding: 5 of 79 cited pairs (6%), and the four checks cannot see it (4 Nov 2026, measured)
 

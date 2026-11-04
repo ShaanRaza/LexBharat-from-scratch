@@ -634,6 +634,19 @@ async def _embed_group(
     return np.array(out, dtype=np.float32)
 
 
+def _voyage_key() -> str:
+    """The Voyage key from the environment or the repo .env; never printed."""
+    key = os.environ.get("VOYAGE_API_KEY", "")
+    if not key:
+        envf = REPO / ".env"
+        for line in envf.read_text().splitlines() if envf.exists() else []:
+            if line.startswith("VOYAGE_API_KEY="):
+                key = line.split("=", 1)[1].strip().strip("\"'")
+    if not key:
+        sys.exit("REFUSED: no VOYAGE_API_KEY in the environment or the repo .env")
+    return key
+
+
 def cmd_embed(go: bool) -> None:
     if not go:
         sys.exit("REFUSED: embed spends money; it needs --go. Run `price` first.")
@@ -644,14 +657,7 @@ def cmd_embed(go: bool) -> None:
     )
     if not price or not price["within_cap"]:
         sys.exit("REFUSED: no `price` result, or it is over the cap.")
-    key = os.environ.get("VOYAGE_API_KEY", "")
-    if not key:
-        envf = REPO / ".env"
-        for line in envf.read_text().splitlines() if envf.exists() else []:
-            if line.startswith("VOYAGE_API_KEY="):
-                key = line.split("=", 1)[1].strip().strip("\"'")
-    if not key:
-        sys.exit("REFUSED: no VOYAGE_API_KEY in the environment or the repo .env")
+    key = _voyage_key()
     client = _client(key)
     (HOME / "embed").mkdir(parents=True, exist_ok=True)
     pf = HOME / "preflight.json"
@@ -994,9 +1000,144 @@ def render_markdown(out: dict, court_label: dict[str, str]) -> str:
     return "\n".join(L) + "\n"
 
 
+SPLIT_PER_GROUP = 100
+SPLIT_CAP_USD = 0.80  # the split is about $0.6; refuse above this
+SPLIT_SEED = 20261105
+
+
+def split_plan() -> list[dict]:
+    """Up to SPLIT_PER_GROUP off-model chunks per group (cosine to voyage-4 below 0.99
+    and not unrelated), drawn at random. Pure reads of the saved sample."""
+    rnd = random.Random(SPLIT_SEED)  # noqa: S311 (sampling, not security)
+    out = []
+    for name in group_files():
+        if name.endswith("NOLABEL"):
+            continue
+        frame, rows, vecs = load_group(name)
+        new = np.load(HOME / "embed" / f"{name}.npy")
+        cls = classify(cosine_rows(new, vecs))
+        off = [i for i in range(len(rows)) if cls[i] in (1, 3)]
+        pick = sorted(rnd.sample(off, min(SPLIT_PER_GROUP, len(off))))
+        out.append(
+            {
+                "group": name,
+                "points": frame["points"],
+                "off_model_in_sample": len(off),
+                "healthy_in_sample": int(((cls == 0) | (cls == 1) | (cls == 3)).sum()),
+                "pick": pick,
+            }
+        )
+    return out
+
+
+def cmd_split(go: bool) -> None:
+    """Which model made each off-model chunk? Re-embed a sample under voyage-4-lite and
+    voyage-4-large; a chunk whose stored vector reproduces (cosine 0.99 or more) under
+    one of them was made by it. Sizes the share where model mismatch measurably costs
+    recall (large chunks, A128)."""
+    from data import voyage_token_count as vtc
+
+    plan = split_plan()
+    texts: list[str] = []
+    stored: list = []
+    owner: list[str] = []
+    for g in plan:
+        _f, rows, vecs = load_group(g["group"])
+        for i in g["pick"]:
+            texts.append(rows[i]["text"])
+            stored.append(vecs[i])
+            owner.append(g["group"])
+    toks = int(sum(vtc.billed_tokens(texts)))
+    usd = (
+        toks
+        / 1e6
+        * (vtc.PRICE_PER_MTOK["voyage-4-lite"] + vtc.PRICE_PER_MTOK["voyage-4-large"])
+    )
+    print(
+        f"{len(texts):,} chunks, {toks:,} tokens each under lite and large = ${usd:.2f} (exact, local); cap ${SPLIT_CAP_USD:.2f}",
+        flush=True,
+    )
+    if usd > SPLIT_CAP_USD or ledger_usd() + usd > CAP_USD:
+        sys.exit("REFUSED: over the cap")
+    if not go:
+        sys.exit("REFUSED: the split spends money; it needs --go")
+    key = _voyage_key()
+    from pydantic import SecretStr
+
+    from adapters.voyage import VoyageClient
+    from core.settings import Settings
+
+    base = Settings(_env_file=None).model_copy(
+        update={
+            "VOYAGE_API_KEY": SecretStr(key),
+            "VOYAGE_EMBED_MODELS": {
+                "split_lite": "voyage-4-lite",
+                "split_large": "voyage-4-large",
+            },
+        }
+    )
+    client = VoyageClient(base, timeout_s=180, max_attempts=10)
+    sims: dict[str, np.ndarray] = {}
+    for coll, model in (
+        ("split_lite", "voyage-4-lite"),
+        ("split_large", "voyage-4-large"),
+    ):
+        vecs_new = []
+        for i in range(0, len(texts), EMBED_CALL):
+            b = asyncio.run(
+                client.embed_batch(texts[i : i + EMBED_CALL], coll, "document")
+            )
+            with LEDGER.open("a") as f:
+                f.write(
+                    json.dumps(
+                        {
+                            "t": time.time(),
+                            "model": model,
+                            "tokens": b.total_tokens,
+                            "tag": f"{TAG}:split-{model}",
+                        }
+                    )
+                    + "\n"
+                )
+            vecs_new += b.vectors
+        sims[model] = cosine_rows(np.array(vecs_new), np.array(stored))
+        print(f"  {model} done", flush=True)
+    lite, large = sims["voyage-4-lite"], sims["voyage-4-large"]
+    made = np.where(
+        lite >= SAME, "lite", np.where(large >= SAME, "large", "unidentified")
+    )
+    res = []
+    for g in plan:
+        m = np.array(owner) == g["group"]
+        n = int(m.sum())
+        k = {x: int((made[m] == x).sum()) for x in ("lite", "large", "unidentified")}
+        res.append(
+            {**{k_: v for k_, v in g.items() if k_ != "pick"}, "sampled": n, **k}
+        )
+    (HOME / "split.json").write_text(
+        json.dumps(
+            {
+                "per_group": res,
+                "lite_min_cos_of_identified": float(lite[made == "lite"].min())
+                if (made == "lite").any()
+                else None,
+                "large_min_cos_of_identified": float(large[made == "large"].min())
+                if (made == "large").any()
+                else None,
+                "ledger_usd_this_job": ledger_usd(),
+            },
+            indent=1,
+        )
+    )
+    tot = {x: int((made == x).sum()) for x in ("lite", "large", "unidentified")}
+    print(f"SPLIT {tot}; job ledger now ${ledger_usd():.3f}")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("stage", choices=["plan", "sample", "price", "embed", "report"])
+    ap.add_argument(
+        "stage", choices=["plan", "sample", "price", "embed", "report", "split"]
+    )
     ap.add_argument("--go", action="store_true", help="embed: spend (required)")
     a = ap.parse_args()
     HOME.mkdir(parents=True, exist_ok=True)
@@ -1016,6 +1157,8 @@ def main() -> None:
         cmd_price()
     elif a.stage == "embed":
         cmd_embed(a.go)
+    elif a.stage == "split":
+        cmd_split(a.go)
     else:
         cmd_report()
 

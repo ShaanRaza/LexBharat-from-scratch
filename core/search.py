@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from adapters.qdrant import DenseGroup, Hit, QueryVectors, VectorStoreUnavailable
 from adapters.voyage import VoyageUnavailable
 from core import model_plan
+from core.act_ids import plain_section, resolve_act
 from core.act_status import read_act_status
 from core.contracts import (
     SEARCH_TOP_K,
@@ -32,6 +33,9 @@ log = logging.getLogger(__name__)
 class SearchResult:
     passages: tuple[Passage, ...]
     keyword_only: bool  # Voyage was down: label "keyword results only"
+    # which layer of the filter ladder served the search (see _law_hits):
+    # "act+section", "act", "section signal", "case number" or "unfiltered"
+    scope: str = "unfiltered"
 
 
 async def embed_query(text: str, deps: Deps) -> list[float] | QueryVectors | None:
@@ -150,25 +154,88 @@ def hit_to_passage(
     )
 
 
-def _must(decision: Decision) -> dict[str, str]:
-    """Exact lookups (named section, case number) skip the merge: payload filter."""
-    f, must = decision.filters, {}
-    if f.section:
-        must["section_number"] = str(f.section)
-    if f.case_number:
-        must["case_number"] = f.case_number
-    return must
-
-
 def _year_ok(h: Hit, decision: Decision) -> bool:
+    """The year filter dates JUDGMENTS. An Act's own `year` is the year it was enacted,
+    so it never excludes an Act section ("judgments after 2015 on section 138 of the
+    Negotiable Instruments Act" must still bring section 138, enacted 1881)."""
     f = decision.filters
     if not (f.year_from or f.year_to):
+        return True
+    if "section_number" in h.payload:  # an Act section, not a judgment
         return True
     try:
         y = int(h.payload.get("year"))
     except (TypeError, ValueError):
         return True
     return (not f.year_from or y >= f.year_from) and (not f.year_to or y <= f.year_to)
+
+
+def _merge(first: list[Hit], second: list[Hit], limit: int) -> list[Hit]:
+    """`first` all kept, then `second` up to the limit; a record in both counts once."""
+    out: dict[str, Hit] = {h.record_id: h for h in first}
+    for h in second:
+        if h.record_id not in out and len(out) < limit:
+            out[h.record_id] = h
+    return list(out.values())[:limit]
+
+
+async def _law_hits(
+    decision: Decision, vector, rq: RewrittenQuery, deps: Deps
+) -> tuple[list[Hit], str]:
+    """The law-collection search, with the exact-lookup filters LAYERED so that no
+    filter the search could not scope can empty it (DECISIONS A144).
+
+    1. The decider named an Act that resolves to stored Act id(s) AND a plain
+       section: a hard filter on (act_id, section_number). A section is only read
+       inside its own Act.
+    2. That finds nothing, or the "section" is not a plain number (Order VII Rule
+       11): the Act alone, ranked as usual. Only when a section was NAMED; an Act
+       mentioned with no section never scopes the search (that would drop the case
+       law about it).
+    3. Still nothing, or the Act does not resolve (not stored, or no name): the
+       section number is a RANKING SIGNAL, not a filter. The ordinary search runs
+       unfiltered and, if there is a plain section, a few slots are reserved for the
+       best matches of that number in any Act, so the right section can still be
+       found and nothing is excluded.
+    4. A case number is a hard filter only while it finds something; otherwise the
+       ordinary search runs.
+    A year or an Act's name never filters here: only (act_id, section_number),
+    act_id (when a section was named) and case_number do. act_id is a payload index
+    in the served collection (before it was, the Act-only layer took 6 to 10 seconds
+    a query against the adapter's 5 second timeout and was dropped; indexed it takes
+    about 0.01 seconds)."""
+    f = decision.filters
+    collection = deps.settings.CORPUS_COLLECTION
+    section = plain_section(f.section)
+    act_ids = resolve_act(f.act)
+    case = {"case_number": f.case_number} if f.case_number else {}
+
+    async def run(must: dict, limit: int = SEARCH_TOP_K) -> list[Hit]:
+        return await deps.vectors.search(collection, vector, rq.query, must, limit)
+
+    if f.section and act_ids:
+        if section:
+            hits = await run(
+                {**case, "act_id": list(act_ids), "section_number": section}
+            )
+            if hits:
+                return hits, "act+section"
+        hits = await run({"act_id": list(act_ids)})
+        if hits:
+            return hits, "act"
+    elif case:
+        hits = await run(case)
+        if hits:
+            return hits, "case number"
+    if section:
+        reserved = max(1, SEARCH_TOP_K // 5)  # a fifth of the slots, not all
+        general, by_section = await asyncio.gather(
+            run({}), run({"section_number": section}, reserved)
+        )
+        if by_section:
+            return _merge(by_section, general, SEARCH_TOP_K), "section signal"
+        return general, "unfiltered"
+    return await run({}), "unfiltered"
 
 
 async def search(
@@ -180,10 +247,7 @@ async def search(
 ) -> SearchResult:
     """Input: query, decision, query vector. Output: at most 50 passages, best first,
     with no two sharing a chunk id or a text (core/dedupe.py)."""
-    must = _must(decision)
-    law = deps.vectors.search(
-        deps.settings.CORPUS_COLLECTION, vector, rq.query, must, SEARCH_TOP_K
-    )
+    law = _law_hits(decision, vector, rq, deps)
     jobs = [law]
     if request.document_ids and deps.settings.FEATURE_UPLOADS:
         jobs.append(
@@ -201,9 +265,10 @@ async def search(
     except VectorStoreUnavailable:
         log.error("vector store unavailable")
         raise
+    law_hits, scope = results[0]
     passages = [
         hit_to_passage(h, settings=deps.settings)
-        for h in results[0]
+        for h in law_hits
         if _year_ok(h, decision)
     ]
     if len(results) > 1:
@@ -213,4 +278,4 @@ async def search(
     if len(unique) < len(passages):
         dropped = len(passages) - len(unique)
         log.info("search: dropped %d duplicate passage(s)", dropped)
-    return SearchResult(tuple(unique[:SEARCH_TOP_K]), vector is None)
+    return SearchResult(tuple(unique[:SEARCH_TOP_K]), vector is None, scope)

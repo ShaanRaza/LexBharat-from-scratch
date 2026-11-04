@@ -121,6 +121,10 @@ class Settings(BaseSettings):
 
     # --- Qdrant ---
     QDRANT_URL: str = "http://qdrant:6333"
+    # Seconds the search waits for Qdrant before the vector store counts as down. The
+    # online default is short on purpose; the evaluation harness raises it when the
+    # local instance is shared with other jobs.
+    QDRANT_TIMEOUT_S: float = 5.0
     QDRANT_API_KEY: SecretStr = SecretStr("")
     QDRANT_UPLOADS_COLLECTION: str = "user_documents"
 

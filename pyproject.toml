@@ -61,6 +61,8 @@ select = ["E", "F", "I", "S", "BLE"]
 "evals/a141/**" = ["E501"]
 # The labelling-pack scripts: long prose docstrings, a loopback read of the copy instance.
 "evals/labelling/**" = ["E501"]
+# The latency measurement (CLAUDE.md section 10): long prose docstrings, a loopback read of the copy instance.
+"evals/performance/**" = ["E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

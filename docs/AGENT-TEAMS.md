@@ -379,6 +379,22 @@ Cross-lane changes go through the lead, not a teammate reaching into someone's f
 - **Tests before "done"** (`CLAUDE.md` §9.1). "Tests pass" means the output was shown.
 - **Never push to `main`**; Shaan merges. No teammate pushes, deploys or touches the server.
 - **Secrets**: no teammate prints `.env` or credentials, and none writes a key into a doc.
+- **The Qdrant copy instance (port 7333) is shared by every session on this machine.**
+  Anything heavy against it announces itself first or runs against a copy of the
+  collection. Heavy means: a scan or dump of more than a few thousand points, building
+  an index, or anything that runs for more than a minute. "Announces itself" is one line
+  in `~/qdrant-kanoon/ACTIVE_JOBS.txt` (who, what, started, expected end) before it
+  starts and removed when it ends; look at that file, and at `ps`, before starting a
+  measurement or an evaluation run. **Why (4 Nov 2026):** another session's dump job took the
+  instance to 831% CPU in the middle of a 100-question run. Eleven of the first 19
+  questions failed with `VectorStoreUnavailable`, and the verifier's "record exists"
+  check, which reads the same instance, removed true citations (IPC section 302
+  among them) as `record_missing`. It looked like three code bugs. It was a busy
+  instance. **If a run shows `VectorStoreUnavailable` or `ReadTimeout`, check what else
+  is on the port before debugging code.** And do not kill another session's process: ask
+  its owner, or wait. The evaluation harness raises the client timeout for exactly this
+  reason (`QDRANT_TIMEOUT_S`, 90 s in `evals/labelling/run_real.py`; the online default
+  stays 5 s).
 
 ---
 

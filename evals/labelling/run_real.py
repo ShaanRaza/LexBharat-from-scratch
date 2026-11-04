@@ -36,6 +36,7 @@ from pathlib import Path
 
 from pydantic import SecretStr
 
+import core.pipeline as _pipeline
 from adapters.cache import FakeCache
 from adapters.decisions import (
     DecisionUnavailable,
@@ -51,6 +52,7 @@ from adapters.voyage import VoyageClient
 from core.contracts import Deps, PipelineRequest
 from core.gate import gate as real_gate
 from core.pipeline import run_pipeline
+from core.search import search as real_search
 from core.verify import verify as real_verify
 from evals.real_run import eval_seal_key, run_settings
 
@@ -235,6 +237,15 @@ SEEN: dict[
 ] = {}  # the passages S1-S8 the gate handed the writer, for the question now running
 
 
+async def recording_search(request, rq, decision, vector, deps):
+    """The real search; remembers which filter layer served it and how many passages
+    it returned, so the run can report zero-passage questions directly."""
+    r = await real_search(request, rq, decision, vector, deps)
+    SEEN["scope"], SEEN["searched"] = r.scope, len(r.passages)
+    SEEN["filters"] = dataclasses.asdict(decision.filters)
+    return r
+
+
 async def recording_gate(rq, passages, deps):
     g = await real_gate(rq, passages, deps)
     SEEN["passages"] = list(g.passages)
@@ -250,6 +261,8 @@ def build(llm: CountingLLM) -> Deps:
             "GEMINI_API_KEY": SecretStr(_line(EVAL_ENV, "EVAL_GEMINI_API_KEY")),
             "VOYAGE_API_KEY": SecretStr(_line(REPO / ".env", "VOYAGE_API_KEY")),
             "QDRANT_URL": COPY_QDRANT,
+            # the copy instance is shared with other jobs; a slow read is not an outage here
+            "QDRANT_TIMEOUT_S": 90.0,
         }
     )
     global DECISIONS
@@ -308,10 +321,14 @@ def record(row: dict, result, seconds: float, calls: int, degraded: dict) -> dic
         "seconds": round(seconds, 2),
         "llm_calls": calls,
         "degraded": degraded,
+        "search_scope": SEEN.get("scope"),
+        "search_passages": SEEN.get("searched"),
+        "filters": SEEN.get("filters"),
     }
 
 
 async def main_async(limit: int | None, out: Path) -> None:
+    _pipeline.search = recording_search  # the pipeline imports search by name
     out.parent.mkdir(parents=True, exist_ok=True)
     done = (
         {json.loads(line)["id"] for line in out.read_text().splitlines()}

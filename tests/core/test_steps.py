@@ -68,7 +68,12 @@ async def test_decide_conservative_when_every_decider_is_down(settings, store):
     assert d.filters.section == "438"  # rewrite's section still applied
 
 
-async def test_search_exact_section_lookup_uses_payload_filter(settings, store):
+async def test_search_a_bare_section_number_is_a_ranking_signal_not_a_filter(
+    settings, store
+):
+    # DECISIONS A144: no Act named, so the section number cannot be scoped. It used to
+    # be a hard filter that returned only section 130 of every Act (or nothing); now
+    # section 130 is guaranteed slots and the ordinary search still runs.
     deps = make_deps(settings, store, gate, verify)
     dec = Decision("in_scope", Filters(section="130"), "normal")
     r = await search(
@@ -78,8 +83,9 @@ async def test_search_exact_section_lookup_uses_payload_filter(settings, store):
         [0.0],
         deps,
     )
-    assert r.passages
-    assert all(p.section == "130" for p in r.passages)
+    assert r.passages and r.scope == "section signal"
+    assert any(p.section == "130" for p in r.passages)
+    assert any(p.section != "130" for p in r.passages)  # nothing was excluded
 
 
 async def test_search_caps_at_fifty_and_strips_header(settings, store):

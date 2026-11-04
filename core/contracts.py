@@ -137,6 +137,10 @@ class Filters:
     act: str | None = None
     section: str | None = None
     case_number: str | None = None
+    # The year printed in the Act's own name ("1973" for the Code of Criminal
+    # Procedure, 1973). It dates the Act, never judgments: core/decide.py keeps it
+    # out of year_from/year_to.
+    act_year: int | None = None
 
     @property
     def is_exact_lookup(self) -> bool:

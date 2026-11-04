@@ -31,6 +31,7 @@ DECIDE: dict = {
         "year_from": _NULL_INT,
         "year_to": _NULL_INT,
         "act": _NULL_STRING,
+        "act_year": _NULL_INT,
         "section": _NULL_STRING,
     },
     "required": ["scope", "safety"],
