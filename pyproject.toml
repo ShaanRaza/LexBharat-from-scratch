@@ -57,6 +57,10 @@ select = ["E", "F", "I", "S", "BLE"]
 "scan/**" = ["E501"]
 # The A136 evidence scripts (DECISIONS A136): a loopback read of the original, a seeded sample.
 "evals/a136/**" = ["S101", "E501", "S310", "S311"]
+# The A141 cost-picture measurements: long prose docstrings, a loopback read of the copy instance.
+"evals/a141/**" = ["E501"]
+# The labelling-pack scripts: long prose docstrings, a loopback read of the copy instance.
+"evals/labelling/**" = ["E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
