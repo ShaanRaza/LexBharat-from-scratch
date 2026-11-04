@@ -51,9 +51,22 @@ ScopeClass = Literal[
 ]
 Rating = Literal["answers", "partly", "not_relevant"]
 Support = Literal["supports", "partly", "does_not_support"]
+# Four reasons say the CITATION was bad (the invented-citation metric counts only
+# these). "store_unavailable" says the record store could not be asked (check 2): the
+# citation is still removed (fail closed), but it is no evidence of invention.
 FailReason = Literal[
-    "not_retrieved", "record_missing", "quote_not_found", "claim_not_supported"
+    "not_retrieved",
+    "record_missing",
+    "quote_not_found",
+    "claim_not_supported",
+    "store_unavailable",
 ]
+INVENTED_REASONS: tuple[str, ...] = (
+    "not_retrieved",
+    "record_missing",
+    "quote_not_found",
+    "claim_not_supported",
+)
 
 
 # --- Matters and answer provenance (PRD-v2 O11, O12, O14) ---------------------------

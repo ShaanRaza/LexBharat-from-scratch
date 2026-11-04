@@ -147,3 +147,27 @@ def test_the_render_names_the_vendor_split_for_a_failure():
     rows = [_row(f"q{i}", first=9.0) for i in range(10)]
     out = rp.render(rows, {}, "4 Nov 2026", "Conditions: a test.")
     assert "**FAIL**" in out and "median inside" in out and "decision" in out
+
+
+def test_the_merged_call_asks_for_exactly_the_fields_of_both_shipped_calls():
+    """merge_steps_2_3 measures a merge, so its schema must be the union of the two
+    shipped schemas and its prompt must carry both shipped prompts unchanged."""
+    from core import llm_schemas
+    from evals.performance import merge_steps_2_3 as m
+
+    props = set(m.MERGED_SCHEMA["properties"])
+    assert props == set(llm_schemas.REWRITE["properties"]) | set(
+        llm_schemas.DECIDE["properties"]
+    )
+    assert {"query", "scope", "safety"} <= set(m.MERGED_SCHEMA["required"])
+    p = m.merged_prompt("What does Section 438 CrPC 1973 say?", "", "")
+    assert "Turn the user's latest message into one standalone legal search query" in p
+    assert "You make a fixed-choice decision for a legal research tool" in p
+    assert "What does Section 438 CrPC 1973 say?" in p
+
+
+def test_critical_path_arithmetic_in_the_merge_report_is_a_paired_difference():
+    from evals.performance.timing import p50_p95
+
+    a, b = [2.0, 2.2, 2.4], [2.1, 2.1, 2.1]
+    assert p50_p95([x - y for x, y in zip(a, b)])[0] == pytest.approx(0.1)

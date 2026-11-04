@@ -16,6 +16,8 @@ release.
 
 - [ ] Each of the four verifier failure reasons removes the citation **and** logs it:
       `not_retrieved`, `record_missing`, `quote_not_found`, `claim_not_supported`
+- [ ] A record store that cannot be asked removes the citation (fail closed) and logs
+      `store_unavailable`, never `record_missing`
 - [ ] A case the model names but that was **not** in S1–S8 is removed (check 1)
 - [ ] Checks 1–3 still run with **Jev switched off** and with Jev timing out
 - [ ] No citation-shaped content is emitted before the single post-verification `citations`

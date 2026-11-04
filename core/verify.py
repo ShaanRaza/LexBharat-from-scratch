@@ -306,8 +306,18 @@ def _record_text(record: object) -> str | None:
     return text if isinstance(text, str) else None
 
 
+class _RecordStoreUnavailable(Exception):
+    """Check 2 could not ask the record store (timeout, outage); not 'no record'."""
+
+
 async def _fetch_record(passage: Passage, deps: Deps) -> str | None:
-    """Check 2. Uploads use the uploads collection with the owner's user_id."""
+    """Check 2. Uploads use the uploads collection with the owner's user_id.
+
+    None = the store answered and the record is not there for this reader (or the reader
+    may not see it). A store that could not be asked raises _RecordStoreUnavailable: the
+    citation is still removed, but under its own reason, so a slow store never reads as
+    a model inventing a citation.
+    """
     if passage.kind == "upload":
         collection = deps.settings.QDRANT_UPLOADS_COLLECTION
         user_id = passage.user_id
@@ -318,7 +328,9 @@ async def _fetch_record(passage: Passage, deps: Deps) -> str | None:
         record = await deps.vectors.get_record(
             collection, passage.record_id, user_id=user_id
         )
-    except (VectorStoreUnavailable, PermissionError):  # cannot confirm -> missing
+    except VectorStoreUnavailable as exc:  # cannot ask -> fail closed, own reason
+        raise _RecordStoreUnavailable from exc
+    except PermissionError:  # the reader may not see it -> as good as missing
         return None
     return _record_text(record)
 
@@ -652,7 +664,16 @@ async def verify(
                 removed.append(RemovedCitation(label, None, "not_retrieved", sentence))
                 failed.add(label)
                 continue
-            record_text = await _fetch_record(passage, deps)  # check 2
+            try:
+                record_text = await _fetch_record(passage, deps)  # check 2
+            except _RecordStoreUnavailable:
+                removed.append(
+                    RemovedCitation(
+                        label, passage.record_id, "store_unavailable", sentence
+                    )
+                )
+                failed.add(label)
+                continue
             if record_text is None:
                 removed.append(
                     RemovedCitation(

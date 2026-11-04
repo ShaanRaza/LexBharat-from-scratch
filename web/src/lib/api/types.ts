@@ -208,7 +208,12 @@ export type EvalRun = {
 export type InventedRow = {
   id: string;
   at: string;
-  reason: "not retrieved" | "record missing" | "quote not found" | "claim not supported";
+  reason:
+    | "not retrieved"
+    | "record missing"
+    | "quote not found"
+    | "claim not supported"
+    | "store unavailable";
   cited_text: string; // what the model wrote; shown to admins only, never to users
 };
 export type SpendRow = {

@@ -78,7 +78,7 @@ def test_upgrade_downgrade_upgrade_on_real_postgres(scratch_db_url):
     with engine.connect() as c:
         assert (
             c.execute(text("select version_num from alembic_version")).scalar()
-            == "0012"
+            == "0013"
         )
     engine.dispose()
 
@@ -445,4 +445,49 @@ def test_act_sections_is_repealed_is_nullable_and_goes_away_on_downgrade(
     _alembic("downgrade", "0011", url=scratch_db_url)
     cols = {c["name"] for c in inspect(engine).get_columns("act_sections")}
     assert "is_repealed" not in cols
+    engine.dispose()
+
+
+@pytest.mark.skipif(
+    not os.environ.get("TEST_DATABASE_URL"), reason="TEST_DATABASE_URL not set"
+)
+def test_invented_reason_allows_store_unavailable_and_downgrade_maps_it_back(
+    scratch_db_url,
+):
+    """0013: the log accepts the fifth reason, still rejects anything else, and the
+    downgrade turns 'store unavailable' rows back into 'record missing' (what they
+    were logged as before) instead of failing on them."""
+    from sqlalchemy.exc import IntegrityError
+
+    url = scratch_db_url
+    _alembic("upgrade", "head", url=url)
+    engine = create_engine(url)
+    ins = text(
+        "insert into invented_citation_log (cited_text, reason) values ('x', :r)"
+    )
+    with engine.begin() as c:
+        for ok in (
+            "not retrieved",
+            "record missing",
+            "quote not found",
+            "claim not supported",
+            "store unavailable",
+        ):
+            c.execute(ins, {"r": ok})
+    with pytest.raises(IntegrityError), engine.begin() as c:
+        c.execute(ins, {"r": "model invented it"})
+    _alembic("downgrade", "0012", url=url)
+    with engine.connect() as c:
+        got = sorted(
+            r[0] for r in c.execute(text("select reason from invented_citation_log"))
+        )
+    assert got == [
+        "claim not supported",
+        "not retrieved",
+        "quote not found",
+        "record missing",
+        "record missing",
+    ]
+    with pytest.raises(IntegrityError), engine.begin() as c:
+        c.execute(ins, {"r": "store unavailable"})
     engine.dispose()

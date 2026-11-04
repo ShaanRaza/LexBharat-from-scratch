@@ -40,6 +40,10 @@ STEP_ORDER = [
 BEGIN, END = "<!-- latency:begin -->", "<!-- latency:end -->"
 
 
+def markers(block_id: str) -> tuple[str, str]:
+    return f"<!-- {block_id}:begin -->", f"<!-- {block_id}:end -->"
+
+
 def load_rows(path: Path) -> list[dict]:
     return [json.loads(x) for x in path.read_text().splitlines() if x.strip()]
 
@@ -274,12 +278,13 @@ def render(rows: list[dict], summary: dict, when: str, conditions: str) -> str:
     return "\n".join(L)
 
 
-def write_metrics(path: Path, block: str) -> None:
+def write_metrics(path: Path, block: str, block_id: str = "latency") -> None:
+    begin, end = markers(block_id)
     text = path.read_text()
-    new = f"{BEGIN}\n{block}\n{END}"
-    if BEGIN in text:
+    new = f"{begin}\n{block}\n{end}"
+    if begin in text:
         text = re.sub(
-            re.escape(BEGIN) + r".*?" + re.escape(END), lambda _m: new, text, flags=re.S
+            re.escape(begin) + r".*?" + re.escape(end), lambda _m: new, text, flags=re.S
         )
     else:
         text = text.rstrip("\n") + "\n\n" + new + "\n"
@@ -293,6 +298,7 @@ def main() -> None:
     ap.add_argument("--when", default="")
     ap.add_argument("--conditions", default="")
     ap.add_argument("--write-metrics", type=Path)
+    ap.add_argument("--block-id", default="latency")
     a = ap.parse_args()
     rows = load_rows(a.inp)
     summary = json.loads(
@@ -300,7 +306,7 @@ def main() -> None:
     )
     block = render(rows, summary, a.when, a.conditions)
     if a.write_metrics:
-        write_metrics(a.write_metrics, block)
+        write_metrics(a.write_metrics, block, a.block_id)
         print(f"wrote the latency block into {a.write_metrics}")
     else:
         print(block)

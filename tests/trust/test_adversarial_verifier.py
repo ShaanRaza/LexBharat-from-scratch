@@ -173,6 +173,7 @@ async def test_the_store_being_down_means_not_verified_not_verified_anyway(world
     world.vectors.down = True
     ans = await run(world, GOOD)
     assert ans.citations == ()
+    assert [r.reason for _, _, r in world.citation_log.rows] == ["store_unavailable"]
 
 
 # ---- the decider (check 4) is outside our control: it must fail closed ---------------

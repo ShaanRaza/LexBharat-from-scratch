@@ -60,10 +60,54 @@ async def test_reason_record_missing(world):
     assert world.citation_log.rows[0][2].record_id == "rec-1"
 
 
-async def test_record_lookup_error_fails_closed_as_record_missing(world):
+async def test_record_store_unavailable_fails_closed_under_its_own_reason(world):
+    """A store that could not be asked is not a model inventing a citation: the citation
+    is still removed (fail closed, no tick) but the log says so, so the invented-citation
+    metric is not corrupted by a slow database."""
     world.vectors.down = True
     ans = await verify(world.draft(GOOD), world.passages, world.deps)
+    assert ans.citations == () and reasons(world) == ["store_unavailable"]
+    assert world.citation_log.rows[0][2].record_id == "rec-1"
+
+
+async def test_store_unavailable_changes_only_the_recorded_reason(world):
+    """Behaviour is identical to a missing record: the same answer text, the same removal
+    note, no citation. Only the reason differs."""
+    missing = world
+    missing.vectors.law = [h for h in missing.vectors.law if h.record_id != "rec-1"]
+    a = await verify(missing.draft(GOOD), missing.passages, missing.deps)
+    from tests.trust.conftest import World
+
+    down = World()
+    down.vectors.down = True
+    b = await verify(down.draft(GOOD), down.passages, down.deps)
+    assert (a.text, a.citations, a.sealed) == (b.text, b.citations, b.sealed)
+    assert [(x.source_id, x.record_id) for x in a.removed] == [
+        (x.source_id, x.record_id) for x in b.removed
+    ]
+    assert reasons(missing) == ["record_missing"] and reasons(down) == [
+        "store_unavailable"
+    ]
+
+
+async def test_a_reader_who_may_not_see_the_record_is_record_missing_not_store_down(
+    world,
+):
+    async def refuse(*a, **k):
+        raise PermissionError("not yours")
+
+    world.vectors.get_record = refuse
+    ans = await verify(world.draft(GOOD), world.passages, world.deps)
     assert ans.citations == () and reasons(world) == ["record_missing"]
+
+
+def test_the_invented_citation_metric_counts_only_the_four_citation_reasons():
+    from typing import get_args
+
+    from core.contracts import INVENTED_REASONS, FailReason
+
+    assert set(get_args(FailReason)) == {*INVENTED_REASONS, "store_unavailable"}
+    assert "store_unavailable" not in INVENTED_REASONS and len(INVENTED_REASONS) == 4
 
 
 async def test_reason_quote_not_found_wrong_words(world):

@@ -25,6 +25,7 @@ _REASON = {
     "record_missing": "record missing",
     "quote_not_found": "quote not found",
     "claim_not_supported": "claim not supported",
+    "store_unavailable": "store unavailable",
 }
 _PLAN_LIMIT = {
     "free": "PLAN_LIMIT_FREE", "student": "PLAN_LIMIT_STUDENT",
