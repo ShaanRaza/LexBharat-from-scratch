@@ -223,7 +223,7 @@ as stored, labelled "as recorded in the dataset".
   marked "no training". Never a free tier that may train on user data.
 - Langfuse logs must be **masked** (upload text, emails, phone numbers → placeholders) and
   Sentry reports **scrubbed** (request bodies, tokens, emails, document text removed).
-  **BUILT AND PROVEN, NOT WIRED (A182, 5 Nov 2026).** `core/redact.py` holds the mask and
+  **BUILT AND PROVEN, NOT WIRED (A155, 5 Nov 2026).** `core/redact.py` holds the mask and
   `adapters/telemetry.py` is the only file allowed to name either vendor. Langfuse: an upload
   or matter-fact run has all its text withheld, other runs have emails, phone numbers and
   tokens masked, and a run that never declares itself is withheld. Sentry: events are rebuilt

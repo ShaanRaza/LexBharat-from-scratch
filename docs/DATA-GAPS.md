@@ -2536,7 +2536,7 @@ So for a paraphrase the whole mechanical guarantee collapses onto check 4. Secti
 | The 33 questions cited under both prompts, old | 129 | 38 (29.5%) | |
 | The same 33, new | 76 | 5 (6.6%) | |
 
-In the new run **74 of 79 pairs (93.7%) gave check 3 nothing to test.** The five that did: q002 (two statutory definitions copied verbatim), q008 (two, "cruelty"), and q088 (the counsel's argument of section 22). All five passed check 3, so no honest quote was stripped in this sample.
+In the new run **74 of 79 pairs (93.7%) gave check 3 nothing to test.** The five that did: q002 (two statutory definitions copied verbatim), q008 (two, "cruelty"), and q088 (the counsel's argument of section 22). **Correction, 5 Nov 2026:** this sentence first said all five passed check 3 and no honest quote was stripped. That was wrong, and I had not run the verifier to see. Replaying the saved drafts through the real `verify()` (check 4 forced to pass, so only checks 1 to 3 and A137 act) shows check 3 removed **2 sentences** of the 79: q008's `"Cruelty" also means harassment...` (the passage has lowercase `cruelty`; check 3 keeps case, and the sentence starts with a capital), and q100's sentence about money laundering, which has no quotation at all but a possessive curly apostrophe (`nation’s`): check 3 counts an unmatched `’` as a stray quotation mark and fails closed. Both removals are honest text lost, 2.5% of the pairs; neither was a fabrication. Section 28 has the second one as a defect class.
 
 **A side effect of the A137 prompt change, reported plainly.** On the same 33 questions the share of pairs with a quote fell from 29.5% to 6.6%. The line that tells the writer to quote only exact words is unchanged (`diff` of the two prompts); what changed is "every sentence ends in a marker, no intro, no summary". I cannot separate cause from run-to-run variation (one run per prompt), but the direction is large. In practice the prompt that made every sentence cite also made the writer paraphrase more, so check 3 now covers less of an answer. That is not a reason to undo A137. It is a reason to know where the guarantee sits.
 
@@ -2567,3 +2567,112 @@ Section 20 counted Acts: 1,568 held. This counts sections, free and read-only, f
 * **Limits.** N is a lower bound (a missing tail is invisible; Schedule rows can push N up; an omitted or repealed number counts as missing). The same checker run independently on the owner's earlier repo's data found 38,508 expected and 8,881 missing for Acts in force; this finds 38,294 and 9,584.
 
 **What this means for `core/coverage.json` (not changed; lane C owns the generator):** it says the Central Acts are held. That is true of 1,568 Acts and not of their sections: about a fifth of the section numbers in force Acts have no text anywhere, and a lookup by section number can miss text that is stored inside a neighbour's chunk. The number for the owner: **about 20 to 25 of every 100 sections of the Acts in force are not in the data**, concentrated in 154 Acts that hold under half of theirs.
+
+## 27. Check 4 cannot ask who is speaking: a limit of the check, not a defect in it (5 Nov 2026, measured)
+
+### What check 4 is asked
+
+`core/prompts/claim_support.txt`, in full: "Does the passage support the sentence? Reply with exactly one word: supports, partly or does_not_support."
+It is given the sentence and the passage. Nothing in the question concerns who in the passage is saying the words.
+
+### What it did on the 79 pairs (section 22)
+
+| Pairs | Count | Real check, first pass |
+|---|---|---|
+| Not the court's holding (a party's argument, a rejected argument, a lower court's holding, an order on the facts) | 5 | **5 supports**, again 5 of 5 on the second pass |
+| Judged defective in some way (the five, a remark stapled to a marker, an obeyed injection, an empty marker) | 8 | **1 removed** (the empty marker), 7 passed |
+| Judged sound or merely garbled by list-splitting | 71 | 1 removed (q056 S6, disputed: section 25 of the Evidence Act quoted in a judgment that says it does not apply there) |
+
+### Why this is a limit and not a defect
+
+The check does what it was specified to do. A passage that recites counsel arguing a proposition does support that proposition, in the sense the
+question asks; "supports" is a property of the words. Who is speaking is a property of the passage's structure (a party's submission, a rejected
+argument, a lower court's reasoning, the court's own holding). A model that answers "supports" there is answering the question it was asked correctly. Retuning
+the prompt will not move this: the five pass because the question has the wrong shape for them.
+
+The remedy is not a better prompt for check 4 either. "Is this the court's holding?" is a legal judgement. Putting it to the same kind of model that
+passed the five adds a fifth check that can be talked round (section 22). The instrument is the advocate review (`docs/ADVOCATE-REVIEW-PACK.md`).
+
+### What this does to `CLAUDE.md` §5
+
+§5 says the tick does **not** mean "the quote is the holding, or the AI's summary is right". Until section 22 that was a caveat. It is now a number:
+
+| | |
+|---|---|
+| Pairs the mechanical checks passed where the cited words were not the court's holding | **5 of 79 (6.3%; 95% Wilson interval 2.7% to 14.0%)** |
+| Drafts affected | 3 of 35 that carried a marker |
+| Checks that could have caught it | none: checks 1 and 2 test the label and the record, check 3 fired on one of the five and passed it (the words are in the record), check 4 passed all five |
+
+One run, one model, practice-fixture retrieval, one non-advocate reader of the five (section 22 limits). The advocate pack sizes it properly; this section does not
+claim the 6.3% is the true rate. It claims that **the shipped checks, taken together, pass this class at a rate of about 100% of the instances found.** No product wording was changed:
+"Record found in dataset" does not claim a holding, and the user-facing text is the owner's.
+
+## 28. What asking the writer to quote statute wording verbatim would cost: measured, not applied (5 Nov 2026)
+
+The case for it: check 3 fires on 6.3% of cited pairs (section 25), so for most cited sentences the only mechanical guarantee is check 4, a model's opinion, and section 27 shows check 4 cannot ask who is speaking.
+This section sizes the lever the way A137 sized strict mode. **Nothing is applied: `core/prompts/answer.txt` is unchanged.** The owner decides.
+
+### What was changed and how it was measured
+
+One sentence added to a scratch copy of the answer prompt, after "Quote only words that appear exactly in the passage":
+*"When a sentence states what an Act, section, rule or article provides, quote the provision's own words exactly as they appear in the passage, inside quotation marks, and end the sentence with the source id. Do not paraphrase a provision."*
+
+Same harness as A137 (`evals/real_run.py` pipeline, real `gemini-3.5-flash-lite` as the writer, the 1,398-record practice fixture, fake word-overlap gate and claim check), on the **current branch**. The branch has changed since A137, so **136** questions now reach the writer (A137: 95),
+and the comparator is a fresh run of the A137 prompt on the same code, not the A137 numbers. Check-3 figures come from replaying each run's saved drafts through the real `verify()` with check 4 forced to "supports", which isolates checks 1 to 3 and A137 strict from the fake check 4.
+
+**One run per prompt.** A second run of each failed: the eval key's project reached its monthly spending cap (HTTP 429, "exceeded its monthly spending cap"). Nothing was retried on another key. So there is no noise estimate from this session; A137 saw run-to-run swings (6 questions cited under one prompt only and 2 under the other, of 33), so treat small differences as unresolved. The large ones below are not small.
+
+### Side by side
+
+| | A137 prompt | Verbatim-quote prompt |
+|---|---|---|
+| Questions that reach the writer | 136 | 136 |
+| Non-empty drafts | 42 | 45 |
+| **Answers served** (`answered`) | **38** | **27** |
+| Marked sentences drafted | 77 | 80 |
+| ...of which carry a quoted span | 6 (7.8%) | **67 (83.8%)** |
+| Drafts with a quoted sentence | 5 | 34 |
+| Quoted spans; median length | 6; 3 words | 75; 20 words |
+| **Sentences removed by check 3** | 1 | **30 (45% of the 67 quoted)** |
+| Drafts emptied by check 3 alone | 1 | **13** |
+| ...still emptied if the stored-text damage below were excused | 0 | 8 |
+| Answers served whose text keeps a quote | 4 | 21 |
+| Sentences kept that carry a verified quote | 5 of 76 (6.6%) | 37 of 50 (74%) |
+| Answered under both prompts | 23 | 23 |
+| Answered under A137 prompt only / under variant only | 15 / 4 | |
+| Words on the 23 answered under both | 1,872 (median 53) | 1,473 (median 35): **-21%** |
+
+The 15 / 4 mixes check-3 emptying with ordinary model variance that this session could not size. 13 drafts were emptied by check 3 alone under the variant against 1 under the A137 prompt, so most of the 11-answer net loss is check 3, but not all of it is proven to be.
+
+### Why check 3 removes 45% of the quoted sentences
+
+Classified on the **letters only** (so markers, digits, spacing and case do not count), 30 removals:
+
+| Cause | Sentences |
+|---|---|
+| The quote's words are all present in order, but the stored text has list markers (`_a_`, `_ii_`), footnote numbers, margin letters or odd spacing inside them | 16 |
+| Words present with a few letters garbled in the stored text (`po er`, `Magi5 trate`, `investiJation`, `thecheque`, `Indianlaw`) | 2 |
+| **Stored-text damage subtotal** | **18 (60%)** |
+| The quote skips, joins or changes words (the model, not the record) | 11 (37%) |
+| Capital letter against lowercase at the start of a sentence | 1 |
+
+By quote length: 12 words or fewer, 5 of 24 fail (21%); 13 to 30 words, 14 of 28 (50%); 31 or more, 12 of 23 (52%). The classification is automatic and I read a sample, not all 30.
+
+### A147: the OCR exposure, measured on these passages
+
+A-SC3's detector (`scan/sc/ocr_noise.py`) on the passages cited in these runs: **6.5%** of 12-word windows carry an artifact under the A137 prompt and **6.1%** under the variant, inside A147's 3.5% to 9.4%. That rate understates what a quote suffers, for two reasons the table shows: the variant's quotes are long (a median of 20 words, so a quote crosses many windows),
+and the damage includes **markdown list markers in statute text (`_a_`) and inline footnote numbers**, which that detector does not look for. So the cleaning A147 describes (clean a copy of the record text, never loosen check 3) is a **precondition** for this lever: with the 18 stored-text removals excused, check 3 would remove 12 of 67 instead of 30 and 8 drafts would still be emptied instead of 13. The remaining 12 are the model quoting inexactly. Check 3 was not loosened and is not proposed to be.
+
+### What it would and would not buy
+
+- **Buys:** check 3 would back 74% of the sentences that survive instead of 6.6%: "these words are in the record" would be mechanically proved for most statutory sentences.
+- **Does not buy:** anything against the section 22 class. The five misattributed pairs (q067 x3, q088, q091) are judgment passages, not statutory provisions, and the variant only asks for verbatim quotation of provisions. q088 already carried quotation marks and passed. A verbatim quote proves the words are in the record; it does not prove who is speaking (section 27).
+- **Costs (this retrieval, one run):** 11 fewer answers served of 38 (-29%), 21% shorter on the answers served both times, and, until the record is cleaned, 18 honest quotes stripped.
+
+My read, for the owner to take or leave: do not apply it before the record-text cleaning of A147 exists; after it, the lever is worth re-measuring on a real retrieval, because it hardens the statutory wording check and costs the answers that quote inexactly. It is not the answer to section 22.
+
+### Found on the way: a possessive apostrophe fails check 3 (not fixed)
+
+`core/verify.py` `_unbalanced_quotes` counts `‘` and `’` and fails closed when they differ, so a sentence with a curly possessive and no opening quote (`the nation’s economy`) is removed as `quote_not_found`. It cost 1 of 79 pairs in the A137 run (q100) and 0 in the other three runs' ~280 marked sentences, so it is rare in this sample; real judgments use curly apostrophes more.
+It is the opposite of a fabrication, and it is a class: any sentence whose only quote-like mark is a possessive `’`. A narrow fix exists (treat a `’` between two letters as an apostrophe, not a mark) with a class-wide test; **it is not applied**, because it changes check 3 and you have refused loosening it. It needs the owner's word.
+
