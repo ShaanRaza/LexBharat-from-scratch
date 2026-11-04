@@ -90,6 +90,7 @@ rows in the parquet that carry no text, which is a different population from the
   the model quotes an amendment note as though it were the operative law.
 - **4,107 regulator records with no source URL.** The tick promises the link goes to the
   record's `pdf_url` / `source_url`. Where there is none, the interface must not imply one.
+- **Text that is in the record but is not the court's holding** (a party's argument, a rejected argument, a lower court's holding): 5 of 79 cited pairs in a real-model run. No check can see it. Section 22.
 
 ## 4. The snapshot boundary is real
 
@@ -2139,3 +2140,65 @@ run cannot split the off-model share into lite and large** (their cosines to `vo
 much of the 52% is the large-model share where mismatch cost something. Section 13's 2,640-chunk identification is still the only split. Closing it: embed about 100 off-model chunks per
 group under lite and large (about 4,800 chunks, roughly $0.6). Not run.
 
+## 22. Text that is in the record but is not the court's holding: 5 of 79 cited pairs (6%), and the four checks cannot see it (4 Nov 2026, measured)
+
+`CLAUDE.md` §5 says the tick does **not** mean "the quote is the holding, or the AI's summary is right". Until now that was a caveat.
+This section is the first measurement of it.
+
+### What was measured
+
+The trust lane's A137 run (`docs/DECISIONS.md` A137): 95 of the 200 questions reach the writer, real `gemini-3.5-flash-lite`, the real
+answer prompt, practice-fixture retrieval (1,398 records, fake word-overlap store, re-ranker and gate). 34 drafts ended `answered`, carrying **79
+(sentence, cited passage) pairs**. I read the sentence, then the passage it cites, and judged by hand whether the words that say it are the court
+speaking. My judgement, from the passage chunk the writer was given, not from the whole judgment, and not an advocate's.
+
+| Reading | Pairs |
+|---|---|
+| Supported, and the court's own words | 63 |
+| Supported but garbled by list-splitting | 8 |
+| **In the passage, but not the court's holding** | **5** |
+| A model remark stapled to a marker | 1 |
+| An empty marker (`[S7]` alone) | 1 |
+| An obeyed injection (q192; its own record is the F3 note in `SECURITY-AND-COMPLIANCE.md`) | 1 |
+
+**5 of 79 pairs is 6.3% (95% interval, Wilson: 2.7% to 14.0%). By answer, 3 of the 34 answered drafts (9%) carry at least one.** One run, one model.
+
+### The five
+
+| # | Question | Sentence says (shortened) | Cited | What the passage actually is |
+|---|---|---|---|---|
+| 1 | q067 (landlord, non-payment of rent) | the Controller "has no option but to direct the tenant to put the landlord in possession" | S1 | **A party's argument.** The landlord's submission, recited by the District Judge, who called it "the correct legal position" and then declined to apply it on the facts. The proposition may be right; the passage does not give it as this court's holding |
+| 2 | q067 | the courts below "acted arbitrarily" in refusing ejectment | S1 | **A lower court's holding.** The Judicial Commissioner's decision, recited. The chunk does not show whether the Supreme Court affirmed it |
+| 3 | q067 | where the tenant committed default, "the eviction petition filed by the landlords stands allowed" | S6 | **An order on the facts, turned into a rule.** The court's own order disposing of that one appeal. It fits none of the three labels (party's argument, rejected argument, lower court's holding); it is a fourth kind, and it is counted among the five |
+| 4 | q088 (preventive detention) | satisfaction that a ground in section 3 exists is a "condition precedent" to the power to detain | S1 | **A rejected argument.** Counsel for a detenu argued it; the passage goes on to say the argument "proceeded on a restricted meaning" and is hard to accept |
+| 5 | q091 (dishonoured cheque) | if the drawer fails to pay on notice, section 138 "could be attracted" | S2 | **A lower court's holding.** The Punjab and Haryana High Court's view in *Bandeep Kaur*, which the Supreme Court cites in support of its own conclusion. Not the Supreme Court speaking |
+
+Several of these may be correct statements of law. The defect is attribution: the answer says "the law is X" and the cited words are someone else's.
+
+### Why none of the four checks catches this class
+
+1. **Retrieved for this question:** passes. S1, S2 and S6 were handed to the writer.
+2. **Record exists:** passes.
+3. **Quotes match:** has nothing to test. None of the five sentences contains quotation marks. Had the model quoted, the check would pass, because the words are genuinely in the record; `CLAUDE.md` §5 describes exactly that.
+4. **Claim supported:** **not measured.** This harness uses the fake word-overlap claim check, so what the real Jev or Gemini check does with these five is unknown. The prediction is that it passes them: its question is whether the passage supports the sentence, and a passage that argues for a proposition supports that proposition. That is a prediction and not a result. The measurement is to run the real `GeminiDecider` on the same 79 pairs (eval key only). **Not run.**
+
+I found these by reading. No check flagged any of them.
+
+### Not fixed here
+
+Whether a passage is the court's holding or a party's rejected argument is a legal judgement. A model can be asked, but it would be the same kind of reader as the one that
+missed it. A classifier would add a fifth check that can be talked round. The instrument is the advocate review. Nothing in the verifier was changed for this.
+
+### How to put the question to an advocate so the answer is comparable to 6%
+
+- **Same unit.** The (sentence, cited passage) pair, not the answer. Same 79 pairs, so the denominator is the same. The pack carries the full passage the writer saw, not my 60-word window.
+- **Blind.** My readings are withheld. One closed question per pair: *"Read the sentence, then the passage. In the passage, who is saying the words that support this sentence?"*
+  (a) the court, as its own holding or reasoning in this judgment; (b) a party or counsel; (c) counsel, and the court rejected it; (d) a lower court or tribunal, recited; (e) a different authority the court cites; (f) the court's order on these facts, not a rule; (g) no one: the passage does not say this.
+- **Scoring.** (a) is correct. (b) to (f) are this section's class. (g) is the separate unsupported count (the 1 stapled remark and the empty marker above). The figure is pairs in (b) to (f) over pairs reviewed, with an interval, and the by-answer figure beside it.
+- **Agreement.** Two advocates on a shared 20 pairs, so a disagreement is visible. A split on (a) against (e) is expected and is itself a finding about how fixed the line is.
+- **The pair of numbers.** The advocates' rate, and the real claim check's pass rate on the same pairs. The gap is what the tick lets through. If the advocates' rate differs from 6%, theirs replaces it.
+- **Not yet built.** The pairs live in the trust lane's scratch space, not the repo. A review pack in the form of the labelling pack is a small job once the owner says go.
+
+### Limits
+
+One reader, who is not an advocate; the chunk and not the judgment (so #2 and #5 could read differently with the rest of the judgment); 95 questions on practice-fixture retrieval, where a different corpus slice would change the mix of passages; one model, one run. Measured on the new answer prompt only: the old prompt's pairs were not read for this kind. 8 further pairs are garbled by list-splitting and are not counted here.
