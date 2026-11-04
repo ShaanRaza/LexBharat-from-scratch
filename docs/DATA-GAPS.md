@@ -2301,6 +2301,8 @@ The snapshot is labelled v2026.08. Latest judgment date per court in the source 
 
 Taking the latest month with 50 or more cases, nearly every court ends in **October 2025** (Karnataka July, Meghalaya and Tripura September); Madhya Pradesh in Feb 2024, Kerala Aug 2024, Punjab and Haryana Dec 2024. The 2026 dates are single-digit stragglers. The Supreme Court's latest is 6 Nov 2025, 363 days before 4 Nov 2026. **"August 2026" overstates the data; the supportable line is "judgments to about October-November 2025", with Madhya Pradesh, Kerala and Punjab and Haryana earlier.** This is the source's content, not the served High Court collection; served High Court dates were not checked (tunnel to 6333 not queried).
 
+**OPEN OWNER ITEM (not resolved by the SC lane; relates to A146).** The coverage sentence ends "or anything after the data-as-of date". The latest Supreme Court judgment held is 6 Nov 2025 while the snapshot is labelled v2026.08, so the data-as-of line overstates currency by about nine months (the label reads August 2026; the data ends November 2025). The owner decides what the data-as-of line says. Measured; no wording changed.
+
 ### 23.4 Citator Phase 1: what references in SC judgment text can be linked (Measured; `scan/sc/measure_refs.py`)
 
 35,688 cases, 1.25 billion characters, 351,980 printed references. The stored `citation` field holds one format only (SCR, 100% filled, unique), so only SCR and neutral references can be matched directly.
