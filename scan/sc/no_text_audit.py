@@ -92,8 +92,8 @@ def main(gaps_csv: str, parquet: str, base: str = "http://localhost:7333") -> No
     con.executemany("insert into nt values (?)", [(i,) for i in ids])
     en = {
         r[0]
-        for r in con.execute(  # noqa: S608 (path is an operator argument)
-            f"select distinct case_id from read_parquet('{parquet}') "
+        for r in con.execute(
+            f"select distinct case_id from read_parquet('{parquet}') "  # noqa: S608
             "where language_code='en' and case_id in (select id from nt)"
         ).fetchall()
     }
