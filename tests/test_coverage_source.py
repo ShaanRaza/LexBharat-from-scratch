@@ -118,9 +118,9 @@ def test_the_guard_can_fail(tmp_path):
 
 
 # --- the source itself ------------------------------------------------------------
-def test_the_source_loads_and_is_a_conservative_placeholder_until_measured():
+def test_the_source_loads_and_is_measured_but_the_wording_is_not_approved():
     cov = coverage.load_coverage()
-    assert cov.status == "placeholder"  # flips to "measured" only via the report script
+    assert cov.status == "measured"  # written only by data/coverage_report.py
     assert cov.sentence_approved is False  # NEEDS-OWNER: the owner approves the wording
     assert cov.covered_labels  # names something
 
@@ -152,7 +152,7 @@ def test_every_reader_asks_the_source():
     crit = coverage.scope_criteria()
     assert jev.SCOPE_CRITERIA == crit
     assert set(crit) == {
-        "in_scope", "needs_high_court", "needs_tribunal", "after_snapshot",
+        "in_scope", "needs_lower_court", "needs_tribunal", "after_snapshot",
         "not_in_dataset", "not_legal",
     }  # fmt: skip
     prompt = (ROOT / "core/prompts/decide.txt").read_text()
@@ -196,3 +196,25 @@ def test_scope_criteria_follow_the_source_not_a_copy():
 def test_readme_and_ux_copy_blocks_match_the_source():
     state = coverage.docs_in_sync(Settings.model_fields["PRODUCT_NAME"].default)
     assert all(state.values()), f"{state}: run `python -m core.coverage --write-docs`"
+
+
+def test_the_courts_in_the_file_are_the_courts_the_snapshot_names():
+    """coverage.json is generated (data/coverage_report.py) from core/court_ids.json, so a
+    court cannot be listed that the record ids do not name, or named and left out."""
+    import json
+
+    ids = json.loads((ROOT / "core" / "court_ids.json").read_text())["courts"]
+    labels = sorted(c["label"] for c in ids.values())
+    cov = coverage.load_coverage()
+    assert sorted(c.payload["court"] for c in cov.courts) == labels
+    assert cov.status == "measured" and cov.measured_at and cov.generated_by
+
+
+def test_the_checked_in_file_is_what_the_generator_writes():
+    import subprocess
+    import sys
+
+    r = subprocess.run(  # noqa: S603
+        [sys.executable, "-m", "data.coverage_report"], cwd=ROOT, capture_output=True
+    )
+    assert r.returncode == 0, r.stdout.decode()

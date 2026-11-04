@@ -1,4 +1,4 @@
-# Design note: the empty-text guard for the future Supreme Court scraper's ingest
+# Design note: the empty-text guard for the future SC scraper's ingest
 
 Status: **design only**. Nothing here is built, and nothing in `data/` was touched.
 Written by the SC lane, 4 Nov 2026. Evidence labels as in CLAUDE.md §9.5.
@@ -11,7 +11,7 @@ for a record whose text is empty**. Check 3 then fails only if the sentence has 
 with no quotation marks goes on to check 4 with nothing behind it, and a "Record found in dataset" tick
 could sit on a record with no readable words. `docs/DATA-GAPS.md` §3 names this.
 
-**Today the hole is not open (Measured, 4 Nov 2026).** All 381,271 served Supreme Court chunks have a body
+**Today the hole is not open (Measured, 4 Nov 2026).** All 381,271 served SC chunks have a body
 of at least 5 alphabetic words after the `Case: ... Section: ...` header (0 below; 1 chunk between 5 and
 19). The risk is a future load, so the guard belongs where chunks enter, not in the verifier.
 

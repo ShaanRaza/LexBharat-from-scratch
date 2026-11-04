@@ -95,10 +95,10 @@ async def test_usage_limit(settings, store):
 
 
 async def test_out_of_scope_stops_before_search_and_writing(settings, store):
-    deps = deps_for(settings, store, decisions=FakeDecisions(scope="needs_high_court"))
+    deps = deps_for(settings, store, decisions=FakeDecisions(scope="needs_lower_court"))
     res = await run_pipeline(PipelineRequest("u1", QUERY), deps)
     assert res.outcome == "out_of_scope"
-    assert res.message_key == "out_of_scope:needs_high_court"
+    assert res.message_key == "out_of_scope:needs_lower_court"
     assert deps.embedder.calls == 1  # embedding runs in parallel with the decision
     assert all("Passages:" not in p for p in deps.llm.prompts)  # nothing written
 

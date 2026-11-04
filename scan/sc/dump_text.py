@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SC lane: copy the served Supreme Court chunks (read-only scroll) into a local sqlite file.
+"""SC lane: copy the served SC chunks (read-only scroll) into a local sqlite file.
 
 Plain words: the citation measurement needs each judgment's whole text many times over while patterns are
 tuned. This reads kanoon_v1 once, one scroll at a time, and writes nothing to Qdrant. Output is scratch data,
@@ -15,6 +15,8 @@ import sqlite3
 import sys
 import urllib.request
 import zlib
+
+from core.coverage import court_payload
 
 FIELDS = [
     "chunk_id", "case_id", "chunk_index", "char_start", "char_end", "page_start",
@@ -37,7 +39,12 @@ def main(out: str, base: str = "http://localhost:7333") -> None:
             "with_payload": FIELDS,
             "with_vector": False,
             "filter": {
-                "must": [{"key": "court", "match": {"value": "Supreme Court of India"}}]
+                "must": [
+                    {
+                        "key": "court",
+                        "match": {"value": court_payload("supreme_court")["court"]},
+                    }
+                ]
             },
         }
         if offset is not None:

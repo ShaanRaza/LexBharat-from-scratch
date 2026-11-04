@@ -216,22 +216,22 @@ def test_out_of_scope_questions_are_filled_from_the_coverage_file():
     oos = [q for q in load_set() if q.category == "out_of_scope"]
     assert len(oos) == 20 and {q.expect_scope for q in oos} <= set(cov.buckets)
     assert {q.expect_scope for q in oos} == {
-        "needs_high_court", "needs_tribunal", "after_snapshot"
+        "needs_lower_court", "needs_tribunal", "after_snapshot"
     }  # fmt: skip
     for q in oos:
         assert "{" not in q.question and "}" not in q.question, q.id
-    high = next(q for q in oos if q.expect_scope == "needs_high_court")
-    assert next(e for e in cov.excluded if "high" in e.lower()) in high.question
+    lower = next(q for q in oos if q.expect_scope == "needs_lower_court")
+    assert next(e for e in cov.excluded if "district" in e.lower()) in lower.question
 
 
 def test_changing_the_coverage_file_changes_the_questions_nothing_is_typed():
     cov = coverage.load_coverage()
     moved = replace(cov, excluded=("Upper Benches", "Special Panels"))
-    with pytest.raises(ValueError, match="nothing matching 'high'"):
-        render_question("How have {excluded:high} ruled?", moved, "v2026.08")
-    other = replace(cov, excluded=("Regional High Courts",))
-    assert "Regional High Courts" in render_question(
-        "How have {excluded:high} ruled?", other, "v2026.08"
+    with pytest.raises(ValueError, match="nothing matching 'district'"):
+        render_question("How have {excluded:district} ruled?", moved, "v2026.08")
+    other = replace(cov, excluded=("Regional district courts",))
+    assert "Regional district courts" in render_question(
+        "How have {excluded:district} ruled?", other, "v2026.08"
     )
     assert "2031" in render_question("in {after_year}", cov, "v2026.08")
 
@@ -386,11 +386,11 @@ def test_each_expected_refusal_is_read_from_the_outcome_and_key_not_from_words()
     cov = make_q(
         category="out_of_scope",
         expect_refusal="coverage",
-        expect_scope="needs_high_court",
+        expect_scope="needs_lower_court",
     )
     assert (
         check_question(
-            cov, refusal("out_of_scope", "out_of_scope:needs_high_court"), None, None
+            cov, refusal("out_of_scope", "out_of_scope:needs_lower_court"), None, None
         )
         == []
     )
@@ -413,7 +413,7 @@ def test_each_expected_refusal_is_read_from_the_outcome_and_key_not_from_words()
         == []
     )
     assert check_question(
-        nf, refusal("out_of_scope", "out_of_scope:needs_high_court"), None, None
+        nf, refusal("out_of_scope", "out_of_scope:needs_lower_court"), None, None
     )
 
     r36 = make_q(category="rule36", expect_refusal="rule36")

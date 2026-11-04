@@ -71,12 +71,24 @@ class Coverage:
     generated_by: str | None = None
     # How the sentence refers to the instruments (page lists them); empty = name them.
     instruments_phrase: str = ""
+    # The same for the courts: with 26 of them the sentence cannot name each one, so the
+    # file gives one phrase and the coverage page lists them. Empty = name them.
+    courts_phrase: str = ""
 
-    @property
-    def covered_labels(self) -> list[str]:
+    def covered_labels_each(self) -> list[str]:
+        """Each court and instrument by its own label, as the coverage page lists."""
         return [c.covered_label for c in self.courts] + [
             i.covered_label for i in self.instruments
         ]
+
+    @property
+    def covered_labels(self) -> list[str]:
+        courts = (
+            [self.courts_phrase]
+            if self.courts_phrase
+            else [c.covered_label for c in self.courts]
+        )
+        return courts + [i.covered_label for i in self.instruments]
 
 
 def _join(items: list[str]) -> str:
@@ -117,6 +129,7 @@ def _parse(raw: dict) -> Coverage:
         measured_at=raw.get("measured_at"),
         generated_by=raw.get("generated_by"),
         instruments_phrase=raw.get("instruments_phrase", ""),
+        courts_phrase=raw.get("courts_phrase", ""),
     )
 
 
@@ -133,7 +146,7 @@ def coverage_sentence(product_name: str, cov: Coverage | None = None) -> str:
     return cov.sentence_template.format(
         product=product_name,
         covered=_join(cov.covered_labels),
-        courts=_join([c.covered_label for c in cov.courts]),
+        courts=cov.courts_phrase or _join([c.covered_label for c in cov.courts]),
         instruments=cov.instruments_phrase
         or _join([i.covered_label for i in cov.instruments]),
         excluded=_join(list(cov.excluded)),

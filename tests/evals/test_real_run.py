@@ -265,7 +265,7 @@ def test_the_legal_vocabulary_is_derived_not_typed():
     )  # the hand-written list is gone
     from dataclasses import replace
 
-    other = replace(cov, courts=cov.courts[:0])  # a changed source changes it
+    other = replace(cov, courts=(), courts_phrase="")  # a changed source changes it
     assert rr.legal_stems(other) != stems
 
 

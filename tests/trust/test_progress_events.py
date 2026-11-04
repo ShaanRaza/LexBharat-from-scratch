@@ -232,7 +232,7 @@ async def test_a_late_step_event_can_never_follow_the_citations():
 
 async def test_a_refused_answer_streams_steps_then_done_and_no_citation():
     deps = make_deps()
-    deps.decisions = FakeDecisions(scope="needs_high_court")  # step 3 refuses
+    deps.decisions = FakeDecisions(scope="needs_lower_court")  # step 3 refuses
 
     async def runner(req, on_step):
         return await run_pipeline(req, deps, on_step)

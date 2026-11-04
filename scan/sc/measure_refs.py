@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SC lane, Task 3b to 3d: how many citation-shaped references do Supreme Court judgments hold, how many
+"""SC lane, Task 3b to 3d: how many citation-shaped references do SC judgments hold, how many
 resolve to a stored record, and how many cite by case name only?
 
 Plain words: reads the local sqlite copy made by dump_text.py (never Qdrant), rebuilds each judgment's text
@@ -365,7 +365,7 @@ def _classify_scr(
     res["_last_artifact"] = False
     tgt, how = _lookup(r.key, by_key, by_ysp)
     sc = res["scr"]
-    # running page header of the judgment's own volume ("SUPREME COURT REPORTS [2000] 3 S.C.R. 830")
+    # running page header of the judgment's own volume ("<court> REPORTS [2000] 3 S.C.R. 830")
     if okey and r.key[:5] == okey[:5]:
         s = starts[okey[:5]]
         i = bisect.bisect_left(s, okey[5])

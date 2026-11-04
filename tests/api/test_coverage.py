@@ -8,7 +8,8 @@ def test_coverage_is_public_and_reads_the_source(client):
     assert r.status_code == 200
     body = r.json()
     cov = coverage.load_coverage()
-    assert body["status"] == "placeholder" and body["sentence_approved"] is False
+    assert body["status"] == cov.status == "measured"
+    assert body["sentence_approved"] is False  # the owner approves the wording
     assert body["sentence"] == coverage.coverage_sentence("LexBharat")
     assert [c["label"] for c in body["courts"]] == [c.covered_label for c in cov.courts]
     assert [i["label"] for i in body["instruments"]] == [
@@ -21,7 +22,11 @@ def test_coverage_is_public_and_reads_the_source(client):
 
 
 def test_coverage_names_nothing_the_source_does_not_name(client):
-    text = client.get("/api/v1/coverage").text.lower()
-    assert (
-        "state act" not in text and "regulation" not in text
-    )  # placeholder: not claimed
+    body = client.get("/api/v1/coverage").json()
+    cov = coverage.load_coverage()
+    shown = {c["label"] for c in body["courts"]} | {
+        i["label"] for i in body["instruments"]
+    }
+    assert shown == set(cov.covered_labels_each())
+    # what is excluded is listed as excluded and appears in no covered label
+    assert not any(e.lower() in label.lower() for e in cov.excluded for label in shown)

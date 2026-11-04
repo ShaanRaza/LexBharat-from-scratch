@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""SC lane, Task 1: are the 4,068 "no text" Supreme Court judgments reachable by the verifier?
+"""SC lane, Task 1: are the 4,068 "no text" SC judgments reachable by the verifier?
 
-Plain words: the owner's gap audit lists 4,068 Supreme Court case ids tagged
+Plain words: the owner's gap audit lists 4,068 SC case ids tagged
 `no_opening_preview_and_no_text_in_app`. DATA-GAPS section 3 warns that if any of them is a served
 record, verifier check 2 (record exists) passes while check 3 (quoted words match) has nothing to match.
 This reads the SERVED collection (kanoon_v1, local, read-only) and the source parquet (read-only) and puts
-each id in one of three boxes, then sweeps every served Supreme Court chunk for an empty or near-empty body
+each id in one of three boxes, then sweeps every served SC chunk for an empty or near-empty body
 (the mechanism the warning is about). It writes nothing anywhere and spends nothing.
 
     python scan/sc/no_text_audit.py GAPS_CSV PARQUET [QDRANT_URL]

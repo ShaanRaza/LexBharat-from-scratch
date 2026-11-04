@@ -16,7 +16,7 @@ describe("a refusal picks its own screen", () => {
     expect(done("out_of_scope", "out_of_scope:not_in_dataset").failure).toBe("notInDataset");
   });
   it("other out-of-scope refusals keep the coverage screen; no match stays 'not found'", () => {
-    expect(done("out_of_scope", "out_of_scope:needs_high_court").failure).toBe("outsideCoverage");
+    expect(done("out_of_scope", "out_of_scope:needs_lower_court").failure).toBe("outsideCoverage");
     expect(done("out_of_scope", null).failure).toBe("outsideCoverage");
     expect(done("not_found", "not_found").failure).toBe("notFound");
   });

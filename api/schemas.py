@@ -194,7 +194,8 @@ class DoneEvent(BaseModel):
     message_key: str | None = Field(
         default=None,
         description="Set when refused: key into docs/UX-COPY.md, e.g. "
-        "'out_of_scope:needs_high_court' or 'not_found'. The website owns the wording.",
+        "'out_of_scope:needs_lower_court' or 'not_found'. "
+        "The website owns the wording.",
     )
     refused: bool = Field(
         default=False,

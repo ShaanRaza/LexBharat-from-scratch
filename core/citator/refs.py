@@ -1,7 +1,7 @@
-"""Citator Phase 1 (Supreme Court only): find citation-shaped references in judgment text.
+"""Citator Phase 1 (SC only): find citation-shaped references in judgment text.
 
 Plain words: a judgment cites earlier cases in a few printed styles. The stored citation field of a
-Supreme Court case has exactly ONE style, SCR (`[1979] 3 S.C.R. 453`, 100% of 35,688 served cases,
+SC case has exactly ONE style, SCR (`[1979] 3 S.C.R. 453`, 100% of 35,688 served cases,
 measured 4 Nov 2026), so only SCR references and neutral citations (`2018 INSC 329`, which is the record
 id `2018_INSC_329`) can be matched to a stored record directly. AIR, SCC and the rest are found and
 counted here but are NOT resolved by this module.
