@@ -132,3 +132,7 @@ invented case accepted). It measures; it does not change `core/verify.py`. Fixtu
 > and `evals.title_rules` row "a" is the new verifier, integrated. The generic-word list
 > the verifier reads is regenerated with
 > `python -m evals.title_rules --write-generic core/generic_title_words.json`.
+
+## A136 evidence scripts (`evals/a136/`)
+
+The query-model comparison behind DECISIONS A136 and PRD-v2 gate items 28 and 29: code, queries, per-query ranks and the run order are in [`a136/README.md`](a136/README.md). The large data files stay outside git.
