@@ -79,6 +79,30 @@ Kerala job alone is about 13 days and the Supreme Court job about 17 hours. With
 method live, both finish inside an hour. This is the clearest case in the project of a trivial
 cost blocking real work.
 
+## 2c. Exact token counts: price any Voyage spend before committing (added 4 Nov 2026, A141)
+
+Until now every embedding spend in this file was priced from an **estimate** of tokens per chunk, and the estimate moved a long way each time it was measured: 900 tokens a chunk became 1,250 for Kerala (§2b), and three measured ratios of tokens per character (0.254, 0.286 and 0.357) disagree by about 17% either way. **Voyage publishes its tokenizer, so the tokens a job will bill can be counted on this laptop, for free, before a single request is made.** That turns the token side of every embedding cost from an estimate into a measurement. What is left to check is the price per token.
+
+**The rule.** Billed tokens are the tokenizer's count for each text **minus one** (a special token Voyage does not bill). The three `voyage-4` models use one tokenizer.
+
+**Verified three times, with zero difference** (local count against the tokens Voyage billed, from `token_ledger.jsonl`), **Measured**:
+
+| Check | Local count | Billed | Difference |
+|---|---:|---:|---:|
+| 2,000 chunks of the A136 evaluation corpus; `voyage-4-lite`, `voyage-4` and `voyage-4-large` each billed the same | 1,864,904 | 1,864,904 | **0** |
+| 10,112 Supreme Court chunks, counted from the parquet text (A129) | 9,546,375 | 9,546,375 | **0** |
+| 2,000 chunks drawn from the missing set (A141); each of the three models | 1,414,980 | 1,414,980 | **0** |
+
+The offset was found on the first check (the raw count was exactly 2,000 over for 2,000 texts) and is not assumed on the other two.
+
+**How to use it.** `data/voyage_token_count.py`: `billed_tokens(texts)`, `price_usd(tokens, model, batch=False)`, and a command line, `python -m data.voyage_token_count chunks.jsonl`, that prints the tokens and the price under each model, standard and batch. It needs the `tokenizers` package (installed with `fastembed`, which the `dev` extra has) and downloads the tokenizer file once. No Voyage key, no request, no cost. `scan/missing_tokens.py` re-runs the first two checks before it counts anything and refuses to run if either is off. Tests: `tests/test_a141_cost_picture.py`.
+
+**What it changed.** A141's backfill was first priced at an estimated $580 to $650. The exact count of the 4.19 million missing chunks is **3,422 million tokens, $138 at `voyage-4` batch and $46 at `voyage-4-lite` batch** (list price). A character-based estimate would have put it anywhere from 2.5 to 3.5 billion tokens. Detail: `A141-COST-PICTURE.md`.
+
+**Limits, stated so they are not over-read.** Not verified: the rerank models, models outside the `voyage-4` family, and whether the Batch API bills the same token count as the standard endpoint (it should; the discount is on price). A text longer than the model's context is truncated by Voyage but counted whole here. The count says nothing about the price per token (the vendor's list prices and the 33% batch discount are **Checked** on the vendor's pages, 4 Nov 2026, and not yet seen on an invoice), the free 200M-token allowance (per model or one pool, not stated), or the exchange rate.
+
+**Practice from here.** A proposal to spend on Voyage embeddings states the exact token count from this module, or says "Estimate" and why it was not run. Spent to date, from the ledger, is in `A141-COST-PICTURE.md` §1.
+
 ---
 
 ## 3. Monthly fixed — the MVP, one server
