@@ -94,7 +94,7 @@ rows in the parquet that carry no text, which is a different population from the
   the model quotes an amendment note as though it were the operative law.
 - **4,107 regulator records with no source URL.** The tick promises the link goes to the
   record's `pdf_url` / `source_url`. Where there is none, the interface must not imply one.
-- **Text that is in the record but is not the court's holding** (a party's argument, a rejected argument, a lower court's holding): 5 of 79 cited pairs in a real-model run. No check can see it. Section 22.
+- **Text that is in the record but is not the court's holding** (a party's argument, a rejected argument, a lower court's holding): 5 of 79 cited pairs in a real-model run. No check can see it. Section 22. Check 3 fires on only 6% of cited pairs; section 25.
 
 ## 4. The snapshot boundary is real
 
@@ -2233,8 +2233,19 @@ Several of these may be correct statements of law. The defect is attribution: th
 
 1. **Retrieved for this question:** passes. S1, S2 and S6 were handed to the writer.
 2. **Record exists:** passes.
-3. **Quotes match:** has nothing to test. None of the five sentences contains quotation marks. Had the model quoted, the check would pass, because the words are genuinely in the record; `CLAUDE.md` §5 describes exactly that.
-4. **Claim supported:** **not measured.** This harness uses the fake word-overlap claim check, so what the real Jev or Gemini check does with these five is unknown. The prediction is that it passes them: its question is whether the passage supports the sentence, and a passage that argues for a proposition supports that proposition. That is a prediction and not a result. The measurement is to run the real `GeminiDecider` on the same 79 pairs (eval key only). **Not run.**
+3. **Quotes match:** has nothing to test in four of the five, which carry no quotation marks. The fifth, q088, quotes "satisfaction" and "condition precedent"; check 3 fired and passed, because those words are genuinely in the record (counsel's argument, which the court goes on to reject). That is exactly the case `CLAUDE.md` §5 describes. Section 25 counts how often check 3 fires at all.
+4. **Claim supported: measured 5 Nov 2026 with the shipped check, and it passes all five.** The shipped `GeminiDecider.claim_support` (`gemini-3.5-flash-lite`, the real `claim_support.txt`, the eval key), run twice on all 79 pairs with the sentence marker-stripped as `core/verify.py` does and the passage text the writer was given:
+
+   | Category (my hand reading) | Pairs | Real check, first pass |
+   |---|---|---|
+   | **In the passage, but not the court's holding** | **5** | **5 supports** (5 of 5 again on the second pass) |
+   | Model remark stapled to a marker ("In-force status not checked for this Act") | 1 | supports |
+   | Obeyed injection (q192) | 1 | supports |
+   | Empty marker (`[S7]` alone) | 1 | does not support (removed) |
+   | Everything else (63 supported + 8 garbled by list-splitting; the two cannot be separated without re-reading, and this run does not do that) | 71 | 67 supports, 3 partly, 1 does not support |
+
+   Overall 74 supports, 3 partly, 2 does not support; **77 of 79 pass (a "partly" is kept, with its own tick)**. Of the 8 pairs I judged defective, the real check removed 1 (the empty marker) and passed 7. It removed 1 of the 71 others: q056 S6, "No confession made to a police officer shall be proved…" which is section 25 of the Evidence Act quoted verbatim in a judgment that goes on to say it does not apply to a departmental inquiry. I read that as supported; the check read it as not. One pair, and a question for the advocates. The two passes differed on one pair (q026, supports then partly), and both outcomes pass.
+   **So the 6.3% passes the shipped check as well:** an argument for a proposition supports that proposition, as predicted. The tick lets all five through.
 
 I found these by reading. No check flagged any of them.
 
@@ -2246,12 +2257,13 @@ missed it. A classifier would add a fifth check that can be talked round. The in
 ### How to put the question to an advocate so the answer is comparable to 6%
 
 - **Same unit.** The (sentence, cited passage) pair, not the answer. Same 79 pairs, so the denominator is the same. The pack carries the full passage the writer saw, not my 60-word window.
-- **Blind.** My readings are withheld. One closed question per pair: *"Read the sentence, then the passage. In the passage, who is saying the words that support this sentence?"*
-  (a) the court, as its own holding or reasoning in this judgment; (b) a party or counsel; (c) counsel, and the court rejected it; (d) a lower court or tribunal, recited; (e) a different authority the court cites; (f) the court's order on these facts, not a rule; (g) no one: the passage does not say this.
-- **Scoring.** (a) is correct. (b) to (f) are this section's class. (g) is the separate unsupported count (the 1 stapled remark and the empty marker above). The figure is pairs in (b) to (f) over pairs reviewed, with an interval, and the by-answer figure beside it.
-- **Agreement.** Two advocates on a shared 20 pairs, so a disagreement is visible. A split on (a) against (e) is expected and is itself a finding about how fixed the line is.
-- **The pair of numbers.** The advocates' rate, and the real claim check's pass rate on the same pairs. The gap is what the tick lets through. If the advocates' rate differs from 6%, theirs replaces it.
-- **Not yet built.** The pairs live in the trust lane's scratch space, not the repo. A review pack in the form of the labelling pack is a small job once the owner says go.
+- **Blind.** My readings and the real check's verdicts are withheld. One closed question per pair: *"Read the sentence, then the passage. In the passage, who is saying the words that support this sentence?"*
+  (a) the court, as its own holding or reasoning in this judgment; (b) the statute itself, quoted by the court; (c) a party or counsel; (d) counsel, and the court rejected it; (e) a lower court or tribunal, recited; (f) a different authority the court cites; (g) the court's order on these facts, not a rule; (h) no one: the passage does not say this; (i) cannot tell from this passage alone.
+  (b) was added after the real-check run: q056 S6 is section 25 of the Evidence Act reproduced in a judgment, and it is a correct source.
+- **Scoring.** (a) and (b) are correct. (c) to (g) are this section's class. (h) is the separate unsupported count (the stapled remark and the empty marker above). (i) is reported beside the figure, never folded in. The figure is pairs in (c) to (g) over pairs reviewed, with an interval, and the by-answer figure beside it.
+- **Agreement.** Two advocates on a shared 20 pairs (the 9 flagged ones plus 11 at random, so agreement is stratified toward the hard class and must be reported as such), so a disagreement is visible. A split on (a) against (e) is expected and is itself a finding about how fixed the line is.
+- **The pair of numbers.** The advocates' rate, and the real claim check's result on the same pairs (above: it passed 5 of the 5 I flagged). The gap between the two is what the tick lets through. If the advocates' rate differs from 6%, theirs replaces it.
+- **The pack.** Built 5 Nov 2026; see `docs/ADVOCATE-REVIEW-PACK.md` for what it holds and how long a row takes.
 
 ### Limits
 
@@ -2475,3 +2487,41 @@ N is the statute's own last section number as I used it (32, 89, 83, 511, 158); 
 **The check that would size it:** for each served Act, compare its `section_number` set with the section list of the same Act in the India Code source (the dataset's parquet or the owner's earlier repo's `MISSING-SECTIONS.md`), and list the sections that have no chunk. Not done here; it needs the source list per Act and is a read-only scan. Until then the figures above are for these five Acts only.
 
 **2 of the 10 are not data holes, they are filters** (DECISIONS, the open row on the 10 `not_found`): q072 (the decision step invented `section: 39` for a question that names no section, and the chunk that exists, `IND_central_2191_s001_d42`, was filtered out) and q050 (a named section returns only the statute, never the judgments the question needs).
+
+## 25. For a paraphrased cited sentence, check 3 does nothing and the mechanical guarantee is check 4, a model's opinion (5 Nov 2026, measured)
+
+Section 22 found five misattributed sentences. Four of them carried no quotation marks, so check 3 had nothing to test. That is a bigger finding than the 6.3%.
+
+### What it means
+
+`CLAUDE.md` §5 lists four checks. For a cited sentence that paraphrases and does not quote:
+1. **Retrieved for this question** passes whenever the label is one the writer was handed (S1 to S8). The writer can only cite what it was given, so this tests the label and not the claim.
+2. **Record exists** passes whenever that passage's record is in the store. Same: it tests the record, not the claim.
+3. **Quotes match** is **vacuous**: no quoted words, nothing to compare.
+4. **Claim supported** is a model's judgement.
+
+So for a paraphrase the whole mechanical guarantee collapses onto check 4. Section 22 measured check 4 passing five defective pairs of five. Check 3 is the only check that proves words were written by the court, and it proves it only for words in quotation marks.
+
+### How often check 3 fires (counted with the verifier's own `_quotes`)
+
+| Run | Pairs | Pairs with a quoted span | Answers with any quote |
+|---|---|---|---|
+| New answer prompt (A137), the 79 pairs of section 22 | 79 | **5 (6.3%)** | 3 of 35 drafts that carried a marker |
+| Old answer prompt | 145 | 40 (27.6%) | 21 of 39 |
+| The 33 questions cited under both prompts, old | 129 | 38 (29.5%) | |
+| The same 33, new | 76 | 5 (6.6%) | |
+
+In the new run **74 of 79 pairs (93.7%) gave check 3 nothing to test.** The five that did: q002 (two statutory definitions copied verbatim), q008 (two, "cruelty"), and q088 (the counsel's argument of section 22). All five passed check 3, so no honest quote was stripped in this sample.
+
+**A side effect of the A137 prompt change, reported plainly.** On the same 33 questions the share of pairs with a quote fell from 29.5% to 6.6%. The line that tells the writer to quote only exact words is unchanged (`diff` of the two prompts); what changed is "every sentence ends in a marker, no intro, no summary". I cannot separate cause from run-to-run variation (one run per prompt), but the direction is large. In practice the prompt that made every sentence cite also made the writer paraphrase more, so check 3 now covers less of an answer. That is not a reason to undo A137. It is a reason to know where the guarantee sits.
+
+### What is not done
+
+- **The verifier is unchanged**, and check 3 is not loosened. A147 (the owner, deferred) records that OCR damage affects 3.5% to 9.4% of 12-word windows and can fail an honest quote; the answer there is already "no" to making check 3 tolerant, and the fix when it comes is cleaning a copy of the record text. This section agrees with that: a weaker check 3 would trade a visible error for an invisible one, and check 3 is already firing on only 6% of pairs.
+- **A prompt lever exists and is the owner's call, not applied:** ask the writer to quote statute wording verbatim when it states what a provision says. That would put check 3 on the sentences that state law. It is an answer-prompt change with its own cost (more quotes means more exposure to the OCR damage A147 describes), so it needs the same blast-radius measurement A137 had.
+- **Check 4 stays unmeasured against a ground truth.** Section 22 gives the advocate review that would supply one.
+
+### Limits
+
+79 and 145 pairs, one run per prompt, one model, practice-fixture retrieval. The quote count is exact for these drafts; what it says about real traffic is not known.
+
