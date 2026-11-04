@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from adapters.llm import LLMUnavailable
+from core import llm_schemas
 from core.contracts import Deps
 from core.question_text import (
     citation_shapes,
@@ -77,7 +78,10 @@ async def suggest_followups(question: str, answer_text: str, deps: Deps) -> Foll
     prompt = _PROMPT.read_text().format(question=question, answer=plain)
     try:
         r = await deps.llm.complete(
-            prompt, model=deps.settings.MODEL_REWRITE, max_tokens=300
+            prompt,
+            model=deps.settings.MODEL_REWRITE,
+            max_tokens=300,
+            json_schema=llm_schemas.FOLLOWUPS,
         )
     except LLMUnavailable:
         log.warning("follow-up suggestions unavailable")

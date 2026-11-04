@@ -28,7 +28,13 @@ class LLMResult:
 
 class LLM(Protocol):
     async def complete(
-        self, prompt: str, *, system: str = "", model: str, max_tokens: int = 1024
+        self,
+        prompt: str,
+        *,
+        system: str = "",
+        model: str,
+        max_tokens: int = 1024,
+        json_schema: dict | None = None,
     ) -> LLMResult: ...
 
 
@@ -39,7 +45,13 @@ class LiteLLMClient:
         self._s = settings
 
     async def complete(
-        self, prompt: str, *, system: str = "", model: str, max_tokens: int = 1024
+        self,
+        prompt: str,
+        *,
+        system: str = "",
+        model: str,
+        max_tokens: int = 1024,
+        json_schema: dict | None = None,
     ) -> LLMResult:
         try:
             import litellm
@@ -47,11 +59,25 @@ class LiteLLMClient:
             msgs = ([{"role": "system", "content": system}] if system else []) + [
                 {"role": "user", "content": prompt}
             ]
+            extra: dict = {}
+            if json_schema is not None:
+                # Ask the API for bare JSON of this shape. Without it Gemini wraps
+                # the reply in a code fence, which the strict parsers reject on
+                # purpose (core/llm_schemas.py).
+                extra["response_format"] = {
+                    "type": "json_schema",
+                    "json_schema": {
+                        "name": "reply",
+                        "schema": json_schema,
+                        "strict": True,
+                    },
+                }
             r = await litellm.acompletion(
                 model=model,
                 messages=msgs,
                 max_tokens=max_tokens,
                 api_key=self._s.GEMINI_API_KEY.get_secret_value(),
+                **extra,
             )
         except Exception as e:
             raise LLMUnavailable(str(e)) from e
@@ -75,11 +101,21 @@ class FakeLLM:
         refuse_in_production()
         self.respond, self.down = respond, down
         self.prompts: list[str] = []
+        self.schemas: list[
+            dict | None
+        ] = []  # the json_schema each call carried (None = none)
 
     async def complete(
-        self, prompt: str, *, system: str = "", model: str, max_tokens: int = 1024
+        self,
+        prompt: str,
+        *,
+        system: str = "",
+        model: str,
+        max_tokens: int = 1024,
+        json_schema: dict | None = None,
     ) -> LLMResult:
         self.prompts.append(prompt)
+        self.schemas.append(json_schema)
         if self.down:
             raise LLMUnavailable("fake down")
         text = self.respond(prompt, system) if callable(self.respond) else self.respond

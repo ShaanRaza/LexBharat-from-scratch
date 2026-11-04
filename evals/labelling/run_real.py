@@ -120,7 +120,13 @@ class CountingLLM:
             await asyncio.sleep(wait)
 
     async def complete(
-        self, prompt: str, *, system: str = "", model: str, max_tokens: int = 1024
+        self,
+        prompt: str,
+        *,
+        system: str = "",
+        model: str,
+        max_tokens: int = 1024,
+        json_schema: dict | None = None,
     ):
         last: Exception | None = None
         for attempt in range(MAX_ATTEMPTS):
@@ -132,7 +138,11 @@ class CountingLLM:
             self.calls += 1
             try:
                 return await self.inner.complete(
-                    prompt, system=system, model=model, max_tokens=max_tokens
+                    prompt,
+                    system=system,
+                    model=model,
+                    max_tokens=max_tokens,
+                    json_schema=json_schema,
                 )
             except LLMUnavailable as e:
                 last = e

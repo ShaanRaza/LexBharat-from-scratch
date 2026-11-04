@@ -8,6 +8,7 @@ import re
 from pathlib import Path
 
 from adapters.llm import LLMUnavailable
+from core import llm_schemas
 from core.contracts import Deps, Memory, PipelineRequest, RewrittenQuery
 
 log = logging.getLogger(__name__)
@@ -36,7 +37,10 @@ async def rewrite(
     )
     try:
         r = await deps.llm.complete(
-            prompt, model=deps.settings.MODEL_REWRITE, max_tokens=300
+            prompt,
+            model=deps.settings.MODEL_REWRITE,
+            max_tokens=300,
+            json_schema=llm_schemas.REWRITE,
         )
         d = json.loads(r.text)
         query = str(d["query"]).strip()

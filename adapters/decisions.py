@@ -19,7 +19,7 @@ from typing import Protocol, cast, get_args
 
 from adapters.guard import refuse_in_production
 from adapters.llm import LLM, LLMUnavailable
-from core import coverage
+from core import coverage, llm_schemas
 from core.contracts import (
     Decision,
     Filters,
@@ -82,10 +82,15 @@ class GeminiDecider:
     def __init__(self, llm: LLM, settings: Settings):
         self._llm, self._s = llm, settings
 
-    async def _ask(self, prompt: str) -> str:
+    async def _ask(self, prompt: str, schema: dict | None = None) -> str:
+        """`schema` is the JSON shape for the call sites that expect JSON.
+        claim_support passes none: its answer is one word, not JSON."""
         try:
             r = await self._llm.complete(
-                prompt, model=self._s.MODEL_REWRITE, max_tokens=200
+                prompt,
+                model=self._s.MODEL_REWRITE,
+                max_tokens=200,
+                json_schema=schema,
             )
         except LLMUnavailable as e:
             raise DecisionUnavailable(str(e)) from e
@@ -108,7 +113,8 @@ class GeminiDecider:
                     query=query,
                     scope_help=coverage.scope_help(),
                     scope_choices=coverage.scope_choices(),
-                )
+                ),
+                llm_schemas.DECIDE,
             )
         )
         scope, safety = d.get("scope"), d.get("safety")
@@ -127,7 +133,10 @@ class GeminiDecider:
 
     async def rate_passage(self, query: str, passage: Passage) -> tuple[Rating, float]:
         d = self._json(
-            await self._ask(_prompt("rate_passage", query=query, passage=passage.text))
+            await self._ask(
+                _prompt("rate_passage", query=query, passage=passage.text),
+                llm_schemas.RATE_PASSAGE,
+            )
         )
         rating, score = d.get("rating"), d.get("score")
         if rating not in get_args(Rating) or not isinstance(score, int | float):
