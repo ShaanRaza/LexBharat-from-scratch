@@ -2384,3 +2384,25 @@ A cited case needs only one reference in SCR or neutral form to be linked. Count
 - **Owner action:** to use the official table someone must fetch the four PDFs by hand and confirm the court's reuse terms. Until then SCC cannot be linked authoritatively.
 - **Does the printed report carry its own SCC or AIR equivalent? No, not in what I could read (Measured, 5 Nov 2026).** The bucket's metadata cannot give one: `citation` is the SCR string and `case_id` the neutral citation, with no equivalent-citation field. Eight 2009 PDFs from the bucket (read in full, no new download): page 1 holds the SCR running head (`[2009] 6 S.C.R. 160`), the party names, case number, date, bench, the headnote, and the margin letters; the last page ends with the reporter's initials and the disposition ("Appeal allowed."). **0 of 8 print an equivalent citation for the judgment itself.** SCC or AIR strings do appear in 6 of the 8, but each refers to *another* case: inside the headnote ("Secretary, State of Karnataka vs. Umadevi (3): 2006 (4) SCC 1, followed"), in a printed "Case Law Reference" table on page 1 ("2006 (4) SCC 1  Followed.  Para 3"), and in the body. Whole served corpus, same question: the first 700 characters of each case's first chunk hold an SCC, AIR, JT or SCALE citation in only 37 of 35,688 cases (0.1%), all headnote references to other cases, none a labelled own-equivalent. So there is **no consistent position to extract an own SCC or AIR equivalent from the report text**, and the SCC-to-SCR mapping cannot be built from this source. Limits: 8 PDFs from one year; the header window is 700 characters; later or earlier print styles (the Judges Library table's column) are not seen in these. The remaining routes are the Equivalent Citation Table above (official, not opened) or a request to the Court's Registry, the owner's to pursue.
 - **Side observation, not built:** the printed "Case Law Reference" table and headnote pair a cited case's name with its SCC citation and an editor's word ("Followed", "Relied on"). That is name-plus-citation, in the Court's own report, and could seed a name-to-SCC list. It is not own-equivalent data, resolving it back to a record would rest on case names (counted as lost by the Phase 1 rule), and the treatment words are Phase 2 (needs an advocate).
+
+### 23.12 Bucket PDF text against our stored text, same cases (Measured, 10 cases; the spend is NOT done)
+
+Ten cases we already hold, one from each stretch of years (1959, 1968, 1978, 1988, 1997, 2004, 2007, 2013, 2019, 2024), their English PDFs fetched from the bucket one at a time (about 5 MB), text extracted with `pdftotext -layout`, compared with our stored chunks rebuilt without overlap and with the layout markers removed (`scan/sc/pdf_vs_stored.py`). Mean per 1,000 words, stored against PDF:
+
+| Artifact | Stored | PDF |
+|---|---|---|
+| Margin letters A-H between words | 3.77 | 2.21 |
+| Glued words ("twopersons") | 0.79 | 0.20 |
+| `l`/`I` for `1` in numbers | 0.10 | 0.10 |
+| Brackets swapped | 0.28 | 0.39 |
+| **Running page headers kept in the text** | 0.71 | **1.23** |
+| **Line-break hyphens left ("deter- mination")** | 0.07 | **3.60** (older cases 6 to 10) |
+| Words not in a dictionary (%) | 18.78 | 18.42 |
+
+Word-for-word the texts agree 97.1% to 99.0% in nine cases and 88.1% in the tenth (`2019_INSC_557`, where our stored text has glued words and the PDF does not). **They are the same OCR underneath; the bucket's extraction is not materially worse.** It is cleaner on glued words and margin letters, and carries two problems the stored text had already removed: unjoined line-break hyphens and more page headers. Both are mechanical to clean (join hyphen-newline; drop lines that match the running head). The lower margin-letter count has a caveat: with `-layout` the letters sit in a margin column, so my detector (which needs a letter between two lower-case words) may miss some; I have not hand-counted them.
+
+**Against verifier check 3 and A147:** the same exposure, not worse. Margin letters are not removed by extraction; but a PDF read with layout keeps them in an outer column, so removing them by position is possible where the stored text lost that information. Not built. No verifier change.
+
+Bucket completeness for the target set: all 1,322 ids of 2009 and all 1,125 bucket-only ids have an English PDF (371 MB for the 1,125; 137 of the 138 no-id records do, 100 MB). 
+
+**Not done: the embedding.** (1) There is no `VOYAGE_API_KEY` in this checkout (`.env` is absent and the variable is unset); I did not look elsewhere. (2) The existing path, `VoyageClient` on the standard endpoint, bills list price, so the same tokens cost about $1.65 (Rs 140) at voyage-4, not the $1.11 batch estimate: 49% over, outside the plus or minus 20%. No Batch API client exists in the repo. (3) The stored SC vectors are voyage-4-large (it reproduces them at 0.9987 to 0.9995, with some below 0.999) and voyage-4 gives 0.94 to 0.96 on them, so a 0.999 reproduction gate has to run on chunks stored with voyage-4 (the High Court control reproduces at 0.999984). Nothing was spent.
