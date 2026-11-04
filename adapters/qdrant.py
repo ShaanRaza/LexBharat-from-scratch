@@ -121,8 +121,9 @@ class VectorStore(Protocol):
         """Law collection only. vector=None means keyword-only (Voyage down). A
         QueryVectors is a per-court search: one dense prefetch per model group, in the
         same single call. `must` is an exact payload filter; a non-empty must on
-        section/case number is the exact-lookup path. `mode` is for the retrieval-
-        quality measurement (evals/known_item.py): the pipeline always uses "hybrid"."""
+        section/case number is the exact-lookup path. `mode` is for the
+        retrieval-quality measurement (evals/known_item.py): the pipeline always uses
+        "hybrid"."""
         ...
 
     async def sample_chunks(
