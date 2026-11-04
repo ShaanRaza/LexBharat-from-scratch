@@ -85,6 +85,10 @@ rows in the parquet that carry no text, which is a different population from the
 - **4,068 Supreme Court judgments with no text** (`no_opening_preview_and_no_text_in_app`).
   If any of these is retrievable, check 2 passes and check 3 has nothing to match. Confirm
   they are absent from the served collection rather than assuming it.
+  **Resolved 4 Nov 2026 (SC lane, Measured; A-SC1, §23 below): 4,068 = 2,739 served + 1,329
+  unserved.** The 2,739 are served WITH text (smallest 160 words, median 4,580), so the audit's
+  "no text" label is wrong for them. The 1,329 have no point in `kanoon_v1` (record_missing if
+  cited). No served chunk anywhere has an empty body.
 - **45,963 garbled sections**: amendment markers (`Subs.`, `Ins.`, `Omitted`, `Rep. by`) sit
   inside the section text. Two risks: a quote fails check 3 because of the marker noise, or
   the model quotes an amendment note as though it were the operative law.
