@@ -24,6 +24,7 @@ import bisect
 import collections
 import json
 import re
+import signal
 import sqlite3
 import sys
 import zlib
@@ -218,6 +219,14 @@ def main(db_path: str, out: str, limit: str | None = None) -> None:
 G: dict = {}
 
 
+class _CaseTimeout(Exception):
+    pass
+
+
+def _on_alarm(_signum, _frame) -> None:
+    raise _CaseTimeout
+
+
 def _new_res() -> dict:
     return {
         "cases": 0,
@@ -232,6 +241,7 @@ def _new_res() -> dict:
         "scr_by_era": collections.defaultdict(collections.Counter),
         "unresolved_examples": collections.defaultdict(list),
         "names": collections.Counter(),
+        "timed_out": collections.Counter(),  # case_id -> 1 when the 60 s alarm fired
     }
 
 
@@ -265,7 +275,8 @@ def _shard(cases: list[str]):
     standalone: list[tuple[str, tuple, str]] = []
     name_examples: list[str] = []
     q = "select chunk_id, idx, cs, ce, text from ch where case_id=? "
-    for cid in cases:
+
+    def one(cid: str) -> None:
         rows = db.execute(q, (cid,)).fetchall()
         idxs = sorted({r[1] for r in rows if r[1] is not None})
         if idxs and idxs != list(range(idxs[0], idxs[0] + len(idxs))):
@@ -334,6 +345,18 @@ def _shard(cases: list[str]):
             else:
                 standalone.append((r.kind, r.key, cid))
         _names(text, refs, meta[cid]["title"] or "", res, name_examples)
+
+    # A pattern that backtracks without end on one odd text hung a whole run for hours (4 Nov 2026).
+    # Each case gets a 60 s alarm; a case that trips it is counted in `timed_out`, never skipped silently.
+    signal.signal(signal.SIGALRM, _on_alarm)
+    for cid in cases:
+        signal.setitimer(signal.ITIMER_REAL, 60)
+        try:
+            one(cid)
+        except _CaseTimeout:
+            res["timed_out"][cid] += 1
+        finally:
+            signal.setitimer(signal.ITIMER_REAL, 0)
 
     return res, scc_pairs, air_pairs, standalone, name_examples
 

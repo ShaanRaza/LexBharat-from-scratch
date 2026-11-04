@@ -91,3 +91,14 @@ def test_air_supreme_court_vs_high_court():
 
 def test_one_printed_citation_is_one_reference():
     assert len(extract("AIR 1950 SC 27")) == 1
+
+
+def test_long_digit_run_does_not_hang():
+    """A page of table figures once made the SCR pattern backtrack for hours (2021_INSC_284, 829k chars)."""
+    import time
+
+    text = ("1 2 3 4 5 6 7 8 9 10 11 12 " * 4000) + "and then [1979] 3 S.C.R. 453"
+    t0 = time.monotonic()
+    refs = extract(text)
+    assert time.monotonic() - t0 < 5
+    assert any(r.kind == "scr" and r.key[-1] == 453 for r in refs)

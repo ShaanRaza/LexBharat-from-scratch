@@ -2256,3 +2256,88 @@ missed it. A classifier would add a fifth check that can be talked round. The in
 ### Limits
 
 One reader, who is not an advocate; the chunk and not the judgment (so #2 and #5 could read differently with the rest of the judgment); 95 questions on practice-fixture retrieval, where a different corpus slice would change the mix of passages; one model, one run. Measured on the new answer prompt only: the old prompt's pairs were not read for this kind. 8 further pairs are garbled by list-splitting and are not counted here.
+
+## 23. Supreme Court: what is held, what is missing, how stale, and what a citator can link (SC lane, 4 Nov 2026)
+
+Evidence labels as in CLAUDE.md §9.5. Everything here is read-only against `kanoon_v1`, the source parquet and a public bucket listing. Nothing was written to a collection and nothing was paid for. No pipeline step and no verifier check was touched.
+
+### 23.1 The 2,739 "no text" judgments have text (Measured)
+
+The owner audit's 4,068 ids split into 2,739 served and 1,329 unserved (DECISIONS A-SC1). Of the 2,739 served: median 4,580 alphabetic words per case, minimum 160, one case under 200. All 381,271 served SC chunks have at least 5 alphabetic words. They are retrievable at rank 1 because they are ordinary records; there is nothing to filter out. Keyword half only (BM25) was run; the dense half needs a paid query embedding and was **not run**. Cited today, they pass check 2 and carry real text for check 3. The 1,329 unserved fail check 2 as `record_missing`. Guard for future loads: `scan/sc/INGEST-GUARD.md`.
+
+### 23.2 Coverage by year (Measured; full table `scan/sc/coverage_by_year.csv`)
+
+Years are taken from the case id (`YYYY_INSC_n`). Three counts: the Open India Law source parquet, what `kanoon_v1` serves, and a third-party public bucket (`s3://indian-supreme-court-judgments`, CC BY 4.0, "downloaded from ecourts", listed with `--no-sign-request`, **listing only, no file downloaded**).
+
+| Years | Source cases | Served | Bucket English PDFs | Bucket minus served |
+|---|---|---|---|---|
+| 1950-1969 | 4,150 | 4,150 | 6,592 | +2,442 |
+| 1970-1989 | 5,628 | 5,628 | 8,346 | +2,718 |
+| 1990-2007 | 12,676 | 12,672 | 12,772 | +100 |
+| 2008 | 1,126 | 1,126 | 1,508 | +382 |
+| **2009** | **1,322** | **13** | **1,326** | **+1,313** |
+| 2010-2024 | 11,674 | 11,659 | 11,886 | +227 |
+| 2025 | 438 | 440 | 897 | +457 |
+| Total | 37,014 | 35,688 | 43,327 | +7,639 |
+
+- **Source minus served is 1,326 net (1,329 unserved, 3 served ids not in the source). 2009 is 1,309 of the 1,329.** Every other year is at most 9 (2013), so 2009 is the only hole in what the source holds. All 1,329 have no English text in the source (Hindi, Punjabi and other scripts only).
+- **The source itself looks short against the bucket**, in two bands: 1950-1989 (bucket 5,160 above served over 40 years, e.g. 1962: 698 against 394) and 2008, 2009, 2025. For 2009 the bucket lists 1,326 English PDFs where the source has English text for 13 cases, so the 2009 judgments exist in English publicly.
+- **What these counts are not.** The bucket may count things the source does not (orders, duplicates, judgments never given a neutral id). The source keys on `case_id`, the bucket on year of judgment; 5,178 source cases have a different `year` field from their id year. **Not reconciled; whether the bucket's extra records are distinct reported judgments is not verified.** It is a third-party copy of eCourts, not the court's own index; the court's index sits behind a CAPTCHA, which was not attempted. So: **the gap against the court's own index is not measured.** The bucket says "at least about 6,300 more than the source" only if its records are distinct judgments.
+- **Do not use INSC numbering gaps as a completeness test.** The source numbers run to 4,354 in 2024 against 743 held (bucket: 782). Numbers are issued to more than the judgments any copy holds.
+- **Marketing consequence:** "complete Supreme Court coverage" is not supported. Defensible today: 35,688 judgments served, 1950 to 6 Nov 2025, with the 2009 English texts missing.
+- Closing 2009 from the bucket would mean downloading PDFs and extracting text (about 1,326 judgments), then embedding them. Embedding is a paid step: not done, **cost not yet priced**; needs the owner's approval first.
+
+### 23.3 Staleness (Measured)
+
+The snapshot is labelled v2026.08. Latest judgment date per court in the source parquet (a few rows carry impossible future dates, up to 2088; the table takes the latest date that is not after 4 Nov 2026):
+
+| Latest date | Courts |
+|---|---|
+| 2024 | Madhya Pradesh 14 Dec; Kerala 20 Dec; Punjab and Haryana 31 Dec |
+| Sep-Oct 2025 | Meghalaya 15 Sep; Tripura 7 Oct; Sikkim 13 Oct; Gujarat 16 Oct; Manipur, Rajasthan, Telangana, Uttarakhand 17 Oct; Jammu and Kashmir 18 Oct |
+| Nov 2025 | Madras 3; **Supreme Court 6**; Chhattisgarh 7; Bombay 14; Orissa 15; Calcutta 27 |
+| Dec 2025 | Himachal Pradesh 8; Jharkhand 15; Karnataka 21; Allahabad 17 |
+| 2026 (sparse) | Delhi 28 Jan; Patna 19 May; Andhra Pradesh 1 Jun; Gauhati 22 Jul |
+
+Taking the latest month with 50 or more cases, nearly every court ends in **October 2025** (Karnataka July, Meghalaya and Tripura September); Madhya Pradesh in Feb 2024, Kerala Aug 2024, Punjab and Haryana Dec 2024. The 2026 dates are single-digit stragglers. The Supreme Court's latest is 6 Nov 2025, 363 days before 4 Nov 2026. **"August 2026" overstates the data; the supportable line is "judgments to about October-November 2025", with Madhya Pradesh, Kerala and Punjab and Haryana earlier.** This is the source's content, not the served High Court collection; served High Court dates were not checked (tunnel to 6333 not queried).
+
+### 23.4 Citator Phase 1: what references in SC judgment text can be linked (Measured; `scan/sc/measure_refs.py`)
+
+35,688 cases, 1.25 billion characters, 351,980 printed references. The stored `citation` field holds one format only (SCR, 100% filled, unique), so only SCR and neutral references can be matched directly.
+
+| Reporter | References | Share | Direct resolve |
+|---|---|---|---|
+| SCC | 161,706 | 45.9% | none (field holds no SCC) |
+| SCR | 124,715 | 35.4% | 90.7% of 113,497 real citations (80.2% exact; 10.6% by the rule below) |
+| AIR | 49,117 | 14.0% | none (39,511 are AIR SC, 9,555 other courts) |
+| Other reporters | 10,200 | 2.9% | none |
+| SCC OnLine | 4,236 | 1.2% | none |
+| Neutral (`2018 INSC 329`) | 2,006 | 0.6% | 87.8% of 900 (1,106 are a case citing itself) |
+
+- **SCC is the largest reporter and cannot be matched to a stored record.** Net of 11,105 running-header and self-citation artifacts, **30.5% of citations (103,762 of 339,656) link directly**; 69.5% cannot. By era the SCR share falls: before 1990, 80.8% SCR; 1990-2009, 21.6%; 2010 onwards, 34.7%, with SCC 50.0% and AIR 10.9%.
+- **A concordance built from the text itself adds at most 9.1%** (31,035 references): where an SCC or AIR is printed within 90 characters of a resolved SCR, the pair is recorded. 58.6% of standalone SCC references (63,732 of 108,785) hit a key with conflicting partners, so the concordance is unreliable and is kept separate. A usable SCC link needs an outside SCC-to-SCR table; none is held. Not built.
+- **SCR unresolved (10,525, 9.3%):** volume not held 3,727; pinpoint page cited as a first page 4,844; page past the last held case 782; ambiguous without volume 523; year off by one 274; page not a start 288; year outside 1950-2025 84. Many are OCR damage (`[19621 2 s.c.R. 5183`). Rule used: a citation without volume (`[1950] S.C.R. 88`) resolves only when exactly one stored case has that year and first page (11,992 references). That is a heuristic; a wrong link is possible and is **not verified**.
+- **Running page headers read as citations:** 10,219 in the judgment's own volume plus 719 beside "SUPREME COURT REPORTS". They are removed before counting.
+- **Case name only:** of 348,537 case-name mentions ("A v. B"), 216,886 (62.2%) have a citation next to them, 34,270 (9.8%) a citation of another year, 94,845 (27.2%) none. The 27.2% is an upper bound (a cite two sentences away is missed) and is counted as lost, not resolved.
+- One text (2021_INSC_284, 829,000 characters) made the first SCR pattern backtrack for hours; the pattern now allows at most 4 tokens between year and S.C.R., tested in `tests/citator/test_refs.py`.
+
+### 23.5 `treatment_mentions` (Measured; provenance partly open)
+
+Present on 8.7% of SC points (32,991). The source parquet has **no such column**, nor does any of the 75 Open India Law parquets, and the dataset README does not mention it, so it was added when the Qdrant collection was built, by someone not identified here (**Needs verification: ask Vaquill**). From a sample of 6,000 tagged and 6,000 untagged SC chunks: it is **per chunk, a keyword flag on the chunk's own words**, with a tag list such as AFFIRMED, APPLIED, DISTINGUISHED, FOLLOWED, DISSENTED, SET_ASIDE, OVERRULED. DISTINGUISHED, FOLLOWED, DISSENTED, SET_ASIDE and REVERSED chunks contain the stem 100% of the time; untagged chunks contain it 0 to 45% of the time (FOLLOWED 37%, APPLIED 45%, the common words). OVERRULED chunks contain "overrul" in 85%. It names **no target case**, so it cannot say which case was overruled; it flags a sentence somewhere in the chunk. Reading 8 OVERRULED chunks: 7 state that an earlier decision "stands overruled" or "was overruled" (one is a general principle, not a holding). It is derived from text we also hold, so nothing here is hidden; but it is a lexical hint, not a determination, and a missing tag proves nothing (91.3% of chunks carry none). **Not used in any output. Trust: usable only as a pointer that says "read this chunk", never as a status.**
+
+### 23.6 OCR noise against verifier check 3 (Measured exposure; verifier untouched)
+
+`core/verify.py normalise` (line 236) turns punctuation into spaces and collapses whitespace but keeps every letter, so OCR damage inside a quoted stretch makes an honest quote fail "quoted words appear exactly". `scan/sc/ocr_noise.py` cut 12,000 sampled chunks (3,000 per era, 585,000 twelve-word windows) and counted windows that contain an artifact a person quoting the printed text would not reproduce.
+
+| Years | Windows with at least one artifact | Main cause |
+|---|---|---|
+| 1950-1969 | 3.5% | margin letters 1.4%, page headers 1.1% |
+| 1970-1989 | 4.0% | margin letters 2.6% |
+| 1990-2009 | 9.4% | margin letters 7.8% |
+| 2010-2025 | 8.8% | glued words 4.0%, margin letters 3.9% |
+
+Margin letters are the printed column marks A to H sitting inside sentences ("held her C guilty of contempt", "name of the H accused"): a quote without the letter fails. Glued words in recent years ("theRegistry", "anDindependent"). This is an **exposure, an upper bound** on quotes that could fail for OCR reasons: it assumes the quoter types the clean printed words and the quote spans 12 words; shorter quotes meet less. The real failure rate needs a quote set from a clean copy; **not measured**. Lane B's separate finding stands: check 3 does nothing on paraphrase. Not touched.
+
+### 23.7 Official listing check for the court's index (Checked)
+
+No RSS feed or API for judgments was found on sci.gov.in; the court's listing sits behind a CAPTCHA. The Supreme Court publishes an annual report whose tables were not opened. The public bucket above names `scr.sci.gov.in` as its source and asks users to avoid high-concurrency scraping. Per-year metadata (`metadata/parquet/year=YYYY/metadata.parquet`) would give id-level lists for (a) judgments on that index we hold nowhere and (b) held judgments not on it; **not downloaded** pending approval.

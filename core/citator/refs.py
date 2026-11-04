@@ -30,7 +30,7 @@ SCR_RE = re.compile(
     rf"""
     [\[\(]?\s*(?P<year>{_YEAR})\s*[\]\)]?        # [1979]  (1979)  (1979]
     \s*(?:\(\s*(?P<pvol>{_DIG})\s*\)\s*)?        # 2003 (6) Suppl. SCR 1235
-    (?P<mid>(?:\s*(?:{_SUPP}|{_ADDL}|{_DIG}))*)  # volume / Supp. / Addl. in any order
+    (?P<mid>(?:\s*(?:{_SUPP}|{_ADDL}|{_DIG})){{0,4}})  # volume / Supp. / Addl. in any order, at most 4 tokens
     \s*S\s?\.?\s?C\s?\.?\s?R\s?\.?               # S.C.R.  SCR
     \s*[,:]?\s*(?P<page>\d{{1,4}})(?!\d)         # first page
     """,
