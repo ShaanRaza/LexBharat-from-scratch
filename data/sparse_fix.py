@@ -11,11 +11,17 @@ Modes
            to the backup file and verify it. Step 2: re-encode and update those points.
   restore  puts the ORIGINAL sparse vectors from the backup file back, then verifies.
 
-Run with the isolated interpreter that has fastembed installed:
-  fe_venv/bin/python -I sparse_fix.py plan
-  fe_venv/bin/python -I sparse_fix.py apply   --backup DIR/central_sparse_backup.jsonl --confirm --limit 20   # rehearsal
-  fe_venv/bin/python -I sparse_fix.py apply   --backup DIR/central_sparse_backup.jsonl --confirm --resume    # the rest
-  fe_venv/bin/python -I sparse_fix.py restore --backup DIR/central_sparse_backup.jsonl --confirm
+GUARD (A137 area, owner decision under CLAUDE.md section 8, 4 Nov 2026): --collection is REQUIRED and
+there is no default. Every collection the owner lists as an original (PROTECTED below) is refused
+in every mode, `plan` included, and so is the original instance (port 6333). The script used to default to
+`acts_india` on 6333 and would have written to it when run with no arguments. --url defaults to the copy
+instance (7333).
+
+Run with the isolated interpreter that has fastembed installed (COPY = the name of a copy):
+  fe_venv/bin/python -I sparse_fix.py plan    --collection COPY
+  fe_venv/bin/python -I sparse_fix.py apply   --collection COPY --backup DIR/central_sparse_backup.jsonl --confirm --limit 20   # rehearsal
+  fe_venv/bin/python -I sparse_fix.py apply   --collection COPY --backup DIR/central_sparse_backup.jsonl --confirm --resume    # the rest
+  fe_venv/bin/python -I sparse_fix.py restore --collection COPY --backup DIR/central_sparse_backup.jsonl --confirm
 """
 
 import argparse
@@ -25,11 +31,33 @@ import sys
 import time
 import urllib.request
 
-Q = "http://localhost:6333"
-COLL = "acts_india"
+Q = "http://localhost:7333"  # the COPY instance; set from --url in main()
+COLL = None  # set from --collection in main(); there is deliberately no default
+# The originals, read-only (owner's list, 4 Nov 2026; the rule is in DATA-GAPS section 17, not spelled
+# out in CLAUDE.md section 6). Refused in every mode.
+PROTECTED = frozenset({"legal_corpus_v1", "legal_corpus_v2", "acts_india", "kanoon_v1"})
+ORIGINAL_PORT = 6333  # the instance that holds the originals
 FILTER = {"must": [{"key": "jurisdiction", "match": {"value": "central"}}]}
 SCROLL_BATCH = 256
 WRITE_BATCH = 128
+
+
+def check_target(collection, url):
+    """Return (collection, url) if it may be touched, else raise SystemExit with the reason."""
+    if not collection:
+        sys.exit(
+            "ABORT: --collection is required (no default). Name a COPY, never an original."
+        )
+    if collection in PROTECTED:
+        sys.exit(
+            f"ABORT: {collection!r} is an original named in CLAUDE.md section 6 (read-only). "
+            "Run this against a copy."
+        )
+    if url.rstrip("/").rsplit(":", 1)[-1] == str(ORIGINAL_PORT):
+        sys.exit(
+            f"ABORT: {url} is the instance that holds the originals. Use the copy instance."
+        )
+    return collection, url.rstrip("/")
 
 
 def call(method, path, body=None, retries=3):
@@ -226,6 +254,10 @@ def cmd_restore(a):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("mode", choices=["plan", "apply", "restore"])
+    ap.add_argument(
+        "--collection", help="REQUIRED: the name of a copy (originals are refused)"
+    )
+    ap.add_argument("--url", default=Q, help="Qdrant URL (default: the copy instance)")
     ap.add_argument("--backup")
     ap.add_argument("--confirm", action="store_true")
     ap.add_argument("--resume", action="store_true")
@@ -233,4 +265,5 @@ if __name__ == "__main__":
         "--limit", type=int, help="apply: change only the first N failing points"
     )
     a = ap.parse_args()
+    COLL, Q = check_target(a.collection, a.url)
     {"plan": cmd_plan, "apply": cmd_apply, "restore": cmd_restore}[a.mode](a)

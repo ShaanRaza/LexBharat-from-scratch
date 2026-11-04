@@ -105,6 +105,46 @@ The offset was found on the first check (the raw count was exactly 2,000 over fo
 
 ---
 
+## 2d. Promoting `acts_noncentral_v1` into the serving collection: what it would cost (added 4 Nov 2026, A145)
+
+**Nothing was promoted.** The owner decides against these numbers. State and regulator Acts (1,024,068 points, sparse vectors
+already repaired, see DATA-GAPS section 9) reach no user today; `kanoon_v1` holds only Supreme Court and Central Acts.
+
+| | Today (`kanoon_v1`) | After promoting | Label |
+|---|---|---|---|
+| Points | 455,755 | **1,479,823** (3.25 times) | **Measured** (Qdrant counts, 4 Nov) |
+| Disk | 5.1 GB (11.2 KB a point) | **about 13.3 GB** (+8.2 GB: the staging collection is 8.0 KB a point) | **Measured** (`du` of the storage folders) |
+| Disk while both copies exist | | about 21.5 GB until the staging collection is deleted | Measured sizes added |
+| RAM, int8 vectors plus graph | under 1 GB | **about 2 to 3.5 GB** | **Estimate**: 1.2 to 1.3 KB a point from 1,024 int8 bytes plus graph links, or the doc's own "under 1 GB at 446k" scaled 3.3 times. Not measured under load; the Qdrant process is 218 MB resident now, idle, which says nothing about serving |
+| Server tier | r7g.large (16 GB), $55 a month | **unchanged**: r7g.large | Estimate. 2 to 3.5 GB leaves large headroom; the tier only moves with the High Court and full-corpus scope (section 8), where this promotion is a rounding error |
+| Monthly cost | | **about +$1 for disk** (8 GB at roughly $0.08 a GB-month) | Estimate, Needs verification |
+| Copy time | | **about 1 to 1.5 hours**, plus index build after | see below |
+| Embedding or Voyage spend | | **zero**: dense and sparse vectors are copied as stored | Measured fact: payload schemas match (staging has one extra field, `footnotes_structured`) and the point ids do not collide (0 of 256 sampled present) |
+
+**Copy time.** Reading full points (vectors and payload, 18 KB each as JSON) from the staging collection ran at 1,022 points a second
+under today's load (5,120 sampled): **Measured**, about 17 minutes for the read alone. The comparable A133 job (read, re-encode half,
+write 1,024,068 points) ran at 324 points a second, 53 minutes in total (**Measured**, `full_run.log`). A copy that skips the encoding
+should land between the two: say 20 to 55 minutes of copying, **Estimate**. Qdrant then builds the index for the new points; that part
+was **not measured**, so budget the 1 to 1.5 hours above rather than the copy figure alone. The machine was not quiet when this was timed
+(load 8 to 9 from another session), so a quiet run should be faster.
+
+**Two ways to do it, and a rule the first one touches.**
+1. *Copy into `kanoon_v1`.* Smallest. But `kanoon_v1` is on the list of collections `data/sparse_fix.py` now refuses (the originals the owner
+   named), so this is a write to a listed collection and needs the owner's explicit approval, as the A129 copy had. Rollback is clean:
+   `kanoon_v1` has only Central Acts and judgments, so deleting every point whose `jurisdiction` is `state` or `regulatory` undoes it.
+2. *Build a new serving collection (a third copy of both).* Re-copies `kanoon_v1`'s 455,755 points as well (another 5.1 GB, about 13.3 GB
+   in all, double the time), writes to no listed collection, and the switch is the one config value `CORPUS_COLLECTION`. Safer, costs
+   disk and time.
+
+**Costs that are not hardware, and are not measured:**
+- *Retrieval quality.* Adding 1.02 million Act provisions to a collection where 381,271 points are judgments changes what a plain-language
+  question retrieves. Nobody has run the 200-question set or the known-item eval against the larger collection. That is the real risk,
+  and the reason to run the eval on a copy before switching anything on.
+- *Duplicates.* A126 keeps one point per `chunk_id`, healthy over repaired. Whether `acts_noncentral_v1` holds duplicate `chunk_id`s was not
+  checked for this note.
+- *Coverage and wording.* `core/coverage.json` must record what is then held (O7), and Act pages keep "In-force status not checked"
+  (`SHOW_IN_FORCE` stays false); 21,162 of 22,264 Acts are withheld today and more would be after this.
+
 ## 3. Monthly fixed — the MVP, one server
 
 | Item | Figure | Label |

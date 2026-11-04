@@ -317,7 +317,23 @@ mixed-script, and 95,478 Latin-script but labelled Hindi or Punjabi, where `text
 `text_original`. Four were inspected by hand and were an English header followed by OCR noise
 from scanned pages; the rest are **not verified**. None of them are in the copy.
 
-## 9. About half of `acts_india` has wrong keyword vectors
+## 9. About half of the ORIGINAL `acts_india` has wrong keyword vectors (the served collections do not)
+
+**Read this first (corrected 4 Nov 2026).** Every percentage and count in this section, the 26.6%, the 49.4%, the 19,835, the
+504,600 and the 524,400, describes the **original `acts_india`** on the original instance, which **nothing serves**. They were read
+as though they described live keyword search; they do not. Where each stands today:
+
+| Collection | Instance | Serves users? | Wrong sparse vectors | Evidence |
+|---|---|---|---|---|
+| `acts_india` (original, 1,098,577 points) | 6333 | **No** | **Yes**: 19,835 of 74,509 Central (26.6%, full scan); about 504,600 of 1,024,068 non-central (49.4% of a 10,000 sample). Untouched, by rule | **Measured** 2 Nov 2026 |
+| `kanoon_v1` (455,755 points: 381,271 Supreme Court, 74,484 Central Acts) | 7333 | **Yes** | **None**: 0 of 74,484 Central Acts would change (full check, 3 Nov); 0 of 3,072 sampled today | **Measured** |
+| `acts_noncentral_v1` (1,024,068 state and regulator Acts) | 7333 | **No** (staging, A133) | **None**: 510,366 were repaired on the way in; 0 of 20,000 random points differ from a fresh encoding (4 Nov); 0 of 3,072 sampled again later on 4 Nov | **Measured** |
+
+So live keyword search is not affected, and the state and regulator Acts that are repaired are not yet served at all (promotion sizing: DECISIONS
+A145, `docs/COSTS.md` section 2d). The 25-point difference between 74,509 and 74,484 Central points is the dedupe, not a repair gap. `data/sparse_fix.py`
+no longer runs against `acts_india`: it refuses any original and requires `--collection` naming a copy.
+
+The text below is the original 2 Nov finding, kept as written; read "`acts_india`" in it as the unserved original.
 
 **Measured**, 2 Nov 2026, from `acts_sample_v1`: 10,000 points sampled with a fixed seed
 across 90 strata from the 1,024,093 `acts_india` points outside the copy. 200 of 200 checked
