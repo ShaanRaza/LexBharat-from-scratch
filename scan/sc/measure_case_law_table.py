@@ -1,6 +1,6 @@
 """Measure whether the Court's printed "Case Law Reference" table survives in the text we hold.
 
-Plain words: a Supreme Court Reports judgment prints, on its first page after the headnote, a table of
+Plain words: a judgment in the Court's own law reports prints, on its first page after the headnote, a table of
 the cases it cites: one row per cited case, `citation  editor's word  Para N` (for example
 `2011 (5) SCR 729   referred to   Para 1`). This script looks for that table in the stored text of
 every served case and reports how many cases carry it, how many rows parse, how many were split by the

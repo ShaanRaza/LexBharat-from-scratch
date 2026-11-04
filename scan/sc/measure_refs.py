@@ -225,7 +225,7 @@ G: dict = {}
 def _load_pair_maps() -> dict[str, dict[tuple, str]]:
     """Optional: PAIRMAP=<pickle from scan/sc/pair_map.py>. Three rules for trusting a headnote pair:
     any1 = one target only; min2 / min3 = the winning target is printed by 2 / 3 or more independent
-    cases and by at least twice as many as any other target. SCC keys, and AIR keys of the Supreme Court."""
+    cases and by at least twice as many as any other target. SCC keys, and AIR keys whose court code is SC."""
     path = os.environ.get("PAIRMAP")
     if not path:
         return {}
