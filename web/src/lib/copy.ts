@@ -27,7 +27,8 @@ export const IN_FORCE_LABEL = "In force";
 export const REPEALED_LABEL = "Repealed";
 
 // Shown under an answer-less screen before any result has told us the date of the data.
-export const DATA_DATE_WITH_RESULTS = "The date of the data is shown with every result."; // NEEDS-OWNER
+// Owner-approved 4 Nov 2026 (A148).
+export const DATA_DATE_WITH_RESULTS = "The date of the data is shown with every result.";
 
 export const FAILURES = {
   // The search ran and the gate kept nothing. Owner-approved 4 Nov 2026. The live text is
@@ -36,7 +37,7 @@ export const FAILURES = {
   notFound: {
     title: "No matching authority found",
     body: "We could not find an authority in our dataset that answers this. That does not mean none exists \u2014 it means our snapshot does not hold one. Try narrowing to a specific Act or section.",
-    hint: "You can also use Act lookup.",
+    hint: "If you know the Act and section, try looking it up directly.",
   },
   // What the product covers is NOT typed here: the sentence comes from GET /coverage
   // (one source, core/coverage.json). The body below is only the fallback shown if that
