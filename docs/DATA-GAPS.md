@@ -2464,6 +2464,37 @@ By raw entry: 48 keys single-target and right; 6 keys carry a wrong second targe
 
 **Owner item (parked, open): extract the "Case Law Reference" table from the bucket's PDFs.** About 6,100 PDFs (the cases whose stored text carries the heading), about 3.2 GB (Estimate, at 0.52 MB per PDF), no embedding cost, one PDF at a time per the registry's request; plus a parser for the table (the PDFs print it cleanly, e.g. 2018_INSC_517 has six rows). It would add the editor's word per cited case (Phase 2 material) and rows the headnote omits. Parked in favour of the headnote route, which is free and already in our text; reopen if the headnote route under-delivers.
 
+### 23.15 Citator Phase 1 BUILT: the links, the map, and what density did and did not do (Measured 5 Nov 2026; `scan/sc/build_links.py`, `core/citator/links.py`, `core/citator/pairmap.py`; output in `data/citator/`)
+
+> **READ THIS FIRST. Case-level coverage does not move, by construction, and the other 51% is structural.** 17,418 of 35,688 served judgments (48.8%) have at least one inbound link before the map and **the same 17,418 after it; 0 cases gained a first link.** The map is derived from headnote pairs printed by judgments that were already linked, so every case it can reach already has an inbound link from the judgment that printed the pair. It cannot reach a case cited only in SCC form with no pair printed anywhere. The 18,270 cases with no inbound link (51.2%) need an **external SCC-to-SCR concordance**: the Supreme Court's Judges Library Equivalent Citation Table (four PDF volumes, section 23.11) or ILR. **Both are the owner's to pursue** (fetch, confirm reuse terms, or a request to the Registry). No amount of extra work on our own text closes this. Expect the question to be asked again; this paragraph is the answer.
+
+**What was built.** The rule from 23.14, unchanged: an SCC citation, or an AIR Supreme Court citation, is mapped to a record only when the winning record is printed by **at least 2 distinct judgments and by at least twice as many as any other record that citation was paired with**. Evidence is a set of citing judgments, so one judgment printing a pair ten times counts once; a judgment's own pair is removed. Trusted keys: 5,391 (5,063 SCC, 328 AIR). Links: 72,101 direct (SCR or neutral citation equals a stored record) plus 20,506 mapped-only, kept apart by a `via` field = 92,607 (citing, cited) pairs. Direct reproduces 23.10 exactly (72,101); the total reproduces the 23.14 "2 or more" row exactly (92,607). **Validation, re-run on the built map against the Judges Library table of 64 landmark cases: 47 right, 0 wrong, 10 not covered** (plus 7 rows that cannot be tested: no SCR given, or the SCR record is not held); a lone pair is not trusted. Ground truth is `scan/sc/judges_library_landmark.json` (a first transcription merged rows 17/18 and 23/24 and omitted the five hand-transcribed wrapped rows; the file holds the corrected keys, and the one apparent "wrong" that surfaced in this run was that transcription error, not the map).
+
+**Link density per case, before (direct only) and after (with the map). This is the number that decides whether an overruling gets spotted.**
+
+| Inbound links per case | Before | After |
+|---|---|---|
+| 0 | 18,270 | 18,270 |
+| 1 | 6,426 | 6,418 |
+| 2 | 3,339 | 2,869 |
+| 3-5 | 4,297 | 3,684 |
+| 6-10 | 2,004 | 2,255 |
+| 11-50 | 1,291 | 2,068 |
+| 51-200 | 61 | 121 |
+| 201+ | 0 | 3 |
+| mean / median | 2.02 / 0 | 2.595 / 0 |
+| 75th / 90th / 99th percentile | 2 / 5 / 22 | 2 / 7 / 31 |
+| maximum | 174 | 258 |
+| cases with 2 or more | 10,992 | 11,000 |
+| cases with 3 or more | 7,653 | 8,131 |
+| share of all links held by the top 1% of cases | 18.8% | 20.3% |
+
+**Reading it.** 3,907 cases gained links, but only **8 moved from fewer than 2 links to 2 or more**, and the single-link bucket barely moved (6,426 to 6,418). The extra links went to cases that were already well linked: the top 1% now hold 20.3% of links against 18.8%. So the map makes the heavily cited landmark cases better covered and does almost nothing for the thinly linked ones, which are the ones where a single missed citing judgment is most likely to hide an overruling. By decade of the cited case, mean inbound links rise most for the 1970s (2.86 to 3.63), 1980s (2.51 to 3.79) and 1990s (1.34 to 2.23) and least for the 2020s (0.42 to 0.49); the share of 2020s cases with two or more links stays 7.6% (full table in `data/citator/sc_link_density.json`). Per-case recall of true inbound citations is still **not measured** (the true inbound set is unknown).
+
+**Design rule, enforced in code.** Nothing renders as "still good law". A zero means no judgment in our data cites the case in a form we can read, never clearance. `core/citator/links.py` has no `status`, `treatment` or `good_law` attribute; every sentence the model can produce is one of two fixed templates (`ZERO_READABLE`, `SOME_READABLE`), both of which say the count is a minimum and say nothing of how a citing judgment treated the case. `tests/citator/test_links.py` fails if such an attribute appears, if any sentence the model can return matches clearance wording ("good law", "no adverse", "not cited", "clear", "safe", "valid", and others), or if code in `core`, `api` or `web/src` asserts good-law standing. Treatment (followed, distinguished, overruled) is Phase 2 and needs an advocate; the "Case Law Reference" extraction stays parked (end of 23.14).
+
+**Not wired.** Nothing serves these links yet: no API route, no screen, no pipeline step, no verifier check changed. Rebuild: `python scan/sc/build_links.py SC_TEXT2.db OUT_DIR --validate scan/sc/judges_library_landmark.json` (about a minute; the sqlite dump is made by `scan/sc/dump_text.py`); output is byte-stable.
+
 ## 24. The 10 remaining `not_found`: 5 absent text, 3 present but lost to a source label, 2 filter problems (5 Nov 2026; CORRECTED the same day)
 
 **Correction first.** The first version of this section (commit `c42b4a3`) said 8 of the 10 were data holes and called the three verifier removals "the verifier working as designed". **That was wrong for three of them.** For IPC 34 (q010), NDPS 37 (q036) and Registration Act 49 (q075) the section's text IS in the data, appended inside the chunk of the section before it (IPC 34 inside the chunk labelled 33, NDPS 37 inside 36C, Registration Act 49 inside 48), and the gate was right to keep that chunk. The first version judged by the chunk's label and by the opening words of its text, which are the previous section's.

@@ -1,7 +1,7 @@
 """Latest content held in the SERVED collection, per kind (A148). Read-only.
 
 Plain words: the data-as-of line must describe the content a page shows, so this finds the
-newest Supreme Court `decision_date` and the newest Act `year` in `kanoon_v1`. Measured 4 Nov 2026:
+newest judgment `decision_date` and the newest Act `year` in `kanoon_v1`. Measured 4 Nov 2026:
 newest judgment 2025-11-06 (35,688 cases, every date parsed); newest Act year 2025 (an Act carries
 a year, and only 600 of 1,568 carry an enactment_date). The numbers go into
 data/coverage_report.py (DATA_AS_OF), which writes core/coverage.json.
