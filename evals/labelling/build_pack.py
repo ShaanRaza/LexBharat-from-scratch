@@ -221,8 +221,7 @@ def write_xlsx(
     dv.add(f"H2:H{len(rows) + 1}")
     ws.freeze_panes = "D2"
     ws.sheet_view.zoomScale = 85
-    for col in "LMN":
-        ws.column_dimensions[col].group(outline_level=1, hidden=True)
+    ws.column_dimensions.group("L", "N", outline_level=1, hidden=True)
 
     ns = wb.create_sheet("Not labelled")
     for j, (h, w) in enumerate(
