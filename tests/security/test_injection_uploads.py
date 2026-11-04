@@ -193,6 +193,8 @@ def vendor_mentions(base: pathlib.Path) -> list[str]:
         f"{f.relative_to(base)}:{i}"
         for f in _py_files(base)
         if f.name != "settings.py"
+        and f.relative_to(base).as_posix()
+        != "adapters/telemetry.py"  # F10: the one masked, scrubbed wiring
         for i, line in enumerate(f.read_text().splitlines(), 1)
         if VENDOR.search(line)
     ]
@@ -202,7 +204,7 @@ def test_no_log_call_in_the_product_interpolates_anything_but_an_id_or_an_error(
     assert log_calls_with_data(ROOT) == []
 
 
-def test_langfuse_and_sentry_are_not_wired_so_no_upload_text_can_reach_them():
+def test_langfuse_and_sentry_are_not_wired_outside_the_one_masked_file():
     assert vendor_mentions(ROOT) == [], (
         "A vendor that receives AI calls or errors was wired. Before it ships: write the "
         "masking / scrubbing code, test it with a hostile document, then update this test."

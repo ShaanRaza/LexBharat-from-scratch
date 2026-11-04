@@ -136,9 +136,8 @@ every hostile string, which is the worst case, not a measurement.
    pasted-in text, not fenced (F3); and the verifier lets an uncited sentence through (F6).
 3. **The upload privacy boundary has two holes that open the day uploads ship** (F1, F2). Neither needs a clever
    attack: a hostile document only has to make the model repeat it.
-4. **Langfuse masking and Sentry scrubbing do not exist as code.** `CLAUDE.md` §6 and the table above describe them;
-   the repo holds four unused settings keys (`core/settings.py:156-159`) and nothing else. Today that is safe only
-   because neither vendor is wired. See F10.
+4. **Langfuse masking and Sentry scrubbing: built 5 Nov 2026, NOT wired into the app** (`core/redact.py`, `adapters/telemetry.py`). Until the two
+   call sites exist (platform lane) nothing is sent, which is the same safe state as before. See F10.
 
 ### Every path by which text we did not write reaches a model
 
@@ -238,11 +237,29 @@ proceeds to the answer step. The verifier then carries the whole load. Pinned by
 
 **F9 — A `null` rewrite query becomes the search "None". Cosmetic.** `core/rewrite.py:42`. BREAK test.
 
-**F10 — Masking and scrubbing are described, not built. Process finding.** This table (rows "Langfuse", "Sentry") and `CLAUDE.md` §6 state
-what is masked and scrubbed. No file in `api/ core/ adapters/ workers/` imports `sentry_sdk` or `langfuse` or sets a litellm
-callback. Two tripwires now fail if either is wired before the masking exists. Before either goes live: write the masking and
-scrubbing code, then test it with a hostile document that puts a known string in the question, the passage, the answer
-and an exception message. **Also a precondition for switching uploads on (see the F3 note, q192):** the same test carries a canary-obedience case.
+**F10 — Masking and scrubbing: BUILT 5 Nov 2026, not wired. Process finding closed in code, open in wiring.**
+`CLAUDE.md` §6 required both before either vendor goes live. They now exist: `core/redact.py` (pure functions, no vendor import) and
+`adapters/telemetry.py` (the one file that may name a vendor). *Langfuse:* its `mask` hook is `redact.mask_trace_data`. A run that
+touches client material (`document_ids` or `matter_facts` on the request, declared at the top of `run_pipeline`) has all its text withheld,
+because an answer to an upload question quotes the upload; every other run has emails, phone numbers and secret-looking tokens replaced.
+Ids, numbers and booleans pass (token counts, cost, speed). A run that never declares itself is withheld (fail closed). *Sentry:*
+`redact.scrub_error_event` rebuilds each event from an allow-list of fields, so a field a later SDK version adds is dropped, not leaked;
+exception **messages** are removed (a vendor error can echo its prompt), as are request bodies, headers, cookies, query strings,
+breadcrumbs, log messages, stack-frame variables and the user's email. The SDK is also started with no PII, no local variables, no
+request bodies, no breadcrumbs and no performance traces.
+*Proof (`tests/security/test_telemetry_masking.py`, 12 mutants, all caught):* a hostile uploaded document puts one known string into the
+question, a passage, the answer and an exception message. With the **real** `sentry-sdk` (capturing transport) and the **real** `langfuse`
+(in-memory span exporter) the string, the email and the phone number reach neither payload. A control shows the capture does see the string
+when scrubbing is switched off, so the pass means something. Without the SDKs installed, the same run uses a stand-in with the SDK's `mask`
+contract, and a static test fails if a vendor is named outside `adapters/telemetry.py` or a client is built there without its hook.
+**What is not done:** (1) **Not wired:** nothing calls `init_error_reporting` or wraps the writing model in `TracedLLM`. That is two lines in the
+platform lane (`api` app factory, dependency builder). (2) **`sentry-sdk` and `langfuse` are not in `pyproject.toml`** (the lead's file), so the
+real-SDK tests skip wherever they are missing; add them at least as dev dependencies so CI runs them. (3) **Follow-up turns:** a turn with no
+`document_ids` whose `history` or `summary` carries upload-derived text is treated as a public run, because `Turn` has no provenance flag.
+Until it has one, a follow-up in an upload chat must keep sending `document_ids`, or its prompt reaches the tracing vendor with emails and phones
+masked but the text itself intact. (4) `CLAUDE.md` §6 still says neither is built; the lead owns that line. (5) The pass is on the shapes of
+the SDK versions installed here (`sentry-sdk` 2.73.0, `langfuse` 5.1.0); `send_default_pii` is deprecated in that Sentry version in favour of
+`data_collection`, and a version bump should re-run these tests. The old tripwire is now "no vendor named outside the one masked file".
 
 **Not examined:** the PDF/OCR step (`adapters/ocr.py`, `workers/`) is unbuilt, but note `PdfExtractor` returns *all* text
 PyMuPDF finds — white-on-white, off-page or tiny text the advocate cannot see is extracted and chunked like any other, so

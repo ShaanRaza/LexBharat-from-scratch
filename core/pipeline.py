@@ -12,6 +12,7 @@ from __future__ import annotations
 import asyncio
 import logging
 
+from core import redact
 from core.answer import answer, model_for
 from core.cache import cache_lookup, cache_store, key_for
 from core.contracts import (
@@ -151,6 +152,14 @@ async def run_pipeline(
 ) -> PipelineResult:
     """Steps 1-9 and 11. Any failure becomes outcome "error"; nothing partial."""
     deps.begin_run()  # Jev batches only calls from this run
+    # What a monitoring vendor may receive for this run (core/redact.py, F10): an
+    # upload or a remembered matter fact is client material, withheld whole; the
+    # rest is masked.
+    client_material = bool(request.document_ids or request.matter_facts)
+    redact.begin_run(
+        client_material=client_material,
+        strings=(request.message, *request.matter_facts) if client_material else (),
+    )
     key: str | None = None
     try:
         result, key = await _run(request, deps, on_step)

@@ -83,7 +83,8 @@ def test_every_complete_call_in_the_product_is_accounted_for():
                     isinstance(node, ast.Call)
                     and isinstance(node.func, ast.Attribute)
                     and node.func.attr == "complete"
-                    and f.name != "llm.py"
+                    # llm.py is the gateway; telemetry.py's TracedLLM only forwards the caller's schema
+                    and f.name not in ("llm.py", "telemetry.py")
                 ):
                     has = any(k.arg == "json_schema" for k in node.keywords)
                     (json_sites if has else prose_sites).add(f"{folder}/{f.name}")
