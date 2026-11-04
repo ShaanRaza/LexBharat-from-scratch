@@ -282,6 +282,21 @@ as stored, labelled "as recorded in the dataset".
   was once printed this way and had to be rotated.)
 - The server is **ARM (Graviton, r7g)** — every Docker image needs an ARM build.
 
+### The source collections are read-only
+
+- **Never write to `legal_corpus_v1`, `legal_corpus_v2`, `acts_india` or `kanoon_v1`.**
+  Every repair, rebuild or promotion is done on a copy. These are the only copies of the
+  snapshot we have; a bad write to one cannot be undone from here. The rule was written
+  in `DATA-GAPS.md` §17 and lived nowhere a coding agent would read it first (A145).
+- **The original instance (port 6333) is read-only entirely**, whatever the collection is
+  called. Work happens on the copy instance (port 7333).
+- **A script that can reach an original must refuse by default**, not by convention. See
+  `data/sparse_fix.py`: `--collection` is required with no default, the four names above are
+  refused in every mode including dry runs, and the tests prove the refusal.
+- Switching which collection serves users is a **config change** (`CORPUS_COLLECTION`), never
+  a write into the live one. Build the new collection beside it and move the setting, so
+  rollback is one value.
+
 ---
 
 ## 7. Do not use
