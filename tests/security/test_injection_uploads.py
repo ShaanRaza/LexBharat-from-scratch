@@ -142,7 +142,11 @@ async def test_a_removed_sentence_that_carries_upload_text_is_not_kept_in_the_ci
 PRODUCT_DIRS = ("api", "core", "adapters", "workers")
 LOG_METHODS = {"debug", "info", "warning", "error", "exception", "critical"}
 # Arguments a log call may interpolate: ids and exception TYPE names only.
-SAFE_LOG_ARGS = {"request_id", "document_id", "left", "e", "call", "dropped"}
+# n_* / unmarked_removed are integer counters (A137), never text
+SAFE_LOG_ARGS = {
+    "request_id", "document_id", "left", "e", "call", "dropped",
+    "n_sentences", "n_cited", "unmarked_removed",
+}  # fmt: skip
 VENDOR = re.compile(
     r"\b(sentry_sdk|langfuse|litellm\.(success|failure|_async_\w+)_callback|set_verbose)",
     re.I,

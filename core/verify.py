@@ -28,10 +28,11 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import logging
 import re
 import unicodedata
 from collections.abc import Sequence
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from difflib import SequenceMatcher
 from functools import lru_cache
 from pathlib import Path
@@ -51,6 +52,8 @@ from core.contracts import (
 )
 from core.hc_citation import NEUTRAL as _NEUTRAL_PUBLISHED
 from core.settings import get_settings
+
+log = logging.getLogger(__name__)
 
 # Wording belongs to docs/UX-COPY.md (note: an authority could not be verified).
 NOTE_ONE = (
@@ -578,13 +581,31 @@ def _unretrieved_authority(sentence: str, passages: Sequence[Passage]) -> bool:
     return False
 
 
+def _attach_bare_markers(
+    sentences: list[tuple[str, str]],
+) -> list[tuple[str, str]]:
+    """`Bail is the rule. [S1]` splits into a sentence and a bare marker. Under A137 the
+    claim has no marker of its own and would be deleted, leaving the marker behind. A
+    sentence that is only a marker belongs to the sentence before it."""
+    out: list[tuple[str, str]] = []
+    for sent, sep in sentences:
+        bare = _MARKER.search(sent) and not re.sub(r"[\W_]", "", _MARKER.sub("", sent))
+        if bare and out:
+            prev, prev_sep = out[-1]
+            out[-1] = (f"{prev}{prev_sep}{sent}", sep)
+        else:
+            out.append((sent, sep))
+    return out
+
+
 async def verify(
     draft: DraftAnswer, passages: Sequence[Passage], deps: Deps
 ) -> VerifiedAnswer:
     """Run checks 1-4 on every citation, remove failures, log them, seal the answer."""
     by_label = {p.source_id: p for p in passages if p.source_id}
     draft_text = _join_versus_breaks(draft.text.translate(_FULL_WIDTH_BRACKETS)).strip()
-    sentences = _split(draft_text)
+    sentences = _attach_bare_markers(_split(draft_text))
+    unmarked_removed = 0  # A137: counted, never stored as text (it would be F2 again)
 
     kept_sentences: list[tuple[str, str]] = []
     citations: dict[str, Citation] = {}
@@ -619,6 +640,7 @@ async def verify(
             last = list(_MARKER.finditer(sentence))[-1]
             tail = sentence[last.end() :]
             if re.search(r"\w", tail):
+                unmarked_removed += 1
                 lead = re.match(r"[\s.,;:!?)\"'”’]*", tail).group(0)
                 sentence = sentence[: last.end()] + lead.rstrip()
 
@@ -664,11 +686,14 @@ async def verify(
                 continue
             passed[label] = _to_citation(passage, status, quotes[0] if quotes else None)
 
+        if not passed and not labels:
+            unmarked_removed += 1
         if not passed:
-            # Every citation failed, or (A137, F6 STRICT) the sentence never had a marker:
-            # drop it. This runs after the quote and unretrieved-authority checks above,
-            # so those still log their own removals; an ordinary unmarked sentence is
-            # dropped silently, like a bare "[S1]". `labels and` here was the exemption.
+            # Every citation failed, or (A137, F6 STRICT) the sentence never had a
+            # marker: drop it. This runs after the quote and unretrieved-authority
+            # checks above, so those still log their own removals; an ordinary
+            # unmarked sentence is dropped silently, like a bare "[S1]". `labels and`
+            # here was the exemption.
             continue
         if failed:  # strip only the failed markers, keep the survivors
             sentence = _strip_markers(sentence, failed)
@@ -711,7 +736,18 @@ async def verify(
     }
     citations = {k: v for k, v in citations.items() if k in shown}
     ordered = tuple(citations[k] for k in sorted(citations, key=lambda s: int(s[1:])))
-    return seal_answer(text, ordered, removed)
+    # Counts only: how many unmarked sentences were dropped silently, out of how many.
+    # No sentence text (F2). The drift in this number is the audit trail for A137.
+    n_sentences, n_cited = len(sentences), len(ordered)
+    log.info(
+        "verify sentences=%d unmarked_removed=%d citations=%d",
+        n_sentences,
+        unmarked_removed,
+        n_cited,
+    )
+    return replace(
+        seal_answer(text, ordered, removed), unmarked_removed=unmarked_removed
+    )
 
 
 # --- The seal -------------------------------------------------------------------------

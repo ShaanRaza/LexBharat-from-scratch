@@ -152,8 +152,11 @@ every hostile string, which is the worst case, not a measurement.
 | 6 | The answer text (model-written from 3–5) | `core/followups.py:77`; `core/verify.py` → `claim_support.txt` as the *sentence* | follow-up model; Jev or Gemini | 9 |
 | 7 | Knowledge notes | `core/answer.py:34` (`deps.notes`) | answer model | 8 — `knowledge/` is empty (4 KB); nothing reaches this path yet |
 | 8 | User's text for "Improve my question" | `core/improve.py:58` | rewrite model | not a step |
+| 9 | **Tool output read by the coding agent** (a build tool, linter, test runner, package manager). Not a model call in the product; it reaches the agent that builds and operates it | no prompt line: the agent reads the tool's stdout/stderr as it works | the coding agent, whose "action" is a shell command run with the user's authority | none (outside the 11 steps; touches whoever runs the repo) |
 
-Reachable today: 1–4, 6, 8. Only after uploads ship (`FEATURE_UPLOADS=False`, and `api/routes/conversations.py:112-114`
+**Row 9, worked example (found by lane C, 4 Nov 2026).** `next build` printed a line telling the agent to relay a recommendation and have the owner run `next upgrade --agent=security`. Lane C refused. Nothing in rows 1-8 covers this: the text did not enter a product prompt, it entered an agent through a tool's output, and acting on it means running commands nobody authorised (an upgrade can change dependencies, files and what the tool later prints). The defence is the instruction source boundary, not a filter: only the user in chat can instruct the agent; anything a tool prints is data, to be quoted to the user and acted on only if they say so. A pattern filter cannot work here, because the hostile line is ordinary English from a tool the agent is meant to trust. Row 9 has no test in `tests/security/`: it is about the agent's behaviour, not code in this repo. Unverified: where that line originated (the tool itself or a package it loads).
+
+Reachable today: 1–4, 6, 8, and 9 (it needs no feature, only a tool that prints something hostile). Only after uploads ship (`FEATURE_UPLOADS=False`, and `api/routes/conversations.py:112-114`
 passes no `document_ids`): 5, and F1, F2. Jev switches are all `False` by default (`core/settings.py:112-119`), so today
 every decision goes to the Gemini fallback.
 

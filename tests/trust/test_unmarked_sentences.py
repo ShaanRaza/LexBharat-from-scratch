@@ -81,3 +81,56 @@ async def test_an_abbreviation_does_not_split_a_cited_sentence_into_a_stray_frag
     text = f"The appellant, {abbr} Bail is the rule and jail the exception [S1]."
     ans = await verify(world.draft(text), world.passages, world.deps)
     assert ans.text == text
+
+
+# --- A claim followed by a marker after its full stop ----------------------------------
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Bail is the rule and jail the exception under Article 21. [S1]",
+        "Bail is the rule and jail the exception under Article 21.\n[S1]",
+        "Bail is the rule and jail the exception under Article 21. [S1].",
+    ],
+)
+async def test_a_marker_after_the_full_stop_belongs_to_the_claim_before_it(world, text):
+    ans = await verify(world.draft(text), world.passages, world.deps)
+    assert "Bail is the rule" in ans.text
+    assert [c.source_id for c in ans.citations] == ["S1"]
+    assert ans.unmarked_removed == 0
+
+
+async def test_a_marker_after_the_full_stop_is_still_claim_checked(world):
+    """Attaching the marker must not skip check 4 or check 1."""
+    ans = await verify(world.draft("Bail is a right. [S7]"), world.passages, world.deps)
+    assert ans.citations == () and "Bail is a right" not in ans.text
+    assert reasons(world) == ["not_retrieved"]
+
+
+# --- The count ----------------------------------------------------------------------
+async def test_the_count_of_dropped_unmarked_sentences_is_recorded_without_text(
+    world, caplog
+):
+    text = (
+        "Based on the passages:\nBail is always available.\n" + GOOD + " and more words"
+    )
+    with caplog.at_level("INFO", logger="core.verify"):
+        ans = await verify(world.draft(text), world.passages, world.deps)
+    assert ans.unmarked_removed == 3  # two whole sentences and one welded tail
+    line = [
+        r.getMessage() for r in caplog.records if "unmarked_removed" in r.getMessage()
+    ]
+    assert line and "unmarked_removed=3" in line[0]
+    assert "Bail" not in line[0] and "passages" not in line[0]  # counts, never text
+    assert (
+        not ans.removed
+    )  # not fed to removed_count: the web UI reads that as "unverified"
+
+
+async def test_the_count_is_not_part_of_the_seal(world):
+    from dataclasses import replace
+
+    ans = await verify(
+        world.draft("Courts decide. " + GOOD), world.passages, world.deps
+    )
+    assert ans.unmarked_removed == 1
+    assert replace(ans, unmarked_removed=0).sealed  # a count carries no claim

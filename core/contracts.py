@@ -230,6 +230,10 @@ class VerifiedAnswer:  # step 9 output (written by trust)
     citations: tuple[Citation, ...]
     removed: tuple[RemovedCitation, ...] = ()
     _seal: bytes = field(default=b"", repr=False, compare=False)
+    # A137: unmarked sentences the verifier dropped this turn. A count, never text.
+    # Not in the seal (it carries no claim) and not cached: a cache hit ran no
+    # verification.
+    unmarked_removed: int = field(default=0, compare=False)
 
     @property
     def sealed(self) -> bool:
