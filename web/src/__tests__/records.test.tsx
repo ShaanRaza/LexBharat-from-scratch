@@ -27,7 +27,7 @@ describe("ActSection", () => {
   });
   it("carries date, credit and notice", () => {
     render(<ActSection s={FAKE_SECTIONS[0]} />);
-    expect(screen.getByText(/Data as of 2026-08-31/)).toBeInTheDocument();
+    expect(screen.getByText(/Data as of 6 November 2025/)).toBeInTheDocument();
     expect(screen.getByText("Data: Open India Law by Vaquill AI, CC BY 4.0")).toBeInTheDocument();
   });
 });

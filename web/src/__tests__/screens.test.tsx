@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 import { render, screen, waitFor, fireEvent, within } from "@testing-library/react";
 import { ActLookup } from "@/components/records/ActLookup";
@@ -17,7 +19,7 @@ describe("stats page", () => {
     render(<StatsView stats={FAKE_STATS} />);
     expect(screen.getByText("Sample")).toBeInTheDocument();
     expect(screen.getByText("340")).toBeInTheDocument();
-    expect(screen.getByText(/Data as of 2026-08-31/)).toBeInTheDocument();
+    expect(screen.getByText(/Data as of 6 November 2025/)).toBeInTheDocument();
     expect(screen.getByText(/CC BY 4.0/)).toBeInTheDocument();
     expect(screen.getByText(/do not predict/)).toBeInTheDocument();
   });
@@ -88,8 +90,9 @@ describe("failure screens use the exact copy", () => {
     render(<FailureCard kind={k} />);
     expect(screen.getByRole("alert")).toHaveTextContent(FAILURES[k].body);
   });
-  it("UX-COPY sentences are verbatim", () => {
-    expect(FAILURES.notFound.body).toBe("No matching judgments found in our dataset (data as of the snapshot date).");
+  it("the not-found fallback is the owner-approved text in core/coverage.json", () => {
+    const file = JSON.parse(readFileSync(resolve(__dirname, "../../../core/coverage.json"), "utf-8"));
+    expect(FAILURES.notFound.body).toBe(file.not_found_message);
   });
 });
 
@@ -105,7 +108,7 @@ describe("citations: visible meaning per citation, one event", () => {
   };
   it("prints the meaning next to each mark, tick only on verified", () => {
     const { container } = render(<AnswerView answer={answered()} />);
-    expect(screen.getAllByText(/Record found in dataset \(data as of 2026-08-31\)/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Record found in dataset \(data as of 6 November 2025\)/).length).toBeGreaterThan(0);
     expect(screen.getAllByText("Support not checked").length).toBeGreaterThan(0);
     expect(container.querySelectorAll('[data-mark="tick"]').length).toBe(2); // S1 inline + S1 list
     expect(container.querySelectorAll('[data-mark="unchecked"]').length).toBe(2);

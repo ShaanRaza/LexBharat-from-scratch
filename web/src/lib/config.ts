@@ -15,5 +15,5 @@ export const FAKE_STEP_DELAY_MS = Number(process.env.NEXT_PUBLIC_FAKE_STEP_DELAY
 export const FEATURE_PRICING = process.env.NEXT_PUBLIC_FEATURE_PRICING === "true";
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
-// Frozen snapshot label (CLAUDE.md section 1). Shown on every page.
-export const DATA_AS_OF = process.env.NEXT_PUBLIC_DATA_AS_OF ?? "v2026.08";
+// There is no date here on purpose: the data-as-of line describes the content a page shows,
+// comes from the API (core/coverage.json), and is never the release name (A146).

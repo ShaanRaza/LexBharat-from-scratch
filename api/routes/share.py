@@ -7,6 +7,7 @@ from fastapi import APIRouter, Request, Response
 from api import schemas as s
 from api.auth import CurrentUser, User
 from api.errors import ApiError, error_response
+from core.coverage import data_as_of_text
 from core.share import MessageNotFound, ShareRefused, create_share_link, hash_token
 
 router = APIRouter()
@@ -101,6 +102,10 @@ async def shared_answer(token: str, request: Request, response: Response):
         citations=[s.Citation(**c) for c in row["citations"]],
         expires_at=row["expires_at"],
         provenance=s.Provenance(
-            data_as_of=cov[0], snapshot_version=cov[1], credit=cs.DATA_CREDIT
+            data_as_of=data_as_of_text(
+                c.get("kind", "judgment") for c in row["citations"]
+            ),
+            snapshot_version=cov[1],
+            credit=cs.DATA_CREDIT,
         ),
     )

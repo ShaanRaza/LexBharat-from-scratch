@@ -335,7 +335,6 @@ def run_settings(*, jev_on: bool) -> Settings:
     base.update(
         ENVIRONMENT="development",
         SEAL_KEY=EVAL_SEAL_KEY,
-        DATA_AS_OF="2026-08-31",
     )
     if jev_on:
         base.update({flag: True for flag in JEV_FLAGS})
@@ -520,7 +519,7 @@ def build_column(name: str, *, jev_on: bool, store: FakeVectorStore) -> Column:
                 "the invented-citation log differs from what was removed"
             )
         col.retrieved[row["question"]] = [p.record_id for p in passages]
-        footer = Footer(settings.DATA_AS_OF, settings.SNAPSHOT_VERSION)
+        footer = Footer(coverage.data_as_of_text(), settings.SNAPSHOT_VERSION)
         result = PipelineResult("answered", verified, footer, removed=verified.removed)
         note(row, result, deps)
         col.recall_log[row["id"]] = (

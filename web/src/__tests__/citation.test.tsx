@@ -18,7 +18,7 @@ describe("markFor", () => {
 });
 
 describe("CitationChip", () => {
-  const base = { label: "S1", dataAsOf: "2026-08-31", href: "https://x.invalid" };
+  const base = { label: "S1", dataAsOf: "6 November 2025", href: "https://x.invalid" };
   it("verified shows tick and the dataset wording", () => {
     render(<CitationChip {...base} status="verified" />);
     expect(screen.getByRole("link")).toHaveAttribute("data-mark", "tick");

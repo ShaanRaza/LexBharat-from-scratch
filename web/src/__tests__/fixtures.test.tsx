@@ -79,8 +79,8 @@ describe("realistic fixtures (real law is not tidy)", () => {
     const s = await answerFor("eight");
     const { container } = render(<AnswerView answer={s} />);
     expect(container.querySelectorAll("li [data-mark]")).toHaveLength(8);
-    expect(screen.getAllByText(/Record found in dataset \(data as of 2026-08-31\)/).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Data as of 2026-08-31/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Record found in dataset \(data as of 6 November 2025\)/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Data as of 6 November 2025/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/CC BY 4.0/).length).toBeGreaterThan(0);
   });
 

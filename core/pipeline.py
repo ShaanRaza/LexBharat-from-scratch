@@ -23,6 +23,7 @@ from core.contracts import (
     PipelineResult,
     StepEvent,
 )
+from core.coverage import data_as_of_text
 from core.decide import decide
 from core.memory import remember
 from core.rerank import rerank
@@ -36,7 +37,7 @@ log = logging.getLogger(__name__)
 def _footer(deps: Deps, personal: bool = False) -> Footer:
     s = deps.settings
     return Footer(
-        data_as_of=s.DATA_AS_OF,
+        data_as_of=data_as_of_text(),
         snapshot_version=s.SNAPSHOT_VERSION,
         credit=s.DATA_CREDIT,
         personal_advice_flag=personal,

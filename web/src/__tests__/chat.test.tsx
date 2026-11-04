@@ -5,7 +5,7 @@ import { FAKE_CITATIONS } from "@/lib/fake/data";
 import { ChatScreen } from "@/components/chat/ChatScreen";
 import { FAILURES } from "@/lib/copy";
 
-const ce = { citations: FAKE_CITATIONS, removed_count: 0, data_as_of: "2026-08-31", credit: "c", notice: "n" };
+const ce = { citations: FAKE_CITATIONS, removed_count: 0, data_as_of: "6 November 2025", credit: "c", notice: "n" };
 
 describe("toSegments", () => {
   it("hides markers before the citations event", () => {

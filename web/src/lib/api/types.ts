@@ -108,6 +108,7 @@ export type CoverageOut = {
   sentence: string;
   sentence_approved: boolean;
   not_in_dataset_message: string;
+  not_found_message: string;
   courts: CoverageItem[];
   instruments: CoverageItem[];
   excluded: string[];

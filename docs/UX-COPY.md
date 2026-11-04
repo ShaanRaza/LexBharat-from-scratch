@@ -13,11 +13,11 @@ them.
 
 | Situation | What the user sees | What it costs |
 |---|---|---|
-| **No relevant results** | "No matching judgments found in our dataset (data as of the snapshot date)." Plus suggestions to rephrase or use Act lookup. **No written answer is generated, so nothing is invented** | One search call, no LLM call |
+| **No relevant results** | <!-- not-found-message:begin -->"We could not find an authority in our dataset that answers this. That does not mean none exists — it means our snapshot does not hold one. Try narrowing to a specific Act or section." (owner-approved 4 Nov 2026; generated from `core/coverage.json`)<!-- not-found-message:end --> Plus a suggestion to rephrase or use Act lookup. **No written answer is generated, so nothing is invented** | One search call, no LLM call |
 | **Voyage API is down** | A notice that meaning-based search is unavailable. Act lookup, outcome statistics and keyword search still work and are labelled **"keyword results only"**. A retry button | No Voyage call |
 | **A judgment is longer than the model can read** | "This judgment is too long to read in full. Answering from the most relevant parts." The parts used are listed, and the user can ask about a page range | Needs verification: measure the longest judgments against the model's limit |
 | **An upload is an unreadable scan** | "We could not read this file. Try a clearer scan or paste the text." Nothing is guessed. **The usage meter is not charged** | OCR attempt only |
-| **The dataset has no coverage of the question** | <!-- coverage-sentence:begin -->"LexBharat covers Supreme Court judgments and the Central Acts listed on our coverage page. It does not include High Courts, district courts, tribunals, or anything after the data-as-of date." **NEEDS-OWNER** (generated from `core/coverage.json`)<!-- coverage-sentence:end --> Points to the official court site. A question about a source the dataset does not hold (for example an Act that is not listed) gets the O7 message instead: "not in our dataset" (`message_key` `out_of_scope:not_in_dataset`), never "does not exist" | No LLM call if detected early |
+| **The dataset has no coverage of the question** | <!-- coverage-sentence:begin -->"LexBharat covers Supreme Court judgments and the Central Acts listed on our coverage page. It does not include High Courts, district courts, tribunals, or anything after the data-as-of date." (generated from `core/coverage.json`)<!-- coverage-sentence:end --> Points to the official court site. A question about a source the dataset does not hold (for example an Act that is not listed) gets the O7 message instead: "not in our dataset" (`message_key` `out_of_scope:not_in_dataset`), never "does not exist" | No LLM call if detected early |
 | **The LLM provider fails or times out** | The retrieved sources are shown **with links but no written answer**, and the user can retry | Retrieval cost only |
 | **The verifier rejects a cited authority** | The answer is shown with that citation removed and a note saying one authority could not be verified. The failure is written to `invented_citation_log` | Free |
 
@@ -39,7 +39,7 @@ Full "means / does not mean" table: [CITATION-VERIFIER.md](CITATION-VERIFIER.md)
 |---|---|
 | Every answer, stats page and Act page | KanoonBuddy gives **information, not legal advice** |
 | When Jev's safety check flags a personal-advice question | The answer **opens** by saying it cannot advise on the user's own situation, and suggests consulting an advocate |
-| Every result, stats page, Act page and share card | The **data-as-of date** |
+| Every result, stats page, Act page and share card | The **data-as-of date**, which describes the content that surface shows, not the release: <!-- data-as-of:begin -->judgment pages, statistics and shared judgment answers: "Data as of 6 November 2025."; Act pages: "Data as of 2025 (the latest Act held)."; an answer: by what it cites, or "Data as of 6 November 2025 for judgments, 2025 for Acts." (generated from `core/coverage.json`; the snapshot name names the release, not the content)<!-- data-as-of:end --> |
 | Every result, stats page, Act page and share card | `Data: Open India Law by Vaquill AI, CC BY 4.0` |
 | An Act whose `act_status`, `is_repealed`, `IND_REP_` id or title marker says repealed | **"Repealed"** (A180, A181) |
 | An Act whose `act_status` says in force and nothing says repealed | **"In force"** only if the owner sets `SHOW_IN_FORCE`; **off** until the act_status count is in (A181) |

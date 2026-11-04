@@ -13,12 +13,16 @@ from core.act_status import read_act_status
 router = APIRouter()
 
 
-async def _prov(request: Request) -> s.Provenance:
+async def _prov(request: Request, kinds: tuple[str, ...] = ()) -> s.Provenance:
+    """`kinds` are what this surface shows ("judgment", "act"); the date describes that
+    content (core.coverage.data_as_of_text), never the release name."""
+    from core.coverage import data_as_of_text
+
     cov = await request.app.state.repo.data_as_of()
     if not cov:
         raise ApiError(503, "service_unavailable", "Data is not loaded yet.")
     return s.Provenance(
-        data_as_of=cov[0],
+        data_as_of=data_as_of_text(kinds),
         snapshot_version=cov[1],
         credit=request.app.state.core_settings.DATA_CREDIT,
     )
@@ -36,7 +40,7 @@ async def get_case(record_id: str, request: Request):
          court=case.get("court"),
         decision_date=case.get("decision_date"), case_number=case.get("case_number"),
         citation_string=case.get("citation_string"), url=case.get("url"),
-        paragraphs=case["paragraphs"], provenance=await _prov(request),
+        paragraphs=case["paragraphs"], provenance=await _prov(request, ("judgment",)),
     )  # fmt: skip
 
 
@@ -61,7 +65,7 @@ async def get_section(act: str, n: str, request: Request):
             None if reading.status == "not_checked" else reading.status == "in_force"
         ),
         act_status_checked=reading.status != "not_checked",
-        provenance=await _prov(request),
+        provenance=await _prov(request, ("act",)),
     )  # fmt: skip
 
 
@@ -78,6 +82,7 @@ async def coverage_page(request: Request):
         ),
         sentence_approved=cov.sentence_approved,
         not_in_dataset_message=cov.not_in_dataset_message,
+        not_found_message=cov.not_found_message,
         courts=[s.CoverageItem(id=c.id, label=c.covered_label) for c in cov.courts],
         instruments=[
             s.CoverageItem(id=i.id, label=i.covered_label) for i in cov.instruments
@@ -94,7 +99,9 @@ async def stats(request: Request):
     # Gated by the FEATURE_STATS_LIVE switch (hand check must pass first).
     if not request.app.state.core_settings.FEATURE_STATS_LIVE:
         rows, live = [], False
-    return s.StatsResponse(rows=rows, live=live, provenance=await _prov(request))
+    return s.StatsResponse(
+        rows=rows, live=live, provenance=await _prov(request, ("judgment",))
+    )
 
 
 @router.get("/search", response_model=s.SearchResponse)

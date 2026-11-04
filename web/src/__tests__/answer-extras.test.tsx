@@ -43,7 +43,7 @@ describe("copy / export text", () => {
   it("copies the citation string exactly as recorded, with date, credit and notice", () => {
     const t = answerToText(finished())!;
     expect(t).toContain("(2020) 1 SCC 1 (as recorded in the dataset)");
-    expect(t).toContain("Data as of 2026-08-31.");
+    expect(t).toContain("Data as of 6 November 2025.");
     expect(t).toContain("Data: Open India Law by Vaquill AI, CC BY 4.0");
     expect(t).toContain("This is legal research, not legal advice.");
     expect(t).toContain("One authority could not be verified and was removed.");

@@ -20,7 +20,7 @@ export function AnswerView({
   // (read by people who may not be signed in) links to the record's own source.
   linkFor?: (c: Citation) => string;
 }) {
-  if (answer.failure === "outsideCoverage" || answer.failure === "notInDataset") {
+  if (answer.failure === "outsideCoverage" || answer.failure === "notInDataset" || answer.failure === "notFound") {
     return <CoverageFailureCard kind={answer.failure} />;
   }
   if (answer.failure) return <FailureCard kind={answer.failure} onRetry={onRetry} />;

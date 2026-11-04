@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import AsyncIterator
+from dataclasses import replace
 
 from core.contracts import (
     FinalEvent,
@@ -13,6 +14,7 @@ from core.contracts import (
     TextDelta,
     is_sealed,
 )
+from core.coverage import data_as_of_text
 
 _WORDS = re.compile(r"\S+\s*")
 
@@ -31,6 +33,9 @@ async def show(result: PipelineResult) -> AsyncIterator[StreamEvent]:
         for m in _WORDS.finditer(ans.text):
             yield TextDelta(m.group())
         citations, had_removals = ans.citations, ans.had_removals
+    footer = result.footer
+    if citations:  # the date describes what was cited, not the release
+        footer = replace(footer, data_as_of=data_as_of_text(c.kind for c in citations))
     yield FinalEvent(
-        result.outcome, citations, result.footer, result.message_key, had_removals
+        result.outcome, citations, footer, result.message_key, had_removals
     )

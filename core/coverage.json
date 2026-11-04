@@ -3,10 +3,20 @@
   "note": "Written by data/coverage_report.py; do not widen it by hand. This is the ONLY place a coverage category may be written (tests/test_coverage_source.py). It records what the SERVED collection `kanoon_v1` holds, measured 4 Nov 2026: 381,271 Supreme Court points and 74,484 Central Act points, nothing else. High Courts (legal_corpus_v1/v2) and State Acts and regulations (1,024,068 points in the staging collection acts_noncentral_v1, never promoted, A133) are NOT listed: the owner widened scope on 3 Nov 2026, but that is intent and this file records what is held. The change that serves them must add them here (HELD_COURTS, INSTRUMENTS) and regenerate. So the five statutes the Act inventory found absent (CrPC 1973, Consumer Protection 1986, Payment of Gratuity 1972, Employees' Compensation 1923, the Constitution) are NOT held: their text lives only in the staging collection. The Indian Trusts Act 1882 is not in the dataset at all. There is no length exclusion (owner); held does not mean complete (A141 is open). OWNER ITEM, not resolved here: the sentence ends 'anything after the data-as-of date', and the snapshot is labelled v2026.08 while the latest Supreme Court judgment held is dated 6 November 2025 (reported by the SC lane), so the date overstates currency by about nine months.",
   "measured_at": "2026-11-04",
   "generated_by": "data/coverage_report.py from the held collection `kanoon_v1` (facets of `court` and `jurisdiction`, 4 Nov 2026), docs/DATA-GAPS.md section 20, and core/court_ids.json",
-  "sentence_approved": false,
+  "sentence_approved": true,
   "sentence_template": "{product} covers {courts} and {instruments}. It does not include {excluded_list}, or anything after the data-as-of date.",
   "instruments_phrase": "the Central Acts listed on our coverage page",
   "not_in_dataset_message": "Not in our dataset. That does not mean it does not exist — it means our snapshot does not hold it.",
+  "not_found_message": "We could not find an authority in our dataset that answers this. That does not mean none exists — it means our snapshot does not hold one. Try narrowing to a specific Act or section.",
+  "data_as_of": {
+    "judgments": "2025-11-06",
+    "acts": "2025"
+  },
+  "data_as_of_templates": {
+    "judgment": "{date}",
+    "act": "{year} (the latest Act held)",
+    "both": "{date} for judgments, {year} for Acts"
+  },
   "courts": [
     {
       "id": "supreme_court",

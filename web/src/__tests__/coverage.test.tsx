@@ -32,6 +32,10 @@ describe("the coverage sentence comes from the API, not from the web app", () =>
     render(<CoverageFailureCard kind="notInDataset" />);
     await waitFor(() => expect(screen.getByText(FAKE_COVERAGE.not_in_dataset_message)).toBeInTheDocument());
   });
+  it("shows the API's 'not found' message when the search ran and kept nothing", async () => {
+    render(<CoverageFailureCard kind="notFound" />);
+    await waitFor(() => expect(screen.getByText(FAKE_COVERAGE.not_found_message)).toBeInTheDocument());
+  });
   it("the built-in fallback names no category", () => {
     for (const k of ["outsideCoverage", "notInDataset"] as const) {
       expect(FAILURES[k].body).not.toMatch(/court|act|tribunal|central|state/i);
@@ -47,7 +51,7 @@ describe("coverage page", () => {
       expect(screen.getByText(i.label)).toBeInTheDocument();
     }
     expect(screen.getByText("Sample exclusions")).toBeInTheDocument();
-    expect(screen.getByText(/Data as of 2026-08-31/)).toBeInTheDocument();
+    expect(screen.getByText(/Data as of 6 November 2025/)).toBeInTheDocument();
     expect(screen.getByText(/CC BY 4.0/)).toBeInTheDocument();
     expect(container.textContent).not.toMatch(/state acts|regulations/i);
   });

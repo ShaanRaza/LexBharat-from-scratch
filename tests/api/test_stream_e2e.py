@@ -44,7 +44,9 @@ def test_token_events_then_one_citations_then_done(client):
 
     cit = events[ci][1]
     assert cit["credit"].startswith("Data: Open India Law")
-    assert cit["data_as_of"] == "2026-08-31" and cit["removed_count"] == 0
+    assert (
+        cit["data_as_of"] == "6 November 2025"
+    )  # judgments only and cit["removed_count"] == 0
     c = cit["citations"][0]
     assert c["status"] in ("verified", "partly") and c["kind"] == "judgment"
     assert c["url"] == "https://example.invalid/fake.pdf" and c["anchor"] == "p3"

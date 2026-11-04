@@ -19,7 +19,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import AsyncIterator, Awaitable, Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from types import SimpleNamespace
 
 from api import schemas as s
@@ -39,6 +39,7 @@ from core.contracts import (
 from core.contracts import (
     Citation as CoreCitation,
 )
+from core.coverage import data_as_of_text
 from core.followups import Followups
 from core.improve import Improved
 
@@ -202,7 +203,7 @@ class FakePipeline:
     def __init__(self, repo=None, footer: Footer | None = None):
         self.repo = repo
         self.footer = footer or Footer(
-            data_as_of="2026-08-31", snapshot_version="v2026.08"
+            data_as_of=data_as_of_text(), snapshot_version="v2026.08"
         )
 
     async def run(
@@ -263,4 +264,7 @@ class FakePipeline:
     async def stream(self, result: FakeResult) -> AsyncIterator[StreamEvent]:
         for word in result.answer_text.split(" "):
             yield TextDelta(word + " ")
-        yield FinalEvent("answered", result.citations, result.footer)
+        footer = replace(
+            result.footer, data_as_of=data_as_of_text(c.kind for c in result.citations)
+        )
+        yield FinalEvent("answered", result.citations, footer)

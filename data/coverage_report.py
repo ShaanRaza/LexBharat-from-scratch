@@ -42,6 +42,23 @@ INSTRUMENTS = [
     ("central_acts", "Central Acts", "central"),
 ]
 
+# The latest content actually held in `kanoon_v1` (4 Nov 2026, scan/latest_dates.py): the newest
+# Supreme Court decision_date, and the newest Act year (the data gives an Act a year, not a
+# date: 600 of 1,568 carry an enactment_date and the 2024 and 2025 Acts carry none).
+DATA_AS_OF = {"judgments": "2025-11-06", "acts": "2025"}
+DATA_AS_OF_TEMPLATES = {
+    "judgment": "{date}",
+    "act": "{year} (the latest Act held)",
+    "both": "{date} for judgments, {year} for Acts",
+}
+
+# Owner-approved wording (4 Nov 2026), shown when the search ran and the gate kept nothing.
+NOT_FOUND_MESSAGE = (
+    "We could not find an authority in our dataset that answers this. That does not mean "
+    "none exists \u2014 it means our snapshot does not hold one. Try narrowing to a "
+    "specific Act or section."
+)
+
 # Scope, not measurement: what is out. High Courts are out until they are served (A146); tribunals
 # are out at launch (G-T, A139); district courts are out because the dataset holds no judgment
 # file for them (26 judgment files: the Supreme Court and 25 High Courts, DATASET.md).
@@ -110,6 +127,9 @@ def build(measured_at: str) -> dict:
         **({"courts_phrase": COURTS_PHRASE} if COURTS_PHRASE else {}),
         "instruments_phrase": "the Central Acts listed on our coverage page",
         "not_in_dataset_message": cur["not_in_dataset_message"],
+        "not_found_message": NOT_FOUND_MESSAGE,
+        "data_as_of": DATA_AS_OF,
+        "data_as_of_templates": DATA_AS_OF_TEMPLATES,
         "courts": courts,
         "instruments": [
             {"id": i, "covered_label": label, "payload": {"jurisdiction": j}}

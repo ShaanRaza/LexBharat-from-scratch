@@ -139,7 +139,7 @@ describe("a saved conversation", () => {
   it("shows the stored answer with its ticks and moves between matters", async () => {
     render(<ConversationScreen id="fake-conv-1" />);
     expect((await screen.findAllByRole("heading", { name: "What is bail?" })).length).toBe(2); // title + question
-    expect(screen.getAllByText(/Record found in dataset \(data as of 2026-08-31\)/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Record found in dataset \(data as of 6 November 2025\)/).length).toBeGreaterThan(0);
     const picker = await screen.findByLabelText("File this conversation under");
     fireEvent.change(picker, { target: { value: "" } });
     await waitFor(() => expect(fakeDb.conversations.find((c) => c.id === "fake-conv-1")?.matter_id).toBeNull());

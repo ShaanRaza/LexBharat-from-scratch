@@ -17,7 +17,6 @@ PRACTICE = Path(__file__).resolve().parents[1] / "fixtures" / "practice"
 @pytest.fixture(autouse=True)
 def _env(monkeypatch):
     monkeypatch.setenv("SEAL_KEY", "test-seal-key-not-a-secret")
-    monkeypatch.setenv("DATA_AS_OF", "2026-08-31")
     monkeypatch.setenv("ENVIRONMENT", "development")
     get_settings.cache_clear()
     yield

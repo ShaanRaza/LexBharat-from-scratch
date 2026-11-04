@@ -12,6 +12,7 @@ from core_helpers import make_deps
 from adapters.decisions import FakeDecisions
 from adapters.llm import FakeLLM
 from adapters.memory import FakeUsageMeter
+from core import coverage
 from core.contracts import (
     Citation,
     FinalEvent,
@@ -57,7 +58,7 @@ async def test_happy_path_answers_with_sealed_verified_citation(settings, store)
     assert res.answer is not None and res.answer.sealed
     assert res.answer.citations
     assert all(c.status in ("verified", "partly") for c in res.answer.citations)
-    assert res.footer.data_as_of == "2026-08-31"
+    assert res.footer.data_as_of == coverage.data_as_of_text()
     assert "CC BY 4.0" in res.footer.credit
     assert res.counted and deps.usage.counts == {"u1": 1}
     assert len(deps.store.saved) == 1
@@ -261,3 +262,20 @@ async def test_not_in_dataset_is_its_own_refusal_not_a_high_court_one(settings, 
     assert res.message_key == "out_of_scope:not_in_dataset"
     assert res.answer is None and not res.counted
     assert deps.store.saved[-1][1].message_key == "out_of_scope:not_in_dataset"
+
+
+async def test_the_date_on_the_final_event_describes_what_was_cited(settings, store):
+    """The data-as-of line is the latest content of the kinds the answer cites, never the
+    release name (owner, 4 Nov 2026)."""
+    from core.contracts import FinalEvent
+    from core.show import show
+
+    deps = deps_for(settings, store)
+    res = await run_pipeline(PipelineRequest("u1", "Tell me about " + QUERY), deps)
+    final = [e async for e in show(res) if isinstance(e, FinalEvent)][0]
+    kinds = {c.kind for c in final.citations}
+    assert final.footer.data_as_of == coverage.data_as_of_text(kinds)
+    assert (
+        "v2026" not in final.footer.data_as_of
+        and "August" not in final.footer.data_as_of
+    )

@@ -26,6 +26,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from core.contracts import PipelineResult
+from core.coverage import data_as_of_text
 
 HERE = Path(__file__).parent
 Pipeline = Callable[[dict], Awaitable[PipelineResult]]
@@ -136,7 +137,7 @@ async def _sample_pipeline_factory():
         decisions=FakeDecisions(),
         citation_log=FakeCitationLog(),
     )
-    footer = Footer(settings.DATA_AS_OF, settings.SNAPSHOT_VERSION)
+    footer = Footer(data_as_of_text(), settings.SNAPSHOT_VERSION)
 
     async def pipeline(q: dict) -> PipelineResult:
         qwords = set(words(q["question"]))

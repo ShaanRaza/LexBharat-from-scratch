@@ -33,7 +33,7 @@ import { ANSWER_EIGHT, ANSWER_REMOVED, CITATIONS_EIGHT, CITATIONS_REMOVED } from
 export { ANSWER_EIGHT, ANSWER_REMOVED, CITATIONS_EIGHT, CITATIONS_REMOVED };
 
 export const FAKE_PROVENANCE: Provenance = {
-  data_as_of: "2026-08-31",
+  data_as_of: "6 November 2025",
   snapshot_version: "v2026.08",
   credit: CC_BY_CREDIT,
   notice: NOT_LEGAL_ADVICE_API,
@@ -128,6 +128,7 @@ export const FAKE_COVERAGE: CoverageOut = {
   sentence: "Sample coverage sentence: this demo covers its sample records only.",
   sentence_approved: false,
   not_in_dataset_message: "Sample: this is not in our dataset.",
+  not_found_message: "Sample: nothing found.",
   courts: [{ id: "sample-court", label: "Sample court judgments" }],
   instruments: [{ id: "sample-acts", label: "Sample Acts" }],
   excluded: ["Sample exclusions"],

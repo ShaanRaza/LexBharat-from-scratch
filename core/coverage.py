@@ -26,7 +26,9 @@ from __future__ import annotations
 import json
 import re
 import sys
-from dataclasses import dataclass
+from collections.abc import Iterable
+from dataclasses import dataclass, field
+from datetime import date
 from functools import lru_cache
 from pathlib import Path
 
@@ -62,6 +64,9 @@ class Coverage:
     )
     sentence_template: str
     not_in_dataset_message: str
+    # Shown when the search ran and the gate kept nothing (pipeline step 7): distinct
+    # from the out-of-scope sentence and from "not in our dataset".
+    not_found_message: str
     courts: tuple[Court, ...]
     instruments: tuple[Instrument, ...]
     excluded: tuple[str, ...]
@@ -74,6 +79,10 @@ class Coverage:
     # The same for the courts: with 26 of them the sentence cannot name each one, so the
     # file gives one phrase and the coverage page lists them. Empty = name them.
     courts_phrase: str = ""
+    # The latest content held, per kind: {"judgments": "2025-11-06", "acts": "2025"}
+    # (an Act carries a year, not a date), and how each is worded to a user.
+    data_as_of: dict[str, str] = field(default_factory=dict)
+    data_as_of_templates: dict[str, str] = field(default_factory=dict)
 
     def covered_labels_each(self) -> list[str]:
         """Each court and instrument by its own label, as the coverage page lists."""
@@ -122,6 +131,9 @@ def _parse(raw: dict) -> Coverage:
         sentence_approved=bool(raw["sentence_approved"]),
         sentence_template=raw["sentence_template"],
         not_in_dataset_message=raw["not_in_dataset_message"],
+        not_found_message=raw["not_found_message"],
+        data_as_of=dict(raw["data_as_of"]),
+        data_as_of_templates=dict(raw["data_as_of_templates"]),
         courts=courts,
         instruments=instruments,
         excluded=tuple(raw["excluded"]),
@@ -152,6 +164,30 @@ def coverage_sentence(product_name: str, cov: Coverage | None = None) -> str:
         excluded=_join(list(cov.excluded)),
         excluded_list=", ".join(cov.excluded),
     )
+
+
+def _long_date(iso: str) -> str:
+    d = date.fromisoformat(iso)
+    return f"{d.day} {d:%B} {d.year}"
+
+
+def data_as_of_text(kinds: Iterable[str] = (), cov: Coverage | None = None) -> str:
+    """The data-as-of line for ONE surface, from the latest content it shows.
+
+    `kinds` are Citation kinds ("judgment", "act"). A surface that shows only judgments
+    gets the latest judgment date; only Acts, the latest Act year; both or none given,
+    both. The snapshot name (v2026.08) names the release, not the content, and is never
+    used here."""
+    cov = cov or load_coverage()
+    have = {k for k in kinds if k in ("judgment", "act")}
+    judgment = _long_date(cov.data_as_of["judgments"])
+    act = cov.data_as_of["acts"]
+    t = cov.data_as_of_templates
+    if have == {"judgment"}:
+        return t["judgment"].format(date=judgment)
+    if have == {"act"}:
+        return t["act"].format(year=act)
+    return t["both"].format(date=judgment, year=act)
 
 
 def scope_criteria(cov: Coverage | None = None) -> dict[str, str]:
@@ -194,10 +230,12 @@ def court_payload(court_id: str, cov: Coverage | None = None) -> dict[str, str]:
 
 
 # --- docs: README and UX-COPY read this too --------------------------------------
-DOC_BLOCKS = {
-    "README.md": "coverage",
-    "docs/UX-COPY.md": "coverage-sentence",
-}
+DOC_BLOCKS = [
+    ("README.md", "coverage"),
+    ("docs/UX-COPY.md", "coverage-sentence"),
+    ("docs/UX-COPY.md", "not-found-message"),
+    ("docs/UX-COPY.md", "data-as-of"),
+]
 
 
 def render_docs_block(name: str, product_name: str, cov: Coverage | None = None) -> str:
@@ -217,6 +255,20 @@ def render_docs_block(name: str, product_name: str, cov: Coverage | None = None)
     if name == "coverage-sentence":
         owner = "" if cov.sentence_approved else " **NEEDS-OWNER**"
         return f'"{sentence}"{owner} (generated from `core/coverage.json`)'
+    if name == "not-found-message":
+        return (
+            f'"{cov.not_found_message}" (owner-approved 4 Nov 2026; generated from '
+            "`core/coverage.json`)"
+        )
+    if name == "data-as-of":
+        return (
+            f"judgment pages, statistics and shared judgment answers: "
+            f'"Data as of {data_as_of_text(["judgment"], cov)}."; '
+            f'Act pages: "Data as of {data_as_of_text(["act"], cov)}."; '
+            f'an answer: by what it cites, or "Data as of {data_as_of_text([], cov)}." '
+            "(generated from `core/coverage.json`; the snapshot name names the "
+            "release, not the content)"
+        )
     raise KeyError(name)
 
 
@@ -231,16 +283,16 @@ def _replace_block(text: str, name: str, body: str) -> str:
 
 def docs_in_sync(product_name: str) -> dict[str, bool]:
     out = {}
-    for rel, name in DOC_BLOCKS.items():
+    for rel, name in DOC_BLOCKS:
         text = (ROOT / rel).read_text(encoding="utf-8")
-        out[rel] = (
+        out[f"{rel}#{name}"] = (
             _replace_block(text, name, render_docs_block(name, product_name)) == text
         )
     return out
 
 
 def write_docs(product_name: str) -> None:
-    for rel, name in DOC_BLOCKS.items():
+    for rel, name in DOC_BLOCKS:
         p = ROOT / rel
         p.write_text(
             _replace_block(

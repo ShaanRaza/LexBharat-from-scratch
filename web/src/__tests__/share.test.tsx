@@ -83,8 +83,8 @@ describe("the public page", () => {
     expect(screen.getByRole("heading", { name: "What is bail?" })).toBeInTheDocument();
     expect(container.querySelector('[data-mark="tick"]')).not.toBeNull();
     expect(container.querySelector('[data-mark="warning"]')).not.toBeNull();
-    expect(screen.getAllByText(/Record found in dataset \(data as of 2026-08-31\)/).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Data as of 2026-08-31/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Record found in dataset \(data as of 6 November 2025\)/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Data as of 6 November 2025/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/CC BY 4.0/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/not legal advice/).length).toBeGreaterThan(0);
   });

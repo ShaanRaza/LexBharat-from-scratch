@@ -118,10 +118,10 @@ def test_the_guard_can_fail(tmp_path):
 
 
 # --- the source itself ------------------------------------------------------------
-def test_the_source_loads_and_is_measured_but_the_wording_is_not_approved():
+def test_the_source_loads_and_is_measured_and_the_sentence_is_approved():
     cov = coverage.load_coverage()
     assert cov.status == "measured"  # written only by data/coverage_report.py
-    assert cov.sentence_approved is False  # NEEDS-OWNER: the owner approves the wording
+    assert cov.sentence_approved is True  # owner, 4 Nov 2026
     assert cov.covered_labels  # names something
 
 
@@ -169,7 +169,7 @@ def test_the_sentence_names_only_what_the_source_names():
     cov = coverage.Coverage(
         status="placeholder", sentence_approved=False,
         sentence_template="{product} covers {covered}. Not {excluded}.",
-        not_in_dataset_message="m",
+        not_in_dataset_message="m", not_found_message="n",
         courts=(), instruments=(coverage.Instrument("a", "Alpha Acts", {}),),
         excluded=("beta",), buckets=dict(coverage.load_coverage().buckets),
     )  # fmt: skip
@@ -184,6 +184,7 @@ def test_scope_criteria_follow_the_source_not_a_copy():
         status=cov.status, sentence_approved=cov.sentence_approved,
         sentence_template=cov.sentence_template,
         not_in_dataset_message=cov.not_in_dataset_message,
+        not_found_message=cov.not_found_message,
         courts=cov.courts,
         instruments=(coverage.Instrument("x", "Zeta Statutes", {}),),
         excluded=cov.excluded, buckets=cov.buckets,
@@ -221,3 +222,29 @@ def test_the_checked_in_file_is_what_the_generator_writes():
         [sys.executable, "-m", "data.coverage_report"], cwd=ROOT, capture_output=True
     )
     assert r.returncode == 0, r.stdout.decode()
+
+
+def test_the_data_as_of_line_describes_the_content_not_the_release():
+    """Judgment surfaces say the newest judgment held; Act surfaces the newest Act year;
+    a mixed answer both. The release name (v2026.08) and 'August 2026' never appear."""
+    cov = coverage.load_coverage()
+    judgments = coverage.data_as_of_text(["judgment"])
+    acts = coverage.data_as_of_text(["act"])
+    both = coverage.data_as_of_text([])
+    assert (
+        judgments == "6 November 2025"
+    )  # newest decision_date in kanoon_v1, 4 Nov 2026
+    assert cov.data_as_of["acts"] in acts and judgments not in acts
+    assert judgments in both and cov.data_as_of["acts"] in both
+    assert coverage.data_as_of_text(["judgment", "act"]) == both
+    for text in (judgments, acts, both):
+        assert "2026" not in text and "August" not in text and "v20" not in text
+
+
+def test_the_not_found_message_is_the_approved_text_and_is_read_from_the_file():
+    cov = coverage.load_coverage()
+    assert cov.not_found_message.startswith(
+        "We could not find an authority in our dataset that answers this."
+    )
+    assert cov.not_found_message.endswith("Try narrowing to a specific Act or section.")
+    assert cov.not_found_message != cov.not_in_dataset_message

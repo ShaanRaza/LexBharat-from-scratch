@@ -26,11 +26,17 @@ export const IN_FORCE_NOT_CHECKED = "In-force status not checked for this Act.";
 export const IN_FORCE_LABEL = "In force";
 export const REPEALED_LABEL = "Repealed";
 
+// Shown under an answer-less screen before any result has told us the date of the data.
+export const DATA_DATE_WITH_RESULTS = "The date of the data is shown with every result."; // NEEDS-OWNER
+
 export const FAILURES = {
+  // The search ran and the gate kept nothing. Owner-approved 4 Nov 2026. The live text is
+  // not_found_message from GET /coverage (core/coverage.json); this is the fallback if that
+  // call fails, and a test keeps the two identical.
   notFound: {
-    title: "No matching judgments found",
-    body: "No matching judgments found in our dataset (data as of the snapshot date).",
-    hint: "Try rephrasing your question, or use Act lookup.",
+    title: "No matching authority found",
+    body: "We could not find an authority in our dataset that answers this. That does not mean none exists \u2014 it means our snapshot does not hold one. Try narrowing to a specific Act or section.",
+    hint: "You can also use Act lookup.",
   },
   // What the product covers is NOT typed here: the sentence comes from GET /coverage
   // (one source, core/coverage.json). The body below is only the fallback shown if that

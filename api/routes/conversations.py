@@ -13,6 +13,7 @@ from api import schemas as s
 from api.auth import CurrentUser, User
 from api.errors import ApiError, request_id_of
 from api.ratelimit import enforce_hourly, record_spend
+from core.coverage import data_as_of_text
 from core.spend import AiCall
 
 router = APIRouter()
@@ -84,7 +85,9 @@ async def _provenance(request: Request) -> s.Provenance | None:
         return None
     cs = request.app.state.core_settings
     return s.Provenance(
-        data_as_of=cov[0], snapshot_version=cov[1], credit=cs.DATA_CREDIT
+        data_as_of=data_as_of_text(),
+        snapshot_version=cov[1],
+        credit=cs.DATA_CREDIT,
     )
 
 
@@ -118,7 +121,7 @@ async def ask(
 
     async def events() -> AsyncIterator[str]:
         async for name, data in bridge.stream_answer(
-            req, pipe.run, pipe.stream, cov[0] if cov else "",
+            req, pipe.run, pipe.stream, data_as_of_text() if cov else "",
             app.state.core_settings.DATA_CREDIT, rid,
         ):  # fmt: skip
             yield _sse(name, data)

@@ -19,7 +19,7 @@ hard-code either string.**
 
 | Group | Variables | Notes |
 |---|---|---|
-| Product | `PRODUCT_NAME`, `CORPUS_COLLECTION`, `DATA_AS_OF`, `SNAPSHOT_VERSION` | Snapshot is `v2026.08` unless the step-1 evaluation upgrades it |
+| Product | `PRODUCT_NAME`, `CORPUS_COLLECTION`, `SNAPSHOT_VERSION` | Snapshot is `v2026.08` unless the step-1 evaluation upgrades it |
 | AI gateway | `LITELLM_*`, `MODEL_FREE`, `MODEL_STUDENT`, `MODEL_PRO`, `MODEL_REWRITE`, `MODEL_FALLBACK` | The model list **only accepts providers marked no-training** |
 | Google / Gemini | `GEMINI_API_KEY` | **Paid tier only** |
 | Voyage | `VOYAGE_API_KEY`, `VOYAGE_EMBED_MODELS` (JSON, per collection), `VOYAGE_RERANK_MODEL` | the embedding model must match the vectors of the collection searched; an unlisted collection is refused |

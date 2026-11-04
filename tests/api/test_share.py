@@ -122,7 +122,7 @@ def test_the_public_page_carries_date_credit_and_notice_and_names_no_one(client)
     body = client.get(f"{API}/s/{token}").json()
     assert set(body) == {"question", "text", "citations", "expires_at", "provenance"}
     p = body["provenance"]
-    assert p["data_as_of"] == "2026-08-31" and p["credit"].startswith(
+    assert p["data_as_of"].startswith("6 November 2025") and p["credit"].startswith(
         "Data: Open India Law"
     )
     assert p["notice"]  # the not-legal-advice notice

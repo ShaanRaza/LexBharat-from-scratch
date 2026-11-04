@@ -43,7 +43,6 @@ class Settings(BaseSettings):
     PRODUCT_NAME: str = "LexBharat"
     CORPUS_COLLECTION: str = "kanoon_v1"
     SNAPSHOT_VERSION: str = "v2026.08"
-    DATA_AS_OF: str = ""
     DATA_CREDIT: str = "Data: Open India Law by Vaquill AI, CC BY 4.0"
 
     # --- Citation seal (HMAC key; must be stable across processes so cached

@@ -12,14 +12,14 @@ describe("source pane (presentational)", () => {
       <SourcePane
         citation={verifiedJudgment}
         state={{ status: "case", record: FAKE_CASE }}
-        dataAsOf="2026-08-31"
+        dataAsOf="6 November 2025"
         clicks={1}
         onClose={() => {}}
       />,
     );
     expect(container.querySelector('[data-mark="tick"]')).not.toBeNull();
-    expect(screen.getAllByText(/Record found in dataset \(data as of 2026-08-31\)/).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Data as of 2026-08-31/)).toBeInTheDocument();
+    expect(screen.getAllByText(/Record found in dataset \(data as of 6 November 2025\)/).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Data as of 6 November 2025/)).toBeInTheDocument();
     expect(screen.getByText(/CC BY 4.0/)).toBeInTheDocument();
     expect(screen.getByText(/not legal advice/)).toBeInTheDocument();
     const cited = container.querySelector('[data-cited="true"]');

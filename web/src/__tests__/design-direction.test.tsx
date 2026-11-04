@@ -38,10 +38,10 @@ describe("tokens follow docs/DESIGN-DIRECTION.md (a draft the owner reacts to)",
 
 describe("the tick is text-led and neutral", () => {
   it("a verified chip carries an outline mark (an svg), the words, and no green", () => {
-    const { container } = render(<CitationChip label="S1" status="verified" dataAsOf="2026-08-31" href="/x" />);
+    const { container } = render(<CitationChip label="S1" status="verified" dataAsOf="6 November 2025" href="/x" />);
     const a = container.querySelector("a")!;
     expect(a.querySelector("svg")).not.toBeNull();
-    expect(a.textContent).toContain("Record found in dataset (data as of 2026-08-31)");
+    expect(a.textContent).toContain("Record found in dataset (data as of 6 November 2025)");
     expect(a.className).not.toMatch(/green|emerald|verified-bg/);
     expect(a.className).toMatch(/text-text-muted/);
   });

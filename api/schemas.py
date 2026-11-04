@@ -512,6 +512,8 @@ class CoverageResponse(BaseModel):
     sentence: str
     sentence_approved: bool
     not_in_dataset_message: str
+    not_found_message: str
+    not_found_message: str
     courts: list[CoverageItem]
     instruments: list[CoverageItem]
     excluded: list[str]

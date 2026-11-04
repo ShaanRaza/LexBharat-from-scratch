@@ -9,7 +9,8 @@ def test_coverage_is_public_and_reads_the_source(client):
     body = r.json()
     cov = coverage.load_coverage()
     assert body["status"] == cov.status == "measured"
-    assert body["sentence_approved"] is False  # the owner approves the wording
+    assert body["sentence_approved"] is cov.sentence_approved is True  # 4 Nov 2026
+    assert body["not_found_message"] == cov.not_found_message
     assert body["sentence"] == coverage.coverage_sentence("LexBharat")
     assert [c["label"] for c in body["courts"]] == [c.covered_label for c in cov.courts]
     assert [i["label"] for i in body["instruments"]] == [
