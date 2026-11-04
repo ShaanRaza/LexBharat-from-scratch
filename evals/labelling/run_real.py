@@ -368,10 +368,18 @@ async def main_async(limit: int | None, out: Path) -> None:
 
 
 def main() -> None:
+    global RPM  # noqa: PLW0603 - read by CountingLLM._pace at call time
     ap = argparse.ArgumentParser()
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--out", type=Path, default=OUT_DEFAULT)
+    ap.add_argument(
+        "--rpm",
+        type=int,
+        default=RPM,
+        help="model calls a minute (the free tier allowed 14; billing is on now)",
+    )
     a = ap.parse_args()
+    RPM = a.rpm
     asyncio.run(main_async(a.limit, a.out))
 
 

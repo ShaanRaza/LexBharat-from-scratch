@@ -16,7 +16,7 @@ audit's own provenance (which snapshot, which export, when) is **not verified**.
 | judgments_no_text_supreme_court | 4,068 |
 | acts_stub_or_empty | 3,716 |
 | hand_copied_india_code | 1,990 |
-| judgments_no_text_high_courts (**1,000-row sample of 16,024,412**) | 1,000 |
+| judgments_no_text_high_courts (**1,000-row sample of 16,024,412**; see section 2: High Court points in the served collections carry text) | 1,000 |
 | court_year_zero_rows | 897 |
 | laws_missing_2025_2026 | 2 |
 
@@ -51,24 +51,34 @@ this file proves existence, not usable coverage.
 "we hold N Acts you can actually read" are different claims, and only the second belongs on
 the coverage page (O7).
 
-## 2. High Courts may not be buildable from this data at all
+## 2. High Courts are buildable: the "metadata only" reading is WRONG for the data we serve
 
-The audit says the High Court export is **metadata only**: `no_judgment_text_loaded (High
-Court export is metadata only)` and `High Court export has no text column`, across
-**16,024,412 cases** and **26 courts**.
+**Settled 4 Nov 2026 (Measured).** The audit reported `no_judgment_text_loaded (High Court export is metadata only)` and
+`High Court export has no text column`, across 16,024,412 cases and 26 courts, and this section used to say High Courts
+"may not be buildable from this data at all". That reading does not hold for `legal_corpus_v1` / `legal_corpus_v2`, the
+collections the product is built from. Evidence, all read from the originals (read-only):
 
-If that holds for the data we would actually serve, PRD-v2 section 4.3's plan to add Bombay,
-Telangana and Kerala after the launch gate **cannot be delivered as written**:
+- **One High Court point opened from each of three courts**, text field populated in all three:
 
-- No judgment text means nothing to retrieve beyond metadata.
-- Verifier check 3 (quoted words appear in the record) can never run.
-- Check 2 (the record exists) would still pass, so a citation could carry a tick while
-  pointing at a record with no readable text. That is the tick meaning less than it says.
+  | Court | Collection | Chunk | Text field |
+  |---|---|---|---|
+  | Kerala | `legal_corpus_v2` | `KLHC010546832023_021` | 4,208 characters; opens "Case: Bail Appl./6428/2023 ... Court: High Court of Kerala ... RESPONDENT/COMPLAINANT: ..." |
+  | Bombay | `legal_corpus_v1` | `HCBM030119402018_000` | 2,554 characters; opens "Case: CA/4715/2018 ... Court: Bombay High Court ... Section: PARAGRAPH" |
+  | Telangana | `legal_corpus_v1` | `HBHC010353512013_000` | 1,152 characters; opens "Case: WP/6535/2013 ... WRIT PETITION No.6535 of 2013" |
 
-**Not verified, and it matters which is true.** This describes an *export*. Whether
-`legal_corpus_v1` / `legal_corpus_v2` hold High Court chunks *with text* is a different
-question and is exactly what the Part 6 inventory should answer before the drive is ejected.
-Do not re-plan the roadmap on this line alone; do not promise High Courts until it is settled.
+- **Not an anecdote: 59,454 points**, drawn at random from all 30 court prefixes of both collections (1,100 of them Supreme Court,
+  the rest High Court) for the embedding health check (section 21), **have zero empty text fields and none under 200 characters.**
+- **Text exists at scale and was already spent on**: A141 counted 3,422M tokens of High Court text in the 2,865,144 whole
+  cases the index lacks (`A141-COST-PICTURE.md` section 2, exact local token count), and A123 re-embedded 217,766 Kerala chunks
+  from their stored text (reproduced at cosine 0.998 or better before the run).
+- Verifier check 3 (quoted words appear in the record) therefore can run on High Court passages, and a High Court citation's
+  tick points at readable text.
+
+**What the audit's line was really describing** is the *export* it examined (and tribunal material, section 7 Conflict 3). It
+is not a property of the served collections. Of the remaining gap: High Court cases that have **no chunk in any collection**
+are an indexing problem, not a text problem (section 19; A141 prices loading them). **Not verified:** the audit's 1,000-row
+sample of High Court cases with no text (the `judgments_no_text_high_courts` row above) was not reproduced; it may describe
+rows in the parquet that carry no text, which is a different population from the points sampled here.
 
 ## 3. Things that touch the verifier and the tick
 
@@ -221,7 +231,7 @@ the project's main contribution — and says *tribunal* material is the part wit
 **This is the likelier reading, and it is good news: High Courts have text, so phase 2 is
 real.** It also means the "no text" risk moves to tribunals, which are already "Later" in
 PRD-v2 section 4.3 and now carry a known OCR cost. Still **not verified** against the drive:
-settle it by opening one High Court point, which the Part 6 inventory does.
+**Settled in section 2, 4 Nov 2026:** a High Court point was opened from each of three courts and the text is there.
 
 ### Other facts worth carrying
 
@@ -1970,4 +1980,162 @@ By a rule that binds on whole missing cases (owner, 4 Nov 2026; the 1% threshold
 - The parquet is the reference: a chunk missing from the parquet but present in Qdrant is reported, not judged. The case key is the chunk id without its trailing `_<n>`, which matched the `case_id` in every parquet row measured earlier (section 18).
 - The overall `court` label counts treat an id that names no known court as unclassifiable. The classification of a missing case as real or placeholder is from language and length only for the ones not spot-checked.
 - The hashes are 64-bit (a collision among 64M ids has probability under 1e-4); not verified beyond that.
+
+## 20. Which central Acts the corpus actually holds (inventory, 4 Nov 2026)
+
+**Measured, read-only, no embeddings, no model calls, no spend** (`scan/central_acts_inventory.py`). CrPC 1973 turned up missing by
+accident (nine lookups returned nothing). This is the proactive version: every central Act, in three places, and the most-practised
+statutes checked against all three. Results: `~/qdrant-kanoon/central_acts/inventory.json`.
+
+**Totals. The three layers agree exactly: 1,568 central Acts.** The source parquet (`in_central_legislation.parquet`) holds 1,568
+Acts in 74,484 chunks; `acts_india` holds the same 1,568 in 74,509 points (25 more points, no more Acts); the served `kanoon_v1`
+holds the same 1,568 in 74,484 points. **Nothing in the central file is missing from what is served: there is no central-Act
+indexing gap.** DATASET.md's "848" is the in-force count only: **848 in force + 710 repealed (`IND_REP_`) + 10 spent = 1,568.**
+The 74,509 points are all 1,568 Acts; they are not 848 Acts. Whether 1,568 is *complete against India Code* is not verified from
+here (that needs the live site).
+
+**The checklist (84 statutes the owner named or that are most practised): 78 present, 6 absent from the central file.** The six are
+an ACQUISITION problem (the source file does not have them), none an indexing problem:
+
+| Absent as a central Act | In any other source file? | Note |
+|---|---|---|
+| Code of Criminal Procedure, 1973 (Act 2 of 1974) | **14 state- and UT-tagged copies** in 8 files (Chandigarh 5, Chhattisgarh 3, Dadra and Nagar Haveli, Maharashtra, Punjab, Rajasthan, Tripura, Uttar Pradesh: 1 each), each 764 chunks; all in `acts_india`, **none in the served collection** | Repealed by the BNSS, which IS present, but it still governs proceedings begun before 1 July 2024. The 9 CrPC lookups of the labelling run returned 0 passages |
+| Constitution of India | 9 items titled "Constitution of India" in state/UT files (Andaman and Nicobar 2, Chandigarh 5, Puducherry 1, Rajasthan 1) plus one GST-tribunal item. Not checked whether any is the full text | Not an "Act" in India Code's central list |
+| Indian Trusts Act, 1882 | **None, in any of the 49 legislation and regulation files** | |
+| Consumer Protection Act, 1986 | 7 state-tagged copies (Chandigarh, Gujarat, Jharkhand, Madhya Pradesh, Manipur, Odisha, Rajasthan) | Repealed by the 2019 Act, which IS present; the 1986 Act governs older disputes |
+| Payment of Gratuity Act, 1972 | state-tagged copies in 10 files | The Factories Act 1948, Minimum Wages Act 1948, Payment of Wages Act 1936 and Maternity Benefit Act 1961 are in the data as repealed, so the central file does list Acts the labour codes repealed; Gratuity is not among them |
+| Employees' Compensation (Workmen's Compensation) Act, 1923 | 3 state-tagged copies (Haryana, Punjab, Rajasthan) | as above |
+
+**Present and served (78):** IPC 1860 (repealed, 774 chunks), Evidence Act 1872 (repealed, 274), CPC 1908, BNS, BNSS and BSA 2023
+(469, 827, 210 chunks), Contract Act, Sale of Goods, Partnership, LLP, Companies Act 2013 and 1956 (1956 repealed), Arbitration and
+Conciliation, Negotiable Instruments, Limitation, Specific Relief, Transfer of Property, Registration, Stamp, Easements, IBC,
+SARFAESI, RDDBFI, Competition, IT Act, Copyright, Patents, Trade Marks, Consumer Protection 2019, RERA, RTI, FEMA, PMLA,
+Prevention of Corruption, NDPS, Arms, Motor Vehicles, POCSO, Domestic Violence, Dowry Prohibition, Juvenile Justice, SC/ST
+Atrocities, Succession, the Hindu statutes (Marriage, Succession, Minority and Guardianship, Adoptions and Maintenance), the Muslim
+statutes (Shariat Application, Dissolution of Muslim Marriages, Muslim Women), Special Marriage, Guardians and Wards, Christian
+Marriage, Parsi Marriage and Divorce, Family Courts, Income-tax Act 1961 (2,650 chunks), CGST and IGST, Customs, Central Excise, the
+four labour codes, Industrial Disputes, Factories (repealed), EPF, Minimum Wages (repealed), Payment of Wages (repealed), Maternity
+Benefit (repealed), POSH, Land Acquisition 2013, Environment Protection, Representation of the People, Advocates, Contempt of
+Courts, Legal Services Authorities, Protection of Human Rights. Status is as the data records it; `act_status` is a default outside
+the `IND_REP_` ids (section 18), so "in force" for any Act here is not a determination.
+
+**What the table does not show.** A present Act can still be incomplete (section gaps are a separate audit row: 6,814 Acts with
+missing sections, 45,963 garbled), and this lists Acts, not sections. The checklist is the owner's list, not a legal census.
+
+## 21. Embedding health, per court (4 Nov 2026): no court besides Kerala holds vectors unrelated to its text, and the corpus is a mix of three models
+
+**Measured.** One job (`scan/embedding_health.py`), every court. A random sample of **59,454 points** from the two original
+collections (48 court-by-collection groups, 1,100 to 1,800 points each, whole groups read where they were smaller, plus a
+2,000-point sample of the points that carry no `court` label), each stored text re-embedded with `voyage-4` as a document and
+compared by cosine with the vector already stored; the existing dead-vector detector scored the same stored vectors. The court is the id prefix,
+not the label. Group sizes are exact (the section 19 scan). Read-only on `legal_corpus_v1` / `v2` (1,460 reads, slowest 16 s,
+no hard stop); nothing written anywhere. **Spend: 53,760,590 tokens = $3.23** at list price (the sample was priced locally,
+exactly, before the run: 53,651,624 tokens, $3.22; the rest is a 50-chunk preflight and the identification step below), every
+request in `token_ledger.jsonl` under the tag `health:`, cap $6.00 never approached. Preflight: 50 of 50 chunks of a court known
+to be `voyage-4` reproduced at cosine 0.9999 or better, so the method (document `input_type`, 1,024 dimensions, the text as stored) is right.
+
+**Why the test is three-way, not "near 1.0 is correct".** The stored vectors are not all `voyage-4`'s. A re-embed reads as one of:
+cosine **0.99 or more** (the stored vector is `voyage-4`'s own), **0.50 to 0.99** (the vector belongs to this text but another
+model of the family made it), **below 0.50** (unrelated to the text). Lines, with the evidence for each: dead Kerala vectors
+re-embed at -0.138 to +0.133 (217,766 chunks, A123); other-model chunks at **0.672 to 0.972** (41,692 in this run, median 0.952,
+0.1th percentile 0.895). Nothing observed sits between 0.14 and 0.67. 23 chunks first read as an unexplained middle (0.67 to
+0.84, 21 of them Chhattisgarh); each was re-embedded under `voyage-4-lite` and `-large` and **23 of 23 reproduced at 0.996 or more
+under one of them**, so they are ordinary other-model chunks and the earlier lowest value (0.839) was a small-sample bound.
+
+### Finding 1: only Kerala has vectors unrelated to its text
+
+| | Sampled | Unrelated to text (cosine below 0.5) |
+|---|---:|---:|
+| High Court of Kerala, `legal_corpus_v2` | 1,800 | **102 (5.67%, 95% interval 4.69 to 6.83)** |
+| **Every other group (47 groups plus the no-label points)** | **57,654** | **0** |
+
+For the 47 groups with 1,100 or more points sampled, the 95% upper bound on a defect rate is **0.21% to 0.35%** per group. In points
+that is at most 6,017 for the largest (Bombay, collection 1) and 69,533 summed over all the courts, which at `voyage-4` batch rates
+is **$2.54 at most**, against **$0 found**. **The re-embed adds nothing to A141's $137.57 batch; the bound is $140.11.**
+Kerala's 102 were already handled (A123: re-embedded into `kerala_v2_fix`, about $16, and every dead point has a live twin, A126).
+Clean courts, so stated: **Andhra Pradesh, Patna, Chhattisgarh, Delhi, Gauhati, Gujarat, Telangana, Bombay, Madras (both),
+Himachal Pradesh, the Supreme Court, Jharkhand, Jammu and Kashmir, Karnataka, Meghalaya, Manipur, Madhya Pradesh, Orissa, Punjab
+and Haryana, Rajasthan, Sikkim, Tripura, Uttarakhand, Allahabad, Calcutta (all four prefixes)**, and the unlabelled points. Small
+groups carry wide bounds (Sikkim 124 sampled, bound 3.0%; collection-2 Tripura 5 and Calcutta Original 4 points, read whole).
+
+**The positive control, and its limit.** The Kerala sample finds 5.67% unrelated against 6.97% in the full scan (217,688 of
+3,125,018): 102 observed against 125 expected, about 2.2 standard deviations low. The random-offset sampling therefore
+under-counts a defect like Kerala's by about a fifth. That does not change zero versus not-zero; it means a bound above should be
+read as roughly 25% higher for a defect shaped like Kerala's. Not diagnosed (the ids of dead points may cluster).
+
+### Finding 2: the detector saw all of it, and false-alarms on long chunks
+
+On the 59,454 stored vectors the detector flagged 116: all **102** Kerala flags are the 102 unrelated chunks, **no unrelated vector was missed (0
+of 59,454)**, and the other 14 are healthy vectors flagged (13 Supreme Court chunks, 12 of them 3,000 characters or more, and 1 Chhattisgarh). So the
+failure that "the detector cannot see", a vector from another chunk that looks healthy, **did not show up**: none of the stored vectors that
+the re-embed calls unrelated scored healthy. Length-stratified (chunk length in characters):
+
+| Length | Kerala: sampled / flagged (rate) | All other groups: sampled / flagged (rate) |
+|---|---|---|
+| under 500 | 4 / 0 | 661 / 0 (0%) |
+| 500 to 1,499 | 105 / 2 (1.9%) | 7,591 / 0 (0%) |
+| 1,500 to 2,999 | 321 / 25 (7.8%) | 14,417 / 1 (0.01%) |
+| 3,000 or more | 1,370 / 75 (5.5%) | 34,985 / 13 (0.04%; 12 of them Supreme Court, 12 of 884 = 1.4%) |
+
+The false-alarm rate on long chunks is the 1% of section 13, concentrated in one court; outside the Supreme Court it is 1 in 34,101.
+**Not tested:** a vector belonging to a *neighbouring* chunk of the same case would read well above 0.5 and could sit in the other-model
+band. The other-model band is tight (0.1th percentile 0.895) and the only 23 chunks below 0.84 were all identified as lite or large, so any
+such population is small, but between 0.84 and 0.9 it is not excluded by this run.
+
+### Finding 3: the model mix per court (a finding in its own right)
+
+**Weighted by points, 47.7% of the corpus's stored vectors are `voyage-4`'s own and 52.3% were made by `voyage-4-lite` or `-large`**
+(collection 1: 55.0% own; collection 2: 35.7% own; 31,419,471 points). The 73% of section 13 is the share of an equal-weight
+sample of 2,640 chunks across court groups (this run, unweighted: 70.0%); weighted by how many points each group holds, it is 52%. The model
+is a property of the ingestion batch, not the court, and groups fall into three kinds:
+
+- **Uniformly `voyage-4`** (97% or more own): Gauhati, Gujarat, Telangana, Bombay, Madras (both prefixes) and Himachal Pradesh in collection 1, and Calcutta Original's 4 points in
+  collection 2 (10.5M points).
+- **Uniformly another model** (3% or less own): 29 groups, 13.1M points. Patna, Chhattisgarh, Andhra Pradesh, Supreme Court, Jharkhand,
+  Jammu and Kashmir, Karnataka, Rajasthan, Sikkim and Calcutta in both collections, and Allahabad, Tripura, Uttarakhand in collection 1, among them.
+- **Mixed inside the group** (7.8M points): Kerala v2 (90% own), Punjab and Haryana v2 (15%), Delhi v1 (17%), Madhya Pradesh v2 (94%),
+  Orissa v2 (89%), Manipur v2 (93%), Meghalaya v2 (93%), Allahabad v2 (17%), Uttarakhand v2 (32%), Tripura v2 (60%), Andhra Pradesh v1 (3%).
+
+| Court | Prefix | Points | `voyage-4` own, collection 1 | collection 2 |
+|---|---|---:|---:|---:|
+| Andhra Pradesh | APHC | 1,064,243 | 3% | 0% |
+| Patna | BRHC | 2,682,782 | 0% | 0% |
+| Chhattisgarh | CGHC | 1,824,522 | 0% | 0% |
+| Delhi | DLHC | 1,127,337 | 17% | 0% |
+| Gauhati | GAHC | 693,391 | 100% | 0% |
+| Gujarat | GJHC | 1,486,348 | 100% | 0% |
+| Telangana | HBHC | 2,857,444 | 100% | 0% |
+| Bombay | HCBM | 2,963,323 | 100% | 0% |
+| Madras | HCMA, HCMD | 2,750,364 | 100% | 0% |
+| Himachal Pradesh | HPHC | 781,765 | 100% | 0% |
+| Supreme Court | INSC | 371,159 | | 0% |
+| Jharkhand | JHHC | 1,250,333 | | 0% |
+| Jammu and Kashmir | JKHC | 246,948 | | 0% |
+| Karnataka | KAHC | 1,570,097 | | 0% |
+| Kerala | KLHC | 3,125,877 | | 90% |
+| Meghalaya | MLHC | 22,221 | | 93% |
+| Manipur | MNHC | 32,262 | | 93% |
+| Madhya Pradesh | MPHC | 767,298 | | 94% |
+| Orissa | ODHC | 507,767 | | 89% |
+| Punjab and Haryana | PHHC | 1,268,090 | | 15% |
+| Rajasthan | RJHC | 1,358,039 | | 0% |
+| Sikkim | SKHC | 2,704 | 0% | 1% |
+| Tripura | TRHC | 139,979 | 0% | 60% |
+| Uttarakhand | UKHC | 266,589 | 0% | 32% |
+| Allahabad | UPHC | 1,930,220 | 0% | 17% |
+| Calcutta | WBCHCA, J, O, P | 328,369 | 0% | 0% (Original: 100% of 4 points) |
+
+**What it would cost to make the corpus uniform.** Re-embedding only the off-model points (about 16.4M, before A126's de-duplication, which lowers it) to
+`voyage-4` is about 15.2B tokens: **$912 at standard, $611 at batch rates** (collection 1 about $301 at batch, collection 2 about $309). This is a price, not a proposal.
+
+**What these numbers do settle.** How much of each court sits off the query model, with tight intervals (about 0.2 to 0.4 points at the
+uniform ends); that no court but Kerala holds a vector unrelated to its text; and that the other-model vectors are *right for their text*
+(identified as reproducing under their own model on the 2,640 chunks of section 13 and on the 23 lowest here; the other 41,669 are inferred from their tight cosine band, not each re-embedded) and sit at a median cosine of 0.95 from `voyage-4`'s own vector of the same text. **What they do not
+settle:** whether the mix costs retrieval quality. A cosine between two models' vectors of one text is agreement, not recall. The retrieval evidence is
+A128's: for `voyage-4-lite` courts, switching the query to the chunk's own model did *worse* than the `voyage-4` query (hybrid @10 -2.5, dense @10 -1.9
+with a court filter, so the `voyage-4` query read lite chunks 1.9 to 2.5 points better); for `voyage-4-large` courts it did better (hybrid @10 +3.8), the one place a
+mismatch cost recall; and A136 did not confirm a single `large` query vector as a replacement. A138 caps all of it: the harness is at its ceiling on hybrid. **This
+run cannot split the off-model share into lite and large** (their cosines to `voyage-4` overlap: medians 0.951 and 0.944), so it cannot say how
+much of the 52% is the large-model share where mismatch cost something. Section 13's 2,640-chunk identification is still the only split. Closing it: embed about 100 off-model chunks per
+group under lite and large (about 4,800 chunks, roughly $0.6). Not run.
 
