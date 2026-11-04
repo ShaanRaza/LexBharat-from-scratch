@@ -298,7 +298,7 @@ text, which is the F2 problem). If nothing is left the turn takes the existing n
 path (`core/pipeline.py:121`). Answer prompt changed first (`core/prompts/answer.txt`).
 Measured on the 95 of the 200 questions that reach the writer, real Gemini
 (`gemini-3.5-flash-lite`, practice-fixture retrieval): unmarked sentences 132 of 255
-(52%) before the prompt change, 4 of 70 (6%) after. Tests: `tests/trust/test_unmarked_sentences.py`,
+(52%) before the prompt change, 4 of 70 (6%) after. Follow-ups (same day): a marker after the full stop is attached to its claim; unmarked sentences dropped are counted (`VerifiedAnswer.unmarked_removed`, one log line, counts only). Full record, mutation set and the false-attribution check: `docs/DECISIONS.md` A137. Tests: `tests/trust/test_unmarked_sentences.py`,
 `tests/security/test_injection_uncited_text.py` (four former BREAK tests now plain tests).
 
 ## Related
