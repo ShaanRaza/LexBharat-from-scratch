@@ -201,7 +201,7 @@ def main() -> None:
     if checked != N or bad_dense or bad_sparse:
         fail("a copied point's dense or sparse vector differs from the staged one")
     # spot check: 10 copied points reproduce under the serving model
-    pick = random.Random(77).sample(ids, 10)
+    pick = random.Random(77).sample(ids, 10)  # noqa: S311 - seeded, reproducible verification sample, not a secret
     pts = http(
         f"/collections/{SERVING}/points",
         {"ids": pick, "with_payload": ["text", "chunk_id"], "with_vector": ["dense"]},

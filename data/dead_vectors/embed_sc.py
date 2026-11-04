@@ -99,7 +99,7 @@ class Ceiling(Exception):
 # --- plumbing ----------------------------------------------------------------------------
 def http(path: str, body: dict | None = None, method: str = "POST", timeout: int = 900):
     assert COPY.endswith(":7333")  # writes go to the copy instance only
-    req = urllib.request.Request(
+    req = urllib.request.Request(  # noqa: S310 - fixed loopback http base, so no file: or custom scheme
         COPY + path,
         data=json.dumps(body).encode() if body is not None else None,
         method=method,
@@ -116,7 +116,7 @@ def orig_scroll(case_id: str) -> list[str]:
         "with_payload": ["chunk_id"],
         "with_vector": False,
     }
-    req = urllib.request.Request(
+    req = urllib.request.Request(  # noqa: S310 - fixed loopback http base, so no file: or custom scheme
         ORIG + "/collections/legal_corpus_v2/points/scroll",
         data=json.dumps(body).encode(),
         headers={"Content-Type": "application/json"},
@@ -218,7 +218,7 @@ def guards(chunks: list[dict], serving: dict) -> dict:
     cases = sorted({c["payload"]["case_id"] for c in chunks})
     ours = {c["payload"]["chunk_id"] for c in chunks}
     found = 0
-    for case in random.Random(5).sample(cases, min(ORIG_SAMPLE_CASES, len(cases))):
+    for case in random.Random(5).sample(cases, min(ORIG_SAMPLE_CASES, len(cases))):  # noqa: S311 - seeded, reproducible verification sample, not a secret
         found += len(ours & set(orig_scroll(case)))
     if found:
         sys.exit(
@@ -260,7 +260,7 @@ def preflight(model: str, key: str) -> None:
     )
     excl = nov2_ids()
     pool = [(i, c) for i, c in serving["sc"] if c not in excl]
-    pick = random.Random(20261103).sample(pool, 20)
+    pick = random.Random(20261103).sample(pool, 20)  # noqa: S311 - seeded, reproducible verification sample, not a secret
     pts = http(
         f"/collections/{SERVING}/points",
         {
@@ -494,7 +494,7 @@ def verify(model: str, key: str) -> None:
     print(
         f"  below {DEAD_BELOW} (dead): {dead} | below 0.30: {(s < 0.30).sum()} | vectors without a sparse part: {no_sparse} | bad norm or size: {bad_norm}"
     )
-    rnd = random.Random(99)
+    rnd = random.Random(99)  # noqa: S311 - seeded, reproducible verification sample, not a secret
     pick = rnd.sample(range(len(ids)), 20)
     text_of = {int(c["id"]): c["payload"]["text"] for c in chunks}
     texts = [text_of[ids[i]] for i in pick]

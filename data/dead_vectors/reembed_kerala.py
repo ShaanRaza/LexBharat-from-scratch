@@ -112,7 +112,7 @@ ORIG_LOG: list[float] = []
 def orig_retrieve(ids: list[int]) -> list[dict]:
     """Retrieve points by id from the ORIGINAL. One request, a pause, a hard stop."""
     body = {"ids": ids, "with_payload": True, "with_vector": ["dense", "sparse"]}
-    req = urllib.request.Request(
+    req = urllib.request.Request(  # noqa: S310 - fixed loopback http base, so no file: or custom scheme
         f"{ORIG}/collections/{SRC}/points",
         data=json.dumps(body).encode(),
         headers={"Content-Type": "application/json"},
@@ -139,7 +139,7 @@ def copy_call(
     assert COPY.endswith(":7333"), "writes go to port 7333 only"
     data = json.dumps(body).encode() if body is not None else None
     for k in range(tries):
-        req = urllib.request.Request(
+        req = urllib.request.Request(  # noqa: S310 - fixed loopback http base, so no file: or custom scheme
             COPY + path,
             data=data,
             method=method,

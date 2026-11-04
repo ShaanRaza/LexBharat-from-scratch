@@ -142,7 +142,7 @@ def orig_post(path: str, body: dict, log) -> dict:
     while True:
         t0 = time.time()
         try:
-            req = urllib.request.Request(
+            req = urllib.request.Request(  # noqa: S310 - fixed loopback http base, so no file: or custom scheme
                 ORIG + path,
                 data=json.dumps(body).encode(),
                 headers={"Content-Type": "application/json"},
@@ -540,7 +540,7 @@ def stage_analyze(ctx: Ctx, partial_ok: bool = False) -> dict:
         "parquet_label_read": False,
     }
     # spot-check
-    rnd = random.Random(2026)
+    rnd = random.Random(2026)  # noqa: S311 - seeded, reproducible verification sample, not a secret
     picks: list[tuple[str, int]] = []
     for code in ("KLHC", "HCBM", "HBHC"):
         for h in rnd.sample(
@@ -603,8 +603,8 @@ def stage_spotcheck(ctx: Ctx, res: dict) -> list[dict]:
             if not k:
                 continue
             rows = con.execute(
-                f"select chunk_id, language_code, length(text), substr(text, 1, 260), source_url from read_parquet('{f}') where starts_with(chunk_id, ?) order by chunk_index",
-                [k + "_"],
+                "select chunk_id, language_code, length(text), substr(text, 1, 260), source_url from read_parquet(?) where starts_with(chunk_id, ?) order by chunk_index",
+                [str(f), k + "_"],
             ).fetchall()
             n_q = {}
             for coll in COLLECTIONS:
@@ -784,7 +784,8 @@ def stage_commit(ctx: Ctx, text: str) -> str:
     path = REPO / "docs" / "DATA-GAPS.md"
     dirty = (
         subprocess.run(
-            ["git", "diff", "--quiet", "--", "docs/DATA-GAPS.md"], cwd=REPO
+            ["git", "diff", "--quiet", "--", "docs/DATA-GAPS.md"],  # noqa: S607 - git on PATH, fixed arguments
+            cwd=REPO,
         ).returncode
         != 0
     )
@@ -795,9 +796,9 @@ def stage_commit(ctx: Ctx, text: str) -> str:
         return "docs/DATA-GAPS.md has uncommitted changes by someone else; section 19 left in SECTION19.md, not appended"
     path.write_text(cur.rstrip("\n") + "\n\n" + text + "\n", encoding="utf-8")
     for _ in range(5):
-        subprocess.run(["git", "add", "docs/DATA-GAPS.md"], cwd=REPO)
+        subprocess.run(["git", "add", "docs/DATA-GAPS.md"], cwd=REPO)  # noqa: S607 - git on PATH, fixed arguments
         p = subprocess.run(
-            [
+            [  # noqa: S607 - git on PATH, fixed arguments
                 "git",
                 "commit",
                 "--only",

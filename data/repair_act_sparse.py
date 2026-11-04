@@ -58,7 +58,7 @@ def orig_scroll(offset, limit: int, with_vector: bool) -> dict:
         "with_payload": True,
         "with_vector": ["dense", "sparse"] if with_vector else ["sparse"],
     }
-    req = urllib.request.Request(
+    req = urllib.request.Request(  # noqa: S310 - fixed loopback http base, so no file: or custom scheme
         ORIG + f"/collections/{SOURCE}/points/scroll",
         data=json.dumps(body).encode(),
         headers={"Content-Type": "application/json"},
@@ -77,7 +77,7 @@ def orig_scroll(offset, limit: int, with_vector: bool) -> dict:
 
 
 def orig_retrieve(ids: list) -> list:
-    req = urllib.request.Request(
+    req = urllib.request.Request(  # noqa: S310 - fixed loopback http base, so no file: or custom scheme
         ORIG + f"/collections/{SOURCE}/points",
         data=json.dumps(
             {"ids": ids, "with_payload": False, "with_vector": ["dense", "sparse"]}
@@ -97,7 +97,7 @@ def copy_http(
     path: str, body: dict | None = None, method: str = "POST", timeout: int = 900
 ):
     assert COPY.endswith(":7333")  # writes go to the copy instance only
-    req = urllib.request.Request(
+    req = urllib.request.Request(  # noqa: S310 - fixed loopback http base, so no file: or custom scheme
         COPY + path,
         data=json.dumps(body).encode() if body is not None else None,
         method=method,
@@ -297,7 +297,7 @@ def verify(a) -> None:
         off = r["next_page_offset"]
         if off is None:
             break
-    pick = random.Random(5).sample(ids, min(a.sample, len(ids)))
+    pick = random.Random(5).sample(ids, min(a.sample, len(ids)))  # noqa: S311 - seeded, reproducible verification sample, not a secret
     bad_sparse = no_text = 0
     for i in range(0, len(pick), 500):
         for p in copy_http(

@@ -52,10 +52,9 @@ select = ["E", "F", "I", "S", "BLE"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "E501"]
-"data/**" = ["S101", "E501", "S310", "S311"]
-# Operational read-only scripts, like data/: long report lines, a loopback-URL read,
-# a seeded sample and `df`/`diskutil` calls are what they are for.
-"scan/**" = ["S101", "E501", "S310", "S311", "S607", "S608"]
+"data/**" = ["S101", "E501"]
+# Read-only report script: its long lines are prose in the generated report.
+"scan/**" = ["E501"]
 # The A136 evidence scripts (DECISIONS A136): a loopback read of the original, a seeded sample.
 "evals/a136/**" = ["S101", "E501", "S310", "S311"]
 

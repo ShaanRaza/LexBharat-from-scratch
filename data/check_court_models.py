@@ -24,7 +24,7 @@ COPY = "http://127.0.0.1:7333"
 
 
 def http(path: str, body: dict | None = None, method: str = "POST"):
-    req = urllib.request.Request(
+    req = urllib.request.Request(  # noqa: S310 - fixed loopback http base, so no file: or custom scheme
         COPY + path,
         data=json.dumps(body).encode() if body is not None else None,
         method=method,

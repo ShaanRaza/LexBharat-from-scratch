@@ -183,7 +183,7 @@ def plan_collection(groups: dict[str, list[Member]]) -> Plan:
 
 # --- the copy-instance side ---------------------------------------------------------------------
 def http(path: str, body: dict | None = None, method: str = "POST", timeout: int = 900):
-    req = urllib.request.Request(
+    req = urllib.request.Request(  # noqa: S310 - fixed loopback http base, so no file: or custom scheme
         COPY + path,
         data=json.dumps(body).encode() if body is not None else None,
         method=method,

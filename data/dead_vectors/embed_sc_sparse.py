@@ -25,7 +25,7 @@ COPY = "http://127.0.0.1:7333"  # the copy instance; never the original on 6333
 
 def http(path: str, body: dict) -> dict:
     assert COPY.endswith(":7333")
-    req = urllib.request.Request(
+    req = urllib.request.Request(  # noqa: S310 - fixed loopback http base, so no file: or custom scheme
         COPY + path,
         data=json.dumps(body).encode(),
         headers={"Content-Type": "application/json"},
@@ -56,7 +56,7 @@ def main() -> None:
         off = r["next_page_offset"]
         if off is None:
             break
-    pick = random.Random(11).sample(pts, 20)
+    pick = random.Random(11).sample(pts, 20)  # noqa: S311 - seeded, reproducible verification sample, not a secret
     bad = 0
     for p, s in zip(pick, enc.embed([p["payload"]["text"] for p in pick])):
         st = p["vector"]["sparse"]
