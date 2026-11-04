@@ -1,4 +1,4 @@
-"""How much OCR noise sits in the served Supreme Court text, read as exposure for verifier check 3.
+"""How much OCR noise sits in the served SC text, read as exposure for verifier check 3.
 
 Plain words: check 3 (core/verify.py `normalise`) turns punctuation into spaces and collapses
 spaces; it keeps every word and every letter as stored. So a quote written the way a person
@@ -40,7 +40,9 @@ ARTIFACTS = {
     ),
     # a running page header inside the text
     "page_header": re.compile(
-        r"SUPREME COURT REPORTS|Digital Supreme Court Reports|\[\d{4}\]\s*(?:SUPP\.?\s*)?\d*\s*S\.?C\.?R\.?\s*\d+",
+        r"SUPREME"
+        r" COURT REPORTS|Digital Supreme"
+        r" Court Reports|\[\d{4}\]\s*(?:SUPP\.?\s*)?\d*\s*S\.?C\.?R\.?\s*\d+",
         re.I,
     ),
     # a word split by a line-break hyphen left in place

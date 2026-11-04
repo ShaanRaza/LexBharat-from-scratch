@@ -1,11 +1,10 @@
 {
   "status": "measured",
-  "note": "Written by data/coverage_report.py; do not widen it by hand. This is the ONLY place a coverage category may be written (tests/test_coverage_source.py). INSTRUMENTS are what the served collection holds: Central Acts only. State Acts and regulations (1,024,068 points) are staged in acts_noncentral_v1, never promoted (A133), and are not listed. So the five statutes the Act inventory found absent (CrPC 1973, Consumer Protection 1986, Payment of Gratuity 1972, Employees' Compensation 1923, the Constitution) are NOT held: their text lives only in the staging collection. The Indian Trusts Act 1882 is not in the dataset at all. COURTS follow the owner's launch scope (every High Court in v1, 3 Nov 2026) over the original collections legal_corpus_v1/v2, and the served `kanoon_v1` does NOT yet hold them (it serves the Supreme Court only: 381,271 points, measured 4 Nov 2026) until the launch collection is built (PRD-v2 section 7, item 19). Held means in the corpus, not complete: 2,865,144 whole cases (18.26%) have no chunk in Qdrant (A141, open), and there is no length exclusion (owner). OWNER ITEM, not resolved here: the sentence ends 'anything after the data-as-of date', and the snapshot is labelled v2026.08 while the latest Supreme Court judgment held is dated 6 November 2025 (reported by the SC lane), so that date may be months after the content it describes.",
+  "note": "Written by data/coverage_report.py; do not widen it by hand. This is the ONLY place a coverage category may be written (tests/test_coverage_source.py). It records what the SERVED collection `kanoon_v1` holds, measured 4 Nov 2026: 381,271 Supreme Court points and 74,484 Central Act points, nothing else. High Courts (legal_corpus_v1/v2) and State Acts and regulations (1,024,068 points in the staging collection acts_noncentral_v1, never promoted, A133) are NOT listed: the owner widened scope on 3 Nov 2026, but that is intent and this file records what is held. The change that serves them must add them here (HELD_COURTS, INSTRUMENTS) and regenerate. So the five statutes the Act inventory found absent (CrPC 1973, Consumer Protection 1986, Payment of Gratuity 1972, Employees' Compensation 1923, the Constitution) are NOT held: their text lives only in the staging collection. The Indian Trusts Act 1882 is not in the dataset at all. There is no length exclusion (owner); held does not mean complete (A141 is open). OWNER ITEM, not resolved here: the sentence ends 'anything after the data-as-of date', and the snapshot is labelled v2026.08 while the latest Supreme Court judgment held is dated 6 November 2025 (reported by the SC lane), so the date overstates currency by about nine months.",
   "measured_at": "2026-11-04",
-  "generated_by": "data/coverage_report.py from core/court_ids.json (snapshot v2026.08, measured 2026-11-03), docs/DATA-GAPS.md sections 19, 20 and 21 (4 Nov 2026), and the `jurisdiction` values of the Act collections",
+  "generated_by": "data/coverage_report.py from the held collection `kanoon_v1` (facets of `court` and `jurisdiction`, 4 Nov 2026), docs/DATA-GAPS.md section 20, and core/court_ids.json",
   "sentence_approved": false,
   "sentence_template": "{product} covers {courts} and {instruments}. It does not include {excluded_list}, or anything after the data-as-of date.",
-  "courts_phrase": "Supreme Court and High Court judgments",
   "instruments_phrase": "the Central Acts listed on our coverage page",
   "not_in_dataset_message": "Not in our dataset. That does not mean it does not exist — it means our snapshot does not hold it.",
   "courts": [
@@ -15,206 +14,6 @@
       "covered_label": "Supreme Court judgments",
       "payload": {
         "court": "Supreme Court of India"
-      }
-    },
-    {
-      "id": "allahabad",
-      "name": "Allahabad High Court",
-      "covered_label": "Allahabad High Court judgments",
-      "payload": {
-        "court": "Allahabad High Court"
-      }
-    },
-    {
-      "id": "bombay",
-      "name": "Bombay High Court",
-      "covered_label": "Bombay High Court judgments",
-      "payload": {
-        "court": "Bombay High Court"
-      }
-    },
-    {
-      "id": "calcutta",
-      "name": "Calcutta High Court",
-      "covered_label": "Calcutta High Court judgments",
-      "payload": {
-        "court": "Calcutta High Court"
-      }
-    },
-    {
-      "id": "gauhati",
-      "name": "Gauhati High Court",
-      "covered_label": "Gauhati High Court judgments",
-      "payload": {
-        "court": "Gauhati High Court"
-      }
-    },
-    {
-      "id": "chhattisgarh",
-      "name": "High Court Of Chhattisgarh",
-      "covered_label": "High Court Of Chhattisgarh judgments",
-      "payload": {
-        "court": "High Court Of Chhattisgarh"
-      }
-    },
-    {
-      "id": "rajasthan",
-      "name": "High Court Of Rajasthan",
-      "covered_label": "High Court Of Rajasthan judgments",
-      "payload": {
-        "court": "High Court Of Rajasthan"
-      }
-    },
-    {
-      "id": "telangana",
-      "name": "High Court for State of Telangana",
-      "covered_label": "High Court for State of Telangana judgments",
-      "payload": {
-        "court": "High Court  for State of Telangana"
-      }
-    },
-    {
-      "id": "andhra_pradesh",
-      "name": "High Court of Andhra Pradesh",
-      "covered_label": "High Court of Andhra Pradesh judgments",
-      "payload": {
-        "court": "High Court of Andhra Pradesh"
-      }
-    },
-    {
-      "id": "delhi",
-      "name": "High Court of Delhi",
-      "covered_label": "High Court of Delhi judgments",
-      "payload": {
-        "court": "High Court of Delhi"
-      }
-    },
-    {
-      "id": "gujarat",
-      "name": "High Court of Gujarat",
-      "covered_label": "High Court of Gujarat judgments",
-      "payload": {
-        "court": "High Court of Gujarat"
-      }
-    },
-    {
-      "id": "himachal_pradesh",
-      "name": "High Court of Himachal Pradesh",
-      "covered_label": "High Court of Himachal Pradesh judgments",
-      "payload": {
-        "court": "High Court of Himachal Pradesh"
-      }
-    },
-    {
-      "id": "jammu_and_kashmir",
-      "name": "High Court of Jammu and Kashmir",
-      "covered_label": "High Court of Jammu and Kashmir judgments",
-      "payload": {
-        "court": "High Court of Jammu and Kashmir"
-      }
-    },
-    {
-      "id": "jharkhand",
-      "name": "High Court of Jharkhand",
-      "covered_label": "High Court of Jharkhand judgments",
-      "payload": {
-        "court": "High Court of Jharkhand"
-      }
-    },
-    {
-      "id": "karnataka",
-      "name": "High Court of Karnataka",
-      "covered_label": "High Court of Karnataka judgments",
-      "payload": {
-        "court": "High Court of Karnataka"
-      }
-    },
-    {
-      "id": "kerala",
-      "name": "High Court of Kerala",
-      "covered_label": "High Court of Kerala judgments",
-      "payload": {
-        "court": "High Court of Kerala"
-      }
-    },
-    {
-      "id": "madhya_pradesh",
-      "name": "High Court of Madhya Pradesh",
-      "covered_label": "High Court of Madhya Pradesh judgments",
-      "payload": {
-        "court": "High Court of Madhya Pradesh"
-      }
-    },
-    {
-      "id": "manipur",
-      "name": "High Court of Manipur",
-      "covered_label": "High Court of Manipur judgments",
-      "payload": {
-        "court": "High Court of Manipur"
-      }
-    },
-    {
-      "id": "meghalaya",
-      "name": "High Court of Meghalaya",
-      "covered_label": "High Court of Meghalaya judgments",
-      "payload": {
-        "court": "High Court of Meghalaya"
-      }
-    },
-    {
-      "id": "punjab_and_haryana",
-      "name": "High Court of Punjab and Haryana",
-      "covered_label": "High Court of Punjab and Haryana judgments",
-      "payload": {
-        "court": "High Court of Punjab and Haryana"
-      }
-    },
-    {
-      "id": "sikkim",
-      "name": "High Court of Sikkim",
-      "covered_label": "High Court of Sikkim judgments",
-      "payload": {
-        "court": "High Court of Sikkim"
-      }
-    },
-    {
-      "id": "tripura",
-      "name": "High Court of Tripura",
-      "covered_label": "High Court of Tripura judgments",
-      "payload": {
-        "court": "High Court of Tripura"
-      }
-    },
-    {
-      "id": "uttarakhand",
-      "name": "High Court of Uttarakhand",
-      "covered_label": "High Court of Uttarakhand judgments",
-      "payload": {
-        "court": "High Court of Uttarakhand"
-      }
-    },
-    {
-      "id": "madras",
-      "name": "Madras High Court",
-      "covered_label": "Madras High Court judgments",
-      "payload": {
-        "court": "Madras High Court"
-      }
-    },
-    {
-      "id": "orissa",
-      "name": "Orissa High Court",
-      "covered_label": "Orissa High Court judgments",
-      "payload": {
-        "court": "Orissa High Court"
-      }
-    },
-    {
-      "id": "patna",
-      "name": "Patna High Court",
-      "covered_label": "Patna High Court judgments",
-      "payload": {
-        "court": "Patna High Court"
       }
     }
   ],
@@ -228,11 +27,12 @@
     }
   ],
   "excluded": [
+    "High Courts",
     "district courts",
     "tribunals"
   ],
   "buckets": {
-    "needs_lower_court": "Needs a judgment of a district court or another court below the High Courts.",
+    "needs_high_court": "Needs a judgment of a High Court.",
     "needs_tribunal": "Needs a tribunal decision (NCLT, ITAT, NGT and similar).",
     "after_snapshot": "Asks about law or events after the data snapshot date."
   }

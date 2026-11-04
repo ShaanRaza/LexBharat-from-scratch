@@ -43,7 +43,7 @@ PassageKind = Literal["judgment", "act_section", "upload"]
 SafetyClass = Literal["normal", "personal_advice", "trick"]
 ScopeClass = Literal[
     "in_scope",
-    "needs_lower_court",
+    "needs_high_court",
     "needs_tribunal",
     "after_snapshot",
     "not_in_dataset",  # a source the dataset does not hold (O7); not a court matter

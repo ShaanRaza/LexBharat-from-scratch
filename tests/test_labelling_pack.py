@@ -53,7 +53,7 @@ def test_one_row_per_citation_and_every_question_without_a_cited_answer_is_liste
                 passages=[{"source_id": "S1", "text": "passage one"}, {"source_id": "S2", "text": "passage two"}]),
         _result("b", outcome="not_found", key="not_found"),
         _result("c", outcome="answered", cites=[], text="An answer with no surviving citation."),
-        _result("d", outcome="out_of_scope", key="out_of_scope:needs_lower_court"),
+        _result("d", outcome="out_of_scope", key="out_of_scope:needs_high_court"),
     ]  # fmt: skip
     rows, none = bp.rows_from_results(results)
     assert [(r["qid"], r["source_id"]) for r in rows] == [("a", "S1"), ("a", "S2")]

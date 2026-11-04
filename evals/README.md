@@ -13,7 +13,7 @@ Suggested shape for each question:
 ```yaml
 id: q001
 question: "Is anticipatory bail available for an offence under Section 138 NI Act?"
-expect_scope: in_scope          # or: needs_lower_court, needs_tribunal, after_snapshot, not_in_dataset, not_legal
+expect_scope: in_scope          # or: needs_high_court, needs_tribunal, after_snapshot, not_in_dataset, not_legal
 expect_records: [ ]             # record_ids that a good answer should cite
 must_not_cite: [ ]              # known traps, e.g. repealed sections
 notes: ""

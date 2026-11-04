@@ -152,7 +152,7 @@ def test_every_reader_asks_the_source():
     crit = coverage.scope_criteria()
     assert jev.SCOPE_CRITERIA == crit
     assert set(crit) == {
-        "in_scope", "needs_lower_court", "needs_tribunal", "after_snapshot",
+        "in_scope", "needs_high_court", "needs_tribunal", "after_snapshot",
         "not_in_dataset", "not_legal",
     }  # fmt: skip
     prompt = (ROOT / "core/prompts/decide.txt").read_text()
@@ -198,15 +198,18 @@ def test_readme_and_ux_copy_blocks_match_the_source():
     assert all(state.values()), f"{state}: run `python -m core.coverage --write-docs`"
 
 
-def test_the_courts_in_the_file_are_the_courts_the_snapshot_names():
-    """coverage.json is generated (data/coverage_report.py) from core/court_ids.json, so a
-    court cannot be listed that the record ids do not name, or named and left out."""
+def test_the_courts_in_the_file_are_named_by_the_snapshot_and_are_only_what_is_served():
+    """coverage.json is generated (data/coverage_report.py): every court it lists is one the
+    record-id table names, and today that is the Supreme Court alone, because `kanoon_v1`
+    serves no High Court (A146). The High Courts return here when they are served."""
     import json
 
     ids = json.loads((ROOT / "core" / "court_ids.json").read_text())["courts"]
-    labels = sorted(c["label"] for c in ids.values())
+    labels = {c["label"] for c in ids.values()}
     cov = coverage.load_coverage()
-    assert sorted(c.payload["court"] for c in cov.courts) == labels
+    assert {c.payload["court"] for c in cov.courts} <= labels
+    assert [c.id for c in cov.courts] == ["supreme_court"]
+    assert [i.id for i in cov.instruments] == ["central_acts"]
     assert cov.status == "measured" and cov.measured_at and cov.generated_by
 
 

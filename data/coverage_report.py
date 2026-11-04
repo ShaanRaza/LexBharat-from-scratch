@@ -1,18 +1,18 @@
-"""Write core/coverage.json from what the corpus holds (decisions O7, A51; gate item 19).
+"""Write core/coverage.json from what the SERVED collection holds (decisions O7, A51, A146).
 
-Plain words: the courts come from `core/court_ids.json` (every court the snapshot's record ids
-name, measured over all 32.6M judgment rows) and the instruments are the three `jurisdiction`
-values the Act collections carry. Everything else in coverage.json (the sentence, the refusal
-buckets, the excluded list) is kept from the file as it stands, because those are wording and
-scope decisions, not measurements. `sentence_approved` is never touched.
+Plain words: coverage is what `kanoon_v1` serves today, not what the corpus holds elsewhere and
+not the launch intent. Measured 4 Nov 2026: 381,271 Supreme Court points and 74,484 Central Act
+points, nothing else. So the file lists the Supreme Court and Central Acts. The High Courts
+(legal_corpus_v1/v2) and the State Acts and regulations (acts_noncentral_v1) are held in other
+collections and reach users only when promoted; the change that does that must add them to
+HELD_COURTS / INSTRUMENTS below and regenerate the file, the docs and the tests (PRD-v2
+section 7, items 19 and 24). Wording (the sentence, the refusal buckets) is kept from the file as
+it stands, because that is a decision, not a measurement. `sentence_approved` is never touched.
 
     .venv/bin/python -m data.coverage_report --write   # regenerate core/coverage.json
     .venv/bin/python -m data.coverage_report           # check: exit 1 if the file is stale
 
-What it does NOT do: it does not count points in Qdrant. The per-court point counts are in
-docs/DATA-GAPS.md sections 19 and 21 and the Act inventory in section 20; this script only
-turns the court table into the file's `courts`, so the two cannot drift. A court is listed
-here only if section 21 found it in the original collections (COURTS_IN_QDRANT below)."""
+Court names come from `core/court_ids.json` so they cannot drift from the record-id table."""
 
 from __future__ import annotations
 
@@ -28,9 +28,11 @@ COURT_IDS = ROOT / "core" / "court_ids.json"
 # The Supreme Court keeps the id the code and tests already use.
 SC_KEY, SC_ID = "supreme-court", "supreme_court"
 
-# DATA-GAPS section 21 (4 Nov 2026): the 26 courts with points in legal_corpus_v1/v2. A court in
-# court_ids.json that is not here would be listed in the file without being searchable.
-COURTS_IN_QDRANT = 26
+# The courts `kanoon_v1` serves. To add the High Courts, put their `court_ids.json` keys here
+# (and set COURTS_PHRASE so the sentence does not name 25 of them) in the change that builds the
+# High Court serving collection.
+HELD_COURTS = [SC_KEY]
+COURTS_PHRASE = ""
 
 # Instruments are what the SERVED collection holds, not what is staged. `kanoon_v1` holds the
 # Supreme Court and 74,484 Central Act points (1,568 Acts, DATA-GAPS section 20); the 1,024,068
@@ -40,80 +42,72 @@ INSTRUMENTS = [
     ("central_acts", "Central Acts", "central"),
 ]
 
-# Scope, not measurement: what is out. High Courts are IN (owner, 3 Nov 2026). Tribunals are out
-# at launch (G-T, A139). District courts are out because the dataset holds no judgment file for
-# them: its 26 judgment files are the Supreme Court and 25 High Courts (DATASET.md).
-EXCLUDED = ["district courts", "tribunals"]
-LOWER_COURT_BUCKET = (
-    "Needs a judgment of a district court or another court below the High Courts."
-)
+# Scope, not measurement: what is out. High Courts are out until they are served (A146); tribunals
+# are out at launch (G-T, A139); district courts are out because the dataset holds no judgment
+# file for them (26 judgment files: the Supreme Court and 25 High Courts, DATASET.md).
+EXCLUDED = ["High Courts", "district courts", "tribunals"]
+HIGH_COURT_BUCKET = "Needs a judgment of a High Court."
 
 GENERATED_BY = (
-    "data/coverage_report.py from core/court_ids.json (snapshot v2026.08, measured "
-    "2026-11-03), docs/DATA-GAPS.md sections 19, 20 and 21 (4 Nov 2026), and the "
-    "`jurisdiction` values of the Act collections"
+    "data/coverage_report.py from the held collection `kanoon_v1` (facets of `court` and "
+    "`jurisdiction`, 4 Nov 2026), docs/DATA-GAPS.md section 20, and core/court_ids.json"
 )
 
 NOTE = (
     "Written by data/coverage_report.py; do not widen it by hand. This is the ONLY place a "
-    "coverage category may be written (tests/test_coverage_source.py). INSTRUMENTS are what "
-    "the served collection holds: Central Acts only. State Acts and regulations (1,024,068 "
-    "points) are staged in acts_noncentral_v1, never promoted (A133), and are not listed. "
-    "So the five statutes the Act inventory found absent (CrPC 1973, Consumer Protection "
-    "1986, Payment of Gratuity 1972, Employees' Compensation 1923, the Constitution) are NOT "
-    "held: their text lives only in the staging collection. The Indian Trusts Act 1882 is not "
-    "in the dataset at all. COURTS follow the owner's launch scope (every High Court in v1, "
-    "3 Nov 2026) over the original collections legal_corpus_v1/v2, and the served "
-    "`kanoon_v1` does NOT yet hold them (it serves the Supreme Court only: 381,271 points, "
-    "measured 4 Nov 2026) until the launch collection is built (PRD-v2 section 7, item 19). "
-    "Held means in the corpus, not complete: 2,865,144 whole cases (18.26%) have no chunk in "
-    "Qdrant (A141, open), and there is no length exclusion (owner). OWNER ITEM, not resolved "
-    "here: the sentence ends 'anything after the data-as-of date', and the snapshot is "
-    "labelled v2026.08 while the latest Supreme Court judgment held is dated 6 November 2025 "
-    "(reported by the SC lane), so that date may be months after the content it describes."
+    "coverage category may be written (tests/test_coverage_source.py). It records what the "
+    "SERVED collection `kanoon_v1` holds, measured 4 Nov 2026: 381,271 Supreme Court points "
+    "and 74,484 Central Act points, nothing else. High Courts (legal_corpus_v1/v2) and State "
+    "Acts and regulations (1,024,068 points in the staging collection acts_noncentral_v1, "
+    "never promoted, A133) are NOT listed: the owner widened scope on 3 Nov 2026, but that is "
+    "intent and this file records what is held. The change that serves them must add them "
+    "here (HELD_COURTS, INSTRUMENTS) and regenerate. So the five statutes the Act inventory "
+    "found absent (CrPC 1973, Consumer Protection 1986, Payment of Gratuity 1972, "
+    "Employees' Compensation 1923, the Constitution) are NOT held: their text lives only in "
+    "the staging collection. The Indian Trusts Act 1882 is not in the dataset at all. There "
+    "is no length exclusion (owner); held does not mean complete (A141 is open). OWNER ITEM, "
+    "not resolved here: the sentence ends 'anything after the data-as-of date', and the "
+    "snapshot is labelled v2026.08 while the latest Supreme Court judgment held is dated 6 "
+    "November 2025 (reported by the SC lane), so the date overstates currency by about nine "
+    "months."
 )
+
+
+def ordered_buckets(cur: dict) -> dict:
+    """The refusal buckets in the contract's order, High Courts as the wording says."""
+    rest = {
+        k: v
+        for k, v in cur.items()
+        if k not in ("needs_lower_court", "needs_high_court")
+    }
+    return {"needs_high_court": HIGH_COURT_BUCKET, **rest}
 
 
 def build(measured_at: str) -> dict:
     cur = json.loads(COVERAGE.read_text(encoding="utf-8"))
     ids = json.loads(COURT_IDS.read_text(encoding="utf-8"))["courts"]
-    if len(ids) != COURTS_IN_QDRANT:
-        raise SystemExit(
-            f"court_ids.json names {len(ids)} courts, DATA-GAPS section 21 found "
-            f"{COURTS_IN_QDRANT} in Qdrant: re-measure before regenerating"
-        )
     courts = []
-    sc = ids[SC_KEY]
-    courts.append(
-        {
-            "id": SC_ID,
-            "name": sc["label"],
-            "covered_label": "Supreme Court judgments",
-            "payload": {"court": sc["label"]},
-        }
-    )
-    high = []
-    for key, c in ids.items():
-        if key == SC_KEY:
-            continue
+    for key in HELD_COURTS:
+        c = ids[key]
         name = " ".join(c["label"].split())
-        high.append(
+        courts.append(
             {
-                "id": key.replace("-", "_"),
+                "id": SC_ID if key == SC_KEY else key.replace("-", "_"),
                 "name": name,
-                "covered_label": f"{name} judgments",
+                "covered_label": "Supreme Court judgments"
+                if key == SC_KEY
+                else f"{name} judgments",
                 "payload": {"court": c["label"]},
             }
         )
-    courts += sorted(high, key=lambda c: c["name"])
-    out = {
+    return {
         "status": "measured",
         "note": NOTE,
         "measured_at": measured_at,
         "generated_by": GENERATED_BY,
         "sentence_approved": cur["sentence_approved"],
         "sentence_template": cur["sentence_template"],
-        "courts_phrase": "Supreme Court and High Court judgments",
+        **({"courts_phrase": COURTS_PHRASE} if COURTS_PHRASE else {}),
         "instruments_phrase": "the Central Acts listed on our coverage page",
         "not_in_dataset_message": cur["not_in_dataset_message"],
         "courts": courts,
@@ -122,9 +116,8 @@ def build(measured_at: str) -> dict:
             for i, label, j in INSTRUMENTS
         ],
         "excluded": EXCLUDED,
-        "buckets": {**cur["buckets"], "needs_lower_court": LOWER_COURT_BUCKET},
+        "buckets": ordered_buckets(cur["buckets"]),
     }
-    return out
 
 
 def render(doc: dict) -> str:
