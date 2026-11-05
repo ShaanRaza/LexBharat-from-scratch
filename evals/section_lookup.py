@@ -152,6 +152,9 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--set", default="evals/section_lookup_set.jsonl")
     ap.add_argument("--out", required=True)
+    ap.add_argument(
+        "--query-model", default="voyage-4", help="the model asked for the question"
+    )
     a = ap.parse_args(argv)
     qs = [json.loads(ln) for ln in open(a.set) if ln.strip()]
     for q in qs:  # how the new collection spells the section
@@ -167,7 +170,7 @@ def main(argv=None) -> int:
         for q in qs
     ]
     s = Settings(
-        VOYAGE_EMBED_MODELS={"kanoon_v1": "voyage-4"}
+        VOYAGE_EMBED_MODELS={"kanoon_v1": a.query_model}
     )  # the live QUERY model (A126)
     r = asyncio.run(
         VoyageClient(s, timeout_s=60, max_attempts=3).embed_batch(
