@@ -203,8 +203,11 @@ widened the database check constraint, which allowed exactly four values).
 | The link goes to the record's `pdf_url` / `source_url` | That the link works today or the text is current law (snapshot v2026.08) |
 | A stored citation string is shown exactly as recorded | That the citation string is correct or complete |
 
-Wording shown to users: **"Record found in dataset"**, with the data-as-of date. Ticks are
-**per citation**, never one badge for the whole answer.
+Wording shown to users: **"Record found in our library"** (owner decision, 5 Nov 2026, A185),
+with one source line per citation: `Source: Open India Law dataset by Vaquill AI, CC BY 4.0` or
+`Source: India Code (official) · as on <date>`, and the data-as-of date **of that record**, not
+one global date. Ticks are **per citation**, never one badge for the whole answer. The old
+wording said "dataset", which is wrong for the India Code supplement records (A182).
 
 **Never** retype or reformat a Supreme Court citation string with the AI. Show it exactly
 as stored, labelled "as recorded in the dataset".
