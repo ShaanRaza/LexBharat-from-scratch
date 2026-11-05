@@ -31,6 +31,8 @@ from core.act_ids import plain_section, resolve_act  # noqa: E402
 from core.settings import Settings  # noqa: E402
 
 BASE = "http://localhost:7333"
+MAIN_FIRST = False
+FIELD = "heading_section"  # the payload field the new-collection lookup filters on (--field)
 
 
 def post(path: str, body: dict) -> dict:
@@ -98,7 +100,12 @@ def ordered_blob(cands: list[dict]) -> str:
 
 
 def lookup_kanoon(q: dict, vec) -> tuple[list[dict], list[dict], str]:
-    ids = list(resolve_act(q["act"]))
+    # core/act_ids.json now points at research_v3; the "before" side is kanoon_v1, so use its own Act id
+    ids = (
+        [q["kanoon_act_id"]]
+        if q.get("kanoon_act_id")
+        else list(resolve_act(q["act"]) if not q["fixed_by_supplement"] else ())
+    )
     sec = plain_section(q["section"])
     if ids and sec:
         must = [
@@ -133,11 +140,29 @@ def lookup_kanoon(q: dict, vec) -> tuple[list[dict], list[dict], str]:
 def lookup_new(q: dict, vec) -> tuple[list[dict], list[dict], str]:
     must = [
         {"key": "act_id", "match": {"value": q["new_act_id"]}},
-        {"key": "heading_section", "match": {"value": q["section_h"]}},
+        {"key": FIELD, "match": {"value": q["section_h"]}},
     ]
     c = candidates("research_v3", must)
+    top = None
+    if MAIN_FIRST:  # a "_d<N>" chunk is a secondary piece (annex paragraph, rule, note): rank main chunks first, keep the rest
+        main_ids = [p["chunk_id"] for p in c if not re.search(r"_d\d+$", p["chunk_id"])]
+        if main_ids and len(main_ids) < len(c):
+            first = ranked(
+                "research_v3",
+                vec,
+                [*must, {"key": "chunk_id", "match": {"any": main_ids}}],
+                5,
+            )
+            rest_ids = [p["chunk_id"] for p in c if p["chunk_id"] not in main_ids]
+            rest = ranked(
+                "research_v3",
+                vec,
+                [*must, {"key": "chunk_id", "match": {"any": rest_ids}}],
+                5,
+            )
+            top = (first + rest)[:5]
     if c:
-        return c, ranked("research_v3", vec, must, 5), "act+heading_section"
+        return c, top or ranked("research_v3", vec, must, 5), f"act+{FIELD}"
     act = [
         {"key": "act_id", "match": {"value": q["new_act_id"]}}
     ]  # same fallback layer as production
@@ -152,10 +177,19 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--set", default="evals/section_lookup_set.jsonl")
     ap.add_argument("--out", required=True)
+    ap.add_argument("--main-first", action="store_true")
+    ap.add_argument(
+        "--field",
+        default="heading_section",
+        choices=["heading_section", "body_section", "series_section", "body_headings"],
+    )
     ap.add_argument(
         "--query-model", default="voyage-4", help="the model asked for the question"
     )
     a = ap.parse_args(argv)
+    global FIELD, MAIN_FIRST
+    FIELD = a.field
+    MAIN_FIRST = a.main_first
     qs = [json.loads(ln) for ln in open(a.set) if ln.strip()]
     for q in qs:  # how the new collection spells the section
         s = q["section"]
@@ -194,6 +228,10 @@ def main(argv=None) -> int:
                 "cand": ph in ordered_blob(cand),
                 "top5": any(ph in N(body(p)) for p in top5),
                 "first": (top5[0]["chunk_id"] if top5 else None),
+                "strict": (ph in ordered_blob(cand))
+                and path.startswith(
+                    "act+"
+                ),  # the exact filter alone found it, no Act-level fallback
             }
         rows.append(row)
     json.dump(
@@ -211,6 +249,14 @@ def main(argv=None) -> int:
     ):
         print(
             f"{lab:13s} n={len(sel):2d}  before top5 {sum(x['before']['top5'] for x in sel)}  after top5 {sum(x['after']['top5'] for x in sel)} | before cand {sum(x['before']['cand'] for x in sel)}  after cand {sum(x['after']['cand'] for x in sel)}"
+        )
+    for lab, sel in (
+        ("all", rows),
+        ("fixed Acts", [x for x in rows if x["fixed"]]),
+        ("unfixed Acts", [x for x in rows if not x["fixed"]]),
+    ):
+        print(
+            f"{lab:13s} STRICT (exact filter alone) before {sum(x['before']['strict'] for x in sel)}  after {sum(x['after']['strict'] for x in sel)}"
         )
     print("query-embedding billed tokens:", r.total_tokens)
     return 0

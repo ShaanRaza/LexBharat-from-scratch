@@ -1,10 +1,10 @@
 # ruff: noqa: E501, S310, E731
-"""How big is the query/document model mismatch? (A185). READ ONLY on port 7333; the only vendor call is
+"""How big is the query/document model mismatch? (A186). READ ONLY on port 7333; the only vendor call is
 embedding ~40 short questions twice (voyage-4 and voyage-4-large, input_type=query). No re-embedding.
 
 For 20 questions about a replaced Act or the Constitution it compares each question's cosine to the BEST
 chunk carrying the section's text in (a) research_v3 (supplement chunk, stored voyage-4 document vector)
-and (b) kanoon_v1 (the old chunk, stored vector, mostly voyage-4-large). For 20 Supreme Court questions
+and (b) kanoon_v1 (the old chunk, stored vector, mostly voyage-4-large). For 20 case-law questions
 it measures how the two query models rank research_v3. Hand-written questions: evals/query_model_questions.json.
 """
 
