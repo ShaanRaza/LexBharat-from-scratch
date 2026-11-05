@@ -11,9 +11,12 @@ conversation store and the citation log, the same ones `evals/real_run.py` uses.
 Keys. Gemini uses the EVALUATION key, `EVAL_GEMINI_API_KEY` in `vaquill-local/.env.local`, never the live key (standing rule).
 Voyage uses the `VOYAGE_API_KEY` line of the repo `.env`. Neither is ever printed.
 
-Spend and limits. Every model call is counted, including retries. The run stops loudly at CALL_CAP (2,500) with
-`CapReached`, which is a BaseException so nothing in the pipeline can swallow it. A rate-limit error is retried with
-backoff and COUNTED; the totals are in the summary. Voyage cost is small (a query embedding and a rerank of up to 50
+Spend and limits (the owner's standing rule on the paid Gemini key, 5 Nov 2026). Every model call is counted. The run
+stops loudly at CALL_CAP (2,500) with `CapReached`, and at ANY 429 or spending-cap error, or once spend passes the
+estimate by 20%, with `SpendStop`; both are BaseExceptions so nothing in the pipeline can swallow them. A 429 is never
+retried and never moved to another key. Every response is cached on disk by model + prompt + schema, so a repeat costs
+nothing and a crash resumes for free. A run needs `--budget-inr` and `--decision` (what the result decides), and more
+than 10 questions needs a pilot of at most 10 first. The summary reports actual tokens and rupees. Voyage cost is small (a query embedding and a rerank of up to 50
 passages per question) and is reported from the answers' own token counts where the API returns them.
 
 Results are written to a JSONL file OUTSIDE the repo (answers quote judgments and name parties). Re-running resumes: ids
@@ -29,6 +32,7 @@ import argparse
 import asyncio
 import collections
 import dataclasses
+import hashlib
 import json
 import logging
 import time
@@ -45,7 +49,7 @@ from adapters.decisions import (
     JevClient,
 )
 from adapters.jev import begin_run
-from adapters.llm import LiteLLMClient, LLMUnavailable
+from adapters.llm import LiteLLMClient, LLMResult, LLMUnavailable
 from adapters.memory import FakeCitationLog, FakeStore, FakeUsageMeter
 from adapters.qdrant import QdrantStore
 from adapters.voyage import VoyageClient
@@ -63,6 +67,20 @@ EVAL_ENV = (
 OUT_DEFAULT = Path.home() / "qdrant-kanoon" / "labelling" / "pipeline_answers.jsonl"
 COPY_QDRANT = "http://127.0.0.1:7333"
 CALL_CAP = 2500
+LLM_CACHE = Path.home() / "qdrant-kanoon" / "labelling" / "llm_cache"
+# gemini-3.5-flash-lite list price, USD per million tokens. Secondhand (third-party price pages, 5 Nov 2026): confirm on
+# ai.google.dev/gemini-api/docs/pricing. Rupees at the COSTS.md rate of 85 to the dollar.
+USD_PER_M_IN, USD_PER_M_OUT, INR_PER_USD = 0.30, 2.50, 85.0
+OVERSPEND = 1.2  # abort once spend passes the estimate by 20%
+PILOT_MAX = 10
+
+
+def inr(tokens_in: int, tokens_out: int) -> float:
+    """What the tokens cost in rupees at the list price above."""
+    usd = tokens_in / 1e6 * USD_PER_M_IN + tokens_out / 1e6 * USD_PER_M_OUT
+    return usd * INR_PER_USD
+
+
 RPM = 14  # the evaluation key is on the Gemini FREE tier: 15 requests a minute for this model (measured 4 Nov 2026)
 PAUSE_S = 0.5
 MAX_ATTEMPTS = 6
@@ -70,6 +88,11 @@ MAX_ATTEMPTS = 6
 
 class QuotaExhausted(BaseException):
     """A per-DAY quota is used up: retrying cannot help. The run stops; re-running resumes from the checkpoint."""
+
+
+class SpendStop(BaseException):
+    """A 429 or spending-cap error, or spend past the estimate by 20%. The run ends; nothing is retried, and no other key
+    or tier is tried. A BaseException so no `except Exception` in the pipeline can swallow it."""
 
 
 class CapReached(BaseException):
@@ -101,8 +124,16 @@ def _is_rate_limit(msg: str) -> bool:
 class CountingLLM:
     """Wraps the real client: counts every call, retries rate limits with backoff, stops at the cap."""
 
-    def __init__(self, inner, cap: int = CALL_CAP):
+    def __init__(
+        self,
+        inner,
+        cap: int = CALL_CAP,
+        budget_inr: float | None = None,
+        cache_dir: Path | None = None,
+    ):
         self.inner, self.cap = inner, cap
+        self.budget_inr, self.cache_dir = budget_inr, cache_dir
+        self.tokens_in = self.tokens_out = self.cache_hits = 0
         self.calls = 0
         self.rate_limit_hits = 0
         self.other_errors = 0
@@ -130,6 +161,10 @@ class CountingLLM:
         max_tokens: int = 1024,
         json_schema: dict | None = None,
     ):
+        cached = self._cache_read(prompt, system, model, max_tokens, json_schema)
+        if cached is not None:
+            self.cache_hits += 1
+            return cached
         last: Exception | None = None
         for attempt in range(MAX_ATTEMPTS):
             if self.calls >= self.cap:
@@ -139,7 +174,7 @@ class CountingLLM:
             await self._pace()
             self.calls += 1
             try:
-                return await self.inner.complete(
+                r = await self.inner.complete(
                     prompt,
                     system=system,
                     model=model,
@@ -153,15 +188,55 @@ class CountingLLM:
                     self.first_rate_limit_message = (
                         self.first_rate_limit_message or str(e)[-600:]
                     )
-                    if "perday" in str(e).lower().replace(" ", "").replace("_", ""):
-                        raise QuotaExhausted(str(e)[-300:]) from e
-                    wait = min(60.0, 3.0 * 2**attempt)
-                else:
-                    self.other_errors += 1
-                    wait = 2.0
+                    raise SpendStop(
+                        "a 429 or cap error: the run stops, nothing is retried and no other "
+                        "key is tried: " + str(e)[-300:]
+                    ) from e
+                self.other_errors += 1
+                wait = 2.0
                 self.sleep_s += wait
                 await asyncio.sleep(wait)
+                continue
+            self._cache_write(prompt, system, model, max_tokens, json_schema, r)
+            self.tokens_in += r.input_tokens or 0
+            self.tokens_out += r.output_tokens or 0
+            if self.budget_inr and self.spent_inr > self.budget_inr * OVERSPEND:
+                raise SpendStop(
+                    f"spend Rs {self.spent_inr:,.2f} passed the estimate of Rs {self.budget_inr:,.2f} by more than "
+                    f"{round((OVERSPEND - 1) * 100)}%"
+                )
+            return r
         raise LLMUnavailable(f"gave up after {MAX_ATTEMPTS} attempts: {last}")
+
+    @property
+    def spent_inr(self) -> float:
+        return inr(self.tokens_in, self.tokens_out)
+
+    def _cache_path(
+        self, prompt, system, model, max_tokens, json_schema
+    ) -> Path | None:
+        if self.cache_dir is None:
+            return None
+        key = json.dumps(
+            [model, system, prompt, max_tokens, json_schema], sort_keys=True
+        )
+        return self.cache_dir / (hashlib.sha256(key.encode()).hexdigest() + ".json")
+
+    def _cache_read(self, *key) -> LLMResult | None:
+        path = self._cache_path(*key)
+        if path is None or not path.exists():
+            return None
+        try:
+            return LLMResult(**json.loads(path.read_text()))
+        except (OSError, ValueError, TypeError):
+            return None
+
+    def _cache_write(self, prompt, system, model, max_tokens, json_schema, r) -> None:
+        path = self._cache_path(prompt, system, model, max_tokens, json_schema)
+        if path is None:
+            return
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(dataclasses.asdict(r)))
 
 
 def stub_rows() -> list[dict]:
@@ -327,7 +402,9 @@ def record(row: dict, result, seconds: float, calls: int, degraded: dict) -> dic
     }
 
 
-async def main_async(limit: int | None, out: Path) -> None:
+async def main_async(
+    limit: int | None, out: Path, budget_inr: float, decision: str
+) -> None:
     _pipeline.search = recording_search  # the pipeline imports search by name
     out.parent.mkdir(parents=True, exist_ok=True)
     done = (
@@ -338,50 +415,75 @@ async def main_async(limit: int | None, out: Path) -> None:
     rows = [r for r in stub_rows() if r["id"] not in done]
     if limit:
         rows = rows[:limit]
-    llm = CountingLLM(None)
+    n = len(rows)
+    if n > PILOT_MAX and not done:
+        raise SystemExit(
+            f"{n} questions and no pilot yet: run --limit {PILOT_MAX} first, check the output, then the rest"
+        )
+    print(
+        f"RUN: {n} questions; estimate Rs {budget_inr:,.2f} (hard stop at Rs {budget_inr * OVERSPEND:,.2f}); "
+        f"decides: {decision}",
+        flush=True,
+    )
+    llm = CountingLLM(None, budget_inr=budget_inr, cache_dir=LLM_CACHE)
     deps = build(llm)
     logging.getLogger("core.rewrite").addHandler(FALLBACKS)
     t_all = time.time()
-    with eval_seal_key(), out.open("a") as f:
-        for i, row in enumerate(rows, 1):
-            before, t0 = llm.calls, time.time()
-            SEEN.clear()
-            d0, f0 = (
-                collections.Counter(DECISIONS.stats),
-                collections.Counter(FALLBACKS.counts),
-            )
-            request = PipelineRequest(user_id="labelling-pack", message=row["question"])
-            deps_q = dataclasses.replace(
-                deps,
-                cache=FakeCache(),
-                usage=FakeUsageMeter(),
-                store=FakeStore(),
-                citation_log=FakeCitationLog(),
-            )
-            result = await run_pipeline(request, deps_q)
-            degraded = {
-                k: v
-                for k, v in ((DECISIONS.stats - d0) + (FALLBACKS.counts - f0)).items()
-            }
-            rec = record(row, result, time.time() - t0, llm.calls - before, degraded)
-            f.write(json.dumps(rec) + "\n")
-            f.flush()
-            print(
-                f"{i}/{len(rows)} {row['id']:>5} {rec['outcome']:>10} {rec['message_key'] or '':<28} "
-                f"{len(rec['citations'])} cit  {rec['llm_calls']} calls  {rec['seconds']:.0f}s",
-                flush=True,
-            )
-            await asyncio.sleep(PAUSE_S)
+    stopped = ""
+    try:
+        with eval_seal_key(), out.open("a") as f:
+            for i, row in enumerate(rows, 1):
+                before, t0 = llm.calls, time.time()
+                SEEN.clear()
+                d0, f0 = (
+                    collections.Counter(DECISIONS.stats),
+                    collections.Counter(FALLBACKS.counts),
+                )
+                request = PipelineRequest(
+                    user_id="labelling-pack", message=row["question"]
+                )
+                deps_q = dataclasses.replace(
+                    deps,
+                    cache=FakeCache(),
+                    usage=FakeUsageMeter(),
+                    store=FakeStore(),
+                    citation_log=FakeCitationLog(),
+                )
+                result = await run_pipeline(request, deps_q)
+                degraded = {
+                    k: v
+                    for k, v in (
+                        (DECISIONS.stats - d0) + (FALLBACKS.counts - f0)
+                    ).items()
+                }
+                rec = record(
+                    row, result, time.time() - t0, llm.calls - before, degraded
+                )
+                f.write(json.dumps(rec) + "\n")
+                f.flush()
+                print(
+                    f"{i}/{len(rows)} {row['id']:>5} {rec['outcome']:>10} {rec['message_key'] or '':<28} "
+                    f"{len(rec['citations'])} cit  {rec['llm_calls']} calls  {rec['seconds']:.0f}s",
+                    flush=True,
+                )
+                await asyncio.sleep(PAUSE_S)
+    except SpendStop as e:
+        stopped = str(e)
     print(
-        f"\nSUMMARY: {len(rows)} questions, {llm.calls} model calls (cap {CALL_CAP}), "
-        f"{llm.rate_limit_hits} rate-limit hits, {llm.other_errors} other model errors, "
-        f"{llm.sleep_s:.0f}s spent waiting (pacing and backoff), {time.time() - t_all:.0f}s wall"
+        f"\nSUMMARY: {len(rows)} questions, {llm.calls} model calls (cap {CALL_CAP}), {llm.cache_hits} served from the "
+        f"disk cache, {llm.other_errors} other model errors, {llm.sleep_s:.0f}s spent waiting, "
+        f"{time.time() - t_all:.0f}s wall"
+    )
+    print(
+        f"SPEND: {llm.tokens_in:,} tokens in, {llm.tokens_out:,} out = Rs {llm.spent_inr:,.2f} "
+        f"(estimate Rs {budget_inr:,.2f}); list price, see USD_PER_M_IN / USD_PER_M_OUT"
     )
     print(
         "decision layer, all questions:", dict(DECISIONS.stats), dict(FALLBACKS.counts)
     )
-    if llm.first_rate_limit_message:
-        print("first rate-limit message:", llm.first_rate_limit_message)
+    if stopped:
+        print("RUN STOPPED:", stopped, flush=True)
+        raise SystemExit(2)
 
 
 def main() -> None:
@@ -395,9 +497,15 @@ def main() -> None:
         default=RPM,
         help="model calls a minute (the free tier allowed 14; billing is on now)",
     )
+    ap.add_argument(
+        "--budget-inr", type=float, required=True, help="the estimate in rupees"
+    )
+    ap.add_argument(
+        "--decision", required=True, help="what decision this result drives"
+    )
     a = ap.parse_args()
     RPM = a.rpm
-    asyncio.run(main_async(a.limit, a.out))
+    asyncio.run(main_async(a.limit, a.out, a.budget_inr, a.decision))
 
 
 if __name__ == "__main__":

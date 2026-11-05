@@ -1,6 +1,6 @@
 {
 "_note": "Built by data/build_act_ids.py from the served collection; lists what is stored, not what the product covers.",
-"collection": "kanoon_v1",
+"collection": "research_v3",
 "acts": [
 [
 "IND_REP_1000_1873",
@@ -4323,6 +4323,60 @@
 "spent"
 ],
 [
+"IND_SUPP_constitution",
+"The Constitution of India",
+"1950",
+"not_checked"
+],
+[
+"IND_SUPP_contract1872",
+"The Indian Contract Act, 1872",
+"1872",
+"not_checked"
+],
+[
+"IND_SUPP_cpc1908",
+"The Code of Civil Procedure, 1908",
+"1908",
+"not_checked"
+],
+[
+"IND_SUPP_hma1955",
+"The Hindu Marriage Act, 1955",
+"1955",
+"not_checked"
+],
+[
+"IND_SUPP_limitation1963",
+"The Limitation Act, 1963",
+"1963",
+"not_checked"
+],
+[
+"IND_SUPP_nia1881",
+"The Negotiable Instruments Act, 1881",
+"1881",
+"not_checked"
+],
+[
+"IND_SUPP_pca1988",
+"The Prevention of Corruption Act, 1988",
+"1988",
+"not_checked"
+],
+[
+"IND_SUPP_sra1963",
+"The Specific Relief Act, 1963",
+"1963",
+"not_checked"
+],
+[
+"IND_SUPP_stamp1899",
+"The Indian Stamp Act, 1899",
+"1899",
+"not_checked"
+],
+[
 "IND_central_11008",
 "The Central Educational Institutions (Reservation in Teachers  Cadre) Act, 2019",
 "2019",
@@ -5103,12 +5157,6 @@
 "in_force"
 ],
 [
-"IND_central_15510",
-"The Indian Stamp Act, 1899",
-"1899",
-"in_force"
-],
-[
 "IND_central_15512",
 "The Jammu and Kashmir Official Languages Act, 2020.",
 "2020",
@@ -5139,21 +5187,9 @@
 "in_force"
 ],
 [
-"IND_central_1558",
-"The Prevention of Corruption Act, 1988",
-"1988",
-"in_force"
-],
-[
 "IND_central_1559",
 "The Geneva Conventions Act, 1960",
 "1960",
-"in_force"
-],
-[
-"IND_central_1560",
-"The Hindu Marriage Act, 1955",
-"1955",
 "in_force"
 ],
 [
@@ -5214,12 +5250,6 @@
 "IND_central_15647",
 "The Institute of Teaching and Research in Ayurveda Act, 2020",
 "2020",
-"in_force"
-],
-[
-"IND_central_1565",
-"The Limitation Act, 1963",
-"1963",
 "in_force"
 ],
 [
@@ -5328,12 +5358,6 @@
 "IND_central_1582",
 "The Enemy Property Act, 1968",
 "1968",
-"in_force"
-],
-[
-"IND_central_1583",
-"The Specific Relief Act, 1963",
-"1963",
 "in_force"
 ],
 [
@@ -8517,26 +8541,8 @@
 "in_force"
 ],
 [
-"IND_central_2187",
-"The Indian Contract Act, 1872",
-"1872",
-"in_force"
-],
-[
-"IND_central_2189",
-"The Negotiable Instruments Act, 1881",
-"1881",
-"in_force"
-],
-[
 "IND_central_2190",
 "The Registration Act, 1908",
-"1908",
-"in_force"
-],
-[
-"IND_central_2191",
-"The Code of Civil Procedure, 1908",
 "1908",
 "in_force"
 ],

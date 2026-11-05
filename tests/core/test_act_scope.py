@@ -34,7 +34,7 @@ from core.gate import gate
 from core.search import search
 from core.verify import verify
 
-CPC = "IND_central_2191"  # the Code of Civil Procedure, 1908, in the served collection
+CPC = "IND_SUPP_cpc1908"  # the Code of Civil Procedure, 1908, in research_v3 (A185)
 
 
 # ----------------------------------------------------------------------------------------
@@ -169,6 +169,7 @@ def law(settings) -> FakeVectorStore:
         "res judicata no court shall try any suit",
         act_id=CPC,
         section_number="11",
+        heading_section="11",
         title="Code of Civil Procedure, 1908",
         year=1908,
     )
@@ -177,6 +178,7 @@ def law(settings) -> FakeVectorStore:
         "courts to try all civil suits unless barred",
         act_id=CPC,
         section_number="9",
+        heading_section="9",
         title="Code of Civil Procedure, 1908",
         year=1908,
     )
@@ -186,6 +188,7 @@ def law(settings) -> FakeVectorStore:
             f"section eleven of unrelated act {i} res judicata",
             act_id=f"IND_central_9{i:03d}",
             section_number="11",
+            heading_section="11",
             title=f"Unrelated Act {i}",
             year=1950 + i,
         )
@@ -194,6 +197,7 @@ def law(settings) -> FakeVectorStore:
         "other act section 438 text about bail",
         act_id="IND_central_9900",
         section_number="438",
+        heading_section="438",
         title="Some Other Act",
         year=1950,
     )
@@ -221,8 +225,9 @@ def law(settings) -> FakeVectorStore:
     s.add_law(
         "nia-138",
         "dishonour of cheque for insufficiency of funds",
-        act_id="IND_central_2189",
+        act_id="IND_SUPP_nia1881",
         section_number="138",
+        heading_section="138",
         title="The Negotiable Instruments Act, 1881",
         year=1881,
     )
@@ -245,14 +250,115 @@ async def test_section_11_is_read_only_in_the_act_the_user_named(settings, law):
     assert [p.record_id for p in r.passages] == ["cpc-11"]  # one point, not thirty-one
 
 
-async def test_a_resolved_act_with_a_section_it_does_not_have_falls_back_to_the_act(
+async def test_a_resolved_act_with_a_section_it_does_not_have_is_section_not_held(
     settings, law
 ):
+    """The Act is held, no chunk of it is headed by section 9999: the typed result,
+    no passages, and the Act's other sections are NOT served in its place."""
     r = await _run(
         settings, law, Filters(act="Code of Civil Procedure, 1908", section="9999")
     )
-    assert r.scope == "act" and r.passages
-    assert {p.act_slug for p in r.passages} == {CPC}
+    assert r.scope == "section not held" and r.passages == ()
+    assert r.not_held is not None
+    assert r.not_held.act_ids == (CPC,) and r.not_held.section == "9999"
+
+
+async def test_a_chunk_labelled_with_the_section_but_headed_by_another_is_not_the_section(
+    settings,
+):
+    """section_number is a label the chunker wrote: IPC 34 sits inside the chunk
+    labelled 33. A chunk is the section only if its own heading says so."""
+    s = FakeVectorStore(settings)
+    s.add_law(
+        "ipc-33",
+        "section 33 act and omission. section 34 acts done by several persons",
+        act_id="IND_central_9901",
+        section_number="34",  # the label says 34
+        heading_section="33",  # the heading says 33
+        title="The Indian Penal Code, 1860",
+        year=1860,
+    )
+    r = await _run(
+        settings,
+        s,
+        Filters(act="The Indian Penal Code, 1860", section="34"),
+        "common intention",
+    )
+    assert r.scope == "section not held" and r.passages == ()
+
+
+async def test_a_store_that_returns_a_chunk_of_another_section_is_not_believed(
+    settings,
+):
+    """Belt and braces: even if the store hands back a chunk headed by another
+    section, the lookup drops it."""
+
+    class Loose:
+        async def search(self, collection, vector, text, must, limit, mode="hybrid"):
+            from adapters.qdrant import Hit
+
+            return [Hit("x", "text", 0.9, {"heading_section": "10", "act_id": CPC})]
+
+    deps = make_deps(settings, Loose(), gate, verify)
+    dec = Decision(
+        "in_scope", Filters(act="Code of Civil Procedure, 1908", section="11"), "normal"
+    )
+    r = await search(
+        PipelineRequest("u", "x"), RewrittenQuery("res judicata"), dec, [0.0], deps
+    )
+    assert r.scope == "section not held" and r.passages == ()
+
+
+async def test_the_section_signal_reserves_slots_by_heading_not_by_label(settings):
+    s = FakeVectorStore(settings)
+    s.add_law(
+        "headed-11",
+        "limitation of suits",
+        act_id="IND_central_9902",
+        section_number="11",
+        heading_section="11",
+    )
+    s.add_law(
+        "labelled-11",
+        "something else entirely",
+        act_id="IND_central_9903",
+        section_number="11",  # the label says 11, the chunk is about 10
+        heading_section="10",
+    )
+    r = await _run(
+        settings, s, Filters(act="Nonexistent Act", section="11"), "unrelated words"
+    )
+    assert r.scope == "section signal"
+    assert "headed-11" in {p.record_id for p in r.passages}
+
+
+async def test_a_not_held_section_ends_the_turn_before_rerank_and_gate(settings, law):
+    from core.pipeline import run_pipeline
+
+    calls = {"gate": 0}
+
+    async def counting_gate(rq, passages, deps):
+        calls["gate"] += 1
+        return await gate(rq, passages, deps)
+
+    class Named(FakeDecisions):
+        async def decide(self, q, *, uploads=False):
+            f = Filters(act="Code of Civil Procedure, 1908", section="9999")
+            return Decision("in_scope", f, "normal", (), False)
+
+    deps = make_deps(
+        settings,
+        law,
+        counting_gate,
+        verify,
+        decisions=Named(),
+        llm=FakeLLM('{"query": "what does section 9999 CPC say"}'),  # names the section
+    )
+    res = await run_pipeline(
+        PipelineRequest(user_id="u", message="what does section 9999 CPC say"), deps
+    )
+    assert res.outcome == "not_found" and res.message_key == "not_found"
+    assert calls["gate"] == 0
 
 
 async def test_an_act_with_no_section_named_never_scopes_the_search(settings, law):
@@ -331,9 +437,7 @@ async def test_a_section_that_is_not_a_plain_number_is_never_a_hard_section_filt
     )
     assert r.scope == "act" and {p.act_slug for p in r.passages} == {CPC}
     # unresolved Act: nothing to scope to, so the ordinary search
-    r = await _run(
-        settings, law, Filters(act="Constitution of India", section="Article 21")
-    )
+    r = await _run(settings, law, Filters(act="Nonexistent Act", section="Article 21"))
     assert r.scope == "unfiltered" and len(r.passages) > 1
 
 
@@ -370,7 +474,10 @@ def test_the_resolver_never_guesses():
     assert (
         resolve_act("Code of Civil Procedure, 1999") == ()
     )  # a year the index does not hold
-    assert resolve_act("Constitution of India") == ()
+    assert resolve_act("Constitution of India") == (
+        "IND_SUPP_constitution",
+    )  # added in research_v3
+    assert resolve_act("Nonexistent Act of 1850") == ()
     assert resolve_act(None) == () and resolve_act("") == ()
 
 
@@ -379,8 +486,8 @@ def test_the_act_index_covers_what_the_served_collection_holds():
 
     idx = load_index()
     assert (
-        sum(len(v) for v in idx.by_key.values()) == 1568
-    )  # data/build_act_ids.py --check keeps it current
+        sum(len(v) for v in idx.by_key.values()) == 1569
+    )  # data/build_act_ids.py --check keeps it current (1,568 Acts of kanoon_v1, 8 replaced, the Constitution added)
 
 
 def test_every_alias_that_names_a_stored_act_resolves_to_exactly_one():
@@ -496,6 +603,7 @@ async def test_an_invented_section_no_longer_strips_judgments_from_the_search(
         "res judicata matter directly in issue",
         act_id=CPC,
         section_number="11",
+        heading_section="11",
         kind="act_section",
     )
     s.add_law("j1", "the doctrine of res judicata bars a second suit", kind="judgment")
@@ -512,3 +620,44 @@ async def test_an_invented_section_no_longer_strips_judgments_from_the_search(
         PipelineRequest(user_id="u", message=rq.query), rq, dec, [0.0], deps
     )
     assert any(p.kind == "judgment" for p in found.passages)
+
+
+def test_the_store_ranks_exact_lookups_on_heading_section_too():
+    from adapters.qdrant import EXACT_KEYS
+
+    assert "heading_section" in EXACT_KEYS and "section_number" in EXACT_KEYS
+
+
+async def test_a_chunk_with_no_heading_whose_label_is_the_section_is_the_section(
+    settings,
+):
+    """3,865 of the 72,185 plain-numbered Act chunks carry no `Section N:` heading
+    (Industrial Disputes Act 25F). With no heading there is nothing to differ, so the
+    label stands; a chunk headed by another section is still dropped."""
+    ID_ACT = resolve_act("The Industrial Disputes Act, 1947")[0]
+    s = FakeVectorStore(settings)
+    s.add_law(
+        "id-25f",
+        "conditions precedent to retrenchment of workmen",
+        act_id=ID_ACT,
+        section_number="25F",
+        heading_section="",
+        title="The Industrial Disputes Act, 1947",
+        year=1947,
+    )
+    s.add_law(
+        "id-25e",
+        "retrenchment compensation",
+        act_id=ID_ACT,
+        section_number="25F",  # labelled 25F ...
+        heading_section="25E",  # ... but headed 25E
+        title="The Industrial Disputes Act, 1947",
+        year=1947,
+    )
+    r = await _run(
+        settings,
+        s,
+        Filters(act="The Industrial Disputes Act, 1947", section="25F"),
+        "retrenchment",
+    )
+    assert r.scope == "act+section" and [p.record_id for p in r.passages] == ["id-25f"]

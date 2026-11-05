@@ -1,4 +1,4 @@
-"""Citator Phase 1: the data model for "which Supreme Court judgments cite this one".
+"""Citator Phase 1: the data model for "which top-court judgments cite this one".
 
 Plain words: this module can say how many judgments in our data cite a case in a form we can read,
 and who they are. It cannot say anything about whether the case is still good law, because there is
@@ -120,7 +120,7 @@ SC_LINKS = (
 
 
 def load_links(path: Path = SC_LINKS) -> list[Link]:
-    """The built Supreme Court links (scan/sc/build_links.py), one `Link` per line."""
+    """The built top-court links (scan/sc/build_links.py), one `Link` per line."""
     with gzip.open(path, "rt", encoding="utf-8") as f:
         return [
             Link(r["citing"], r["cited"], Via(r["via"]), r["mentions"])

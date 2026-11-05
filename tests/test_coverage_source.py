@@ -47,6 +47,15 @@ SKIP_PREFIXES = (
     "web/public/",
 )
 SKIP_FILES = {"CLAUDE.md"}
+
+# scan/sc/ is the one allowlisted folder (A185). Its scripts MEASURE the Supreme Court's own records (a
+# citation map, a case-law table, a reference count): the court is the subject of the measurement, so
+# the court's name cannot be avoided in them. They are run by hand, write files under ~/qdrant-kanoon,
+# and are never imported by anything that serves or shows a user. The folder is named exactly, never a
+# pattern, and `test_the_measurement_allowlist_can_never_reach_shipped_code` pins that api/, web/ and
+# core/ (so core/prompts too) can never be added to it and that nothing shipped imports scan.sc.
+MEASUREMENT_ONLY_PREFIXES = ("scan/sc/",)
+SHIPPED_PREFIXES = ("api/", "web/", "core/", "adapters/")
 KEEP_DOCS = {"docs/UX-COPY.md"}
 SUFFIXES = (".py", ".ts", ".tsx", ".mjs", ".txt", ".md", ".yml", ".yaml", ".sql")
 
@@ -77,7 +86,7 @@ def _scanned(path: str) -> bool:
         return False
     if path in KEEP_DOCS:
         return True
-    if path.startswith(SKIP_PREFIXES):
+    if path.startswith(SKIP_PREFIXES) or path.startswith(MEASUREMENT_ONLY_PREFIXES):
         return False
     return path.endswith(SUFFIXES) and (ROOT / path).is_file()
 
@@ -248,3 +257,43 @@ def test_the_not_found_message_is_the_approved_text_and_is_read_from_the_file():
     )
     assert cov.not_found_message.endswith("Try narrowing to a specific Act or section.")
     assert cov.not_found_message != cov.not_in_dataset_message
+
+
+def test_the_measurement_allowlist_can_never_reach_shipped_code():
+    """The allowlist is one named folder. A shipped path (api/, web/, core/prompts and the rest of core/, adapters/)
+    is scanned however the lists are edited, and nothing shipped imports the folder."""
+    assert MEASUREMENT_ONLY_PREFIXES == ("scan/sc/",)
+    for allowed in MEASUREMENT_ONLY_PREFIXES + SKIP_PREFIXES:
+        if allowed.startswith(
+            ("tests/", "web/src/__tests__/", "web/src/lib/fake/", "web/public/")
+        ):
+            continue  # fixtures and static files, never read by the product; pre-existing (A51)
+        for shipped in SHIPPED_PREFIXES:
+            assert not allowed.startswith(shipped) and not shipped.startswith(
+                allowed
+            ), f"{allowed!r} would exempt shipped code under {shipped!r}"
+    for shipped_path in (
+        "api/routes.py",
+        "core/prompts/answer.txt",
+        "core/prompts/decide.txt",
+        "core/answer.py",
+        "adapters/llm.py",
+    ):
+        assert not shipped_path.startswith(MEASUREMENT_ONLY_PREFIXES + SKIP_PREFIXES)
+    # a claim in a shipped file is caught; the same words under scan/sc/ are not scanned
+    assert CLAIM.search("answers from the Supreme Court")
+    assert _scanned("scan/sc/build_links.py") is False
+    importers = []
+    for path in _tracked():
+        if path.startswith(SHIPPED_PREFIXES) and path.endswith((".py", ".ts", ".tsx")):
+            f = ROOT / path
+            text = f.read_text(encoding="utf-8") if f.is_file() else ""
+            if re.search(
+                r"^\s*(?:from|import)\s+scan\.sc\b|from\s+['\"][^'\"]*scan/sc",
+                text,
+                re.M,
+            ):
+                importers.append(path)
+    assert importers == [], (
+        f"shipped code imports the measurement-only folder: {importers}"
+    )

@@ -101,6 +101,12 @@ async def _run(
         return hit, None  # free: not counted against the limit
     _emit(on_step, StepEvent("searching"))
     found = await search(request, rq, decision, vector, deps)  # 5
+    if found.not_held:
+        # The user named a section of an Act we hold and no chunk is headed by it:
+        # nothing to re-rank or rate, and the Act's other sections are not offered
+        # in its place. Same not-found the gate gives (the wording is the owner's).
+        log.info("search: section not held")
+        return PipelineResult("not_found", None, footer, "not_found"), None
     top = await rerank(rq, found.passages, deps)  # 6
     _emit(on_step, StepEvent("checking", found=len(found.passages)))
     gate = await deps.gate(rq, top, deps)  # 7

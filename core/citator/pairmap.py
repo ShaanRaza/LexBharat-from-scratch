@@ -1,6 +1,6 @@
-"""Citator Phase 1: the SCC and AIR to Supreme Court record map, and the rule that decides what to trust.
+"""Citator Phase 1: the SCC and AIR to top-court record map, and the rule that decides what to trust.
 
-Plain words: a Supreme Court Reports headnote lists the cases a judgment relies on, each with two
+Plain words: a top-court reporter headnote lists the cases a judgment relies on, each with two
 citations joined by a colon: `(2002) 5 SCC 1 : [2002] 3 SCR 810`. The SCR side is one of our records,
 so the pair says "this SCC citation is that record". One judgment may print a pair wrongly (an OCR slip,
 a typo). A pair printed by several judgments that have nothing to do with each other is far safer.
@@ -53,8 +53,8 @@ def build_map(
     """{citation key: record id} for every key whose evidence passes `trusted_target`.
 
     Keys are the tuples `core.citator.refs` makes: ("scc", year, supp, vol, page) and
-    ("air", year, court, page). An AIR citation of a High Court is never mapped: the record it would
-    name is a Supreme Court record, and an AIR High Court key would be a different case."""
+    ("air", year, court, page). An AIR citation of a regional court is never mapped: the record it would
+    name is a top-court record, and an AIR regional-court key would be a different case."""
     out: dict[Hashable, str] = {}
     for key, evidence in pairs.items():
         if (

@@ -51,7 +51,13 @@ def store(settings, chunks, act_sections) -> FakeVectorStore:
             c["chunk_id"], c["text"], **{k: v for k, v in c.items() if k != "text"}
         )
     for a in act_sections:
+        # research_v3 carries `heading_section` on every chunk (the section the chunk's own heading names)
         s.add_law(
-            a["chunk_id"], a["text"], **{k: v for k, v in a.items() if k != "text"}
+            a["chunk_id"],
+            a["text"],
+            **{
+                "heading_section": a.get("section_number"),
+                **{k: v for k, v in a.items() if k != "text"},
+            },
         )
     return s

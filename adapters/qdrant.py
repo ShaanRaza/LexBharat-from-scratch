@@ -35,7 +35,7 @@ COURT_CODE = "court_code"
 # source). `language_code` is mostly missing and uses uppercase "EN" (Measured), so
 # filtering on it silently drops real chunks.
 # Payload keys that mean "the user named this exactly": they skip the merge.
-EXACT_KEYS = ("section_number", "case_number")
+EXACT_KEYS = ("section_number", "heading_section", "case_number")
 
 # Which half of the search runs. The pipeline only ever uses "hybrid"; the other two
 # exist so the retrieval-quality measurement can tell the halves apart.

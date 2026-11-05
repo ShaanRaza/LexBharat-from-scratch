@@ -29,13 +29,34 @@ from core.uploads import search_user_documents
 log = logging.getLogger(__name__)
 
 
+# The key an exact-section lookup filters on: the section a chunk's OWN heading
+# names (research_v3 carries it on every chunk, indexed). `section_number` is a
+# label the chunker wrote and not an address: an amended section is appended into
+# the chunk of the section before and carries that one's number (docs/DATASET.md,
+# "The section_number trap").
+SECTION_KEY = "heading_section"
+
+
+@dataclass(frozen=True)
+class SectionNotHeld:
+    """The user named a section of an Act we hold, and no chunk of that Act is
+    headed by that section."""
+
+    act_ids: tuple[str, ...]
+    section: str
+
+
 @dataclass(frozen=True)
 class SearchResult:
     passages: tuple[Passage, ...]
     keyword_only: bool  # Voyage was down: label "keyword results only"
     # which layer of the filter ladder served the search (see _law_hits):
-    # "act+section", "act", "section signal", "case number" or "unfiltered"
+    # "act+section", "act", "section signal", "case number", "unfiltered" or
+    # "section not held"
     scope: str = "unfiltered"
+    # set only when scope == "section not held": no passages, and the Act's other
+    # text is NOT served in its place
+    not_held: SectionNotHeld | None = None
 
 
 async def embed_query(text: str, deps: Deps) -> list[float] | QueryVectors | None:
@@ -179,24 +200,52 @@ def _merge(first: list[Hit], second: list[Hit], limit: int) -> list[Hit]:
     return list(out.values())[:limit]
 
 
+def _is_section(h: Hit, section: str) -> bool:
+    """A chunk is section N's text if its own heading names N. A chunk with no
+    heading at all (3,865 of the 72,185 plain-numbered Act chunks of research_v3:
+    the chunker left no `Section N:` line) has no heading to differ, so its label
+    stands. A chunk headed by ANOTHER section is dropped, whatever its label says."""
+    heading = str(h.payload.get(SECTION_KEY) or "").upper()
+    if heading:
+        return heading == section
+    return str(h.payload.get("section_number") or "").upper() == section
+
+
+async def _section_hits(run, section: str, must: dict, limit: int) -> list[Hit]:
+    """Chunks that ARE section `section`: by heading, plus labelled-and-headless
+    chunks (see `_is_section`); both lookups are exact payload filters."""
+    by_heading, by_label = await asyncio.gather(
+        run({**must, SECTION_KEY: section}, limit),
+        run({**must, "section_number": section}, limit),
+    )
+    kept: dict[str, Hit] = {}
+    for h in by_heading + by_label:
+        if _is_section(h, section):
+            kept.setdefault(h.record_id, h)
+    return list(kept.values())[:limit]
+
+
 async def _law_hits(
     decision: Decision, vector, rq: RewrittenQuery, deps: Deps
-) -> tuple[list[Hit], str]:
+) -> tuple[list[Hit], str, SectionNotHeld | None]:
     """The law-collection search, with the exact-lookup filters LAYERED so that no
     filter the search could not scope can empty it (DECISIONS A144).
 
     1. The decider named an Act that resolves to stored Act id(s) AND a plain
-       section: a hard filter on (act_id, section_number). A section is only read
-       inside its own Act.
-    2. That finds nothing, or the "section" is not a plain number (Order VII Rule
-       11): the Act alone, ranked as usual. Only when a section was NAMED; an Act
-       mentioned with no section never scopes the search (that would drop the case
-       law about it).
-    3. Still nothing, or the Act does not resolve (not stored, or no name): the
-       section number is a RANKING SIGNAL, not a filter. The ordinary search runs
-       unfiltered and, if there is a plain section, a few slots are reserved for the
-       best matches of that number in any Act, so the right section can still be
-       found and nothing is excluded.
+       section: a hard filter on (act_id, heading_section), the section a chunk's
+       own heading names, plus a chunk with no heading whose label is that section.
+       A section is only read inside its own Act. If no chunk of the Act is that
+       section, the result is the typed "section not held" (no passages): the Act's
+       other sections are NOT served in its place, because text of a different
+       section under a question about this one reads as an answer.
+    2. The "section" is not a plain number (Order VII Rule 11): the Act alone, ranked
+       as usual. Only when a section was NAMED; an Act mentioned with no section
+       never scopes the search (that would drop the case law about it).
+    3. The Act does not resolve (not stored, or no name): the section number is a
+       RANKING SIGNAL, not a filter. The ordinary search runs unfiltered and, if
+       there is a plain section, a few slots are reserved for the best chunks headed
+       by that number in any Act, so the right section can still be found and
+       nothing is excluded.
     4. A case number is a hard filter only while it finds something; otherwise the
        ordinary search runs.
     A year or an Act's name never filters here: only (act_id, section_number),
@@ -215,27 +264,30 @@ async def _law_hits(
 
     if f.section and act_ids:
         if section:
-            hits = await run(
-                {**case, "act_id": list(act_ids), "section_number": section}
+            # no case number here: an Act's chunks carry none, so it could only
+            # empty the lookup
+            hits = await _section_hits(
+                run, section, {"act_id": list(act_ids)}, SEARCH_TOP_K
             )
             if hits:
-                return hits, "act+section"
+                return hits, "act+section", None
+            return [], "section not held", SectionNotHeld(tuple(act_ids), section)
         hits = await run({"act_id": list(act_ids)})
         if hits:
-            return hits, "act"
+            return hits, "act", None
     elif case:
         hits = await run(case)
         if hits:
-            return hits, "case number"
+            return hits, "case number", None
     if section:
         reserved = max(1, SEARCH_TOP_K // 5)  # a fifth of the slots, not all
         general, by_section = await asyncio.gather(
-            run({}), run({"section_number": section}, reserved)
+            run({}), _section_hits(run, section, {}, reserved)
         )
         if by_section:
-            return _merge(by_section, general, SEARCH_TOP_K), "section signal"
-        return general, "unfiltered"
-    return await run({}), "unfiltered"
+            return _merge(by_section, general, SEARCH_TOP_K), "section signal", None
+        return general, "unfiltered", None
+    return await run({}), "unfiltered", None
 
 
 async def search(
@@ -265,7 +317,7 @@ async def search(
     except VectorStoreUnavailable:
         log.error("vector store unavailable")
         raise
-    law_hits, scope = results[0]
+    law_hits, scope, not_held = results[0]
     passages = [
         hit_to_passage(h, settings=deps.settings)
         for h in law_hits
@@ -278,4 +330,4 @@ async def search(
     if len(unique) < len(passages):
         dropped = len(passages) - len(unique)
         log.info("search: dropped %d duplicate passage(s)", dropped)
-    return SearchResult(tuple(unique[:SEARCH_TOP_K]), vector is None, scope)
+    return SearchResult(tuple(unique[:SEARCH_TOP_K]), vector is None, scope, not_held)
