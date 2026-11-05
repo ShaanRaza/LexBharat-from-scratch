@@ -169,9 +169,15 @@ PAYLOAD = {
 
 def test_the_shipped_hold_list_is_off_and_emits_nothing():
     entries = h.load_hold()
-    assert {e["slug"] for e in entries} == {"crpc1973", "gratuity1972", "consumer1986"}
+    assert {e["slug"] for e in entries} == {
+        "crpc1973",
+        "gratuity1972",
+        "consumer1986",
+        "eca1923",
+    }
     for e in entries:
         assert not h.servable(e)
+        assert e["proposed"]["status"] == "UNREVIEWED" and e["repealed_by"] == ""
         assert list(h.records_for(e, [PAYLOAD])) == []
         with pytest.raises(h.HeldBack):
             h.to_supplement_record(PAYLOAD, e)
@@ -214,4 +220,63 @@ def test_a_fully_reviewed_act_is_emitted_as_repealed_central_with_the_new_prefix
     assert (
         r["repealed_by"] == e["repealed_by"]
         and r["copied_from_act_id"] == "IND_state_6796"
+    )
+
+
+# ---- splitting oversize records (A183) ----------------------------------------------------
+def test_split_body_is_lossless_and_respects_the_limit():
+    body = "\n".join(
+        [
+            f"({i}) A clause about thing {i} that runs on for a while to take up room. "
+            * 3
+            for i in range(1, 40)
+        ]
+    )
+    parts = b.split_body(body, 500)
+    assert "".join(parts) == body and len(parts) > 3
+    assert all(len(p) <= 500 for p in parts)
+    assert all(
+        p.lstrip().startswith("(") for p in parts[1:]
+    )  # cut at a sub-clause, not mid-sentence
+
+
+def test_one_huge_line_is_cut_at_sentence_ends():
+    body = "Sentence number one is here. " * 200
+    parts = b.split_body(body, 300)
+    assert "".join(parts) == body and all(len(p) <= 300 for p in parts)
+    assert all(p.rstrip().endswith(".") for p in parts[:-1])
+
+
+def test_split_payload_keeps_parent_part_number_and_stores_notes_once():
+    p = {
+        "chunk_id": "IND_SUPP_x_s1",
+        "text": "Act: T | India | Central | Status not checked\nSection 1: H\n"
+        + ("(1) text here. \n" * 200),
+        "amendment_notes": ["1. Subs. by Act"],
+        "amendment_count": 1,
+        "state_amendment_text": "state",
+    }
+    parts = b.split_payload(p, 600)
+    assert len(parts) > 2 and all(len(q["text"]) <= 600 for q in parts)
+    assert [q["part_number"] for q in parts] == list(range(1, len(parts) + 1))
+    assert {q["parent_id"] for q in parts} == {"IND_SUPP_x_s1"}
+    assert parts[0]["amendment_notes"] and not any(
+        q["amendment_notes"] for q in parts[1:]
+    )
+    assert len({q["chunk_id"] for q in parts}) == len(parts)
+    rebuilt = "".join(q["text"].split("\n", 2)[2] for q in parts)
+    assert rebuilt == p["text"].split("\n", 2)[2]
+
+
+def test_an_unsplit_record_keeps_its_own_id():
+    p = {
+        "chunk_id": "IND_SUPP_x_s2",
+        "text": "H1\nH2\nshort body",
+        "amendment_notes": [],
+    }
+    (q,) = b.split_payload(p, 600)
+    assert (
+        q["chunk_id"] == "IND_SUPP_x_s2"
+        and q["part_number"] == 1
+        and q["total_parts"] == 1
     )

@@ -35,6 +35,8 @@ def load_hold(path: Path = HOLD_FILE) -> list[dict]:
 def missing_review(entry: dict) -> list[str]:
     """What an advocate still has to supply. Empty list AND serve=true is the only way through."""
     gaps = [k for k in REQUIRED if not str(entry.get(k) or "").strip()]
+    if entry.get("parked"):
+        gaps.append("parked (history-only by lead decision)")
     if entry.get("serve") is not True:
         gaps.append("serve (must be true; the owner switches it, not the advocate)")
     return gaps

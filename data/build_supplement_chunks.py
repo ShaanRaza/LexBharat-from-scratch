@@ -51,6 +51,7 @@ SOURCE_KIND = "supplement_indiacode"
 STATUS = (
     "not_checked"  # never "in_force": nobody has determined it (CLAUDE.md section 6)
 )
+SPLIT_LIMIT = 1711  # p95 of kanoon_v1 central-Act point text, in characters (Measured 5 Nov 2026, n=74,484)
 SHORT = 30  # a section body shorter than this many characters is listed in the manifest
 DOWNLOAD_DATE = (
     "2026-10-24"  # SOURCES.md: "found 2026-10-24"; the Constitution 2026-10-25
@@ -191,6 +192,9 @@ class Rec:
     notes: list[str] = field(default_factory=list)
     stub: bool = False
     in_state: bool = False
+    forced_status: str = ""
+    state_block: str = ""
+    variant: int = 1  # 2 = the same Order number printed a second time
 
 
 # ---------------------------------------------------------------------------------------------
@@ -647,13 +651,21 @@ def parse(mode: str, stream: list[tuple[int, str]]) -> tuple[list[Rec], Counter]
         stats["_toc"] = toc_sec  # type: ignore[assignment]
         recs += stubs(recs, toc_sec, toc_lines(lines[:first_sched_toc]), stream, stats)
         # Orders: the TOC lists each Order's rules after its "ORDER X" heading
-        order_rx = re.compile(r"^\s*(?:In\s+)?ORDER\s+([IVXL]+[A-Z]?)\s*$")
+        # Seen in the PDF: "ORDER XX", "[ORDER XXA", "*[ORDER XV-A aC" (watermark), "InORDER XLIII" (watermark
+        # glued on). A quote mark before ORDER means a STATE-inserted Order, which is not matched.
+        order_rx = re.compile(
+            r"^\s*(?:In\s*)?[*\[]{0,2}\s*ORDER\s+([IVXL]+)(?:[-\s]?([A-Z]))?\]?(?:\s+(?:e|od|aC|di|In))?\s*$"
+        )
+
+        def order_no(m):
+            return m.group(1) + (m.group(2) or "")
+
         toc_orders: dict[str, list[str]] = {}
         cur = None
         for ln in lines[first_sched_toc:sched]:
             mo = order_rx.match(ln)
             if mo:
-                cur = mo.group(1)
+                cur = order_no(mo)
                 toc_orders.setdefault(cur, [])
                 continue
             m = LABEL.match(ln)
@@ -662,12 +674,23 @@ def parse(mode: str, stream: list[tuple[int, str]]) -> tuple[list[Rec], Counter]
         app0 = first(r"^\s*APPENDIX\s+[A-H]\s*$", sched + 1)
         orders_stream = stream[sched + 1 : app0 or len(stream)]
         starts = [i for i, (_, ln) in enumerate(orders_stream) if order_rx.match(ln)]
+        seen_orders: Counter = Counter()
         for a, b in zip(starts, starts[1:] + [len(orders_stream)]):
-            ordno = order_rx.match(orders_stream[a][1]).group(1)
-            toc_o = toc_orders.get(ordno, [])
+            ordno = order_no(order_rx.match(orders_stream[a][1]))
+            seen_orders[ordno] += 1
+            variant = seen_orders[
+                ordno
+            ]  # Order XI is printed twice (the second: commercial courts)
+            toc_o = toc_orders.get(ordno, []) if variant == 1 else []
+            if not toc_o:  # an Order the printed arrangement omits (Order XV-A): accept 1, 1A, 2 ... in order
+                toc_o = [f"{i}{x}" for i in range(1, 90) for x in ("", "A", "B", "C")]
+                stats["orders_not_in_arrangement"] += 1
             rs, st2 = segment(orders_stream[a + 1 : b], toc_o, "rule", order=ordno)
             for r in rs:
                 r.order = ordno
+                r.variant = variant
+            if variant > 1:
+                stats["orders_printed_more_than_once"] += 1
             recs += rs
             stats["orders_found"] += 1
             stats.update({f"orders:{k}": v for k, v in st2.items()})
@@ -733,6 +756,56 @@ def schedule_rows(stream, stats):
     return ([head] if any(x.strip() for x in head.lines) else []) + out
 
 
+STATE_NAME_ALONE = re.compile(rf"^\s*({STATES}|Uttaranchal)\s*[.\-–—]*\s*$")
+
+
+def stamp_tail_blocks(tail: list[tuple[int, str]], stats) -> list[Rec]:
+    """Everything from "SCHEDULE 1-A" on is STATE material (1-A is the Orissa schedule; the rest are
+    state amendments), cut at each line that is only a state's name. Evidence that the cut is
+    reliable: each block's own "[Vide <State> Act ...]" citations name the state in its heading
+    (13 of 14 blocks agree; the last also holds one Uttarakhand citation). The central
+    "SCHEDULE II ... [Enactments repealed.]" line at the very end is split off as its own record."""
+    lines = [(p, ln) for p, ln in tail]
+    sch2 = next(
+        (k for k, (_, ln) in enumerate(lines) if re.match(r"^\s*SCHEDULE II\b", ln)),
+        len(lines),
+    )
+    cuts = (
+        [0]
+        + [
+            k
+            for k, (_, ln) in enumerate(lines[:sch2])
+            if k > 0 and STATE_NAME_ALONE.match(ln)
+        ]
+        + [sch2]
+    )
+    out: list[Rec] = []
+    head = " ".join(ln for _, ln in lines[:6])
+    first_state = re.search(r"\(([A-Z]+(?: [A-Z]+)?) AMENDMENT\)", head)
+    for n, (a, b) in enumerate(zip(cuts, cuts[1:])):
+        if n == 0:
+            state = first_state.group(1).title() if first_state else "unattributed"
+        else:
+            state = STATE_NAME_ALONE.match(lines[a][1]).group(1).strip()
+        r = Rec(
+            f"State block {n + 1}: {state}",
+            "schedule",
+            f"{state} (Schedule 1-A and later state amendments)",
+        )
+        r.lines = [ln.strip() for _, ln in lines[a:b]]
+        r.pages = {p for p, _ in lines[a:b]}
+        r.state_block = state
+        out.append(r)
+    if sch2 < len(lines):
+        r = Rec("Schedule II", "schedule", "Schedule II")
+        r.lines = [ln.strip() for _, ln in lines[sch2:]]
+        r.pages = {p for p, _ in lines[sch2:]}
+        r.forced_status = "repealed"
+        out.append(r)
+    stats["stamp_state_blocks"] = len(cuts) - 1
+    return out
+
+
 def stamp_schedule_nl(pdf: Path, first_page: int, stats):
     """Schedule I of the Stamp Act from the NON-layout text (the layout text interleaves the two
     columns; reading order keeps each article's heading with its rows). One record per numbered
@@ -754,7 +827,11 @@ def stamp_schedule_nl(pdf: Path, first_page: int, stats):
         ):
             body.pop()
         stream += [(first_page + i, ln) for ln in body]
-    art = re.compile(r"^\[?(\d{1,3}[A-Z]{0,2})\.\s*[A-Z]{3,}")
+    # Article headings as printed: "8. APPRAISEMENT", "2[36. LETTER", "4 [37. LETTER", "[49. Promissory note"
+    # and a lone "60." with the heading on the next line.
+    art = re.compile(
+        r"^(?:\d{1,2}\s?(?=\[))?\[?(\d{1,3}[A-Z]{0,2})\.(?:\s*[A-Z]{3,}|\s*[A-Z][a-z]|\s*$)"
+    )
     i1a = next(
         (
             i
@@ -769,9 +846,11 @@ def stamp_schedule_nl(pdf: Path, first_page: int, stats):
     cur = None
     for pg, ln in stream[:i1a]:
         m = art.match(ln)
+        accepted = False
         if m:
             n = int(re.match(r"\d+", m.group(1)).group(0))
             if m.group(1) not in seen and last - 4 <= n <= last + 4:
+                accepted = True
                 seen.add(m.group(1))
                 last = max(last, n)
                 cur = Rec(
@@ -786,19 +865,37 @@ def stamp_schedule_nl(pdf: Path, first_page: int, stats):
                 or re.match(r"^\s*\[?Vide .*Act", ln)
             ):
                 cur.in_state = True
-            if m:
+            if accepted:
                 cur.in_state = False
             (cur.state_lines if cur.in_state else cur.lines).append(ln.strip())
-    if i1a < len(stream):
-        tail = Rec(
-            "Schedule 1-A and after",
-            "schedule",
-            "Schedule 1-A and later schedules (state material mixed in)",
+    # An Article printed only as asterisk lines (omitted) leaves a gap in the numbers: store a stub
+    have = {r.label for r in out}
+    nums = sorted(int(re.match(r"\d+", r.label).group(0)) for r in out)
+    for n in range(nums[0], nums[-1] + 1) if nums else []:
+        if str(n) in have or any(re.match(rf"{n}[A-Z]", h) for h in have):
+            continue
+        prev = max(
+            (r for r in out if int(re.match(r"\d+", r.label).group(0)) < n),
+            key=lambda r: int(re.match(r"\d+", r.label).group(0)),
         )
-        tail.pages = {p for p, _ in stream[i1a:]}
-        tail.lines = [ln.strip() for _, ln in stream[i1a:]]
-        out.append(tail)
-    stats["stamp_schedule_articles"] = len(out) - (1 if i1a < len(stream) else 0)
+        if sum(1 for x in prev.lines if x.strip("* ") == "") >= 1 and any(
+            set(x.strip()) <= {"*", " "} and x.strip() for x in prev.lines
+        ):
+            st = Rec(str(n), "schedule_article", f"Schedule I, Article {n}")
+            st.lines = [
+                "[not printed: asterisk lines between Articles %d and %d]"
+                % (n - 1, n + 1)
+            ]
+            st.forced_status = "omitted"
+            st.stub = True
+            out.append(st)
+            stats["schedule_stubs_from_asterisks"] += 1
+    out.sort(key=lambda r: (int(re.match(r"\d+", r.label).group(0)), r.label))
+    if i1a < len(stream):
+        out += stamp_tail_blocks(stream[i1a:], stats)
+    stats["stamp_schedule_articles"] = sum(
+        1 for r in out if r.kind == "schedule_article"
+    )
     return out
 
 
@@ -843,7 +940,8 @@ def stamp_schedule(stream, stats):
 def chunk_id(slug: str, r: Rec) -> str:
     lab = re.sub(r"[^A-Za-z0-9]+", "", r.label)
     if r.kind == "rule":
-        return f"{PREFIX}{slug}_o{r.order}_r{lab}"
+        v = f"_v{r.variant}" if r.variant > 1 else ""
+        return f"{PREFIX}{slug}_o{r.order}{v}_r{lab}"
     pre = {
         "article": "art",
         "section": "s",
@@ -857,7 +955,9 @@ def chunk_id(slug: str, r: Rec) -> str:
 
 def payload(a: dict, r: Rec, heading: str, body: str, ordinal: int, total: int) -> dict:
     slug, fname, title, actno, year, mode = a["spec"]
-    status = status_of(r) if r.kind in ("section", "article", "rule") else STATUS
+    status = r.forced_status or (
+        status_of(r) if r.kind in ("section", "article", "rule") else STATUS
+    )
     unit = {
         "article": "Article",
         "rule": "Rule",
@@ -868,7 +968,7 @@ def payload(a: dict, r: Rec, heading: str, body: str, ordinal: int, total: int) 
     label = f"{unit} {r.label}".strip() if unit else r.label
     if r.kind == "rule":
         label = f"Order {r.order} Rule {r.label}"
-    head = f"Act: {title}{f' (Act {actno} of {year})' if actno else ''} | India | Central | Status not checked\n{label}: {heading}\n"
+    head = f"Act: {title}{f' (Act {actno} of {year})' if actno else ''} | India | {'State amendment (' + r.state_block + ')' if r.state_block else 'Central'} | Status not checked\n{label}: {heading}\n"
     return {
         "chunk_id": chunk_id(slug, r),
         "act_id": f"{PREFIX}{slug}",
@@ -888,16 +988,19 @@ def payload(a: dict, r: Rec, heading: str, body: str, ordinal: int, total: int) 
         "part": r.part,
         "part_title": r.part_title,
         "order_number": r.order,
+        "order_variant": r.variant,
         "is_repealed": status == "repealed",
         "title": title,
         "act_number": actno,
         "year": year,
         "category": "central",
-        "state": "central",
+        "state": r.state_block.lower() if r.state_block else "central",
         "jurisdiction": "central",
         "act_status": STATUS,
         "section_status": status,
         "stub_from_arrangement": r.stub,
+        "state_amendment": bool(r.state_block),
+        "amendment_state": r.state_block,
         "amendment_notes": r.notes,
         "amendment_count": len(r.notes),
         "state_amendment_text": "\n".join(r.state_lines),
@@ -911,6 +1014,84 @@ def payload(a: dict, r: Rec, heading: str, body: str, ordinal: int, total: int) 
         "page_start": min(r.pages) + 1 if r.pages else None,
         "page_end": max(r.pages) + 1 if r.pages else None,
     }
+
+
+BOUNDARY = re.compile(
+    r"^\s*(?:\(\d+[A-Za-z]?\)|\([a-z]{1,3}\)|\([ivx]+\)|Provided|Explanation|Illustrations?|Exception|"
+    r"\[?Vide |State block|\d{1,3}[A-Z]{0,2}\.\s)"
+)
+
+
+def _cut_long_line(ln: str, budget: int) -> list[str]:
+    """A single line longer than the budget: cut after a sentence end, else a space, else hard."""
+    out = []
+    while len(ln) > budget:
+        cut = max(ln.rfind(". ", 0, budget), ln.rfind("; ", 0, budget)) + 2
+        if cut < budget // 2:
+            cut = ln.rfind(" ", 0, budget) + 1
+        if cut < budget // 2:
+            cut = budget
+        out.append(ln[:cut])
+        ln = ln[cut:]
+    return [*out, ln]
+
+
+def split_body(body: str, budget: int) -> list[str]:
+    """Cut `body` into parts of at most `budget` characters, EXACTLY: ''.join(parts) == body.
+    Preferred cut: just before a line that starts a rule, sub-clause, proviso, explanation,
+    illustration, state citation or a blank-line paragraph; failing that between lines; a single
+    line longer than the budget is cut at a sentence end or a space."""
+    if len(body) <= budget:
+        return [body]
+    pieces = [
+        x for ln in body.splitlines(keepends=True) for x in _cut_long_line(ln, budget)
+    ]
+    parts: list[str] = []
+    cur: list[str] = []
+    size = 0
+    best = 0  # index in `cur` of the last natural boundary
+    for pc in pieces:
+        if size + len(pc) > budget and cur:
+            cut = best if best > 0 else len(cur)
+            parts.append("".join(cur[:cut]))
+            cur = cur[cut:]
+            size = sum(len(x) for x in cur)
+            best = 0
+        if cur and (BOUNDARY.match(pc) or not cur[-1].strip()):
+            best = len(cur)
+        cur.append(pc)
+        size += len(pc)
+    if cur:
+        parts.append("".join(cur))
+    assert "".join(parts) == body and all(len(x) <= budget for x in parts)
+    return parts
+
+
+def split_payload(p: dict, limit: int = SPLIT_LIMIT) -> list[dict]:
+    """One payload -> its parts. Every part keeps the two-line header so it reads on its own, a
+    `parent_id` (the unsplit record's chunk_id) and a `part_number`; notes and state text stay on
+    part 1 only so nothing is stored twice."""
+    head, body = p["text"].split("\n", 2)[:2], p["text"].split("\n", 2)[2]
+    head_s = "\n".join(head) + "\n"
+    parts = split_body(body, max(400, limit - len(head_s)))
+    out = []
+    off = 0
+    for n, part in enumerate(parts, 1):
+        q = dict(p)
+        q.update(
+            text=head_s + part,
+            chunk_id=p["chunk_id"] if len(parts) == 1 else f"{p['chunk_id']}_p{n:02d}",
+            parent_id=p["chunk_id"],
+            part_number=n,
+            total_parts=len(parts),
+            char_start=off,
+            char_end=off + len(part),
+        )
+        if n > 1:
+            q.update(amendment_notes=[], amendment_count=0, state_amendment_text="")
+        out.append(q)
+        off += len(part)
+    return out
 
 
 def parse_sources(path: Path) -> dict[str, str]:
@@ -933,16 +1114,19 @@ def main(argv: list[str] | None = None) -> int:
         "--sources", type=Path, help="SOURCES.md (default: <pdf-dir>/SOURCES.md)"
     )
     ap.add_argument("--out-dir", type=Path, required=True)
+    ap.add_argument("--split-limit", type=int, default=SPLIT_LIMIT)
     a = ap.parse_args(argv)
     urls = parse_sources(a.sources or a.pdf_dir / "SOURCES.md")
     a.out_dir.mkdir(parents=True, exist_ok=True)
     manifest = []
+    a_chunks = (a.out_dir / "supplement_chunks.jsonl").open("w", encoding="utf-8")
     with (a.out_dir / "supplement_records.jsonl").open("w", encoding="utf-8") as fh:
         for spec in ACTS:
             res = build_act(a.pdf_dir / spec[1], spec, urls)
             recs = res["recs"]
             seen: Counter = Counter(
-                r.kind + "|" + r.label + "|" + r.order for r, _, _ in recs
+                r.kind + "|" + r.label + "|" + r.order + "|" + str(r.variant)
+                for r, _, _ in recs
             )
             total_chars = 0
             statuses: Counter = Counter()
@@ -950,6 +1134,8 @@ def main(argv: list[str] | None = None) -> int:
             for i, (r, h, b) in enumerate(recs):
                 p = payload(res, r, h, b, i, len(recs))
                 fh.write(json.dumps(p, ensure_ascii=False) + "\n")
+                for q in split_payload(p, a.split_limit):
+                    a_chunks.write(json.dumps(q, ensure_ascii=False) + "\n")
                 total_chars += len(p["text"])
                 statuses[p["section_status"]] += 1
                 if len(b) < SHORT:
@@ -991,6 +1177,7 @@ def main(argv: list[str] | None = None) -> int:
                     "dropped": res["dropped"],
                 }
             )
+    a_chunks.close()
     (a.out_dir / "supplement_manifest.json").write_text(
         json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8"
     )
