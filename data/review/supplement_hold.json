@@ -1,0 +1,78 @@
+{
+  "README": "UNREVIEWED. Kept OFF. data/supplement_hold.py emits nothing for an entry until repealed_by, reviewed_by and reviewed_on are filled by an advocate and the owner sets serve=true. repealed_by is the Act that replaced this one, e.g. the later Act's full title and year; leave blank if it was NOT replaced. Not verified in the dataset: that any of these Acts was replaced.",
+  "acts": [
+    {
+      "slug": "crpc1973",
+      "title": "The Code of Criminal Procedure, 1973",
+      "copies_in_acts_noncentral_v1": [
+        "IND_state_21498",
+        "IND_state_17271",
+        "IND_state_15269",
+        "IND_state_15381",
+        "IND_state_9180",
+        "IND_state_15272",
+        "IND_state_15273",
+        "IND_state_12831",
+        "IND_state_18547",
+        "IND_state_12824",
+        "IND_state_10833",
+        "IND_state_18232",
+        "IND_state_15247",
+        "IND_state_6796"
+      ],
+      "canonical_act_ids": [],
+      "chunks_per_copy": 764,
+      "total_chunks_stated": 774,
+      "repealed_by": "",
+      "reviewed_by": "",
+      "reviewed_on": "",
+      "serve": false,
+      "note": "Candidate replacement to confirm: Bharatiya Nagarik Suraksha Sanhita, 2023 (already held in kanoon_v1 as IND_central_20099). 14 identical copies; pick one."
+    },
+    {
+      "slug": "gratuity1972",
+      "title": "The Payment of Gratuity Act, 1972",
+      "copies_in_acts_noncentral_v1": [
+        "IND_state_15318",
+        "IND_state_15989",
+        "IND_state_20365",
+        "IND_state_9149",
+        "IND_state_7791",
+        "IND_state_18656",
+        "IND_state_12921",
+        "IND_state_9167",
+        "IND_state_20959",
+        "IND_state_11224"
+      ],
+      "canonical_act_ids": [],
+      "chunks_per_copy": 36,
+      "total_chunks_stated": 36,
+      "repealed_by": "",
+      "reviewed_by": "",
+      "reviewed_on": "",
+      "serve": false,
+      "note": "Candidate replacement to confirm: the Code on Social Security, 2020 (not in kanoon_v1 as far as checked). 10 copies; pick one."
+    },
+    {
+      "slug": "consumer1986",
+      "title": "The Consumer Protection Act, 1986",
+      "copies_in_acts_noncentral_v1": [
+        "IND_state_13342",
+        "IND_state_7052",
+        "IND_state_18554",
+        "IND_state_4890",
+        "IND_state_5743",
+        "IND_state_17060",
+        "IND_state_9463"
+      ],
+      "canonical_act_ids": [],
+      "chunks_per_copy": 75,
+      "total_chunks_stated": 75,
+      "repealed_by": "",
+      "reviewed_by": "",
+      "reviewed_on": "",
+      "serve": false,
+      "note": "Candidate replacement to confirm: The Consumer Protection Act, 2019 (already held in kanoon_v1 as IND_central_15256). 7 copies; pick one."
+    }
+  ]
+}
