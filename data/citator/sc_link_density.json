@@ -1,0 +1,129 @@
+{
+ "before_direct_only": {
+  "cases": 35688,
+  "with_a_readable_link": 17418,
+  "share_with_a_readable_link": 0.4881,
+  "links": 72101,
+  "mean": 2.02,
+  "median": 0.0,
+  "p75": 2,
+  "p90": 5,
+  "p99": 22,
+  "max": 174,
+  "cases_with_2_or_more": 10992,
+  "cases_with_3_or_more": 7653,
+  "share_held_by_top_1_percent": 0.1877,
+  "buckets": {
+   "0": 18270,
+   "1": 6426,
+   "2": 3339,
+   "3-5": 4297,
+   "6-10": 2004,
+   "11-50": 1291,
+   "51-200": 61,
+   "201+": 0
+  }
+ },
+ "after_with_pair_map": {
+  "cases": 35688,
+  "with_a_readable_link": 17418,
+  "share_with_a_readable_link": 0.4881,
+  "links": 92607,
+  "mean": 2.595,
+  "median": 0.0,
+  "p75": 2,
+  "p90": 7,
+  "p99": 31,
+  "max": 258,
+  "cases_with_2_or_more": 11000,
+  "cases_with_3_or_more": 8131,
+  "share_held_by_top_1_percent": 0.2033,
+  "buckets": {
+   "0": 18270,
+   "1": 6418,
+   "2": 2869,
+   "3-5": 3684,
+   "6-10": 2255,
+   "11-50": 2068,
+   "51-200": 121,
+   "201+": 3
+  }
+ },
+ "cases_that_gained_a_first_link": 0,
+ "cases_that_gained_links": 3907,
+ "cases_that_reached_2_or_more": 8,
+ "by_decade_of_cited_case": {
+  "1950s": {
+   "cases": 983,
+   "before_mean": 8.354,
+   "after_mean": 8.518,
+   "before_share_with_2_or_more": 0.7091,
+   "after_share_with_2_or_more": 0.7091
+  },
+  "1960s": {
+   "cases": 3167,
+   "before_mean": 3.873,
+   "after_mean": 4.03,
+   "before_share_with_2_or_more": 0.527,
+   "after_share_with_2_or_more": 0.527
+  },
+  "1970s": {
+   "cases": 2928,
+   "before_mean": 2.856,
+   "after_mean": 3.632,
+   "before_share_with_2_or_more": 0.402,
+   "after_share_with_2_or_more": 0.402
+  },
+  "1980s": {
+   "cases": 2700,
+   "before_mean": 2.513,
+   "after_mean": 3.789,
+   "before_share_with_2_or_more": 0.3696,
+   "after_share_with_2_or_more": 0.37
+  },
+  "1990s": {
+   "cases": 6469,
+   "before_mean": 1.338,
+   "after_mean": 2.229,
+   "before_share_with_2_or_more": 0.226,
+   "after_share_with_2_or_more": 0.226
+  },
+  "2000s": {
+   "cases": 7342,
+   "before_mean": 1.777,
+   "after_mean": 2.564,
+   "before_share_with_2_or_more": 0.3187,
+   "after_share_with_2_or_more": 0.3194
+  },
+  "2010s": {
+   "cases": 7788,
+   "before_mean": 1.668,
+   "after_mean": 1.96,
+   "before_share_with_2_or_more": 0.2982,
+   "after_share_with_2_or_more": 0.2984
+  },
+  "2020s": {
+   "cases": 4311,
+   "before_mean": 0.415,
+   "after_mean": 0.486,
+   "before_share_with_2_or_more": 0.0759,
+   "after_share_with_2_or_more": 0.0759
+  }
+ },
+ "map": {
+  "keys_trusted": 5391,
+  "scc": 5063,
+  "air": 328
+ },
+ "timed_out": [],
+ "links": {
+  "direct": 72101,
+  "mapped_only": 20506
+ },
+ "validation_against_judges_library": {
+  "right": 47,
+  "wrong": 0,
+  "not_covered": 10,
+  "untestable_rows": 7
+ }
+}

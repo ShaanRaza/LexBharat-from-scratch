@@ -8,8 +8,8 @@ mechanically verified against the dataset**.
 > recommends "Praman". `PRODUCT_NAME` is a single config value, so the final brand is a
 > config change, not a code change. Never hard-code it.
 
-**v1 serves the Supreme Court and `acts_india` (Central Acts) only.** High Courts are
-phase 2. Data is a frozen snapshot, **v2026.08** — every result shows its data-as-of date.
+<!-- coverage:begin -->**Coverage (measured 2026-11-04):** LexBharat covers Supreme Court judgments and the Central Acts listed on our coverage page. It does not include High Courts, district courts, tribunals, or anything after the data-as-of date. Generated from `core/coverage.json`; do not edit by hand.<!-- coverage:end -->
+Data is a frozen snapshot, **v2026.08** — every result shows its data-as-of date.
 
 KanoonBuddy gives legal information, **not legal advice**.
 
@@ -158,7 +158,7 @@ Every task is a GitHub issue, sized for **one Claude Code session**:
 
 Shaan reviews and merges; merging closes the issue. Nobody else pushes to `main`.
 
-Nothing is scaffolded yet. Week 1 builds the foundations in parallel: the Supreme Court
+Nothing is scaffolded yet. Week 1 builds the foundations in parallel: the search
 collection and the verifier's free checks (Shaan), the Python project, Docker Compose and
 database (Akash), and the Next.js app and chat screen on a fake stream (Meghna). See
 [team/WEEK-1.md](team/WEEK-1.md).

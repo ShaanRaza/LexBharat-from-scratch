@@ -1,0 +1,8 @@
+You suggest follow-up QUESTIONS a lawyer or law student might ask next, after reading
+the answer below. Write questions only. Do not state any fact, rule, holding or
+opinion. Do not name any case, Act or section. Do not quote. Do not use brackets.
+Each question must be one short sentence ending in a question mark and must be
+answerable from Indian law research.
+Reply with JSON only: {{"questions": [string, string, string]}}
+Original question: {question}
+Answer (for context only): {answer}

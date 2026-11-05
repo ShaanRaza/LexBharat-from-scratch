@@ -1,0 +1,453 @@
+{
+ "_note": "The embedding model per court, from the majority of a measured sample (A128). Anything not listed under `courts` is refused, never defaulted. Built by data/build_court_models.py from data/court_model_sample.csv; do not edit by hand.",
+ "min_sample": 20,
+ "measured": "2026-11-02/03",
+ "models": [
+  "voyage-4",
+  "voyage-4-lite",
+  "voyage-4-large"
+ ],
+ "collections": {
+  "legal_corpus_v1": {
+   "courts": {
+    "APHC": {
+     "model": "voyage-4-large",
+     "sample": {
+      "n": 76,
+      "voyage-4": 1,
+      "voyage-4-lite": 0,
+      "voyage-4-large": 75
+     },
+     "outside_majority": 1
+    },
+    "BRHC": {
+     "model": "voyage-4-large",
+     "sample": {
+      "n": 100,
+      "voyage-4": 0,
+      "voyage-4-lite": 0,
+      "voyage-4-large": 100
+     },
+     "outside_majority": 0
+    },
+    "CGHC": {
+     "model": "voyage-4-large",
+     "sample": {
+      "n": 55,
+      "voyage-4": 0,
+      "voyage-4-lite": 0,
+      "voyage-4-large": 55
+     },
+     "outside_majority": 0
+    },
+    "DLHC": {
+     "model": "voyage-4-large",
+     "sample": {
+      "n": 59,
+      "voyage-4": 16,
+      "voyage-4-lite": 0,
+      "voyage-4-large": 43
+     },
+     "outside_majority": 16
+    },
+    "GAHC": {
+     "model": "voyage-4",
+     "sample": {
+      "n": 102,
+      "voyage-4": 102,
+      "voyage-4-lite": 0,
+      "voyage-4-large": 0
+     },
+     "outside_majority": 0
+    },
+    "GJHC": {
+     "model": "voyage-4",
+     "sample": {
+      "n": 50,
+      "voyage-4": 50,
+      "voyage-4-lite": 0,
+      "voyage-4-large": 0
+     },
+     "outside_majority": 0
+    },
+    "HBHC": {
+     "model": "voyage-4",
+     "sample": {
+      "n": 67,
+      "voyage-4": 67,
+      "voyage-4-lite": 0,
+      "voyage-4-large": 0
+     },
+     "outside_majority": 0
+    },
+    "HCBM": {
+     "model": "voyage-4",
+     "sample": {
+      "n": 114,
+      "voyage-4": 114,
+      "voyage-4-lite": 0,
+      "voyage-4-large": 0
+     },
+     "outside_majority": 0
+    },
+    "HCMA": {
+     "model": "voyage-4",
+     "sample": {
+      "n": 95,
+      "voyage-4": 95,
+      "voyage-4-lite": 0,
+      "voyage-4-large": 0
+     },
+     "outside_majority": 0
+    },
+    "HPHC": {
+     "model": "voyage-4",
+     "sample": {
+      "n": 60,
+      "voyage-4": 60,
+      "voyage-4-lite": 0,
+      "voyage-4-large": 0
+     },
+     "outside_majority": 0
+    },
+    "SKHC": {
+     "model": "voyage-4-lite",
+     "sample": {
+      "n": 50,
+      "voyage-4": 0,
+      "voyage-4-lite": 50,
+      "voyage-4-large": 0
+     },
+     "outside_majority": 0
+    },
+    "TRHC": {
+     "model": "voyage-4-lite",
+     "sample": {
+      "n": 54,
+      "voyage-4": 0,
+      "voyage-4-lite": 54,
+      "voyage-4-large": 0
+     },
+     "outside_majority": 0
+    },
+    "UKHC": {
+     "model": "voyage-4-lite",
+     "sample": {
+      "n": 52,
+      "voyage-4": 0,
+      "voyage-4-lite": 52,
+      "voyage-4-large": 0
+     },
+     "outside_majority": 0
+    },
+    "UPHC": {
+     "model": "voyage-4-lite",
+     "sample": {
+      "n": 100,
+      "voyage-4": 0,
+      "voyage-4-lite": 100,
+      "voyage-4-large": 0
+     },
+     "outside_majority": 0
+    },
+    "WBCHCA": {
+     "model": "voyage-4-lite",
+     "sample": {
+      "n": 58,
+      "voyage-4": 0,
+      "voyage-4-lite": 58,
+      "voyage-4-large": 0
+     },
+     "outside_majority": 0
+    },
+    "WBCHCO": {
+     "model": "voyage-4-lite",
+     "sample": {
+      "n": 49,
+      "voyage-4": 0,
+      "voyage-4-lite": 49,
+      "voyage-4-large": 0
+     },
+     "outside_majority": 0
+    }
+   },
+   "not_registered": {
+    "HCMD": "measured on 17 chunk(s), fewer than 20",
+    "INSC": "not measured in this collection",
+    "JHHC": "not measured in this collection",
+    "JKHC": "not measured in this collection",
+    "KAHC": "not measured in this collection",
+    "KLHC": "not measured in this collection",
+    "MLHC": "not measured in this collection",
+    "MNHC": "not measured in this collection",
+    "MPHC": "not measured in this collection",
+    "ODHC": "not measured in this collection",
+    "PHHC": "not measured in this collection",
+    "RJHC": "not measured in this collection",
+    "WBCHCJ": "measured on 1 chunk(s), fewer than 20",
+    "WBCHCP": "not measured in this collection"
+   }
+  },
+  "legal_corpus_v2": {
+   "courts": {
+    "APHC": {
+     "model": "voyage-4-lite",
+     "sample": {
+      "n": 62,
+      "voyage-4": 0,
+      "voyage-4-lite": 62,
+      "voyage-4-large": 0
+     },
+     "outside_majority": 0
+    },
+    "BRHC": {
+     "model": "voyage-4-lite",
+     "sample": {
+      "n": 98,
+      "voyage-4": 0,
+      "voyage-4-lite": 98,
+      "voyage-4-large": 0
+     },
+     "outside_majority": 0
+    },
+    "CGHC": {
+     "model": "voyage-4-lite",
+     "sample": {
+      "n": 50,
+      "voyage-4": 0,
+      "voyage-4-lite": 50,
+      "voyage-4-large": 0
+     },
+     "outside_majority": 0
+    },
+    "DLHC": {
+     "model": "voyage-4-lite",
+     "sample": {
+      "n": 55,
+      "voyage-4": 0,
+      "voyage-4-lite": 55,
+      "voyage-4-large": 0
+     },
+     "outside_majority": 0
+    },
+    "GAHC": {
+     "model": "voyage-4-lite",
+     "sample": {
+      "n": 99,
+      "voyage-4": 0,
+      "voyage-4-lite": 99,
+      "voyage-4-large": 0
+     },
+     "outside_majority": 0
+    },
+    "GJHC": {
+     "model": "voyage-4-lite",
+     "sample": {
+      "n": 50,
+      "voyage-4": 0,
+      "voyage-4-lite": 50,
+      "voyage-4-large": 0
+     },
+     "outside_majority": 0
+    },
+    "HBHC": {
+     "model": "voyage-4-lite",
+     "sample": {
+      "n": 56,
+      "voyage-4": 0,
+      "voyage-4-lite": 56,
+      "voyage-4-large": 0
+     },
+     "outside_majority": 0
+    },
+    "HCBM": {
+     "model": "voyage-4-lite",
+     "sample": {
+      "n": 100,
+      "voyage-4": 0,
+      "voyage-4-lite": 100,
+      "voyage-4-large": 0
+     },
+     "outside_majority": 0
+    },
+    "HCMA": {
+     "model": "voyage-4-lite",
+     "sample": {
+      "n": 73,
+      "voyage-4": 0,
+      "voyage-4-lite": 73,
+      "voyage-4-large": 0
+     },
+     "outside_majority": 0
+    },
+    "HCMD": {
+     "model": "voyage-4-lite",
+     "sample": {
+      "n": 31,
+      "voyage-4": 0,
+      "voyage-4-lite": 31,
+      "voyage-4-large": 0
+     },
+     "outside_majority": 0
+    },
+    "HPHC": {
+     "model": "voyage-4-large",
+     "sample": {
+      "n": 60,
+      "voyage-4": 0,
+      "voyage-4-lite": 16,
+      "voyage-4-large": 44
+     },
+     "outside_majority": 16
+    },
+    "INSC": {
+     "model": "voyage-4-large",
+     "sample": {
+      "n": 23,
+      "voyage-4": 0,
+      "voyage-4-lite": 0,
+      "voyage-4-large": 23
+     },
+     "outside_majority": 0
+    },
+    "JHHC": {
+     "model": "voyage-4-large",
+     "sample": {
+      "n": 54,
+      "voyage-4": 0,
+      "voyage-4-lite": 10,
+      "voyage-4-large": 44
+     },
+     "outside_majority": 10
+    },
+    "JKHC": {
+     "model": "voyage-4-large",
+     "sample": {
+      "n": 58,
+      "voyage-4": 0,
+      "voyage-4-lite": 22,
+      "voyage-4-large": 36
+     },
+     "outside_majority": 22
+    },
+    "KAHC": {
+     "model": "voyage-4-large",
+     "sample": {
+      "n": 54,
+      "voyage-4": 0,
+      "voyage-4-lite": 4,
+      "voyage-4-large": 50
+     },
+     "outside_majority": 4
+    },
+    "KLHC": {
+     "model": "voyage-4",
+     "sample": {
+      "n": 48,
+      "voyage-4": 40,
+      "voyage-4-lite": 5,
+      "voyage-4-large": 3
+     },
+     "outside_majority": 8
+    },
+    "MLHC": {
+     "model": "voyage-4",
+     "sample": {
+      "n": 50,
+      "voyage-4": 33,
+      "voyage-4-lite": 17,
+      "voyage-4-large": 0
+     },
+     "outside_majority": 17
+    },
+    "MNHC": {
+     "model": "voyage-4-lite",
+     "sample": {
+      "n": 50,
+      "voyage-4": 21,
+      "voyage-4-lite": 29,
+      "voyage-4-large": 0
+     },
+     "outside_majority": 21
+    },
+    "MPHC": {
+     "model": "voyage-4",
+     "sample": {
+      "n": 50,
+      "voyage-4": 27,
+      "voyage-4-lite": 23,
+      "voyage-4-large": 0
+     },
+     "outside_majority": 23
+    },
+    "ODHC": {
+     "model": "voyage-4-lite",
+     "sample": {
+      "n": 73,
+      "voyage-4": 31,
+      "voyage-4-lite": 42,
+      "voyage-4-large": 0
+     },
+     "outside_majority": 31
+    },
+    "PHHC": {
+     "model": "voyage-4-lite",
+     "sample": {
+      "n": 69,
+      "voyage-4": 10,
+      "voyage-4-lite": 59,
+      "voyage-4-large": 0
+     },
+     "outside_majority": 10
+    },
+    "RJHC": {
+     "model": "voyage-4-lite",
+     "sample": {
+      "n": 99,
+      "voyage-4": 0,
+      "voyage-4-lite": 99,
+      "voyage-4-large": 0
+     },
+     "outside_majority": 0
+    },
+    "UKHC": {
+     "model": "voyage-4-lite",
+     "sample": {
+      "n": 37,
+      "voyage-4": 11,
+      "voyage-4-lite": 26,
+      "voyage-4-large": 0
+     },
+     "outside_majority": 11
+    },
+    "UPHC": {
+     "model": "voyage-4-lite",
+     "sample": {
+      "n": 52,
+      "voyage-4": 10,
+      "voyage-4-lite": 42,
+      "voyage-4-large": 0
+     },
+     "outside_majority": 10
+    },
+    "WBCHCA": {
+     "model": "voyage-4-lite",
+     "sample": {
+      "n": 25,
+      "voyage-4": 1,
+      "voyage-4-lite": 24,
+      "voyage-4-large": 0
+     },
+     "outside_majority": 1
+    }
+   },
+   "not_registered": {
+    "SKHC": "measured on 14 chunk(s), fewer than 20",
+    "TRHC": "measured on 1 chunk(s), fewer than 20",
+    "WBCHCJ": "measured on 11 chunk(s), fewer than 20",
+    "WBCHCO": "measured on 2 chunk(s), fewer than 20",
+    "WBCHCP": "not measured in this collection"
+   }
+  }
+ }
+}

@@ -16,6 +16,8 @@ release.
 
 - [ ] Each of the four verifier failure reasons removes the citation **and** logs it:
       `not_retrieved`, `record_missing`, `quote_not_found`, `claim_not_supported`
+- [ ] A record store that cannot be asked removes the citation (fail closed) and logs
+      `store_unavailable`, never `record_missing`
 - [ ] A case the model names but that was **not** in S1–S8 is removed (check 1)
 - [ ] Checks 1–3 still run with **Jev switched off** and with Jev timing out
 - [ ] No citation-shaped content is emitted before the single post-verification `citations`
@@ -39,6 +41,8 @@ to release, and **signed off by the advocate advisor before it is used**.
 | Real questions collected in the validation interviews | 100 |
 | Act and section lookups | 50 |
 | **Traps** — cases that do not exist, wrong section numbers, events after the snapshot date | **50** |
+
+> **Current structure (A101, a starting point):** the set in `evals/question_set.jsonl` is split by what each question tests (answerable, out of scope, nothing found, personal advice, Rule 36, fabricated citations, name bait, in-force bait, injection), not by the 100/50/50 above. **100 of its 200 rows are stubs awaiting an advocate's labels and count as NOT RUN, never as passes.** The table above is the original plan.
 
 The 50 traps are what prove the verifier and the out-of-scope detection actually work.
 **Do not drop them to raise the score.**

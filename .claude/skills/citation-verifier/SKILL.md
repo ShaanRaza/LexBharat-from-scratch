@@ -29,7 +29,8 @@ change makes any of 1–3 conditional on Jev, it is wrong.
 
 - A failed citation is **removed**, the answer notes one authority could not be verified,
   and a row goes to `invented_citation_log` with one of: `not_retrieved`, `record_missing`,
-  `quote_not_found`, `claim_not_supported`.
+  `quote_not_found`, `claim_not_supported`, or `store_unavailable` (check 2 could not ask
+  the store: fail closed, own reason, not counted in the invented-citation metric).
 - **Nothing citation-shaped streams before the single post-verification `citations` event.**
   A user must never see a citation appear and then vanish.
 - Ticks are **per citation**, never one badge for the whole answer.

@@ -28,10 +28,16 @@ sentence and the case can still be bad law.
 2. The answer carries a note that one authority could not be verified.
 3. A row goes to `invented_citation_log`: question, model, the failed citation, and the
    reason — one of `not_retrieved`, `record_missing`, `quote_not_found`,
-   `claim_not_supported`.
+   `claim_not_supported`, or `store_unavailable`.
 
-**Launch metric:** the share of answers with a removed citation, for any of the four
-reasons, must be **under 0.5%**. It is shown on the admin page and checked on every release
+`store_unavailable` is check 2 failing because the record store could not be asked (a
+timeout or an outage), not because the record is absent. Behaviour is the same as a
+missing record (fail closed: the citation is removed, no tick), but the log says what
+happened, so a slow database never reads as the model inventing a citation.
+
+**Launch metric:** the share of answers with a removed citation, for any of the **four**
+citation reasons (not `store_unavailable`, which is tracked on its own), must be
+**under 0.5%**. It is shown on the admin page and checked on every release
 against the 200-question test set.
 
 ## What the tick means — and does not

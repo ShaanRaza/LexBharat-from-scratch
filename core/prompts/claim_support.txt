@@ -1,0 +1,4 @@
+Does the passage support the sentence? Reply with exactly one word:
+supports, partly or does_not_support.
+Sentence: {sentence}
+Passage: {passage}

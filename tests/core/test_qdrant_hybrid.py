@@ -1,0 +1,220 @@
+"""QdrantStore hybrid search, against a fake client (no live Qdrant, no fastembed).
+
+What is checked: one call carrying a dense and a sparse prefetch merged by RRF; the
+keyword half uses the QUERY-side encoder; named sections / case numbers skip the merge;
+Voyage down runs the keyword half alone; language_code filters are refused.
+"""
+
+from types import SimpleNamespace
+
+import pytest
+
+from adapters.qdrant import (
+    DENSE_VECTOR,
+    SPARSE_VECTOR,
+    QdrantStore,
+    VectorStoreUnavailable,
+    english_supreme_court,
+)
+from core.coverage import court_payload
+from core.settings import Settings
+
+
+def _point(i, text="body"):
+    return SimpleNamespace(id=i, score=0.5, payload={"chunk_id": f"c{i}", "text": text})
+
+
+class FakeClient:
+    def __init__(self, fail=False):
+        self.queries, self.scrolls, self.fail = [], [], fail
+
+    async def query_points(self, collection, **kw):
+        if self.fail:
+            raise RuntimeError("boom")
+        self.queries.append((collection, kw))
+        return SimpleNamespace(points=[_point(1), _point(2)])
+
+    async def scroll(self, collection, **kw):
+        self.scrolls.append((collection, kw))
+        return [_point(3)], None
+
+
+def _store(client, calls=None):
+    def encode(text):
+        if calls is not None:
+            calls.append(text)
+        return [7, 9], [1.5, 0.5]
+
+    return QdrantStore(Settings(SEAL_KEY="k"), sparse_encoder=encode, client=client)
+
+
+def _fields(flt):
+    """The label conditions of a filter. A `court` label is a nested OR: the label, or the
+    court the record id names (court_code); this reads the label side."""
+    out = {}
+    for c in flt.must:
+        if getattr(c, "should", None):
+            c = next(x for x in c.should if x.key == "court")
+        out[c.key] = c.match.value
+    return out
+
+
+async def test_hybrid_is_one_call_dense_plus_sparse_merged_by_rrf():
+    c, calls = FakeClient(), []
+    hits = await _store(c, calls).search(
+        "kanoon_v1", [0.1, 0.2], "bail", english_supreme_court(), 50
+    )
+    assert len(c.queries) == 1 and not c.scrolls
+    _, kw = c.queries[0]
+    assert [p.using for p in kw["prefetch"]] == [DENSE_VECTOR, SPARSE_VECTOR]
+    assert kw["prefetch"][0].query == [0.1, 0.2]
+    assert kw["prefetch"][1].query.indices == [7, 9]
+    assert kw["query"].fusion.value == "rrf"
+    assert kw["limit"] == 50 and all(p.limit == 50 for p in kw["prefetch"])
+    # the court filter is inside BOTH halves, and is court, not language_code
+    for p in kw["prefetch"]:
+        assert _fields(p.filter) == court_payload("supreme_court")
+    assert calls == ["bail"]
+    assert [h.record_id for h in hits] == ["c1", "c2"]
+
+
+async def test_voyage_down_runs_keyword_half_alone():
+    c = FakeClient()
+    await _store(c).search("kanoon_v1", None, "bail", {}, 10)
+    ((_, kw),) = c.queries
+    assert [p.using for p in kw["prefetch"]] == [SPARSE_VECTOR]
+    assert kw["query"].fusion.value == "rrf"
+
+
+@pytest.mark.parametrize("key", ["section_number", "case_number"])
+async def test_named_section_or_case_number_skips_the_merge(key):
+    c, calls = FakeClient(), []
+    await _store(c, calls).search("kanoon_v1", [0.1], "x", {key: "302"}, 50)
+    ((_, kw),) = c.queries
+    assert "prefetch" not in kw and kw["using"] == DENSE_VECTOR
+    assert _fields(kw["query_filter"]) == {key: "302"}
+    assert calls == []  # the keyword encoder is not even used
+
+
+async def test_exact_lookup_without_vector_scrolls_by_filter():
+    c = FakeClient()
+    hits = await _store(c).search("kanoon_v1", None, "x", {"case_number": "1"}, 5)
+    assert not c.queries and len(c.scrolls) == 1
+    assert [h.record_id for h in hits] == ["c3"]
+
+
+async def test_language_code_filter_is_refused():
+    with pytest.raises(ValueError):
+        await _store(FakeClient()).search(
+            "kanoon_v1", [0.1], "x", {"language_code": "EN"}, 5
+        )
+
+
+async def test_client_failure_becomes_vector_store_unavailable():
+    with pytest.raises(VectorStoreUnavailable):
+        await _store(FakeClient(fail=True)).search("kanoon_v1", [0.1], "x", {}, 5)
+
+
+async def test_uploads_collection_still_refused_on_law_search():
+    s = Settings(SEAL_KEY="k")
+    with pytest.raises(PermissionError):
+        await _store(FakeClient()).search(
+            s.QDRANT_UPLOADS_COLLECTION, [0.1], "x", {}, 5
+        )
+
+
+async def test_missing_fastembed_is_reported_not_swallowed(monkeypatch):
+    import builtins
+
+    real = builtins.__import__
+
+    def deny(name, *a, **k):
+        if name == "fastembed":
+            raise ImportError(name)
+        return real(name, *a, **k)
+
+    monkeypatch.setattr(builtins, "__import__", deny)
+    store = QdrantStore(Settings(SEAL_KEY="k"), client=FakeClient())
+    with pytest.raises(VectorStoreUnavailable, match="fastembed"):
+        await store.search("kanoon_v1", [0.1], "x", {}, 5)
+
+
+async def test_dense_only_and_sparse_only_run_one_half_with_no_merge():
+    """Measurement modes (evals/known_item.py, A100): one named vector, no RRF."""
+    c, calls = FakeClient(), []
+    store = _store(c, calls)
+    await store.search("kanoon_v1", [0.1, 0.2], "bail", {}, 50, mode="dense")
+    await store.search("kanoon_v1", [0.1, 0.2], "bail", {}, 50, mode="sparse")
+    (_, dense), (_, sparse) = c.queries
+    assert dense["using"] == DENSE_VECTOR and dense["query"] == [0.1, 0.2]
+    assert sparse["using"] == SPARSE_VECTOR and sparse["query"].indices == [7, 9]
+    assert "prefetch" not in dense and "prefetch" not in sparse
+    assert calls == ["bail"]  # the keyword encoder ran only for the sparse call
+
+
+async def test_dense_only_without_a_vector_is_an_error_not_a_quiet_fallback():
+    with pytest.raises(VectorStoreUnavailable, match="needs a query vector"):
+        await _store(FakeClient()).search(
+            "kanoon_v1", None, "bail", {}, 5, mode="dense"
+        )
+
+
+async def test_sample_chunks_is_a_random_read_and_never_the_uploads_collection():
+    c = FakeClient()
+    store = _store(c)
+    hits = await store.sample_chunks("kanoon_v1", court_payload("supreme_court"), 7)
+    ((_, kw),) = c.queries
+    assert kw["query"].sample.value == "random" and kw["limit"] == 7
+    assert [h.record_id for h in hits] == ["c1", "c2"]
+    with pytest.raises(PermissionError):
+        await store.sample_chunks(store._s.QDRANT_UPLOADS_COLLECTION, {}, 5)
+
+
+# --- A court label also matches the court the record ID names (CLAUDE.md section 6) -----
+def _court_branch(flt):
+    (cond,) = [c for c in flt.must if getattr(c, "should", None)]
+    label = next(x for x in cond.should if x.key == "court")
+    code = next(x for x in cond.should if x.key == "court_code")
+    return label.match.value, list(code.match.any)
+
+
+async def test_a_court_label_filter_also_matches_the_court_the_id_names():
+    c = FakeClient()
+    await _store(c).search("kanoon_v1", [0.1], "bail", english_supreme_court(), 50)
+    (_, kw) = c.queries[0]
+    for p in kw["prefetch"]:  # both halves carry it
+        label, codes = _court_branch(p.filter)
+        assert label == court_payload("supreme_court")["court"] and codes == ["INSC"]
+
+
+async def test_a_court_with_several_id_prefixes_matches_all_of_them():
+    c = FakeClient()
+    await _store(c).search(
+        "legal_corpus_v1", [0.1], "x", {"court": "Calcutta High Court"}, 10
+    )
+    (_, kw) = c.queries[0]
+    label, codes = _court_branch(kw["prefetch"][0].filter)
+    assert label == "Calcutta High Court" and sorted(codes) == [
+        "WBCHCA",
+        "WBCHCJ",
+        "WBCHCO",
+        "WBCHCP",
+    ]
+
+
+@pytest.mark.parametrize(
+    "label", ["High Court of Hyderabad", "High Court", "Some Tribunal", ""]
+)
+async def test_an_unknown_generic_or_shared_label_gets_no_code_branch(label):
+    """Nothing is guessed: a label that names no one court keeps the plain label filter."""
+    c = FakeClient()
+    await _store(c).search("legal_corpus_v1", [0.1], "x", {"court": label}, 10)
+    (_, kw) = c.queries[0]
+    assert all(not getattr(x, "should", None) for x in kw["prefetch"][0].filter.must)
+
+
+async def test_other_filters_are_unchanged_by_the_court_branch():
+    c = FakeClient()
+    await _store(c).search("kanoon_v1", [0.1], "x", {"jurisdiction": "central"}, 10)
+    (_, kw) = c.queries[0]
+    assert _fields(kw["prefetch"][0].filter) == {"jurisdiction": "central"}

@@ -33,6 +33,24 @@ across all 75 parquet files on 6 October 2026.
 Embeddings are **Voyage voyage-4, 1024 dimensions, cosine distance**. Any semantic query
 must use the same model, or the vectors are meaningless.
 
+### Findings from inspecting the local Qdrant copy (2 Nov 2026)
+
+Reported by the session that runs the Qdrant copy. **Not re-run from this repo** (this
+session did not touch Qdrant): treat as Measured by that session, to re-check when the
+copy finishes.
+
+| Finding | Evidence | What to do |
+|---|---|---|
+| **Judgment sparse vectors reproduce exactly** with FastEmbed `Qdrant/bm25` (16 of 16 sampled) | Measured (small sample) | Queries must use `query_embed()`, **not** `embed()` (that is the document side). `adapters/qdrant.py` does |
+| **`acts_india`: 19,835 of 74,509 Central Act points (26.6%, full scan) do not match the encoder.** Their sparse vectors are plain integer counts, so keyword search silently misses them | Measured (full scan of Central points) | Repair script `data/sparse_fix.py` (`plan`, `apply --confirm`, `restore`). **Not yet run on live data** |
+| The earlier "52% of `acts_india`" figure | Came from a flawed sample | **Unknown.** Do not quote it |
+| **Dense vectors are mixed**: a judgment chunk matches voyage-4 exactly (cosine 1.0000); a Central Act chunk matches **voyage-4-large** (0.9994) | Measured, **one chunk each only** | More testing pending on the copy. Until then a voyage-4 query vector may be slightly off against Act chunks |
+| **`language_code` is mostly missing** and uses uppercase `"EN"` | Measured | Select English Supreme Court chunks with `court = "Supreme Court of India"`. The store refuses a `language_code` filter |
+| `legal_corpus_v2` holds 11.8M points, mostly outside v1 | Measured | v1 scope is about **371,159** Supreme Court points plus **74,509** Central Act points |
+| The PRD's claim that keyword search must be **built from scratch** is wrong for judgments | Measured: the sparse vectors already exist and reproduce | Build step in `docs/DATA-MODEL.md` (compute BM25) is only needed for Acts that fail the check |
+| **Filtered scans on unindexed payload fields over the big collections time out** | Measured | Create payload indexes on `court`, `jurisdiction`, `section_number`, `act_status` before real use |
+| The Supreme Court **translations (about 742,000 chunks)** are real non-English text and were **not embedded** | Measured | Consistent with v1 scope (English only). Do not serve them |
+
 ## At launch
 
 Only the **Supreme Court and `acts_india`** are served, from one new collection. Everything
@@ -51,7 +69,7 @@ quantization well under the earlier 4–5 GB estimate (Needs verification by loa
 | `disposition` | 98.8% | **577 different values** — a High Court problem. The SC concentrates in ~10 |
 | `judges` | 32.7% | Sampled values were extraction garbage ("another", "apply for bail") |
 | `petitioner` / `respondent` | 99.9% | Often counsel names or sentence fragments, not party names |
-| `section_number`, legislation | 98.5% | No problem — section lookup works directly |
+| `section_number`, legislation | 98.5% filled | **Filled, but NOT reliable as a filter key** — see `section_number` below. (This row used to say "section lookup works directly"; that was wrong.) |
 | `in_force`, legislation | 100% | No problem **as a field** — but see `act_status` below |
 
 **Consequence: never display judges or party names.** A tool sold on trust cannot show
@@ -62,8 +80,32 @@ wrong names.
 `act_status` is filled for only **74,484 rows across 1,568 acts** (in force 59,596,
 repealed 14,604, spent 284), against 1,098,269 rows and 22,264 acts in total.
 
-**Working decision:** show the in-force flag **only** on acts whose `act_status` is filled,
-and label every other Act result **"in-force status not checked"**.
+**Working decision, widened 2 Nov 2026 (A180, A181):** an Act reads **repealed** if
+`act_status` says so, **or** `is_repealed` is true, **or** its id starts `IND_REP_`, **or**
+its title ends with the clean marker `(Rep., Act NN of YYYY)`. It reads **in force** only
+if `act_status` says so **and** `SHOW_IN_FORCE` is on, which it is **not** until the count
+below is run. Every other Act
+result, and any with an unclear repeal note, is labelled **"In-force status not checked for
+this Act."** (`core/act_status.py`). The `in_force` column is not used.
+
+**Unresolved conflict between our own notes (needs the full count).** The paragraph above
+says `act_status` is filled for 1,568 of 22,264 acts. But the Qdrant field-fill sample
+(`docs/QDRANT-INVENTORY.md` section 7) finds `act_status` and `is_repealed` 100% non-empty
+across `acts_india`, and `tests/fixtures/practice/README.md` says every state Act in the
+dataset reads `in_force`, which "looks like a default, not a check" (Measured). If so, the
+"in force" label on state Acts and regulators rests on a default. Count with
+`python -m core.act_status <acts file>` before relying on it. **Not run.**
+
+### The `section_number` trap
+
+`section_number` is filled (98.5%) but it is **not the address of a section's text**, and a lookup that filters on it will miss text that is present. **Do not trust `section_number` as a filter key.** Measured 5 Nov 2026 on all 74,484 Central Act points in `kanoon_v1` (`scan/section_coverage.py`, `docs/SECTION-COVERAGE.md`, DATA-GAPS sections 24 and 26):
+
+* **A section is appended into the previous section's chunk and carries the previous number.** An amended or substituted section (`[34. Acts done by several persons ...]`) is stored inside the chunk of the section before it. Found for IPC 34 (inside the chunk labelled 33), NDPS 37 (inside 36C) and Registration Act 49 (inside 48). A filter on `section_number == 34` finds nothing, though section 34's text is in the data. Across the Acts in force, 9,584 section numbers have no chunk labelled with them; for 1,733 of those the text is inside the chunk before (hand-checked: 13 of 16 random credits were the real section).
+* **One number, many provisions.** Order rules and Schedule rows are filed as sections: in the CPC the chunks labelled `Section 9:` and `Section 11:` are Order rules, and the text of Sections 9 and 11 themselves is not in the data; in the Limitation Act the Schedule's articles are labelled `Section 121:`. 134 Acts in force file 3 or more different provisions under one number.
+* **Odd labels.** A year filed as a section number (`Section 1941`), 16 Acts in force stored as unlabelled blocks with no `section_number` at all (the Arms Act, the Protection of Human Rights Act), and 45 stubs of 1 to 3 sections.
+* **What it did to the 100-question run.** Of the questions that name a section, 36 kept at least one Act-section passage, and in 35 the asked section's text was in a kept passage. **By label alone, 16 of 65 kept passages differed from the asked section** (all in 4 questions): in 3 of those 4 the text was right (IPC 34 labelled 33; Contract Act 73 and IT Act 43 both labelled `s001`) and the label was the data's error; in the 4th (HSA 6) the text was wrong too. The gate was not confidently wrong about neighbouring sections; the label was.
+
+**Consequence for the code.** The exact filter on (`act_id`, `section_number`) is the first layer of step 5 but never the only path: it falls back to the Act alone and then to the ordinary search (DECISIONS A144), and a section the user did not name is never a filter (`core/decide.py`). Do not build anything that serves "section N" by `section_number` alone, or that says a section is absent because no chunk carries its label. A completeness check has to look in the text as well (`scan/section_coverage.py` does).
 
 ## Coverage is shallower than the court list suggests
 
@@ -111,7 +153,7 @@ relevance may outweigh archive depth. The interviews settle it.
 | **`case_id` is not one per case** | Rajasthan: 1,056,767 `case_id` against 308,342 distinct `case_number`. Patna: 1,614,939 against 504,632. So 15.7M counts **case records**, not cases. **Never compete on document counts** |
 | Judgments vs the dataset card | The card claims 12,848,644 judgments; disk holds 15,693,540 distinct `case_id` — 22% more |
 | Three judgment counts in circulation | 12.8M+ (Vaquill's India page), 32.5M chunks (its GitHub), 15,693,540 cases (Measured). Reconcile in weeks 1–2 |
-| `acts_india` point count | Qdrant holds 1,098,577 points against 1,098,269 parquet rows. The 308 difference is **unexplained** (Needs verification) |
+| `acts_india` point count | Qdrant holds 1,098,577 points against 1,098,269 parquet rows: **308 more points, none missing the other way** (308 chunk ids only in Qdrant, 0 only in the parquet, no duplicate chunk ids on either side). By group: regulatory +163, state +120, Central +25. All 308 have real text and are interior chunks of 175 acts (174 are in the parquet; one Bihar act, `IND_state_19988`, is not, which is why Qdrant has 22,265 acts to the parquet's 22,264). **The 25 Central ones are the 25 Central points missing from the `kanoon_v1` data copy** (74,509 Central points in Qdrant, 74,484 in the copy), because the copy was built from parquet-known chunk ids. *Measured* (2 Nov 2026; ids in `part1_extra_308_points.json` and `part4_central_acts_not_in_copy_ids.json`). **Cause unverified:** the dataset card shows the same two totals (1,098,577 sections, 1,098,269 provisions), so the gap probably sits in the source release rather than in our copy, but nobody has checked which chunks the card's figures count |
 | **Text without vectors** | Either ~1,153,189 chunks (3.5%) or ~55,000 (0.2%) exist as text with no vector, depending on whether the 32,572,660 total includes the 1,098,269 legislation rows. Count rows per judgment file against points per collection |
 | **Checksums** | `SHA256SUMS.json` and `totals.json` each describe **one** file (Kerala). **74 of 75 files have no published checksum** — request per-file checksums from Vaquill |
 | Snapshot v2026.08.1 | Published but not held. Its headline change is `source_url` on 83.3% of rows (Competitor claim). Weigh against mirror speeds of 0.03–11.6 MB/s |

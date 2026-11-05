@@ -1,0 +1,222 @@
+[
+ {
+  "kind": "act",
+  "q": "What makes an agreement a valid contract under the Indian Contract Act?",
+  "new_act": "IND_SUPP_contract1872",
+  "old_act": "IND_central_2187",
+  "phrase": "All agreements are contracts if they are made by the free consent of parties competent to contract"
+ },
+ {
+  "kind": "act",
+  "q": "Which agreements are void because their object or consideration is unlawful?",
+  "new_act": "IND_SUPP_contract1872",
+  "old_act": "IND_central_2187",
+  "phrase": "The consideration or object of an agreement is lawful, unless it is forbidden by law"
+ },
+ {
+  "kind": "act",
+  "q": "Is an agreement that stops a party from going to court enforceable?",
+  "new_act": "IND_SUPP_contract1872",
+  "old_act": "IND_central_2187",
+  "phrase": "by which any party thereto is restricted absolutely from enforcing his rights under or in respect of any contract"
+ },
+ {
+  "kind": "act",
+  "q": "What compensation can I claim when the other side breaks a contract?",
+  "new_act": "IND_SUPP_contract1872",
+  "old_act": "IND_central_2187",
+  "phrase": "the party who suffers by such breach is entitled to receive, from the party who has broken the contract, compensation"
+ },
+ {
+  "kind": "act",
+  "q": "What happens legally when a cheque bounces for insufficient funds?",
+  "new_act": "IND_SUPP_nia1881",
+  "old_act": "IND_central_2189",
+  "phrase": "Where any cheque drawn by a person on an account maintained by him with a banker for payment of any amount of money to another person"
+ },
+ {
+  "kind": "act",
+  "q": "Can the court order interim compensation in a cheque dishonour case?",
+  "new_act": "IND_SUPP_nia1881",
+  "old_act": "IND_central_2189",
+  "phrase": "may order the drawer of the cheque to pay interim compensation to the complainant"
+ },
+ {
+  "kind": "act",
+  "q": "On what grounds can a Hindu marriage be dissolved by divorce?",
+  "new_act": "IND_SUPP_hma1955",
+  "old_act": "IND_central_1560",
+  "phrase": "may, on a petition presented by either the husband or the wife, be dissolved by a decree of divorce"
+ },
+ {
+  "kind": "act",
+  "q": "Can a spouse get maintenance while the divorce case is pending?",
+  "new_act": "IND_SUPP_hma1955",
+  "old_act": "IND_central_1560",
+  "phrase": "Maintenance pendente lite and expenses of proceedings"
+ },
+ {
+  "kind": "act",
+  "q": "What is restitution of conjugal rights?",
+  "new_act": "IND_SUPP_hma1955",
+  "old_act": "IND_central_1560",
+  "phrase": "Restitution of conjugal rights"
+ },
+ {
+  "kind": "act",
+  "q": "Is specific performance of a contract mandatory or discretionary now?",
+  "new_act": "IND_SUPP_sra1963",
+  "old_act": "IND_central_1583",
+  "phrase": "The specific performance of a contract shall be enforced by the court subject to the provisions contained in sub-section (2) of section 11"
+ },
+ {
+  "kind": "act",
+  "q": "What is the offence of a public servant taking an undue advantage?",
+  "new_act": "IND_SUPP_pca1988",
+  "old_act": "IND_central_1558",
+  "phrase": "obtains or accepts or attempts to obtain from any person, an undue advantage"
+ },
+ {
+  "kind": "act",
+  "q": "What counts as criminal misconduct by a public servant?",
+  "new_act": "IND_SUPP_pca1988",
+  "old_act": "IND_central_1558",
+  "phrase": "A public servant is said to commit the offence of criminal misconduct"
+ },
+ {
+  "kind": "act",
+  "q": "When is a second suit barred because of an earlier decision on the same issue?",
+  "new_act": "IND_SUPP_cpc1908",
+  "old_act": "IND_central_2191",
+  "phrase": "No Court shall try any suit or issue in which the matter directly and substantially in issue"
+ },
+ {
+  "kind": "act",
+  "q": "Which courts can try civil suits and when are they barred?",
+  "new_act": "IND_SUPP_cpc1908",
+  "old_act": "IND_central_2191",
+  "phrase": "shall (subject to the provisions herein contained) have jurisdiction to try all suits of a civil nature"
+ },
+ {
+  "kind": "act",
+  "q": "What are the inherent powers of a civil court?",
+  "new_act": "IND_SUPP_cpc1908",
+  "old_act": "IND_central_2191",
+  "phrase": "Nothing in this Code shall be deemed to limit or otherwise affect the inherent power of the Court"
+ },
+ {
+  "kind": "act",
+  "q": "Can a court condone delay in filing an appeal?",
+  "new_act": "IND_SUPP_limitation1963",
+  "old_act": "IND_central_1565",
+  "phrase": "may be admitted after the prescribed period if the appellant or the applicant satisfies the court that he had sufficient cause"
+ },
+ {
+  "kind": "act",
+  "q": "What is the bar of limitation for suits, appeals and applications?",
+  "new_act": "IND_SUPP_limitation1963",
+  "old_act": "IND_central_1565",
+  "phrase": "every suit instituted, appeal preferred, and application made after the prescribed period shall be dismissed"
+ },
+ {
+  "kind": "act",
+  "q": "What does the Constitution say about protection of life and personal liberty?",
+  "new_act": "IND_SUPP_constitution",
+  "old_act": null,
+  "phrase": "No person shall be deprived of his life or personal liberty except according to procedure established by law"
+ },
+ {
+  "kind": "act",
+  "q": "What does the Constitution guarantee about equality before the law?",
+  "new_act": "IND_SUPP_constitution",
+  "old_act": null,
+  "phrase": "The State shall not deny to any person equality before the law or the equal protection of the laws"
+ },
+ {
+  "kind": "act",
+  "q": "Which writs can a High Court issue under the Constitution?",
+  "new_act": "IND_SUPP_constitution",
+  "old_act": null,
+  "phrase": "every High Court shall have power, throughout the territories in relation to which it exercises jurisdiction"
+ },
+ {
+  "kind": "sc",
+  "q": "What are the guidelines for granting anticipatory bail?"
+ },
+ {
+  "kind": "sc",
+  "q": "What is the basic structure doctrine of the Constitution?"
+ },
+ {
+  "kind": "sc",
+  "q": "Is the right to privacy a fundamental right?"
+ },
+ {
+  "kind": "sc",
+  "q": "When can bail be granted in an NDPS Act case?"
+ },
+ {
+  "kind": "sc",
+  "q": "When can the High Court quash an FIR using its inherent powers?"
+ },
+ {
+  "kind": "sc",
+  "q": "What is the doctrine of legitimate expectation?"
+ },
+ {
+  "kind": "sc",
+  "q": "How is compensation calculated using the multiplier in motor accident claims?"
+ },
+ {
+  "kind": "sc",
+  "q": "Can a divorced wife claim maintenance under section 125 of the Code of Criminal Procedure?"
+ },
+ {
+  "kind": "sc",
+  "q": "What is the scope of judicial review of administrative action?"
+ },
+ {
+  "kind": "sc",
+  "q": "Does res judicata apply to writ petitions?"
+ },
+ {
+  "kind": "sc",
+  "q": "What are the principles for granting a temporary injunction?"
+ },
+ {
+  "kind": "sc",
+  "q": "On what grounds can an arbitral award be set aside under section 34?"
+ },
+ {
+  "kind": "sc",
+  "q": "When does the presumption of dowry death arise?"
+ },
+ {
+  "kind": "sc",
+  "q": "When should an appellate court interfere with an order of acquittal?"
+ },
+ {
+  "kind": "sc",
+  "q": "Can a landlord evict a tenant for bona fide personal need?"
+ },
+ {
+  "kind": "sc",
+  "q": "How is compensation determined for compulsorily acquired land?"
+ },
+ {
+  "kind": "sc",
+  "q": "How is seniority decided in service law disputes?"
+ },
+ {
+  "kind": "sc",
+  "q": "Is reservation in promotions constitutionally permissible?"
+ },
+ {
+  "kind": "sc",
+  "q": "When is the death penalty awarded under the rarest of rare doctrine?"
+ },
+ {
+  "kind": "sc",
+  "q": "What amounts to criminal contempt of court?"
+ }
+]

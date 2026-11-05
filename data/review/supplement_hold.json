@@ -1,0 +1,131 @@
+{
+  "README": "UNREVIEWED. Kept OFF. data/supplement_hold.py emits nothing for an entry until repealed_by, reviewed_by and reviewed_on are filled by an advocate and the owner sets serve=true. repealed_by is the Act that replaced this one, e.g. the later Act's full title and year; leave blank if it was NOT replaced. Not verified in the dataset: that any of these Acts was replaced. The 'proposed' blocks are pre-filled from India Code's repealed labels (Checked 5 Nov 2026) and are UNREVIEWED; they are NOT the serving values. repealed_by stays empty until the advocate confirms.",
+  "acts": [
+    {
+      "slug": "crpc1973",
+      "title": "The Code of Criminal Procedure, 1973",
+      "copies_in_acts_noncentral_v1": [
+        "IND_state_21498",
+        "IND_state_17271",
+        "IND_state_15269",
+        "IND_state_15381",
+        "IND_state_9180",
+        "IND_state_15272",
+        "IND_state_15273",
+        "IND_state_12831",
+        "IND_state_18547",
+        "IND_state_12824",
+        "IND_state_10833",
+        "IND_state_18232",
+        "IND_state_15247",
+        "IND_state_6796"
+      ],
+      "canonical_act_ids": [],
+      "chunks_per_copy": 764,
+      "total_chunks_stated": 774,
+      "repealed_by": "",
+      "reviewed_by": "",
+      "reviewed_on": "",
+      "serve": false,
+      "note": "Candidate replacement to confirm: Bharatiya Nagarik Suraksha Sanhita, 2023 (already held in kanoon_v1 as IND_central_20099). 14 identical copies; pick one.",
+      "proposed": {
+        "status": "UNREVIEWED",
+        "repealed_by": "The Bharatiya Nagarik Suraksha Sanhita, 2023 (Act 46 of 2023)",
+        "india_code_label": "Rep., Act 46 of 2023",
+        "evidence_label": "India Code label (Checked 5 Nov 2026), not law",
+        "act_page": "https://indiacode.gov.in/act/973d60aa-105c-4a2f-94f1-7640f0b5d6a7",
+        "replacing_act_held_in_kanoon_v1": "IND_central_20099"
+      }
+    },
+    {
+      "slug": "gratuity1972",
+      "title": "The Payment of Gratuity Act, 1972",
+      "copies_in_acts_noncentral_v1": [
+        "IND_state_15318",
+        "IND_state_15989",
+        "IND_state_20365",
+        "IND_state_9149",
+        "IND_state_7791",
+        "IND_state_18656",
+        "IND_state_12921",
+        "IND_state_9167",
+        "IND_state_20959",
+        "IND_state_11224"
+      ],
+      "canonical_act_ids": [],
+      "chunks_per_copy": 36,
+      "total_chunks_stated": 36,
+      "repealed_by": "",
+      "reviewed_by": "",
+      "reviewed_on": "",
+      "serve": false,
+      "note": "Candidate replacement to confirm: the Code on Social Security, 2020 (not in kanoon_v1 as far as checked). 10 copies; pick one.",
+      "proposed": {
+        "status": "UNREVIEWED",
+        "repealed_by": "The Code on Social Security, 2020 (Act 36 of 2020)",
+        "india_code_label": "Rep., Act 36 of 2020",
+        "evidence_label": "India Code label (Checked 5 Nov 2026), not law",
+        "act_page": "https://indiacode.gov.in/act/8655ef34-37d9-41d8-9086-cb2b6f3b5ec6",
+        "replacing_act_held_in_kanoon_v1": "IND_central_16823"
+      }
+    },
+    {
+      "slug": "consumer1986",
+      "title": "The Consumer Protection Act, 1986",
+      "copies_in_acts_noncentral_v1": [
+        "IND_state_13342",
+        "IND_state_7052",
+        "IND_state_18554",
+        "IND_state_4890",
+        "IND_state_5743",
+        "IND_state_17060",
+        "IND_state_9463"
+      ],
+      "canonical_act_ids": [],
+      "chunks_per_copy": 75,
+      "total_chunks_stated": 75,
+      "repealed_by": "",
+      "reviewed_by": "",
+      "reviewed_on": "",
+      "serve": false,
+      "note": "Candidate replacement to confirm: The Consumer Protection Act, 2019 (already held in kanoon_v1 as IND_central_15256). 7 copies; pick one.",
+      "proposed": {
+        "status": "UNREVIEWED",
+        "repealed_by": "The Consumer Protection Act, 2019 (Act 35 of 2019)",
+        "india_code_label": "Rep., Act 35 of 2019",
+        "evidence_label": "India Code label (Checked 5 Nov 2026), not law",
+        "act_page": "https://indiacode.gov.in/act/4431ff6f-8249-414f-9136-9ffbbe5036aa",
+        "replacing_act_held_in_kanoon_v1": "IND_central_15256"
+      }
+    },
+    {
+      "slug": "eca1923",
+      "title": "The Employees' Compensation Act, 1923",
+      "copies_in_acts_noncentral_v1": [
+        "IND_state_20967",
+        "IND_state_18924",
+        "IND_state_9158"
+      ],
+      "canonical_act_ids": [],
+      "parked": true,
+      "note": "Parked: repealed, history-only (lead decision, 5 Nov 2026). Dataset holds it only as 3 state copies titled Workmen's Compensation Act 1923, 134 of 138 chunks each.",
+      "repealed_by": "",
+      "reviewed_by": "",
+      "reviewed_on": "",
+      "serve": false,
+      "proposed": {
+        "status": "UNREVIEWED",
+        "repealed_by": "The Code on Social Security, 2020 (Act 36 of 2020)",
+        "india_code_label": "Rep., Act 36 of 2020",
+        "evidence_label": "India Code label (Checked 5 Nov 2026), not law",
+        "act_page": "https://indiacode.gov.in/act/90ad081e-8240-43f8-a2b7-e3ca5cd33334",
+        "replacing_act_held_in_kanoon_v1": "IND_central_16823"
+      }
+    }
+  ],
+  "questions_for_the_advocate": [
+    "India Code shows Act 36 of 2020 as the law that repealed BOTH the Payment of Gratuity Act 1972 and the Employees' Compensation Act 1923. Do you agree they are history-only?",
+    "Do you agree the CrPC 1973 -> BNSS 2023 and Consumer Protection Act 1986 -> 2019 labels are right, and that no part of either old Act still governs pending matters (savings clauses)? The India Code label says repealed; it does not say what survives.",
+    "For each Act, which ONE of the copies should be canonical?"
+  ]
+}

@@ -1,0 +1,122 @@
+source_file,id_prefix,court_label,rows
+allahabad,UPHC,Allahabad High Court,2005273
+allahabad,UPHC,High Court of Allahabad,1910
+allahabad,UPHC,,744
+andhra-pradesh,APHC,High Court of Andhra Pradesh,641156
+andhra-pradesh,APHC,,20044
+andhra-pradesh,APHC,High Court of Hyderabad,115
+andhra-pradesh,APHC,High Court of Amaravati,29
+andhra-pradesh,APHC,High Court of Allahabad,3
+andhra-pradesh,APHC,High Court of Telangana,3
+andhra-pradesh,APHC,High Court of Andhra,2
+andhra-pradesh,APHC,High Court of Delhi,1
+bombay,HCBM,Bombay High Court,2768060
+bombay,HCBM,High Court of Bombay,16021
+bombay,HCBM,,4272
+bombay,HCBM,High Court of Mumbai,27
+bombay,HCBM,High Court,3
+bombay,HCBM,High Court of Nagpur,1
+calcutta,WBCHCA,Calcutta High Court,422449
+calcutta,WBCHCA,,7103
+calcutta,WBCHCA,High Court of Calcutta,1985
+calcutta,WBCHCA,High Court of Delhi,17
+calcutta,WBCHCA,High Court of Bombay,3
+calcutta,WBCHCJ,Calcutta High Court,24457
+calcutta,WBCHCJ,High Court of Calcutta,116
+calcutta,WBCHCJ,,9
+calcutta,WBCHCO,Calcutta High Court,69882
+calcutta,WBCHCO,High Court of Calcutta,1519
+calcutta,WBCHCO,,5
+calcutta,WBCHCP,Calcutta High Court,7873
+calcutta,WBCHCP,High Court of Calcutta,33
+calcutta,WBCHCP,,2
+chhattisgarh,CGHC,High Court Of Chhattisgarh,1730387
+chhattisgarh,CGHC,,14043
+chhattisgarh,CGHC,High Court of Chhattisgarh,6
+chhattisgarh,CGHC,High Court of Jabalpur,2
+delhi,DLHC,High Court of Delhi,1033011
+delhi,DLHC,,31354
+delhi,DLHC,High Court of Patna,71
+delhi,DLHC,High Court of Chandigarh,9
+delhi,DLHC,High Court of Madras,6
+delhi,DLHC,High Court of Aurangabad,3
+delhi,DLHC,High Court of Karnataka,3
+delhi,DLHC,High Court of Allahabad,1
+delhi,DLHC,High Court of Bombay,1
+gauhati,GAHC,Gauhati High Court,654860
+gauhati,GAHC,High Court of Gauhati,6278
+gauhati,GAHC,,1955
+gauhati,GAHC,High Court of Rajasthan,1
+gujarat,GJHC,High Court of Gujarat,1395164
+gujarat,GJHC,,5084
+gujarat,GJHC,High Court of Patna,1
+himachal-pradesh,HPHC,High Court of Himachal Pradesh,594720
+himachal-pradesh,HPHC,,25190
+himachal-pradesh,HPHC,High Court of Calcutta,6
+himachal-pradesh,HPHC,High Court of Delhi,3
+jammu-and-kashmir,JKHC,High Court of Jammu and Kashmir,176679
+jammu-and-kashmir,JKHC,,4525
+jammu-and-kashmir,JKHC,High Court of Rajasthan,6
+jammu-and-kashmir,JKHC,High Court of Bombay,6
+jammu-and-kashmir,JKHC,High Court of Kashmir,3
+jammu-and-kashmir,JKHC,High Court of Srinagar,2
+jharkhand,JHHC,High Court of Jharkhand,768124
+jharkhand,JHHC,,9593
+jharkhand,JHHC,High Court of Patna,17
+karnataka,KAHC,High Court of Karnataka,1453935
+karnataka,KAHC,,17193
+kerala,KLHC,High Court of Kerala,2776879
+kerala,KLHC,,859
+madhya-pradesh,MPHC,High Court of Madhya Pradesh,970471
+madhya-pradesh,MPHC,,436
+madhya-pradesh,MPHC,High Court of Madhya,1
+madras,HCMA,Madras High Court,1670522
+madras,HCMA,High Court of Madras,5853
+madras,HCMA,,3621
+madras,HCMA,High Court of Bombay,14
+madras,HCMA,High Court of Delhi,1
+madras,HCMA,High Court of Chennai,1
+madras,HCMD,Madras High Court,928258
+madras,HCMD,High Court of Madras,2314
+madras,HCMD,,12
+manipur,MNHC,High Court of Manipur,38835
+manipur,MNHC,,672
+meghalaya,MLHC,High Court of Meghalaya,25544
+meghalaya,MLHC,,14
+orissa,ODHC,Orissa High Court,853943
+orissa,ODHC,,18233
+orissa,ODHC,High Court of Orissa,616
+orissa,ODHC,High Court of Patna,24
+orissa,ODHC,High Court of Bombay,6
+orissa,ODHC,High Court of Gauhati,4
+orissa,ODHC,High Court of Jharkhand,3
+orissa,ODHC,High Court of Haryana,2
+orissa,ODHC,High Court of Gujarat,2
+patna,BRHC,Patna High Court,2540233
+patna,BRHC,High Court of Patna,21837
+patna,BRHC,,199
+punjab-and-haryana,PHHC,High Court of Punjab and Haryana,1839900
+punjab-and-haryana,PHHC,,5238
+punjab-and-haryana,PHHC,High Court of Haryana,168
+punjab-and-haryana,PHHC,High Court of Chandigarh,38
+rajasthan,RJHC,High Court Of Rajasthan,2667404
+rajasthan,RJHC,High Court of Rajasthan,8426
+rajasthan,RJHC,,365
+sikkim,SKHC,High Court of Sikkim,11251
+sikkim,SKHC,,138
+supreme-court,,Supreme Court of India,1113313
+telangana,HBHC,High Court  for State of Telangana,2718977
+telangana,HBHC,,13116
+telangana,HBHC,High Court of Hyderabad,293
+telangana,HBHC,High Court of Telangana,1
+tripura,TRHC,High Court of Tripura,110912
+tripura,TRHC,,1205
+tripura,TRHC,High Court of Gauhati,2
+tripura,TRHC,High Court of Guwahati,1
+uttarakhand,UKHC,High Court of Uttarakhand,302988
+uttarakhand,UKHC,,4096
+uttarakhand,UKHC,High Court of Allahabad,48
+uttarakhand,UKHC,High Court of Kerala,9
+uttarakhand,UKHC,High Court of Patna,1
+uttarakhand,UKHC,High Court of Rajasthan,1
+uttarakhand,UKHC,High Court of Sikkim,1

@@ -1,0 +1,57 @@
+"use client";
+import Link from "next/link";
+import { useState } from "react";
+import { Card, EmptyState, SearchBar } from "@/components/ui";
+import { listConversations, searchHistory } from "@/lib/api/client";
+import { EMPTY, SHARED_MANAGE, HISTORY_RECENT, HISTORY_SEARCH, HISTORY_SEARCH_PLACEHOLDER } from "@/lib/copy";
+import { useLoaded } from "@/lib/matters/useLoaded";
+
+// A saved answer carries [S1] markers. In a search result they would look like checked
+// citations without being shown with their ticks, so the snippet shows plain words only.
+export const plainSnippet = (s: string) => s.replace(/\s*[\[(]\s*S\d+(?:\s*[,;]\s*S?\d+)*\s*[\])]/gi, "");
+
+// Recent conversations, and search across the user's OWN saved questions and answers.
+export function HistoryScreen() {
+  const [q, setQ] = useState<string | null>(null);
+  const recent = useLoaded(() => listConversations(), "recent");
+  const found = useLoaded(() => (q ? searchHistory(q) : Promise.resolve([])), `search:${q}`);
+  return (
+    <div className="flex flex-col gap-4">
+      <Link href="/shared" className="text-small font-semibold text-accent underline">
+        {SHARED_MANAGE}
+      </Link>
+      <SearchBar placeholder={HISTORY_SEARCH_PLACEHOLDER} submitLabel={HISTORY_SEARCH} onSubmit={(t) => setQ(t)} />
+      {q === null ? (
+        <section aria-label={HISTORY_RECENT} className="flex flex-col gap-2">
+          <h2 className="font-sans text-label font-bold uppercase tracking-wide text-ink-soft">{HISTORY_RECENT}</h2>
+          {recent.status === "ready" && recent.value!.length === 0 && <EmptyState {...EMPTY.history} />}
+          <ul className="flex flex-col gap-2">
+            {recent.value?.map((c) => (
+              <li key={c.id}>
+                <Link href={`/conversations/${c.id}`}>
+                  <Card className="break-words">{c.title ?? "Untitled conversation"}</Card>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : (
+        <section aria-label="Results" className="flex flex-col gap-2">
+          {found.status === "ready" && found.value!.length === 0 && <EmptyState {...EMPTY.search} />}
+          <ul className="flex flex-col gap-2">
+            {found.value?.map((h) => (
+              <li key={`${h.conversation_id}-${h.message_id ?? "title"}`}>
+                <Link href={`/conversations/${h.conversation_id}`}>
+                  <Card>
+                    <span className="font-semibold">{h.title ?? "Untitled conversation"}</span>
+                    <span className="mt-1 block break-words text-small text-ink-soft">{plainSnippet(h.snippet)}</span>
+                  </Card>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </div>
+  );
+}

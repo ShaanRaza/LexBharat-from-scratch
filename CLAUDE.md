@@ -10,7 +10,8 @@ should fix this file.
 
 ## 1. What this is
 
-**KanoonBuddy** (working name; entity **LexBharat**) is an AI legal research tool for
+**LexBharat** (final name, decided 2 Nov 2026; older docs and the original PDFs still say
+"KanoonBuddy", which means the same product; the trademark search is still pending) is an AI legal research tool for
 Indian lawyers and law students. A user asks a legal question in plain language and gets
 a short plain answer where **every claim carries a citation that has been mechanically
 verified against the dataset**.
@@ -18,25 +19,66 @@ verified against the dataset**.
 The trust promise is the product. An answer with a fabricated citation is worse than no
 answer. Everything below exists to protect that.
 
-### v1 scope — do not widen it
+### v1 scope — widened AGAIN by the owner on 3 Nov 2026: the full product
 
-| In v1 | Not in v1 |
+**Owner decision, 3 Nov 2026 (A124): v1 is no longer an MVP.** It is the full product with every
+data source the dataset holds, ready to ship. What `core/coverage.json` records as held is still
+the single source and still never restated elsewhere (O7, A51) — but the intent behind it changed:
+it should now record everything measured as usable, not a conservative launch subset.
+
+**What this moved from "later" to "before launch"**, and what each now requires:
+
+- **All High Courts**, not three. Their vectors already exist, so there is no embedding cost — but
+  three things that were deferrable are now gate items: the **Kerala recall gap** (`DATA-GAPS.md`
+  §17) now ships rather than sitting unserved; the **query embedding model** (§13) is a single model for
+  every court (the per-court config was dropped, A128; which model is still open); and **how often `court` is simply wrong** (§15) is load-bearing, because
+  a bad label now serves one court's law under another's name. It is still unmeasured.
+- **State Acts and regulators.** Their BM25 sparse vectors must be repaired on the way into the
+  serving collection — ~504,600 points, about half of them (§9). That step is no longer optional.
+- **Server size.** The launch corpus fits an r7g.large at ~$55/month. The full corpus is ~45–55 GB
+  of RAM, so r7g.2xlarge at ~$219/month plus disk (`COSTS.md` §8). Four times the monthly floor,
+  and the sizing experiment has still not reported.
+- **The 200-question test set** was written for the narrow corpus. Full scope needs High Court and
+  tribunal questions too, which grows the advocate's labelling job (A101, A103).
+- **The launch gate** (`PRD-v2.md` §7) was written for the MVP and needs rewriting against this.
+
+**The one thing scope alone cannot deliver: tribunals.** They are not in the dataset. Acquiring
+them depends on Vaquill, who has not replied, or on building extraction from the tribunals' own
+published orders. That is an external dependency the owner does not control, so "everything" has a
+date nobody can set. Decide explicitly whether launch waits on tribunals or ships without them.
+
+---
+
+### Previous v1 scope — widened by the owner on 2 Nov 2026 (superseded by the above)
+
+The owner widened v1 to a **production-ready product**. The full list, with the gate each
+feature must pass, is [`docs/PRD-v2.md`](docs/PRD-v2.md) section 4; the stack for it is
+[`docs/TECH-STACK-v2.md`](docs/TECH-STACK-v2.md). Where those two disagree, the Tech Stack
+wins. Summary:
+
+| In v1 (built before public launch) | Later |
 |---|---|
-| Supreme Court judgments | All High Courts (phase 2: Bombay, Telangana, Kerala) |
-| `acts_india` (Central Acts) | Tribunals |
-| Research chat with verified citations | Drafting / review / compare (P1) |
-| Act + section lookup (free, public) | Hindi UI (P1) |
-| Supreme Court outcome statistics (free, public) | Counter-arguments, moot court, study buddy (P2) |
-| Upload-and-chat (built, behind a switch) | Data-refresh pipeline (post-MVP backlog, decision D2) |
+| Whatever `core/coverage.json` records as held (**decision O7**: measured, published on the coverage page, never over-claimed). That file is the single source — do not restate a coverage category here or anywhere else | High Courts: Bombay, Telangana, Kerala (after the launch gate; data prep may start now) |
+| Research chat with verified citations; Act + section lookup (free, public) | Counter-arguments, moot court, study buddy (branching features, after the gate) |
+| Plans, billing, accounts, consents, delete and export, feedback, admin page | Hindi (after its tests pass) |
+| Judgment reader, talk with a single judgment, saved answers, export to Word/PDF | "Still good law?" signal (research item, not promised) |
+| Free public pages, share cards, Supreme Court outcome statistics (counts only; live after the hand check) | Data-refresh pipeline (backlog, decision D2) |
+| Chambers team accounts | Tribunals |
+| Upload-and-chat, drafting, review/compare: **built, switched on only when each passes its own gate** | **Not building:** outcome prediction; anything that lists or ranks advocates |
 
-Data is a frozen snapshot, **v2026.08**. There is no refresh pipeline in v1. Every result,
+Widening scope never loosens the trust rules below. Every feature that writes legal text
+goes through the gate and the verifier afterwards. The launch gate is
+[`docs/PRD-v2.md`](docs/PRD-v2.md) section 7.
+
+Data is a frozen snapshot, **v2026.08**. There is no refresh pipeline yet. Every result,
 stats page and Act page shows its **data-as-of date**.
 
 ### Naming — everything is a placeholder
 
-The product name, the collection name `kanoon_v1` and the folder name `kanoonbuddy/` are
-**all placeholders**, pending a trademark search. Each lives in **one config value**
+The product name is **LexBharat** (decided). The collection name `kanoon_v1` and the folder
+name `kanoonbuddy/` are internal placeholders. Each lives in **one config value**
 (`PRODUCT_NAME`, `CORPUS_COLLECTION`), so renaming is a config change, not a code change.
+Do not rename the collection while the data copy is running.
 
 - **Never hard-code a product or collection name.** Read it from config.
 - **Prefer neutral internal names in anything new** — `research_v1`, not a brand word.
@@ -141,8 +183,16 @@ Runs after the model finishes writing. A citation passes only if **all four** ch
 Checks 1–3 are free, plain Python, and **always run — Jev up or down**.
 
 A failed citation is **removed** from the answer, the answer notes that one authority could
-not be verified, and a row is written to `invented_citation_log` with the reason (not
-retrieved, record missing, quote not found, claim not supported).
+not be verified, and a row is written to `invented_citation_log` with one of **five**
+reasons: not retrieved, record missing, quote not found, claim not supported, or
+**store unavailable**.
+
+**Only the first four count towards the hallucination metric.** `store_unavailable` means
+the store timed out, so we do not know whether the record exists — the citation is still
+removed and the user is told the same thing, but a network fault must never be counted as
+the model inventing an authority. Before this existed a slow store read as a fabricated
+citation and polluted the one number that measures fabrication (A146; migration `0013`
+widened the database check constraint, which allowed exactly four values).
 
 ### What the tick means — and does not
 
@@ -153,8 +203,11 @@ retrieved, record missing, quote not found, claim not supported).
 | The link goes to the record's `pdf_url` / `source_url` | That the link works today or the text is current law (snapshot v2026.08) |
 | A stored citation string is shown exactly as recorded | That the citation string is correct or complete |
 
-Wording shown to users: **"Record found in dataset"**, with the data-as-of date. Ticks are
-**per citation**, never one badge for the whole answer.
+Wording shown to users: **"Record found in our library"** (owner decision, 5 Nov 2026, A185),
+with one source line per citation: `Source: Open India Law dataset by Vaquill AI, CC BY 4.0` or
+`Source: India Code (official) · as on <date>`, and the data-as-of date **of that record**, not
+one global date. Ticks are **per citation**, never one badge for the whole answer. The old
+wording said "dataset", which is wrong for the India Code supplement records (A182).
 
 **Never** retype or reformat a Supreme Court citation string with the AI. Show it exactly
 as stored, labelled "as recorded in the dataset".
@@ -171,8 +224,25 @@ as stored, labelled "as recorded in the dataset".
   filter leaks one lawyer's client files to another.
 - **Only models on no-training terms.** The model list in config accepts only providers
   marked "no training". Never a free tier that may train on user data.
-- Langfuse logs are **masked** (upload text, emails, phone numbers → placeholders). Sentry
-  reports are **scrubbed** (request bodies, tokens, emails, document text removed).
+- Langfuse logs must be **masked** (upload text, emails, phone numbers → placeholders) and
+  Sentry reports **scrubbed** (request bodies, tokens, emails, document text removed).
+  **BUILT AND PROVEN, NOT WIRED (A155, 5 Nov 2026).** `core/redact.py` holds the mask and
+  `adapters/telemetry.py` is the only file allowed to name either vendor. Langfuse: an upload
+  or matter-fact run has all its text withheld, other runs have emails, phone numbers and
+  tokens masked, and a run that never declares itself is withheld. Sentry: events are rebuilt
+  from an allow-list, dropping exception messages, request bodies, headers, breadcrumbs, log
+  messages, frame variables and the user's email. **Proven** against the real SDKs with a
+  hostile upload putting one known string into the question, a passage, the answer and an
+  exception message: it reaches neither payload, a control shows the capture sees it with
+  scrubbing off, and 12 mutants were caught.
+  **Nothing is sent anywhere yet, and that is deliberate.** The two call sites (the app
+  factory and the dependency builder) do not exist, `sentry-sdk` and `langfuse` are dev-only
+  dependencies, and the tripwire tests in `tests/security/` still fail if a vendor is wired.
+  **Before either goes live:** add the call sites, promote the two packages to runtime
+  dependencies in that same change, and re-run the hostile-document proof — it was measured
+  against `sentry-sdk` 2.73.0 and `langfuse` 5.1.0, so a version bump re-runs it.
+  **Known gap:** a follow-up turn carries no flag saying it came from an upload chat, so it
+  is withheld only if it still sends `document_ids`. Close that before wiring.
 - Delete means **hard delete**: file from S3, extracted text from PostgreSQL, all vectors
   from Qdrant by `document_id`, in one job, logged, with a nightly leftover check.
 
@@ -180,10 +250,32 @@ as stored, labelled "as recorded in the dataset".
 - **Never display judges or party names.** `judges` is 32.7% filled and sampled values were
   extraction garbage; `petitioner`/`respondent` are 99.9% filled but often counsel names or
   sentence fragments (Measured).
-- **Show the in-force flag only where `act_status` is filled** — it covers 1,568 of 22,264
-  acts. Label every other Act result "in-force status not checked".
+- **"In force" is OFF PERMANENTLY. Measured and settled 3 Nov 2026 (was open since 2 Nov).**
+  The conflict is resolved and the answer is the dangerous one. `act_status` is filled in every
+  row of all 22,264 Acts — `DATASET.md`'s "1,568" was the central legislation file alone, not the
+  whole set. But it carries **no information the record id does not already carry**: all 8,544
+  state Acts and all 848 central Acts read `in_force`, and the only variation sits where the id
+  already says it (every one of the 710 `repealed` is an `IND_REP_` id; the 378 `superseded` are
+  all SEBI; 10 `spent` are central). A field that agrees with the id and varies nowhere else is a
+  **default, not a determination**. So `SHOW_IN_FORCE` stays false — it currently withholds 21,162
+  of 22,264 Acts — and anything not provably repealed reads "In-force status not checked for this
+  Act." **Repealed remains safe to show** from the four signals in `core/act_status.py`.
+- **Derive `court` from the record id, not the `court` field.** Measured 3 Nov 2026 across all
+  32.57M judgment rows: 30 id prefixes, each mapping to exactly one court. A **wrong** label is a
+  non-problem (282 rows, 0.00087%). A **missing** one is the real cost: **0.58%** of rows carry no
+  `court` at all (189,320 rows; Himachal Pradesh 4.1%, Andhra Pradesh 3.0%, Delhi 2.9%), plus
+  0.21% alternate spellings. A court filter silently drops every one of them — and `DATA-GAPS.md`
+  §14 established the filter is a **recall** mechanism at scale, not just a refinement. Deriving
+  from the id fixes both for free. Do not do it blindly: a few alias labels may be historically
+  real.
 - **High Courts have no citation strings** (0.0% filled). The verifier falls back to record
   existence and quoted text, and High Court answers show no citation string.
+- **Never write a coverage category outside `core/coverage.json`.** What the product
+  covers (which courts, which instruments) is written in that one file and read from
+  `core/coverage.py` by the scope check, the decide prompt, the Qdrant filter, every
+  user-facing sentence, the coverage page and the generated doc blocks. A hard-coded
+  court or instrument name elsewhere fails `tests/test_coverage_source.py`. Six places
+  once said three different things; that is why this rule exists (A51).
 - **Never compete on document counts.** `case_id` is not one per case — Rajasthan has
   1,056,767 `case_id` against 308,342 distinct `case_number`.
 - Full field-quality table: [`docs/DATASET.md`](docs/DATASET.md).
@@ -211,16 +303,35 @@ as stored, labelled "as recorded in the dataset".
   was once printed this way and had to be rotated.)
 - The server is **ARM (Graviton, r7g)** — every Docker image needs an ARM build.
 
+### The source collections are read-only
+
+- **Never write to `legal_corpus_v1`, `legal_corpus_v2`, `acts_india` or `kanoon_v1`.**
+  Every repair, rebuild or promotion is done on a copy. These are the only copies of the
+  snapshot we have; a bad write to one cannot be undone from here. The rule was written
+  in `DATA-GAPS.md` §17 and lived nowhere a coding agent would read it first (A145).
+- **The original instance (port 6333) is read-only entirely**, whatever the collection is
+  called. Work happens on the copy instance (port 7333).
+- **A script that can reach an original must refuse by default**, not by convention. See
+  `data/sparse_fix.py`: `--collection` is required with no default, the four names above are
+  refused in every mode including dry runs, and the tests prove the refusal.
+- Switching which collection serves users is a **config change** (`CORPUS_COLLECTION`), never
+  a write into the live one. Build the new collection beside it and move the setting, so
+  rollback is one value.
+
 ---
 
 ## 7. Do not use
 
-- **CrewAI** or any multi-agent orchestrator **inside the product**. A fixed pipeline is
-  what guarantees every answer passes the verifier.
 - **Full LangChain.** Small pieces (e.g. text splitters) are fine. The framework is not.
-- **LangGraph** — not now. Month 6 at the earliest, only for features with real branching
-  (counter-arguments, moot court), and only with the verifier still forced.
-- Agents are for **building** this product, not for **running** it.
+- **Any orchestration that lets an answer skip the verifier.** Agent orchestration inside
+  the product is now **allowed** (owner decision, 1 Nov 2026), but only where the final
+  answer always passes through the citation verifier (§5) and the gate (step 7) afterwards,
+  with the verifier code outside the agents' control. The 11-step research pipeline in §4
+  stays a fixed pipeline; orchestration is for features with real branching
+  (counter-arguments, moot court, drafting, review).
+- **CrewAI / LangGraph for the research pipeline itself.** Not needed; the fixed pipeline is
+  cheaper, faster and easier to debug. Use them only for the branching features above, and
+  record the choice in `docs/DECISIONS.md` first.
 
 ---
 
@@ -248,24 +359,30 @@ So, on every non-trivial change:
 Writing more code faster is not the goal. The goal is a product its owner can defend to an
 advocate, a regulator and the next engineer.
 
-### Who leads the design
+### Who decides (agent-built mode, from 1 Nov 2026)
 
-On the code the owner must be able to defend — **`core/`, the citation verifier, the
-adapters, the data model, and any product or legal decision** — the **owner leads**:
+The owner has asked for the build to be done **completely by agents**. So agents decide
+technical design themselves, including `core/`, the adapters and the data model. What
+changes is *how visible* the decision is:
 
-1. Lay out the options and the trade-offs. Recommend one; do not just pick it silently.
-2. Wait for the call on anything that changes behaviour the owner would have to explain.
+1. Make the call. Pick the simplest option that follows the seven rules in §2.
+2. **Record every non-obvious choice in `docs/DECISIONS.md` in the same commit**: the choice,
+   the one alternative ruled out, and why, in one or two lines.
 3. Then build, explaining as in §8 above.
-4. Push back when the chosen option is worse. Agreeing with a bad call is not helpful.
+4. Push back on a bad instruction, in the commit message or the final report.
 
-On **boilerplate** — Docker Compose, CI config, lint setup, scaffolding, formatting — just
-do it. Hand-designing a `docker-compose.yml` teaches nothing and wastes the owner's time.
+**Still the owner's call. Stop, do the preparatory work, and write the question into the
+final report** — do not guess — for:
 
-The test: *would the owner have to defend this choice to an advocate, a regulator or the
-next engineer?* If yes, they decide. If no, decide it yourself and say what you did.
+- anything that changes what a user is told about the law (UX copy about advice, privilege,
+  the not-legal-advice line, BCI Rule 36 wording);
+- weakening or skipping any verifier check (§5), or changing the 50 → 10 → 8 passage counts;
+- pricing, plans, the product name, retention periods;
+- spending money or using a real API key or production system;
+- anything in `docs/DECISIONS.md` marked open that needs a lawyer, an advocate or Vaquill.
 
 > If the **Vibe Wise** plugin is loaded in this session, its learning-first mode takes
-> precedence and this section is the fallback.
+> precedence over this section.
 
 ## 9. How to work here
 
@@ -284,14 +401,18 @@ next engineer?* If yes, they decide. If no, decide it yourself and say what you 
    the PRD, read the **whole** document, or summarise it section by section first. (The
    first docs here were drafted after reading 3 of 59 PRD pages and had to be corrected.)
 
-7. **One task = one GitHub issue = one branch = one pull request = one Claude session.**
-   Start with `/start-task <issue>` and end with `/finish-task <issue>`, which checks the
-   work, opens the pull request and updates the issue. If a task outgrows one session,
-   finish a clean slice and propose a follow-up issue. Don't stretch the session.
+7. **Two ways to work, pick one per session.**
+   - **Single task (default for people):** one GitHub issue = one branch = one pull request
+     = one Claude session. Start with `/start-task <issue>`, end with `/finish-task <issue>`.
+     If a task outgrows one session, finish a clean slice and propose a follow-up issue.
+   - **Agent build (owner-run, see §12):** one branch (`shan/agent-team`), several agents
+     working in parallel on separate folders, one pull request to `main`. The owner reviews
+     and merges. Agents never push to `main`.
 
 ### Environment
 
-The owner is on **macOS**.
+The owner is on **macOS**. Agent builds may run on Linux in the cloud: anything you write
+must still work on macOS and on the ARM server.
 
 - Use macOS/BSD-compatible commands. There is **no GNU `timeout`** — use `gtimeout`, or a
   background-and-kill pattern.
@@ -324,14 +445,31 @@ with Docker Compose): [`.claude/README.md`](.claude/README.md).
 
 ### Commands
 
-Nothing is scaffolded yet — fill these in as you build, and keep them true.
+These are the commands as built on `shan/agent-team`. Use the shared virtualenv
+(`python3 -m venv .venv && .venv/bin/pip install -e ".[dev]"`).
 
 ```bash
-docker compose -f infra/docker-compose.yml up    # whole system
-# api:    (to be added)
-# web:    (to be added)
-# tests:  (to be added)
-# evals:  (to be added — 200-question test set)
+.venv/bin/pytest                      # all Python tests (api tests need TEST_DATABASE_URL for Postgres)
+.venv/bin/pytest tests/trust          # the verifier and gate: must pass before any deploy
+.venv/bin/ruff check . && .venv/bin/ruff format --check .
+cd web && npm run lint && npx tsc --noEmit && npm test
+SEAL_KEY=demo-key .venv/bin/python -m evals.runner --sample   # offline eval demo
+.venv/bin/python -m evals.real_run                             # 200-question set, real pipeline + fakes
+.venv/bin/python -m evals.title_keys                           # sizes the case-name key (A115)
+```
+
+**Docker is NOT yet validated and has never been started.** `docker compose` is not installed on
+the owner's laptop (`brew install docker-compose`), and the Docker engine there is a Colima VM
+shared with the data work — so starting it mid-measurement would corrupt someone's numbers. The
+URLs below come from the compose file and the code, **not from a running service**:
+
+```bash
+docker compose -f infra/docker-compose.yml up    # whole system — NEVER RUN, see A114
+# api:    http://localhost:8000   (health: /api/v1/healthz)
+# web:    http://localhost:3000
+# known blockers before it can start: no SEAL_KEY or vendor keys are passed in;
+#   nothing runs the migrate service before api, so the first start has no tables;
+#   POSTGRES_PASSWORD and APP_DB_PASSWORD are unset
 ```
 
 ---
@@ -368,8 +506,10 @@ things expected to break first on a 16 GB server.
 | How does verification work in detail? | [`docs/CITATION-VERIFIER.md`](docs/CITATION-VERIFIER.md) |
 | **What exactly does the user see when something fails?** | [`docs/UX-COPY.md`](docs/UX-COPY.md) |
 | What do I build next? | [`docs/BUILD-ORDER.md`](docs/BUILD-ORDER.md) |
+| What features are planned after the P0 core? | [`docs/FEATURES-PLAN.md`](docs/FEATURES-PLAN.md) |
 | When does this ship? | [`docs/ROADMAP.md`](docs/ROADMAP.md) |
 | What are we measuring, and what gates launch? | [`docs/METRICS.md`](docs/METRICS.md) |
+| **What does this cost to run?** | [`docs/COSTS.md`](docs/COSTS.md) |
 | What could go wrong? | [`docs/RISKS.md`](docs/RISKS.md) |
 | What are the legal constraints? | [`docs/SECURITY-AND-COMPLIANCE.md`](docs/SECURITY-AND-COMPLIANCE.md) |
 | How long do we keep data? | [`docs/RETENTION.md`](docs/RETENTION.md) |
@@ -384,3 +524,23 @@ things expected to break first on a 16 GB server.
 | Which skills did we plan, use or reject? | [`skills-used/README.md`](skills-used/README.md) |
 | Who works on what, and how does work reach `main`? | [`team/README.md`](team/README.md) |
 | What does the product look like after 11 weeks, and what's next? | [`after-11-weeks/`](after-11-weeks/README.md) |
+
+## 12. Agent team lanes (branch `shan/agent-team`)
+
+Used when the owner runs an agent build (§9.7). Agents work in parallel in **one checkout**,
+so each owns a folder and never edits another's. Shared files (`pyproject.toml`, `CLAUDE.md`,
+`docs/DECISIONS.md`) are edited only by the lead agent.
+
+| Lane | Owns | Builds |
+|---|---|---|
+| core | `core/` (except `verify.py`, `gate.py`), `adapters/`, `tests/core/` | adapters with fakes, one function per pipeline step, `core/contracts.py` (shared types) |
+| trust | `core/verify.py`, `core/gate.py`, `evals/`, `tests/trust/` | verifier checks 1-4 and the gate, written WITH tests that try to break them; eval runner |
+| platform | `api/`, `migrations/`, `workers/`, `infra/`, `.github/`, `tests/api/`, `tests/migrations/`, `tests/integration/` | Alembic migrations, FastAPI routes, the API-to-pipeline bridge, Docker (ARM), CI |
+| web | `web/` | chat, citation ticks, failure screens, Act/judgment pages on the shared design tokens |
+| reviewer | read-only | checks each piece as it lands against §2, §5 and §6; reports, does not fix |
+
+Order (set as task dependencies by the lead): `core/contracts.py` and `api/schemas.py` come
+first; web's API client and platform's bridge start only after those two are done.
+
+Rules for every lane: use fakes for Voyage, Gemini, Jev, Firebase, S3, Razorpay (no real keys);
+state "not verified" for anything that was not actually run; commit small and often.

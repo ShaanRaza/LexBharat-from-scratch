@@ -1,6 +1,6 @@
 # Data model
 
-**17 PostgreSQL tables and 2 Qdrant collections** in v1.
+**18 PostgreSQL tables and 2 Qdrant collections** in v1 (17 + `matters`, migration 0006).
 
 Conventions: IDs are UUIDs; every table has `created_at` and `updated_at`. **There is no
 password column anywhere** — Firebase holds passwords and these tables point to the
@@ -18,12 +18,75 @@ those features are built.
 | `memberships` | organisation_id, user_id, role (admin / member), status (invited / active / removed) |
 | `consents` | id, user_id, notice_version, purpose, given_at, withdrawn_at |
 
+## Matters, and the two schema rules
+
+| Table | Key fields |
+|---|---|
+| `matters` | id, user_id, title, kind (matter / project), status (active / archived), archived_at, created_at, updated_at |
+
+A matter is one case or project that saved answers, uploads, drafts, notes and remembered
+facts hang off (PRD-v2 O11). One table. "Matter" for advocates and "Project" for students
+is the `kind` label, not a second feature.
+
+**Convention 1 — `matter_id` from the first migration.** Every table that holds user work
+carries a **nullable** `matter_id` (foreign key to `matters`, `ON DELETE SET NULL`) in the
+migration that **creates** it, even if the screen that uses it ships later. Today that is
+`conversations`, `messages` and `documents` (added in 0006). Tables not yet created that must
+follow: `saved_items`, `notes`, `drafts`, `exports`, `matter_facts`. Retrofitting the column
+across a live schema is the migration that goes wrong.
+
+**Convention 2 — every stored answer carries the provenance flag.** `messages` has
+`shaped_by_upload` and `shaped_by_matter_fact` (both `NOT NULL`, **no default**). The
+pipeline decides them when the answer is produced and step 11 (Save) writes them in the same
+insert; nothing derives them later. Sharing (PRD-v2 O14) is allowed only when both are false,
+and an answer shaped by a matter fact is never put in the shared answer cache. Any future
+table that stores an answer (saved copies, exports, share links) copies these two columns.
+
+Not created yet, on purpose: memory tables (`memory_preferences`, `matter_facts`). Memory
+retention (O13) is not settled.
+
+## Provenance is write-once (migration 0010)
+
+A trigger on `messages` refuses clearing `shaped_by_upload` or `shaped_by_matter_fact` once
+true (`UPDATE ... SET shaped_by_upload = false` raises). Setting a flag to true later is
+allowed (it only makes an answer less shareable). The `share_links_guard` trigger now fires
+on UPDATE of `message_id` or `user_id` as well as on INSERT, so a link cannot be repointed
+at a shaped answer or handed to another user. Revoking (which updates only `revoked_at`) is
+never blocked.
+
+## Share links
+
+`share_links` (migration 0009): `user_id`, `message_id`, `token_hash` (unique), `expires_at`,
+`revoked_at`. **The token is never stored**, only its SHA-256, so a leaked database does not
+leak live links. A database trigger (`share_links_guard`) refuses to create a link for a
+message that is not the same user's assistant answer, or that is shaped by an upload or a
+matter fact (the provenance flags), so the rule holds even if application code forgets it.
+The public read checks the row on every request (not revoked, not expired, still
+unshaped); there is no cache to go stale.
+
+## AI spend view
+
+`ai_spend_daily` (a view, migration 0007) lists, per day and feature, the calls and tokens
+of every paid model call we can count: answers (from `messages`, cache hits excluded) and
+the two helpers `improve` and `followups` (from `usage_daily`, which stores their tokens
+under their own feature name). No money is stored: it is worked out when read from
+`AI_PRICE_IN_PER_MTOK` / `AI_PRICE_OUT_PER_MTOK`. **The answer meter counts only the
+`research` rows**, so helper calls never use the answer limit. Not counted yet (existing
+gap): tokens of the rewrite, gate and decision calls.
+
+## History search
+
+Two full-text indexes (migration 0008) let a user search their own saved work:
+`ix_messages_content_fts` on `to_tsvector('english', content)` and
+`ix_conversations_title_fts` on the conversation title. The search is PostgreSQL full text;
+every query filters on `user_id`, and `core/user_search.py` checks each row again.
+
 ## Conversations and trust
 
 | Table | Key fields |
 |---|---|
-| `conversations` | id, user_id, module (research / document), document_id (if any), title, rolling_summary, message_count |
-| `messages` | id, conversation_id, role, content, rewritten_query, model, tokens_in, tokens_out, latency_ms, from_cache, scope, route (easy/hard), safety, jev_used |
+| `conversations` | id, user_id, module (research / document), document_id (if any), **matter_id (nullable)**, title, rolling_summary, message_count |
+| `messages` | id, conversation_id, **matter_id (nullable)**, **shaped_by_upload**, **shaped_by_matter_fact**, role, content, rewritten_query, model, tokens_in, tokens_out, latency_ms, from_cache, scope, route (easy/hard), safety, jev_used |
 | `message_sources` | message_id, source_id (S1–S8), record_id, chunk_id, rank, rerank_score, verified (yes/no), relevance (from the Jev gate), support (supports / partly / does not), support_confidence |
 | `invented_citation_log` | id, message_id, query, model, cited_text, reason (not retrieved / record missing / quote not found / claim not supported) |
 | `feedback` | message_id, user_id, rating, reason, comment |
@@ -86,7 +149,7 @@ The local Qdrant holds all 32.5M vectors. v1 needs only the Supreme Court and
 1. Read Supreme Court points out of **`legal_corpus_v2`** with the filter
    `court_type = "supreme_court"`, with their vectors: **371,159 points** (Measured,
    13 Oct 2026). `legal_corpus_v1` holds no Supreme Court points.
-2. Read matching chunk text from the parquet files with DuckDB and compute BM25 sparse
+2. Read matching chunk text from the parquet files with DuckDB and compute BM25 sparse (judgment sparse vectors already exist and reproduce, and some `acts_india` ones are wrong: see docs/DATASET.md, 2 Nov 2026 findings)
    vectors (fastembed, free, local).
 3. Write both into `kanoon_v1` with two named vectors: dense (the existing voyage-4
    vectors, **no re-embedding**) and sparse. Copy `acts_india` the same way.

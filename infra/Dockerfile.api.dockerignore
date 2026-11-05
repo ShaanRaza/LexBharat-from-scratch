@@ -1,0 +1,12 @@
+# Allow-list: the API image copies only these (infra/Dockerfile.api). Everything else,
+# including .env, .git, .venv and web/node_modules, never reaches the build context.
+*
+!pyproject.toml
+!api
+!core
+!adapters
+!workers
+!data
+!migrations
+**/__pycache__
+**/*.pyc

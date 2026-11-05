@@ -1,7 +1,7 @@
 # API
 
 All routes live under **`/api/v1`**, send and receive JSON, and need a **Firebase token** —
-except the public Act, stats and sitemap routes, and the Razorpay webhook.
+except the public Act, judgment, stats and sitemap routes, and the Razorpay webhook.
 
 There are no `/auth/signup` or `/auth/login` routes: Firebase handles those in the browser.
 
@@ -9,6 +9,10 @@ There are no `/auth/signup` or `/auth/login` routes: Firebase handles those in t
 
 Chat answers stream over **server-sent events (SSE)**:
 
+0. First, `step` events, one per pipeline stage as it starts: `understanding`, `searching`,
+   `checking` (with `found`), `writing` (with `found` and `kept`), `verifying`. A step event
+   is a **name and counts only**, never a case name, citation, quote or record id. They ride
+   the same stream (no second channel), so none can arrive after the first token.
 1. Text arrives **word by word**.
 2. Then **one** `citations` event, after verification — the full checked set, each with a
    tick or a warning mark, a link to `pdf_url` or `source_url`, the data-as-of date, the
@@ -16,7 +20,14 @@ Chat answers stream over **server-sent events (SSE)**:
 3. Then a `done` event.
 
 A user must **never** see a citation appear and then vanish. Nothing citation-shaped goes
-out before step 2.
+out before step 2, and step 2 is sent only after the verifier has finished.
+
+**As built (`api/schemas.py`):** `citations` carries `removed_count`, `data_as_of`, `credit`
+and `notice`. A refusal is a single `done` with `refused: true`, a `reason`
+(`out_of_scope` or `not_found`) and a `message_key`. A usage limit is a single `error` event
+with code `quota_exceeded`. A citation's `status` is only `verified` or `partly`; the web
+shows a tick for `verified` alone. Routes not yet built answer `501 feature_disabled` after
+the login check. Judgment titles are never sent (they are party names).
 
 ## Routes
 
@@ -24,8 +35,8 @@ out before step 2.
 |---|---|
 | `GET /me` | Profile, plan, answers left this month |
 | `GET /search` | Direct search with filters, no AI answer (cheap) |
-| `GET /cases/{id}` | Full judgment with paragraph anchors; backs every citation link |
-| `GET /acts/{act}/sections/{n}` | One section. In-force status shown **only** when `act_status` is filled, otherwise labelled "in-force status not checked". **Public, no login** |
+| `GET /cases/{id}` | **Public (no login).** Full judgment with paragraph anchors; backs every citation link, including those on a shared answer. No judges or party names |
+| `GET /acts/{act}/sections/{n}` | One section, with `force_status`: `repealed` (act_status, `IND_REP_` id or a clean `(Rep., Act NN of YYYY)` title marker), `in_force` (only where act_status says so) or `not_checked`. `in_force` and `act_status_checked` are derived from it. **Public, no login** |
 | `POST /conversations` | Start a research or document conversation |
 | `GET /conversations` | List, with cursor pagination |
 | `GET /conversations/{id}` | Full history with sources |
@@ -34,7 +45,17 @@ out before step 2.
 | `GET /documents/{id}` | Upload status |
 | `DELETE /documents/{id}` | **Hard delete**: file, text and vectors |
 | `POST /feedback` | Thumbs up/down plus a comment |
+| `POST /conversations/{id}/messages/{mid}/followups` | Up to 3 next-question suggestions for a saved answer. Questions only, no citation marker. Not a pipeline step; **not an answer, never uses the answer limit**; rate-limited per user per hour (`RATE_LIMIT_FOLLOWUPS_PER_HOUR`, 429 `rate_limited`); counted in the daily AI spend |
+| `POST /prompts/improve` | "Improve my question": editable text for the input box (`{text, changed}`). Never contains a citation. Not a pipeline step; **never uses the answer limit**; rate-limited per user per hour (`RATE_LIMIT_IMPROVE_PER_HOUR`); counted in the daily AI spend |
 | `POST /billing/webhook` | Razorpay events (**signature checked**, no Firebase token) |
+| `POST /messages/{id}/share` | Make a link to ONE of your saved answers (returns the token **once**; only its hash is stored). **Refused (403) if an upload or a saved matter fact shaped the answer**, or if it is not an assistant answer; someone else's or an unknown answer is 404. The expiry is `SHARE_LINK_EXPIRY_DAYS` (placeholder 30) |
+| `GET /share`, `DELETE /share/{id}` | List your links (never the token), and switch one off. The public page stops working on the next request |
+| `GET /s/{token}` | **Public, no login.** One shared answer with its checked citations, the data-as-of date, the CC BY credit and the not-legal-advice notice; never the owner's identity or a judgment title. Read from the database on every request. Every response, errors included, carries `X-Robots-Tag: noindex, nofollow, noarchive`, `Cache-Control: no-store` and `Referrer-Policy: no-referrer`. Unknown, revoked and expired look identical (404) |
+| `GET /matters?status=active\|archived\|all`, `POST /matters`, `GET /matters/{id}`, `PATCH /matters/{id}` | List, create, open (with its conversations and counts), rename and archive/restore a matter (or project: `kind` is only the label). Another user's matter always looks absent (404) |
+| `PATCH /conversations/{id}` | File a conversation under a matter, move it to another, or unfile it (`matter_id` null). Both the conversation and the matter must be the caller's |
+| `GET /history/search?q=` | Full-text search across the caller's OWN conversation titles and messages (PostgreSQL, no new vendor). Always filtered by user; never another user's row |
+| `DELETE /matters/{id}?mode=unfile\|everything` | Delete a matter. **`mode` is required** (the user is asked): `unfile` deletes the matter only and its work moves to unfiled; `everything` deletes the matter, its conversations and its uploads, and the uploads are genuinely hard-deleted (S3 file, every vector, database text), then re-checked. If an upload cannot be fully deleted the matter is kept (503) |
+| `GET /coverage` | What the dataset covers: the coverage sentence, the courts and instruments, what is excluded, a `placeholder`/`measured` status, the data-as-of date, credit and notice. **Public, no login.** Every word comes from `core/coverage.json` (decision A51). Never invents a category |
 | `GET /stats` | Public outcome counts by court, year and outcome label. **No login.** Supreme Court only until Phase 2 |
 | `GET /sitemap.xml` | Every public Act and stats page, for Google (served by the website) |
 | `POST /organisations` | Create a Chambers organisation (minimum 3 seats, one bill) |
