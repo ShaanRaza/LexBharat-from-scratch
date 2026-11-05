@@ -661,3 +661,112 @@ async def test_a_chunk_with_no_heading_whose_label_is_the_section_is_the_section
         "retrenchment",
     )
     assert r.scope == "act+section" and [p.record_id for p in r.passages] == ["id-25f"]
+
+
+# ----------------------------------------------------------------------------------------
+# The exact lookup is checked against the chunk's OWN heading (core/section_heading.py)
+# ----------------------------------------------------------------------------------------
+HDR = "Act: The Code of Civil Procedure, 1908 | India | Central | In Force\n"
+
+
+def _chunk(label, body, **kw):
+    return {
+        "section_number": label,
+        "heading_section": label,  # the header line is built from the label
+        "act_id": CPC,
+        **kw,
+    }, f"{HDR}Section {label}: Heading\n{body}"
+
+
+async def _lookup(settings, chunks, section="11"):
+    s = FakeVectorStore(settings)
+    for rid, (payload, text) in chunks.items():
+        s.add_law(rid, text, **payload)
+    return await _run(
+        settings,
+        s,
+        Filters(act="Code of Civil Procedure, 1908", section=section),
+        "res judicata",
+    )
+
+
+async def test_wrong_label_right_text_is_found_by_body_section_and_wrong_text_is_dropped(
+    settings,
+):
+    """The label says 12, the body is section 11 (body_section says so): it IS section 11. The chunk labelled 11
+    whose body is section 12 is not."""
+    chunks = {
+        "real-11": (
+            {
+                "section_number": "12",
+                "heading_section": "12",
+                "body_section": "11",
+                "body_kind": "section",
+                "act_id": CPC,
+            },
+            HDR + "Section 12: Wrong\n**11. Res judicata.—** No Court shall try",
+        ),
+        "fake-11": (
+            {
+                "section_number": "11",
+                "heading_section": "11",
+                "body_section": "12",
+                "body_kind": "section",
+                "act_id": CPC,
+            },
+            HDR + "Section 11: Wrong\n**12. Bar to further suit.—**",
+        ),
+    }
+    r = await _lookup(settings, chunks)
+    assert [p.record_id for p in r.passages] == ["real-11"]
+
+
+async def test_the_text_decides_when_the_collection_has_no_body_section(settings):
+    """kanoon_v1 style: only labels. A chunk labelled 11 whose body opens '12.' is section 12, and is dropped."""
+    chunks = {
+        "label-11-body-12": _chunk("11", "**12. Bar to further suit.—** The court"),
+        "label-11-body-11": _chunk("11", "**11. Res judicata.—** No Court"),
+    }
+    r = await _lookup(settings, chunks)
+    assert [p.record_id for p in r.passages] == ["label-11-body-11"]
+
+
+async def test_an_order_rule_and_a_section_sharing_a_number_are_not_confused(settings):
+    chunks = {
+        "order-rule-11": _chunk(
+            "11", "ORDER VII  PLAINT  rule 11. Rejection of plaint"
+        ),
+        "section-11": _chunk("11", "**11. Res judicata.—** No Court shall try"),
+    }
+    r = await _lookup(settings, chunks)
+    assert [p.record_id for p in r.passages] == ["section-11"]
+
+
+async def test_only_an_order_rule_under_that_number_is_section_not_held(settings):
+    chunks = {"order-rule-11": _chunk("11", "ORDER VII  PLAINT  rule 11. Rejection")}
+    r = await _lookup(settings, chunks)
+    assert r.scope == "section not held" and r.passages == ()
+    assert r.not_held and r.not_held.section == "11"
+
+
+async def test_a_section_with_no_chunk_is_section_not_held_not_the_acts_other_text(
+    settings,
+):
+    chunks = {"section-9": _chunk("9", "**9. Courts to try all civil suits.—** The")}
+    r = await _lookup(settings, chunks, section="11")
+    assert r.scope == "section not held" and r.passages == ()
+
+
+async def test_continuation_chunks_stand_on_their_label_and_a_headed_chunk_does_not(
+    settings,
+):
+    """d1 and d2 open mid-section: no heading to differ, so the label stands. A continuation labelled for another
+    section is not returned."""
+    chunks = {
+        "s11_d0": _chunk("11", "**11. Res judicata.—** No Court shall try"),
+        "s11_d1": _chunk("11", "( _a_ ) the validity of any loan or advance"),
+        "s11_d2": _chunk("11", "(1) At any time after an arrear"),
+        "s12_d1": _chunk("12", "( _a_ ) something of section twelve"),
+    }
+    r = await _lookup(settings, chunks)
+    assert {p.record_id for p in r.passages} == {"s11_d0", "s11_d1", "s11_d2"}

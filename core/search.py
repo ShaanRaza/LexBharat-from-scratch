@@ -23,18 +23,21 @@ from core.contracts import (
 )
 from core.dedupe import dedupe_passages
 from core.hc_citation import case_reference, extract_neutral_citation
+from core.section_heading import own_section
 from core.settings import Settings
 from core.uploads import search_user_documents
 
 log = logging.getLogger(__name__)
 
 
-# The key an exact-section lookup filters on: the section a chunk's OWN heading
-# names (research_v3 carries it on every chunk, indexed). `section_number` is a
-# label the chunker wrote and not an address: an amended section is appended into
-# the chunk of the section before and carries that one's number (docs/DATASET.md,
-# "The section_number trap").
-SECTION_KEY = "heading_section"
+# The fields an exact-section lookup asks the store for, in order of preference:
+# `body_section` (read from the chunk's own first heading line, when the collection
+# carries it), `heading_section`, then the chunker's `section_number` label. The label
+# is not an address: it is wrong for about 17% of Union-level Act chunks, and an
+# amended section is appended into the chunk of the section before and carries that
+# one's number (docs/DATASET.md, "The section_number trap"). Whatever a store returns
+# is then checked against the chunk's OWN heading (core/section_heading.py).
+SECTION_KEYS = ("body_section", "heading_section", "section_number")
 
 
 @dataclass(frozen=True)
@@ -201,27 +204,37 @@ def _merge(first: list[Hit], second: list[Hit], limit: int) -> list[Hit]:
 
 
 def _is_section(h: Hit, section: str) -> bool:
-    """A chunk is section N's text if its own heading names N. A chunk with no
-    heading at all (3,865 of the 72,185 plain-numbered Act chunks of research_v3:
-    the chunker left no `Section N:` line) has no heading to differ, so its label
-    stands. A chunk headed by ANOTHER section is dropped, whatever its label says."""
-    heading = str(h.payload.get(SECTION_KEY) or "").upper()
-    if heading:
-        return heading == section
+    """A chunk is section N's text if its own heading says N. A chunk headed by
+    anything else (another section, an Order's rule that shares the number, a
+    Schedule article) is dropped whatever its label says. A chunk with no heading of
+    its own (a continuation, ids ending _d1, _d2; a Union-level Act chunk the
+    chunker left no heading on) has none to differ, so its header, else its label,
+    stands.
+    """
+    number, kind, _ = own_section(h.payload, h.text)
+    if number is not None:
+        return kind == "section" and number == section
+    header = str(h.payload.get("heading_section") or "").upper()
+    if header:
+        # the "Section N:" header the chunker wrote: built from the label, so not
+        # independent of it, but it can disagree with it
+        return header == section
     return str(h.payload.get("section_number") or "").upper() == section
 
 
 async def _section_hits(run, section: str, must: dict, limit: int) -> list[Hit]:
-    """Chunks that ARE section `section`: by heading, plus labelled-and-headless
-    chunks (see `_is_section`); both lookups are exact payload filters."""
-    by_heading, by_label = await asyncio.gather(
-        run({**must, SECTION_KEY: section}, limit),
-        run({**must, "section_number": section}, limit),
+    """Chunks that ARE section `section`: an exact lookup on each of SECTION_KEYS, then
+    every candidate checked against its own heading (`_is_section`). Best-preferred
+    key first, a chunk counted once.
+    """
+    found = await asyncio.gather(
+        *(run({**must, k: section}, limit) for k in SECTION_KEYS)
     )
     kept: dict[str, Hit] = {}
-    for h in by_heading + by_label:
-        if _is_section(h, section):
-            kept.setdefault(h.record_id, h)
+    for hits in found:
+        for h in hits:
+            if _is_section(h, section):
+                kept.setdefault(h.record_id, h)
     return list(kept.values())[:limit]
 
 

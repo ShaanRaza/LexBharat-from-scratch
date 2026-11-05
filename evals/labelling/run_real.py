@@ -66,6 +66,7 @@ EVAL_ENV = (
 )
 OUT_DEFAULT = Path.home() / "qdrant-kanoon" / "labelling" / "pipeline_answers.jsonl"
 COPY_QDRANT = "http://127.0.0.1:7333"
+COLLECTION = ""  # --collection: the collection for THIS run only; empty = the configured CORPUS_COLLECTION
 CALL_CAP = 2500
 LLM_CACHE = Path.home() / "qdrant-kanoon" / "labelling" / "llm_cache"
 # gemini-3.5-flash-lite list price, USD per million tokens. Secondhand (third-party price pages, 5 Nov 2026): confirm on
@@ -336,6 +337,7 @@ def build(llm: CountingLLM) -> Deps:
             "GEMINI_API_KEY": SecretStr(_line(EVAL_ENV, "EVAL_GEMINI_API_KEY")),
             "VOYAGE_API_KEY": SecretStr(_line(REPO / ".env", "VOYAGE_API_KEY")),
             "QDRANT_URL": COPY_QDRANT,
+            **({"CORPUS_COLLECTION": COLLECTION} if COLLECTION else {}),
             # the copy instance is shared with other jobs; a slow read is not an outage here
             "QDRANT_TIMEOUT_S": 90.0,
         }
@@ -487,7 +489,7 @@ async def main_async(
 
 
 def main() -> None:
-    global RPM  # noqa: PLW0603 - read by CountingLLM._pace at call time
+    global RPM, COLLECTION  # noqa: PLW0603 - read by CountingLLM._pace and build() at call time
     ap = argparse.ArgumentParser()
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--out", type=Path, default=OUT_DEFAULT)
@@ -498,13 +500,18 @@ def main() -> None:
         help="model calls a minute (the free tier allowed 14; billing is on now)",
     )
     ap.add_argument(
+        "--collection",
+        default="",
+        help="CORPUS_COLLECTION for this run only (never written to .env or the repo)",
+    )
+    ap.add_argument(
         "--budget-inr", type=float, required=True, help="the estimate in rupees"
     )
     ap.add_argument(
         "--decision", required=True, help="what decision this result drives"
     )
     a = ap.parse_args()
-    RPM = a.rpm
+    RPM, COLLECTION = a.rpm, a.collection
     asyncio.run(main_async(a.limit, a.out, a.budget_inr, a.decision))
 
 

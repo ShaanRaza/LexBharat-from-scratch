@@ -1,4 +1,4 @@
-"""Which model does the live path ask Voyage for? (A185). A fake HTTP transport records the request;
+"""Which model does the live path ask Voyage for? (A186). A fake HTTP transport records the request;
 no vendor is called. Pipeline step 5 (Search): core/search.py embed_query -> adapters/voyage.py."""
 
 import json
@@ -46,7 +46,9 @@ async def test_kanoon_v1_query_is_sent_with_the_model_the_map_names():
 
 async def test_an_unregistered_new_collection_is_refused_before_any_request():
     with pytest.raises(UnknownEmbeddingModel):
-        await _ask("research_v3")
+        await _ask(
+            "research_v4"
+        )  # research_v3 is registered (voyage-4-large) since 5 Nov
 
 
 async def test_a_registered_new_collection_uses_whatever_the_map_says():

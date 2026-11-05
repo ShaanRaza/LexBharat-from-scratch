@@ -64,17 +64,21 @@ class Settings(BaseSettings):
     # A query embedding must use the model that built the stored vectors of the
     # collection being searched, or ranking is silently damaged (the same text embedded
     # by two models agrees only to about 0.91-0.96 cosine). Keys are collection names; a
-    # collection that is not listed is REFUSED, never given a default. Measured 2 Nov
-    # 2026 by re-embedding stored text: kanoon_v1 is voyage-4-large in 30 of 30 sampled
-    # points. The original corpora are NOT single-model (voyage-4, voyage-4-large and
-    # voyage-4-lite all occur inside legal_corpus_v1, legal_corpus_v2 and acts_india,
-    # by document), so they are deliberately absent. `kerala_v2_fix` is the staging
-    # collection that holds ONLY the re-embedded Kerala chunks whose stored vector was
-    # dead (data/dead_vectors/reembed_kerala.py); every vector in it is voyage-4, the
+    # collection that is not listed is REFUSED, never given a default. Measured 5 Nov
+    # 2026 by re-embedding stored text (78 random chunks): 67 reproduce under
+    # voyage-4-large (86%), 11 under voyage-4 (14%, all central-Act chunks). kanoon_v1
+    # is mostly voyage-4-large, not only. This map names the model a QUERY is
+    # embedded with. The original corpora are NOT single-model (voyage-4,
+    # voyage-4-large and voyage-4-lite all occur inside legal_corpus_v1,
+    # legal_corpus_v2 and acts_india, by document), so they are deliberately absent.
+    # `kerala_v2_fix` is the staging collection that holds ONLY the re-embedded
+    # Kerala chunks whose stored vector was dead
+    # (data/dead_vectors/reembed_kerala.py); every vector in it is voyage-4, the
     # model of 368 of 450 sampled Kerala chunks. Override with a JSON object in
     # VOYAGE_EMBED_MODELS.
     VOYAGE_EMBED_MODELS: dict[str, str] = {
         "kanoon_v1": "voyage-4-large",
+        "research_v3": "voyage-4-large",  # lane D: the live query model is -large
         "kerala_v2_fix": "voyage-4",
     }
     # A collection that mixes courts embedded by DIFFERENT models is described per court
