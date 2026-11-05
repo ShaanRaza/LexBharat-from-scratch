@@ -2671,7 +2671,7 @@ and the damage includes **markdown list markers in statute text (`_a_`) and inli
 
 My read, for the owner to take or leave: do not apply it before the record-text cleaning of A147 exists; after it, the lever is worth re-measuring on a real retrieval, because it hardens the statutory wording check and costs the answers that quote inexactly. It is not the answer to section 22.
 
-### Found on the way: a possessive apostrophe fails check 3 (not fixed)
+### Found on the way: a possessive apostrophe fails check 3 (fixed in A157, 5 Nov 2026)
 
 `core/verify.py` `_unbalanced_quotes` counts `‘` and `’` and fails closed when they differ, so a sentence with a curly possessive and no opening quote (`the nation’s economy`) is removed as `quote_not_found`. It cost 1 of 79 pairs in the A137 run (q100) and 0 in the other three runs' ~280 marked sentences, so it is rare in this sample; real judgments use curly apostrophes more.
 It is the opposite of a fabrication, and it is a class: any sentence whose only quote-like mark is a possessive `’`. A narrow fix exists (treat a `’` between two letters as an apostrophe, not a mark) with a class-wide test; **it is not applied**, because it changes check 3 and you have refused loosening it. It needs the owner's word.

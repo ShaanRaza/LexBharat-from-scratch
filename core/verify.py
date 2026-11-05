@@ -269,15 +269,25 @@ def _quotes(sentence: str) -> list[str]:
     return out
 
 
+_CURLY_APOSTROPHE = re.compile(r"(?<=[^\W\d_])\u2019(?=[^\W\d_])")
+
+
 def _unbalanced_quotes(sentence: str) -> bool:
     """A stray or unrecognised quote mark (stray, backtick) means we cannot tell
-    what is quoted: fail closed."""
+    what is quoted: fail closed.
+
+    A157: a U+2019 between two letters (nation's) is an apostrophe, not a closing
+    quote, and is not counted. Only when the sentence has no U+2018: with one, a
+    single-quoted span may close on such a mark, so the count stays strict."""
     rest = _QUOTE_SPAN.sub(" ", sentence)
+    closers = sentence.count("\u2019")
+    if "\u2018" not in sentence:
+        closers -= len(_CURLY_APOSTROPHE.findall(sentence))
     return (
         "`" in sentence
         or "\u00b4" in sentence
         or bool(_STRAY_QUOTE.search(rest))
-        or sentence.count("\u2018") != sentence.count("\u2019")
+        or sentence.count("\u2018") != closers
     )
 
 
