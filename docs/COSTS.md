@@ -36,7 +36,7 @@ server and several, every month, forever.
 
 | Item | Figure | Label | Source |
 |---|---|---|---|
-| Re-embedding, if needed at all | **$0** (a single query model; the per-court config was dropped, A128); else ~$560 at `voyage-4-lite`, ~$1,700 at `voyage-4`, **~$3,400 at `voyage-4-large`** (what `kanoon_v1` serves) | **Measured** (28B tokens) | `DATA-GAPS.md` section 13 |
+| Re-embedding, if needed at all | **$0** (a single query model; the per-court config was dropped, A128); else ~$560 at `voyage-4-lite`, ~$1,700 at `voyage-4`, **~$3,400 at `voyage-4-large`** (what most of `kanoon_v1` is built with: 27 of 30 random chunks reproduced at 0.999 or better under it and 3 under `voyage-4`, **Measured** 5 Nov 2026, sample too small for a precise share; the collection is NOT single-model, A184) | **Measured** (28B tokens) | `DATA-GAPS.md` section 13 |
 | Measuring whether that is needed | under **$1** (~420,000 Voyage tokens) | **Estimate** | the known-item run, this file section 6 |
 | BM25 repair of broken sparse vectors already in the served copy | about **12 seconds** of compute, no vendor cost | **Measured** | `DATA-GAPS.md` section 9 |
 | Jev credits bought so far | **$5** | **Checked** | `PRD-v2.md` section 8 |
